@@ -175,8 +175,9 @@ class ArcRaiderContractsRepository {
     required bool confirmed,
     String reason = '',
   }) async {
-    if (submissionId.isEmpty)
+    if (submissionId.isEmpty) {
       throw ArgumentError('No video submission to review.');
+    }
     if (!confirmed && reason.trim().isEmpty) {
       throw ArgumentError('Explain why the evidence needs replacing.');
     }

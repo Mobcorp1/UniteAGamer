@@ -1430,11 +1430,12 @@ class _ArcHunterContractCardState extends State<ArcHunterContractCard> {
     try {
       await action();
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         setState(
           () =>
               _error = 'That action could not be completed. Please try again.',
         );
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -1666,11 +1667,12 @@ class _IssuerReviewDialogState extends State<_IssuerReviewDialog> {
       await widget.onSubmit(_reason.text.trim());
       if (mounted) Navigator.of(context).pop(true);
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         setState(
           () => _error =
               'Review could not be saved. Your feedback is still here. Try again or reopen the contract if it has changed.',
         );
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -1751,14 +1753,16 @@ Future<void> _openContractVideo(ArcRaiderContract contract) async {
   );
   final expectedPrefix =
       'contract_evidence/${contract.id}/${contract.hunterUid}/';
-  if (!video.storagePath.startsWith(expectedPrefix))
+  if (!video.storagePath.startsWith(expectedPrefix)) {
     throw StateError('Invalid evidence reference.');
+  }
   final url = await FirebaseStorage.instance
       .ref(video.storagePath)
       .getDownloadURL();
   final uri = Uri.parse(url);
-  if (uri.scheme != 'https' || !await launchUrl(uri))
+  if (uri.scheme != 'https' || !await launchUrl(uri)) {
     throw StateError('Could not open evidence.');
+  }
 }
 
 Future<void> _evidenceDialog(
@@ -1801,22 +1805,25 @@ class _ContractVideoDialogState extends State<_ContractVideoDialog> {
       if (!file.name.toLowerCase().endsWith('.mp4') ||
           length == 0 ||
           length > 25 * 1024 * 1024) {
-        if (mounted)
+        if (mounted) {
           setState(
             () => _error = 'Choose a nonempty MP4 clip, 25 MB or smaller.',
           );
+        }
         return;
       }
-      if (mounted)
+      if (mounted) {
         setState(() {
           _clip = file;
           _uploaded = null;
         });
+      }
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         setState(
           () => _error = 'Could not open that video. Please choose it again.',
         );
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -1839,11 +1846,12 @@ class _ContractVideoDialogState extends State<_ContractVideoDialog> {
       );
       if (mounted) Navigator.of(context).pop();
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         setState(
           () => _error =
               'The clip could not be submitted. Retry with this clip, or reopen the contract if its status changed.',
         );
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -1901,27 +1909,30 @@ class _IssuedContracts extends StatelessWidget {
   Widget build(BuildContext context) => StreamBuilder<List<ArcRaiderContract>>(
     stream: repo.watchIssuedContracts(),
     builder: (context, snapshot) {
-      if (snapshot.hasError)
+      if (snapshot.hasError) {
         return const _TrustLoadProblem(
           title: 'Issuer review unavailable',
           message: 'Reopen Activity to reload your issued contracts.',
         );
+      }
       if (!snapshot.hasData) return const LinearProgressIndicator();
       final contracts = snapshot.requireData.toList()
         ..sort((a, b) {
-          if (a.isAwaitingIssuerReview != b.isAwaitingIssuerReview)
+          if (a.isAwaitingIssuerReview != b.isAwaitingIssuerReview) {
             return a.isAwaitingIssuerReview ? -1 : 1;
+          }
           return (b.updatedAt ?? DateTime(1970)).compareTo(
             a.updatedAt ?? DateTime(1970),
           );
         });
-      if (contracts.isEmpty)
+      if (contracts.isEmpty) {
         return const Padding(
           padding: ArcUiTokens.panelPadding,
           child: Text(
             'No issued contracts yet. Evidence from your hunters will appear here for review.',
           ),
         );
+      }
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -1975,11 +1986,12 @@ class _MyActivity extends StatelessWidget {
       StreamBuilder<List<ArcRaiderReport>>(
         stream: repo.watchMyReports(),
         builder: (context, snapshot) {
-          if (snapshot.hasError)
+          if (snapshot.hasError) {
             return const _TrustLoadProblem(
               title: 'Reports unavailable',
               message: 'Reopen Activity to reload your reports.',
             );
+          }
           if (!snapshot.hasData) return const LinearProgressIndicator();
           return Column(
             children: snapshot.requireData

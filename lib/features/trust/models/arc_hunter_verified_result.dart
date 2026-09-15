@@ -33,8 +33,9 @@ class ArcHunterVerifiedResult {
         data['verifiedByUid'] != issuer ||
         data['evidenceSubmissionId'] is! String ||
         (data['evidenceSubmissionId'] as String).isEmpty ||
-        timestamp is! Timestamp)
+        timestamp is! Timestamp) {
       return null;
+    }
     final country = '${data['countryCode'] ?? ''}'.toUpperCase();
     return ArcHunterVerifiedResult(
       contractId: documentId,
@@ -55,12 +56,14 @@ class ArcHunterVerifiedResult {
     for (final result in results) {
       if (countryCode != null &&
           (result.countryCode.isEmpty ||
-              result.countryCode != countryCode.toUpperCase()))
+              result.countryCode != countryCode.toUpperCase())) {
         continue;
+      }
       if (month != null &&
           (result.verifiedAt.year != month.toUtc().year ||
-              result.verifiedAt.month != month.toUtc().month))
+              result.verifiedAt.month != month.toUtc().month)) {
         continue;
+      }
       if (!seen.add(result.contractId)) continue;
       counts.update(result.hunterUid, (value) => value + 1, ifAbsent: () => 1);
     }
