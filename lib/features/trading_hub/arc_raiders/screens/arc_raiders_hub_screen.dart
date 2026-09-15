@@ -333,7 +333,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
     return _ArcHubFeature(
       title: label,
       subtitle:
-          '${itemCount == 1 ? '1 system' : '$itemCount systems'} â€¢ ${_groupSubtitle(label)}',
+          '${itemCount == 1 ? '1 system' : '$itemCount systems'} • ${_groupSubtitle(label)}',
       icon: visual.icon,
       accent: visual.accent,
       art: visual.art,
