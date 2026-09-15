@@ -59,14 +59,14 @@ class UagCreatorCommercialPolicy {
       name: 'Raider',
       minPoints: 1,
       maxPoints: 7.99,
-      commissionBasisPoints: 750,
+      commissionBasisPoints: 500,
       allocation: UagCreatorMonthlyAllocation(essential7Day: 2),
     ),
     UagCreatorLevel(
       name: 'Scout',
       minPoints: 8,
       maxPoints: 14.99,
-      commissionBasisPoints: 1000,
+      commissionBasisPoints: 750,
       allocation: UagCreatorMonthlyAllocation(
         essential7Day: 2,
         essentialMonth: 1,
@@ -76,7 +76,7 @@ class UagCreatorCommercialPolicy {
       name: 'Squad Leader',
       minPoints: 15,
       maxPoints: 24.99,
-      commissionBasisPoints: 1250,
+      commissionBasisPoints: 1000,
       allocation: UagCreatorMonthlyAllocation(
         essentialMonth: 2,
         premium7Day: 1,
@@ -86,7 +86,7 @@ class UagCreatorCommercialPolicy {
       name: 'Commander',
       minPoints: 25,
       maxPoints: 39.99,
-      commissionBasisPoints: 1500,
+      commissionBasisPoints: 1250,
       allocation: UagCreatorMonthlyAllocation(
         essentialMonth: 2,
         premiumMonth: 1,
@@ -96,7 +96,7 @@ class UagCreatorCommercialPolicy {
       name: 'Vanguard',
       minPoints: 40,
       maxPoints: 59.99,
-      commissionBasisPoints: 1750,
+      commissionBasisPoints: 1500,
       allocation: UagCreatorMonthlyAllocation(
         essentialMonth: 3,
         premiumMonth: 2,
@@ -106,7 +106,7 @@ class UagCreatorCommercialPolicy {
       name: 'Elite',
       minPoints: 60,
       maxPoints: 99.99,
-      commissionBasisPoints: 2000,
+      commissionBasisPoints: 1750,
       allocation: UagCreatorMonthlyAllocation(
         essentialMonth: 4,
         premiumMonth: 3,

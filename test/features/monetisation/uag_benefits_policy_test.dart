@@ -16,12 +16,12 @@ void main() {
   });
 
   test('creator commission ladder and community uplift remain bounded', () {
-    expect(UagCreatorCommissionRatePolicy.baseRatePercent(1), 7.5);
-    expect(UagCreatorCommissionRatePolicy.baseRatePercent(8), 10);
-    expect(UagCreatorCommissionRatePolicy.baseRatePercent(15), 12.5);
-    expect(UagCreatorCommissionRatePolicy.baseRatePercent(25), 15);
-    expect(UagCreatorCommissionRatePolicy.baseRatePercent(40), 17.5);
-    expect(UagCreatorCommissionRatePolicy.baseRatePercent(60), 20);
+    expect(UagCreatorCommissionRatePolicy.baseRatePercent(1), 5);
+    expect(UagCreatorCommissionRatePolicy.baseRatePercent(8), 7.5);
+    expect(UagCreatorCommissionRatePolicy.baseRatePercent(15), 10);
+    expect(UagCreatorCommissionRatePolicy.baseRatePercent(25), 12.5);
+    expect(UagCreatorCommissionRatePolicy.baseRatePercent(40), 15);
+    expect(UagCreatorCommissionRatePolicy.baseRatePercent(60), 17.5);
     expect(UagCreatorCommissionRatePolicy.baseRatePercent(100), 20);
     expect(UagCreatorCommissionRatePolicy.communityUpliftPercent(250000), 2.5);
     expect(

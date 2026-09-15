@@ -11,7 +11,7 @@ void main() {
       );
       expect(dashboard.creatorPoints, 25);
       expect(dashboard.level?.name, 'Commander');
-      expect(dashboard.commissionPercent, 15);
+      expect(dashboard.commissionPercent, 12.5);
     },
   );
 
