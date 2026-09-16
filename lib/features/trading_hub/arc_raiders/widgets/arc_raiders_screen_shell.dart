@@ -202,69 +202,103 @@ class ArcRaidersPageHeader extends StatelessWidget {
     final compact = width < 430;
 
     Widget leadingIcon() {
-      if (logoAsset != null) {
-        return Image.asset(
-          logoAsset!,
-          width: compact ? 24 : 28,
-          height: compact ? 24 : 28,
-          filterQuality: FilterQuality.high,
-          errorBuilder: (_, _, _) => Icon(
-            icon ?? Icons.dashboard_rounded,
-            color: accent,
-            size: compact ? 22 : 24,
-          ),
-        );
-      }
+      final glyph = logoAsset != null
+          ? Image.asset(
+              logoAsset!,
+              width: compact ? 22 : 25,
+              height: compact ? 22 : 25,
+              filterQuality: FilterQuality.high,
+              errorBuilder: (_, _, _) => Icon(
+                icon ?? Icons.dashboard_rounded,
+                color: accent,
+                size: compact ? 20 : 22,
+              ),
+            )
+          : Icon(
+              icon ?? Icons.dashboard_rounded,
+              color: accent,
+              size: compact ? 20 : 22,
+            );
 
-      return Icon(
-        icon ?? Icons.arrow_back_rounded,
-        color: accent,
-        size: compact ? 20 : 22,
+      return Container(
+        width: compact ? 36 : 40,
+        height: compact ? 36 : 40,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              accent.withValues(alpha: 0.16),
+              accent.withValues(alpha: 0.035),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
+          border: Border.all(color: accent.withValues(alpha: 0.28)),
+        ),
+        alignment: Alignment.center,
+        child: glyph,
       );
     }
 
     return Padding(
       padding: EdgeInsets.fromLTRB(
-        compact ? 3 : 5,
+        compact ? 2 : 4,
         0,
-        compact ? 3 : 5,
-        compact ? 1 : 2,
+        compact ? 2 : 4,
+        compact ? 4 : 6,
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          leadingIcon(),
-          SizedBox(width: compact ? 8 : 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: ArcUiTokens.pageTitle(
-                    fontSize: compact ? 15 : 18,
-                    color: accent,
-                  ),
+          Row(
+            children: [
+              leadingIcon(),
+              SizedBox(width: compact ? 9 : 11),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: compact ? 2 : 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: ArcUiTokens.pageTitle(
+                        fontSize: compact ? 17 : 20,
+                        color: ArcUiTokens.textPrimary,
+                      ),
+                    ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle!,
+                        maxLines: compact ? 2 : 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: ArcUiTokens.bodySmall(
+                          color: ArcUiTokens.textTertiary,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-                if (subtitle != null && !compact) ...[
-                  const SizedBox(height: 1),
-                  Text(
-                    subtitle!,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: ArcUiTokens.body(
-                      fontSize: 11,
-                      color: ArcUiTokens.textTertiary,
-                      weight: FontWeight.w600,
-                    ).copyWith(height: 1.15),
-                  ),
+              ),
+              if (trailing != null) ...[const SizedBox(width: 8), trailing!],
+            ],
+          ),
+          const SizedBox(height: 8),
+          Container(
+            height: 1,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  accent.withValues(alpha: 0.55),
+                  accent.withValues(alpha: 0.10),
+                  Colors.transparent,
                 ],
-              ],
+              ),
             ),
           ),
-          if (trailing != null) ...[const SizedBox(width: 8), trailing!],
         ],
       ),
     );
@@ -290,38 +324,73 @@ class ArcRaidersHeroBanner extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(compact ? ArcUiTokens.gapM : ArcUiTokens.gapL),
       decoration: ArcUiTokens.surfaceDecoration(
-        role: ArcSurfaceRole.interactive,
-        radius: ArcUiTokens.radiusL,
+        role: ArcSurfaceRole.raised,
+        radius: ArcUiTokens.radiusXXL,
         accent: accent,
-        borderOpacity: 0.34,
-        glow: false,
+        borderOpacity: 0.28,
+        glow: true,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          Container(
-            width: compact ? 36 : 44,
-            height: 3,
-            decoration: BoxDecoration(
-              color: accent,
-              borderRadius: BorderRadius.circular(999),
+          Positioned(
+            right: compact ? -4 : 4,
+            top: compact ? -6 : -4,
+            child: IgnorePointer(
+              child: Icon(
+                Icons.blur_on_rounded,
+                size: compact ? 72 : 92,
+                color: accent.withValues(alpha: 0.045),
+              ),
             ),
           ),
-          const SizedBox(height: ArcUiTokens.gapM),
-          Text(
-            title,
-            style: ArcUiTokens.sectionTitle(
-              fontSize: compact ? 18 : 22,
-              color: accent,
-            ),
-          ),
-          const SizedBox(height: ArcUiTokens.gapS),
-          Text(
-            subtitle,
-            style: ArcUiTokens.body(
-              fontSize: compact ? 12 : 13,
-              color: ArcUiTokens.textSecondary,
-              weight: FontWeight.w600,
+          Padding(
+            padding: EdgeInsets.only(right: compact ? 26 : 54),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: compact ? 36 : 44,
+                      height: 3,
+                      decoration: BoxDecoration(
+                        color: accent,
+                        borderRadius: BorderRadius.circular(999),
+                        boxShadow: [
+                          BoxShadow(
+                            color: accent.withValues(alpha: 0.22),
+                            blurRadius: 10,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 7),
+                    Text(
+                      'ARC OPERATIONS',
+                      style: ArcUiTokens.label(
+                        color: accent,
+                      ).copyWith(letterSpacing: 1.0),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: ArcUiTokens.gapM),
+                Text(
+                  title,
+                  style: ArcUiTokens.sectionTitle(
+                    fontSize: compact ? 19 : 23,
+                    color: ArcUiTokens.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: ArcUiTokens.gapS),
+                Text(
+                  subtitle,
+                  style: ArcUiTokens.body(
+                    fontSize: compact ? 12 : 13,
+                    color: ArcUiTokens.textSecondary,
+                    weight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -447,27 +516,51 @@ class ArcTacticalStatTile extends StatelessWidget {
         decoration: ArcUiTokens.surfaceDecoration(
           role: ArcSurfaceRole.interactive,
           accent: accent,
-          borderOpacity: 0.18,
-          radius: ArcUiTokens.radiusM,
+          borderOpacity: 0.20,
+          radius: ArcUiTokens.radiusL,
         ),
         child: Row(
           children: [
             if (icon != null) ...[
-              Icon(icon, color: accent, size: 17),
-              const SizedBox(width: 8),
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.09),
+                  borderRadius: BorderRadius.circular(ArcUiTokens.radiusS),
+                  border: Border.all(color: accent.withValues(alpha: 0.22)),
+                ),
+                child: Icon(icon, color: accent, size: 17),
+              ),
+              const SizedBox(width: 9),
             ],
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    label.toUpperCase(),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: ArcUiTokens.label(),
+                  Row(
+                    children: [
+                      Container(
+                        width: 16,
+                        height: 2,
+                        decoration: BoxDecoration(
+                          color: accent.withValues(alpha: 0.88),
+                          borderRadius: BorderRadius.circular(99),
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      Expanded(
+                        child: Text(
+                          label.toUpperCase(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: ArcUiTokens.label(),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 3),
+                  const SizedBox(height: 4),
                   Text(
                     value,
                     maxLines: 2,

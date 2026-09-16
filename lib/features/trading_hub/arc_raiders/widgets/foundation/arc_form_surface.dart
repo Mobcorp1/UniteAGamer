@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/widgets/arc_layout_system.dart';
+import 'package:uag_arc_raiders_hub/widgets/uag_cinematic_background.dart';
 
 import 'arc_ui_tokens.dart';
 
@@ -88,56 +89,112 @@ class ArcFormPageLead extends StatelessWidget {
     final compact = MediaQuery.sizeOf(context).width < 430;
 
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: compact ? 12 : 14,
-        vertical: compact ? 10 : 12,
+      padding: EdgeInsets.fromLTRB(
+        compact ? 12 : 16,
+        compact ? 12 : 14,
+        compact ? 12 : 16,
+        compact ? 12 : 14,
       ),
       decoration: ArcUiTokens.surfaceDecoration(
         role: ArcSurfaceRole.raised,
         accent: accent,
-        borderOpacity: 0.24,
-        radius: ArcUiTokens.radiusL,
+        borderOpacity: 0.30,
+        radius: ArcUiTokens.radiusXXL,
+        glow: true,
       ),
-      child: Row(
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
         children: [
-          Container(
-            width: compact ? 38 : 42,
-            height: compact ? 38 : 42,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
-              color: accent.withValues(alpha: 0.10),
-              border: Border.all(color: accent.withValues(alpha: 0.34)),
-            ),
-            child: Icon(icon, color: accent, size: compact ? 21 : 23),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  title,
-                  maxLines: compact ? 2 : 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: ArcUiTokens.sectionTitle(
-                    fontSize: compact ? 16 : 18,
-                    color: ArcUiTokens.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  maxLines: compact ? 2 : 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: ArcUiTokens.bodySmall(
-                    color: ArcUiTokens.textSecondary,
-                  ),
-                ),
-              ],
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.14,
+              child: Image.asset(
+                UagVisualAssets.arcBackground,
+                fit: BoxFit.cover,
+                alignment: Alignment.centerRight,
+                errorBuilder: (_, _, _) => const SizedBox.shrink(),
+              ),
             ),
           ),
-          if (trailing != null) ...[const SizedBox(width: 8), trailing!],
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [
+                    ArcUiTokens.surfaceRaised.withValues(alpha: 0.98),
+                    ArcUiTokens.surfaceRaised.withValues(alpha: 0.80),
+                    ArcUiTokens.background.withValues(alpha: 0.56),
+                  ],
+                  stops: const [0.0, 0.62, 1.0],
+                ),
+              ),
+            ),
+          ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: compact ? 46 : 52,
+                height: compact ? 46 : 52,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      accent.withValues(alpha: 0.20),
+                      accent.withValues(alpha: 0.055),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(ArcUiTokens.radiusL),
+                  border: Border.all(color: accent.withValues(alpha: 0.42)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: accent.withValues(alpha: 0.08),
+                      blurRadius: 16,
+                    ),
+                  ],
+                ),
+                child: Icon(icon, color: accent, size: compact ? 23 : 26),
+              ),
+              SizedBox(width: compact ? 11 : 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'ARC OPERATIONS',
+                      style: ArcUiTokens.label(
+                        color: accent,
+                      ).copyWith(letterSpacing: 1.15),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      title,
+                      maxLines: compact ? 2 : 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: ArcUiTokens.sectionTitle(
+                        fontSize: compact ? 18 : 20,
+                        color: ArcUiTokens.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      subtitle,
+                      maxLines: compact ? 3 : 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: ArcUiTokens.bodySmall(
+                        color: ArcUiTokens.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (trailing != null) ...[const SizedBox(width: 8), trailing!],
+            ],
+          ),
         ],
       ),
     );
@@ -249,13 +306,16 @@ class _ArcExpandableFormSectionState extends State<ArcExpandableFormSection> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
       margin: widget.margin,
       decoration: ArcUiTokens.surfaceDecoration(
-        role: ArcSurfaceRole.panel,
+        role: _expanded ? ArcSurfaceRole.raised : ArcSurfaceRole.panel,
         accent: widget.accent,
-        borderOpacity: _expanded ? 0.24 : 0.14,
-        radius: ArcUiTokens.radiusL,
+        borderOpacity: _expanded ? 0.34 : 0.15,
+        radius: ArcUiTokens.radiusXXL,
+        selected: _expanded,
+        glow: _expanded,
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -264,22 +324,33 @@ class _ArcExpandableFormSectionState extends State<ArcExpandableFormSection> {
           InkWell(
             onTap: () => setState(() => _expanded = !_expanded),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               child: Row(
                 children: [
                   Container(
-                    width: 32,
-                    height: 32,
+                    width: 38,
+                    height: 38,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(ArcUiTokens.radiusS),
-                      color: widget.accent.withValues(alpha: 0.09),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          widget.accent.withValues(
+                            alpha: _expanded ? 0.22 : 0.13,
+                          ),
+                          widget.accent.withValues(alpha: 0.045),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
                       border: Border.all(
-                        color: widget.accent.withValues(alpha: 0.24),
+                        color: widget.accent.withValues(
+                          alpha: _expanded ? 0.46 : 0.25,
+                        ),
                       ),
                     ),
-                    child: Icon(widget.icon, color: widget.accent, size: 17),
+                    child: Icon(widget.icon, color: widget.accent, size: 19),
                   ),
-                  const SizedBox(width: 9),
+                  const SizedBox(width: 11),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -288,7 +359,7 @@ class _ArcExpandableFormSectionState extends State<ArcExpandableFormSection> {
                         Text(
                           widget.title,
                           style: ArcUiTokens.sectionTitle(
-                            fontSize: 14,
+                            fontSize: 15,
                             color: ArcUiTokens.textPrimary,
                           ),
                         ),
@@ -313,22 +384,38 @@ class _ArcExpandableFormSectionState extends State<ArcExpandableFormSection> {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: ArcUiTokens.bodySmall(
-                              color: ArcUiTokens.textTertiary,
+                              color: ArcUiTokens.textSecondary,
                             ),
                           ),
                         ],
                       ],
                     ),
                   ),
-                  const SizedBox(width: 6),
-                  AnimatedRotation(
-                    turns: _expanded ? 0.5 : 0,
-                    duration: const Duration(milliseconds: 160),
-                    child: Icon(
-                      Icons.keyboard_arrow_down_rounded,
-                      color: _expanded
-                          ? widget.accent
-                          : ArcUiTokens.textTertiary,
+                  const SizedBox(width: 8),
+                  Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: widget.accent.withValues(
+                        alpha: _expanded ? 0.12 : 0.05,
+                      ),
+                      border: Border.all(
+                        color: widget.accent.withValues(
+                          alpha: _expanded ? 0.34 : 0.12,
+                        ),
+                      ),
+                    ),
+                    child: AnimatedRotation(
+                      turns: _expanded ? 0.5 : 0,
+                      duration: const Duration(milliseconds: 160),
+                      child: Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        size: 21,
+                        color: _expanded
+                            ? widget.accent
+                            : ArcUiTokens.textTertiary,
+                      ),
                     ),
                   ),
                 ],
@@ -338,12 +425,30 @@ class _ArcExpandableFormSectionState extends State<ArcExpandableFormSection> {
           AnimatedCrossFade(
             duration: const Duration(milliseconds: 180),
             firstChild: const SizedBox(width: double.infinity),
-            secondChild: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: widget.children,
-              ),
+            secondChild: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  height: 1,
+                  margin: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.transparent,
+                        widget.accent.withValues(alpha: 0.34),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: widget.children,
+                  ),
+                ),
+              ],
             ),
             crossFadeState: _expanded
                 ? CrossFadeState.showSecond

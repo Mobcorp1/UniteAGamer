@@ -344,6 +344,7 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
                   summary: 'Core UAG identity and account details',
                   title: 'Identity',
                   icon: Icons.badge_outlined,
+                  accent: ArcUiTokens.primaryAccent,
                   children: [
                     _field(
                       _uagIdController,
@@ -382,7 +383,9 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
                 ),
                 ArcExpandableFormSection(
                   title: 'Account',
+                  summary: 'Payout, subscription and affiliate settings',
                   icon: Icons.account_balance_wallet_outlined,
+                  accent: ArcUiTokens.tertiaryAccent,
                   children: [
                     DropdownButtonFormField<String>(
                       initialValue: _payoutMethod,
@@ -408,7 +411,10 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
                 ),
                 ArcExpandableFormSection(
                   title: 'Archetypes & Match Fit',
+                  summary:
+                      'Playstyle, communication, squad intent and session focus',
                   icon: Icons.hub_rounded,
+                  accent: ArcUiTokens.secondaryAccent,
                   children: [
                     Text(
                       'Choose the tags that best describe how you play.',
@@ -519,7 +525,9 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
                 ),
                 ArcExpandableFormSection(
                   title: 'Preferences',
+                  summary: 'Discovery, voice, region and crossplay controls',
                   icon: Icons.tune_rounded,
+                  accent: ArcUiTokens.success,
                   children: [
                     SwitchListTile(
                       value: _visibleInSearch,
@@ -554,7 +562,9 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
                 ),
                 ArcExpandableFormSection(
                   title: 'Public Social Links',
+                  summary: 'Creator, community and platform profiles',
                   icon: Icons.link_rounded,
+                  accent: ArcUiTokens.secondaryAccent,
                   children: [
                     ArcSocialLinksEditor(
                       initialLinks: _socialLinks,

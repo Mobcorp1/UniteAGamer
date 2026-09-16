@@ -18,24 +18,54 @@ class ArcSectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final heading = Column(
+    final heading = Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title.toUpperCase(),
-          style: ArcUiTokens.sectionTitle(color: accent),
+        Container(
+          width: 3,
+          height: subtitle == null ? 22 : 38,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [accent, accent.withValues(alpha: 0.18)],
+            ),
+            borderRadius: BorderRadius.circular(99),
+            boxShadow: [
+              BoxShadow(color: accent.withValues(alpha: 0.12), blurRadius: 10),
+            ],
+          ),
         ),
-        if (subtitle != null) ...[
-          const SizedBox(height: ArcUiTokens.gapXS),
-          Text(subtitle!, style: ArcUiTokens.bodySmall()),
-        ],
+        const SizedBox(width: 9),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title.toUpperCase(),
+                style: ArcUiTokens.sectionTitle(
+                  color: accent,
+                ).copyWith(letterSpacing: 0.45),
+              ),
+              if (subtitle != null) ...[
+                const SizedBox(height: ArcUiTokens.gapXS),
+                Text(
+                  subtitle!,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: ArcUiTokens.bodySmall(),
+                ),
+              ],
+            ],
+          ),
+        ),
       ],
     );
+
     return SizedBox(
       width: double.infinity,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          // Use the panel's width, including when it is inside a desktop grid.
           final stacked =
               constraints.maxWidth < 480 ||
               MediaQuery.textScalerOf(context).scale(16) > 24;
@@ -52,7 +82,7 @@ class ArcSectionHeader extends StatelessWidget {
             );
           }
           return Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(child: heading),
               if (trailing != null) ...[

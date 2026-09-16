@@ -458,6 +458,7 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
                   summary: 'Core UAG identity and account details',
                   title: 'Identity',
                   icon: Icons.badge_outlined,
+                  accent: ArcUiTokens.primaryAccent,
                   children: [
                     _field(
                       _uagIdController,
@@ -475,7 +476,9 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
                 ),
                 ArcExpandableFormSection(
                   title: 'Platform & Server',
+                  summary: 'Region, platform, timezone and server preferences',
                   icon: Icons.travel_explore_rounded,
+                  accent: ArcUiTokens.tertiaryAccent,
                   children: [
                     _field(
                       _regionController,
@@ -504,7 +507,10 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
                 ),
                 ArcExpandableFormSection(
                   title: 'Archetypes & Match Fit',
+                  summary:
+                      'Playstyle, communication, squad intent and session focus',
                   icon: Icons.hub_rounded,
+                  accent: ArcUiTokens.secondaryAccent,
                   children: [
                     Text(
                       'Choose the tags that best describe how you play.',
@@ -615,7 +621,9 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
                 ),
                 ArcExpandableFormSection(
                   title: 'Preferences',
+                  summary: 'Discovery, voice, region and crossplay controls',
                   icon: Icons.tune_rounded,
+                  accent: ArcUiTokens.success,
                   children: [
                     _switchTile(
                       value: _visibleInSearch,
@@ -650,7 +658,9 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
                 ),
                 ArcExpandableFormSection(
                   title: 'Public Social Links',
+                  summary: 'Creator, community and platform profiles',
                   icon: Icons.link_rounded,
+                  accent: ArcUiTokens.secondaryAccent,
                   children: [
                     ArcSocialLinksEditor(
                       initialLinks: _socialLinks,
@@ -660,7 +670,9 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
                 ),
                 ArcExpandableFormSection(
                   title: 'Account',
+                  summary: 'Payout, subscription and affiliate settings',
                   icon: Icons.account_balance_wallet_outlined,
+                  accent: ArcUiTokens.tertiaryAccent,
                   children: [
                     _dropdown(
                       label: 'Preferred payout method',

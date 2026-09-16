@@ -643,32 +643,53 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Icon(_statusIcon(tile.status), color: accent, size: 18),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    _cleanText(tile.title).toUpperCase(),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTheme.tradingHeading(
-                      fontSize: active ? 14 : 12,
-                      color: accent,
+            if (active) ...[
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(_statusIcon(tile.status), color: accent, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _cleanText(tile.title).toUpperCase(),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTheme.tradingHeading(
+                        fontSize: 14,
+                        color: accent,
+                      ),
                     ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 5),
+              Align(
+                alignment: Alignment.centerRight,
+                child: ArcCommandStatusPill(
+                  label: tile.value,
+                  status: tile.status,
                 ),
-                Flexible(
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: ArcCommandStatusPill(
-                      label: tile.value,
-                      status: tile.status,
+              ),
+            ] else
+              Row(
+                children: [
+                  Icon(_statusIcon(tile.status), color: accent, size: 17),
+                  const SizedBox(width: 7),
+                  Expanded(
+                    child: Text(
+                      _cleanText(tile.title).toUpperCase(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTheme.tradingHeading(
+                        fontSize: 12,
+                        color: accent,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
+                  const SizedBox(width: 5),
+                  ArcCommandStatusPill(label: tile.value, status: tile.status),
+                ],
+              ),
             const Spacer(),
             Text(
               _shortActionText(tile.detail),

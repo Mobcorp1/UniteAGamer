@@ -4,6 +4,7 @@ import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/screens/monetisation_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 import 'package:uag_arc_raiders_hub/widgets/arc_layout_system.dart';
+import '../widgets/foundation/arc_ui_tokens.dart';
 import '../widgets/foundation/uag_profile_glyph.dart';
 
 import '../data/arc_player_archetype_catalog.dart';
@@ -492,7 +493,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
               title: 'Public Profile Details',
               summary: 'Bio, platform and public-facing Raider details',
               icon: Icons.public_rounded,
-              accent: Colors.amberAccent,
+              accent: ArcUiTokens.tertiaryAccent,
               child: _publicDetailsPanel(profile),
             ),
             _profileDisclosure(
@@ -609,41 +610,68 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
     required Widget child,
   }) {
     final expanded = openId == id;
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
       margin: const EdgeInsets.only(bottom: AppTheme.spaceS),
-      decoration: BoxDecoration(
-        color: AppTheme.cardBackground.withValues(alpha: 0.78),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: accent.withValues(alpha: expanded ? 0.34 : 0.15),
-        ),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: expanded ? ArcSurfaceRole.raised : ArcSurfaceRole.panel,
+        accent: accent,
+        borderOpacity: expanded ? 0.34 : 0.15,
+        radius: ArcUiTokens.radiusXXL,
+        selected: expanded,
+        glow: expanded,
       ),
+      clipBehavior: Clip.antiAlias,
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
           key: ValueKey<String>('profile-disclosure-$id-$expanded'),
           initiallyExpanded: expanded,
           maintainState: false,
-          tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 1),
-          childrenPadding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+          tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          childrenPadding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
           iconColor: accent,
-          collapsedIconColor: Colors.white54,
+          collapsedIconColor: ArcUiTokens.textTertiary,
           onExpansionChanged: (isExpanded) =>
               onOpenChanged(isExpanded ? id : null),
-          leading: Icon(icon, color: accent, size: 19),
+          leading: Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  accent.withValues(alpha: expanded ? 0.22 : 0.12),
+                  accent.withValues(alpha: 0.035),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: accent.withValues(alpha: expanded ? 0.44 : 0.22),
+              ),
+            ),
+            child: Icon(icon, color: accent, size: 19),
+          ),
           title: Text(
             title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 13,
-              fontWeight: FontWeight.w900,
+            style: ArcUiTokens.sectionTitle(
+              fontSize: 15,
+              color: ArcUiTokens.textPrimary,
             ),
           ),
-          subtitle: Text(
-            summary,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: Colors.white54, fontSize: 10),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text(
+              summary,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: ArcUiTokens.bodySmall(
+                color: expanded
+                    ? ArcUiTokens.textSecondary
+                    : ArcUiTokens.textTertiary,
+              ),
+            ),
           ),
           children: [child],
         ),
@@ -1104,42 +1132,53 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
   }) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppTheme.spaceS),
-      decoration: BoxDecoration(
-        color: AppTheme.cardBackgroundAlt.withValues(alpha: 0.72),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.14)),
+      padding: const EdgeInsets.all(10),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        accent: AppTheme.neonCyan,
+        borderOpacity: 0.15,
+        radius: ArcUiTokens.radiusL,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: AppTheme.neonCyan, size: 20),
-          const SizedBox(width: AppTheme.spaceS),
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: AppTheme.neonCyan.withValues(alpha: 0.09),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: AppTheme.neonCyan.withValues(alpha: 0.22),
+              ),
+            ),
+            child: Icon(icon, color: AppTheme.neonCyan, size: 19),
+          ),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title.toUpperCase(),
-                  style: const TextStyle(
-                    color: Colors.white54,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.8,
-                  ),
+                  style: ArcUiTokens.label().copyWith(letterSpacing: 0.65),
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: 2),
                 Text(
                   value,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: ArcUiTokens.cardTitle(
+                    fontSize: 16,
+                    color: ArcUiTokens.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: 2),
                 Text(
                   copy,
-                  style: const TextStyle(color: Colors.white60, fontSize: 11),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: ArcUiTokens.bodySmall(color: ArcUiTokens.textTertiary),
                 ),
               ],
             ),
@@ -1150,27 +1189,158 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
   }
 
   Widget _publicDetailsPanel(ArcTraderProfile profile) {
-    return _detailCard(
-      title: 'Public Profile Details',
-      children: [
-        _detailRow('UAG ID', profile.uagId),
-        _detailRow('UAG Name', profile.uagName),
-        _detailRow('Region', profile.region),
-        _detailRow('Preferred Platform', profile.platform),
-        _detailRow(
-          'Embark ID',
-          profile.embarkId.isEmpty
-              ? 'Private until trade confirmed'
-              : profile.embarkId,
-        ),
-        _detailRow('Timezone', profile.timezone),
-        _detailRow(
-          'Visibility',
-          profile.visibleInSearch
-              ? 'Visible in player and trader discovery'
-              : 'Hidden from player and trader discovery',
-        ),
-      ],
+    final details = <({String label, String value, IconData icon})>[
+      (label: 'UAG ID', value: profile.uagId, icon: Icons.badge_outlined),
+      (label: 'UAG Name', value: profile.uagName, icon: Icons.person_rounded),
+      (label: 'Region', value: profile.region, icon: Icons.public_rounded),
+      (
+        label: 'Preferred Platform',
+        value: profile.platform,
+        icon: Icons.sports_esports_rounded,
+      ),
+      (
+        label: 'Embark ID',
+        value: profile.embarkId.isEmpty
+            ? 'Private until trade confirmed'
+            : profile.embarkId,
+        icon: Icons.verified_user_outlined,
+      ),
+      (
+        label: 'Timezone',
+        value: profile.timezone,
+        icon: Icons.schedule_rounded,
+      ),
+      (
+        label: 'Visibility',
+        value: profile.visibleInSearch
+            ? 'Visible in player and trader discovery'
+            : 'Hidden from player and trader discovery',
+        icon: profile.visibleInSearch
+            ? Icons.visibility_rounded
+            : Icons.visibility_off_rounded,
+      ),
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: ArcUiTokens.tertiaryAccent,
+        borderOpacity: 0.18,
+        radius: ArcUiTokens.radiusXXL,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: ArcUiTokens.tertiaryAccent.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(9),
+                  border: Border.all(
+                    color: ArcUiTokens.tertiaryAccent.withValues(alpha: 0.22),
+                  ),
+                ),
+                child: const Icon(
+                  Icons.public_rounded,
+                  color: ArcUiTokens.tertiaryAccent,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 9),
+              Expanded(
+                child: Text(
+                  'Public Profile Details',
+                  style: ArcUiTokens.sectionTitle(
+                    fontSize: 17,
+                    color: ArcUiTokens.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              const gap = 8.0;
+              final columns = constraints.maxWidth >= 700 ? 2 : 1;
+              final width = columns == 1
+                  ? constraints.maxWidth
+                  : (constraints.maxWidth - gap) / 2;
+              return Wrap(
+                spacing: gap,
+                runSpacing: gap,
+                children: [
+                  for (final detail in details)
+                    SizedBox(
+                      width: width,
+                      child: _profileDetailTile(
+                        label: detail.label,
+                        value: detail.value,
+                        icon: detail.icon,
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _profileDetailTile({
+    required String label,
+    required String value,
+    required IconData icon,
+  }) {
+    final displayValue = value.trim().isEmpty ? 'Not set' : value;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        accent: ArcUiTokens.tertiaryAccent,
+        borderOpacity: 0.10,
+        radius: ArcUiTokens.radiusM,
+      ),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            color: ArcUiTokens.tertiaryAccent.withValues(alpha: 0.88),
+            size: 17,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  label.toUpperCase(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: ArcUiTokens.label(),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  displayValue,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: ArcUiTokens.body(
+                    fontSize: 13,
+                    color: ArcUiTokens.textPrimary,
+                    weight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -2907,22 +3077,34 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
   }) {
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: accent.withValues(alpha: 0.18),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: accent,
+        borderOpacity: 0.18,
+        radius: ArcUiTokens.radiusXXL,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, color: accent, size: 18),
-              const SizedBox(width: AppTheme.spaceS),
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.09),
+                  borderRadius: BorderRadius.circular(9),
+                  border: Border.all(color: accent.withValues(alpha: 0.22)),
+                ),
+                child: Icon(icon, color: accent, size: 18),
+              ),
+              const SizedBox(width: 9),
               Expanded(
                 child: Text(
                   title,
-                  style: AppTheme.tradingHeading(
+                  style: ArcUiTokens.sectionTitle(
                     fontSize: 17,
-                    color: Colors.white,
+                    color: ArcUiTokens.textPrimary,
                   ),
                 ),
               ),
@@ -3120,69 +3302,33 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
     );
   }
 
-  Widget _detailCard({required String title, required List<Widget> children}) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(
-        AppTheme.spaceM,
-        AppTheme.spaceS,
-        AppTheme.spaceM,
-        AppTheme.spaceL,
-      ),
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: AppTheme.neonCyan.withValues(alpha: 0.18),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: AppTheme.tradingHeading(
-              fontSize: 20,
-              color: AppTheme.neonPink,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spaceM),
-          ...children,
-        ],
-      ),
-    );
-  }
-
   Widget _detailRow(String label, String value) {
     final displayValue = value.trim().isEmpty ? 'Not set' : value;
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppTheme.spaceS),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppTheme.spaceM,
-        vertical: AppTheme.spaceM,
-      ),
-      decoration: BoxDecoration(
-        color: AppTheme.cardBackgroundAlt.withValues(alpha: 0.65),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        accent: AppTheme.neonPink,
+        borderOpacity: 0.10,
+        radius: ArcUiTokens.radiusM,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 118,
-            child: Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white60,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            width: 112,
+            child: Text(label.toUpperCase(), style: ArcUiTokens.label()),
           ),
-          const SizedBox(width: AppTheme.spaceM),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
               displayValue,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-                height: 1.25,
+              style: ArcUiTokens.body(
+                fontSize: 13,
+                color: ArcUiTokens.textPrimary,
+                weight: FontWeight.w600,
               ),
             ),
           ),

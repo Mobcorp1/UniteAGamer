@@ -227,15 +227,57 @@ class ArcUiTokens {
     bool selected = false,
     bool glow = false,
   }) {
+    final base = backgroundColor ?? surfaceFor(role);
+    final surfaceAccent =
+        accent ?? (role == ArcSurfaceRole.warning ? warning : primaryAccent);
     final borderColor = accent == null
         ? Colors.white.withValues(alpha: selected ? 0.18 : borderOpacity)
-        : accent.withValues(alpha: selected ? 0.54 : borderOpacity);
+        : surfaceAccent.withValues(alpha: selected ? 0.54 : borderOpacity);
+    final topTint = Color.alphaBlend(
+      surfaceAccent.withValues(alpha: selected ? 0.095 : 0.042),
+      base,
+    );
+    final lowerTint = Color.alphaBlend(
+      secondaryAccent.withValues(
+        alpha: role == ArcSurfaceRole.interactive ? 0.024 : 0.012,
+      ),
+      base,
+    );
 
     return BoxDecoration(
-      color: backgroundColor ?? surfaceFor(role).withValues(alpha: 0.96),
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          topTint,
+          base.withValues(alpha: 0.985),
+          lowerTint.withValues(alpha: 0.97),
+        ],
+        stops: const [0.0, 0.58, 1.0],
+      ),
       borderRadius: BorderRadius.circular(radius),
-      border: Border.all(color: borderColor, width: selected ? 1.1 : 1),
-      boxShadow: glow && accent != null ? ArcUiTokens.glow(accent) : null,
+      border: Border.all(color: borderColor, width: selected ? 1.15 : 1),
+      boxShadow:
+          role == ArcSurfaceRole.raised ||
+              role == ArcSurfaceRole.overlay ||
+              glow ||
+              selected
+          ? [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.22),
+                blurRadius: 16,
+                offset: const Offset(0, 8),
+              ),
+              if (glow || selected)
+                BoxShadow(
+                  color: surfaceAccent.withValues(
+                    alpha: selected ? 0.085 : 0.050,
+                  ),
+                  blurRadius: selected ? 22 : 16,
+                  spreadRadius: 0.3,
+                ),
+            ]
+          : null,
     );
   }
 
@@ -308,7 +350,7 @@ class ArcUiTokens {
       prefixIcon: prefixIcon == null
           ? null
           : Icon(prefixIcon, color: primaryAccent.withValues(alpha: 0.82)),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       border: border,
       enabledBorder: border,
       focusedBorder: border.copyWith(

@@ -22,7 +22,7 @@ class ArcBlueprintGridBackground extends StatelessWidget {
         const ColoredBox(color: ArcUiTokens.background),
         const UagCinematicBackground(
           backgroundAsset: UagVisualAssets.arcBackground,
-          backgroundOpacity: 0.20,
+          backgroundOpacity: 0.24,
           // Static UAG watermarking is deliberately disabled. Cinematic art is
           // allowed to breathe and the brand is carried by the app chrome.
           watermarkOpacity: 0.0,
@@ -56,6 +56,22 @@ class ArcBlueprintGridBackground extends StatelessWidget {
                   Colors.transparent,
                 ],
                 stops: const [0.0, 0.42, 1.0],
+              ),
+            ),
+          ),
+        ),
+        IgnorePointer(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                center: const Alignment(0.86, 0.62),
+                radius: 0.92,
+                colors: [
+                  ArcUiTokens.secondaryAccent.withValues(alpha: 0.045),
+                  ArcUiTokens.tertiaryAccent.withValues(alpha: 0.014),
+                  Colors.transparent,
+                ],
+                stops: const [0.0, 0.46, 1.0],
               ),
             ),
           ),
