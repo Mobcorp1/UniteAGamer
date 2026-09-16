@@ -117,6 +117,7 @@ class ArcTacticalPanel extends StatelessWidget {
     return Stack(
       children: [
         Container(
+          width: double.infinity,
           padding:
               padding ??
               EdgeInsets.all(compact ? ArcUiTokens.gapM : ArcUiTokens.gapL),
@@ -124,7 +125,7 @@ class ArcTacticalPanel extends StatelessWidget {
             role: ArcSurfaceRole.panel,
             radius: ArcUiTokens.radiusL,
             accent: accent,
-            borderOpacity: 0.24,
+            borderOpacity: 0.18,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -204,13 +205,13 @@ class ArcTacticalPanel extends StatelessWidget {
           top: 0,
           right: 18,
           child: Container(
-            width: compact ? 42 : 58,
+            width: compact ? 34 : 48,
             height: 2,
             decoration: BoxDecoration(
               color: ArcUiTokens.secondaryAccent.withValues(alpha: 0.92),
               boxShadow: ArcUiTokens.glow(
                 ArcUiTokens.secondaryAccent,
-                strength: 0.8,
+                strength: 0.45,
               ),
             ),
           ),

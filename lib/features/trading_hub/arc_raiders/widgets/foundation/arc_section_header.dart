@@ -31,35 +31,38 @@ class ArcSectionHeader extends StatelessWidget {
         ],
       ],
     );
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Use the panel's width, including when it is inside a desktop grid.
-        final stacked =
-            constraints.maxWidth < 480 ||
-            MediaQuery.textScalerOf(context).scale(16) > 24;
-        if (stacked) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return SizedBox(
+      width: double.infinity,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Use the panel's width, including when it is inside a desktop grid.
+          final stacked =
+              constraints.maxWidth < 480 ||
+              MediaQuery.textScalerOf(context).scale(16) > 24;
+          if (stacked) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                heading,
+                if (trailing != null) ...[
+                  const SizedBox(height: ArcUiTokens.gapS),
+                  trailing!,
+                ],
+              ],
+            );
+          }
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              heading,
+              Expanded(child: heading),
               if (trailing != null) ...[
-                const SizedBox(height: ArcUiTokens.gapS),
+                const SizedBox(width: ArcUiTokens.gapM),
                 trailing!,
               ],
             ],
           );
-        }
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Expanded(child: heading),
-            if (trailing != null) ...[
-              const SizedBox(width: ArcUiTokens.gapM),
-              trailing!,
-            ],
-          ],
-        );
-      },
+        },
+      ),
     );
   }
 }

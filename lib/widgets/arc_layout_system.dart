@@ -98,9 +98,12 @@ class ArcPageViewport extends StatelessWidget {
         constraints: BoxConstraints(
           maxWidth: ArcLayoutTokens.contentMaxWidth(context, width: width),
         ),
-        child: Padding(
-          padding: padding ?? ArcLayoutTokens.pagePadding(context),
-          child: child,
+        child: SizedBox(
+          width: double.infinity,
+          child: Padding(
+            padding: padding ?? ArcLayoutTokens.pagePadding(context),
+            child: child,
+          ),
         ),
       ),
     );
@@ -220,40 +223,59 @@ class ArcSection extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (title != null || trailing != null)
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (title != null)
-                          Text(
-                            title!,
-                            style: ArcUiTokens.sectionTitle(
-                              fontSize: 18,
-                              color: accent,
-                            ),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final stacked = constraints.maxWidth < 520;
+                  final heading = Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (title != null)
+                        Text(
+                          title!,
+                          style: ArcUiTokens.sectionTitle(
+                            fontSize: 18,
+                            color: accent,
                           ),
-                        if (subtitle != null) ...[
-                          const SizedBox(height: 3),
-                          Text(
-                            subtitle!,
-                            style: ArcUiTokens.body(
-                              fontSize: 13,
-                              color: ArcUiTokens.textSecondary,
-                            ),
+                        ),
+                      if (subtitle != null) ...[
+                        const SizedBox(height: 3),
+                        Text(
+                          subtitle!,
+                          style: ArcUiTokens.body(
+                            fontSize: 13,
+                            color: ArcUiTokens.textSecondary,
                           ),
-                        ],
+                        ),
                       ],
-                    ),
-                  ),
-                  if (trailing != null) ...[
-                    const SizedBox(width: 10),
-                    trailing!,
-                  ],
-                ],
+                    ],
+                  );
+
+                  if (stacked && trailing != null) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        heading,
+                        const SizedBox(height: ArcUiTokens.gapS),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: trailing!,
+                        ),
+                      ],
+                    );
+                  }
+
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: heading),
+                      if (trailing != null) ...[
+                        const SizedBox(width: ArcUiTokens.gapM),
+                        trailing!,
+                      ],
+                    ],
+                  );
+                },
               ),
             if (title != null || subtitle != null || trailing != null)
               const SizedBox(height: AppTheme.spaceM),

@@ -99,7 +99,7 @@ class ArcRaidersResponsiveContent extends StatelessWidget {
       child: Center(
         child: ConstrainedBox(
           constraints: BoxConstraints(maxWidth: maxWidth),
-          child: child,
+          child: SizedBox(width: double.infinity, child: child),
         ),
       ),
     );

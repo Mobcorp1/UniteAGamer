@@ -45,7 +45,10 @@ class ArcResponsivePageShell extends StatelessWidget {
               maxWidth ??
               ArcLayoutTokens.contentMaxWidth(context, width: width),
         ),
-        child: Padding(padding: resolvedPadding, child: child),
+        child: SizedBox(
+          width: double.infinity,
+          child: Padding(padding: resolvedPadding, child: child),
+        ),
       ),
     );
 
@@ -117,9 +120,12 @@ class ArcResponsiveSliverShell extends StatelessWidget {
                             width: width,
                           ),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: children,
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: children,
+                      ),
                     ),
                   ),
                 ),

@@ -467,15 +467,78 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final compact = constraints.maxWidth < 620;
-          final ringHeight = compact ? 150.0 : 172.0;
+          final ringHeight = compact ? 190.0 : 172.0;
 
           Widget sideCard(_CommandTileData tile) {
             return Opacity(
-              opacity: 0.54,
+              opacity: 0.46,
               child: Transform.scale(
-                scale: compact ? 0.78 : 0.82,
+                scale: 0.82,
                 child: _carouselCard(tile, active: false),
               ),
+            );
+          }
+
+          Widget desktopRing() {
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(flex: 3, child: sideCard(tiles[previousIndex])),
+                const SizedBox(width: 4),
+                _featureArrow(
+                  icon: Icons.chevron_left_rounded,
+                  tooltip: 'Previous feature',
+                  onPressed: () => rotate(-1),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  flex: 7,
+                  child: Transform.scale(
+                    scale: 1.04,
+                    child: _carouselCard(tiles[activeIndex], active: true),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                _featureArrow(
+                  icon: Icons.chevron_right_rounded,
+                  tooltip: 'Next feature',
+                  onPressed: () => rotate(1),
+                ),
+                const SizedBox(width: 4),
+                Expanded(flex: 3, child: sideCard(tiles[nextIndex])),
+              ],
+            );
+          }
+
+          Widget compactRing() {
+            return Stack(
+              alignment: Alignment.center,
+              clipBehavior: Clip.none,
+              children: [
+                Positioned.fill(
+                  left: 18,
+                  right: 18,
+                  child: _carouselCard(tiles[activeIndex], active: true),
+                ),
+                Positioned(
+                  left: 0,
+                  child: _featureArrow(
+                    icon: Icons.chevron_left_rounded,
+                    tooltip: 'Previous feature',
+                    compact: true,
+                    onPressed: () => rotate(-1),
+                  ),
+                ),
+                Positioned(
+                  right: 0,
+                  child: _featureArrow(
+                    icon: Icons.chevron_right_rounded,
+                    tooltip: 'Next feature',
+                    compact: true,
+                    onPressed: () => rotate(1),
+                  ),
+                ),
+              ],
             );
           }
 
@@ -488,40 +551,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
                 if (velocity.abs() < 120) return;
                 rotate(velocity < 0 ? 1 : -1);
               },
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    flex: compact ? 2 : 3,
-                    child: sideCard(tiles[previousIndex]),
-                  ),
-                  const SizedBox(width: 2),
-                  _featureArrow(
-                    icon: Icons.chevron_left_rounded,
-                    tooltip: 'Previous feature',
-                    onPressed: () => rotate(-1),
-                  ),
-                  SizedBox(width: compact ? 3 : 6),
-                  Expanded(
-                    flex: compact ? 5 : 6,
-                    child: Transform.scale(
-                      scale: compact ? 1.02 : 1.08,
-                      child: _carouselCard(tiles[activeIndex], active: true),
-                    ),
-                  ),
-                  SizedBox(width: compact ? 3 : 6),
-                  _featureArrow(
-                    icon: Icons.chevron_right_rounded,
-                    tooltip: 'Next feature',
-                    onPressed: () => rotate(1),
-                  ),
-                  const SizedBox(width: 2),
-                  Expanded(
-                    flex: compact ? 2 : 3,
-                    child: sideCard(tiles[nextIndex]),
-                  ),
-                ],
-              ),
+              child: compact ? compactRing() : desktopRing(),
             ),
           );
 
@@ -579,16 +609,19 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     required IconData icon,
     required String tooltip,
     required VoidCallback onPressed,
+    bool compact = false,
   }) {
+    final size = compact ? 38.0 : 42.0;
     return IconButton(
       tooltip: tooltip,
       onPressed: onPressed,
-      icon: Icon(icon, size: 27),
+      icon: Icon(icon, size: compact ? 24 : 27),
       style: IconButton.styleFrom(
         foregroundColor: AppTheme.neonCyan,
-        backgroundColor: Colors.black.withValues(alpha: 0.52),
-        side: BorderSide(color: AppTheme.neonCyan.withValues(alpha: 0.52)),
-        minimumSize: const Size(42, 42),
+        backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.94),
+        side: BorderSide(color: AppTheme.neonCyan.withValues(alpha: 0.56)),
+        minimumSize: Size(size, size),
+        maximumSize: Size(size, size),
         padding: EdgeInsets.zero,
       ),
     );
@@ -600,8 +633,13 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
       action: tile.action,
       active: active,
       child: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: _imageDecoration(tile.image, accent, radius: 10),
+        padding: const EdgeInsets.fromLTRB(12, 11, 12, 10),
+        decoration: _imageDecoration(
+          tile.image,
+          accent,
+          radius: 12,
+          darken: active ? 0.58 : 0.64,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -614,7 +652,10 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
                     _cleanText(tile.title).toUpperCase(),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTheme.tradingHeading(fontSize: 12, color: accent),
+                    style: AppTheme.tradingHeading(
+                      fontSize: active ? 14 : 12,
+                      color: accent,
+                    ),
                   ),
                 ),
                 Flexible(
@@ -634,16 +675,16 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: AppTheme.bodyTextStyle(
-                fontSize: 9,
-                color: Colors.white70,
+                fontSize: active ? 11 : 9,
+                color: Colors.white.withValues(alpha: active ? 0.90 : 0.72),
                 isBold: true,
-              ).copyWith(height: 1.22),
+              ).copyWith(height: 1.24),
             ),
             const SizedBox(height: 4),
             Text(
               'TAP',
               style: AppTheme.bodyTextStyle(
-                fontSize: 8,
+                fontSize: active ? 9 : 8,
                 color: accent,
                 isBold: true,
               ),
@@ -1509,13 +1550,14 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     String image,
     Color accent, {
     double radius = 20,
+    double darken = 0.47,
   }) {
     return _cardDecoration(accent, radius: radius).copyWith(
       image: DecorationImage(
         image: AssetImage(image),
         fit: BoxFit.cover,
         colorFilter: ColorFilter.mode(
-          Colors.black.withValues(alpha: 0.47),
+          Colors.black.withValues(alpha: darken),
           BlendMode.darken,
         ),
       ),
