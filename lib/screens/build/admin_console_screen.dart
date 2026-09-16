@@ -15,6 +15,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_admin_map_editor_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_map_filter_icon_review_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_beta_first_run.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_admin_workspace_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_feature_visibility_diagnostics_panel.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
@@ -215,6 +216,11 @@ class _AdminConsoleBody extends StatelessWidget {
                 scrollbarThickness: 10,
                 padding: ArcLayoutTokens.pagePadding(context),
                 children: [
+                  const ArcAdminWorkspaceBar(
+                    current: ArcAdminWorkspace.console,
+                    padding: EdgeInsets.zero,
+                  ),
+                  const SizedBox(height: AppTheme.spaceL),
                   _AdminExpandableSection(
                     key: const Key('admin-section-feature-access'),
                     header: _sectionHeader(

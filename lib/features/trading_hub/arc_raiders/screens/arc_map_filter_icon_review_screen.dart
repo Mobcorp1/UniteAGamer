@@ -5,6 +5,7 @@ import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_filter_icon_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_filter_taxonomy.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_map_filter_icon.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_admin_workspace_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/arc_layout_system.dart';
@@ -30,7 +31,17 @@ class ArcMapFilterIconReviewScreen extends StatelessWidget {
           children: [
             const ArcPageViewport(
               width: ArcPageWidth.wide,
-              child: ArcMapFilterIconReviewAtlas(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ArcAdminWorkspaceBar(
+                    current: ArcAdminWorkspace.mapIcons,
+                    padding: EdgeInsets.zero,
+                  ),
+                  SizedBox(height: AppTheme.spaceL),
+                  ArcMapFilterIconReviewAtlas(),
+                ],
+              ),
             ),
           ],
         ),
