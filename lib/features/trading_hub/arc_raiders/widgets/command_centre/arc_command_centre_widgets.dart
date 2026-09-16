@@ -1,22 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_command_centre_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
-import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 Color arcCommandStatusAccent(ArcCommandStatus status) {
   switch (status) {
     case ArcCommandStatus.critical:
-      return Colors.redAccent;
+      return ArcUiTokens.danger;
     case ArcCommandStatus.warning:
-      return Colors.amberAccent;
+      return ArcUiTokens.warning;
     case ArcCommandStatus.active:
-      return AppTheme.neonCyan;
+      return ArcUiTokens.primaryAccent;
     case ArcCommandStatus.ready:
-      return AppTheme.neonPink;
+      return ArcUiTokens.secondaryAccent;
     case ArcCommandStatus.neutral:
-      return Colors.white70;
+      return ArcUiTokens.textSecondary;
     case ArcCommandStatus.success:
-      return Colors.lightGreenAccent;
+      return ArcUiTokens.success;
   }
 }
 
@@ -24,7 +23,7 @@ class ArcCommandCentreCard extends StatelessWidget {
   const ArcCommandCentreCard({
     super.key,
     required this.child,
-    this.accent = AppTheme.neonCyan,
+    this.accent = ArcUiTokens.primaryAccent,
     this.padding = const EdgeInsets.all(12),
   });
 
@@ -37,11 +36,11 @@ class ArcCommandCentreCard extends StatelessWidget {
     return Container(
       padding: padding,
       decoration: ArcUiTokens.surfaceDecoration(
-        role: ArcSurfaceRole.raised,
+        role: ArcSurfaceRole.panel,
         accent: accent,
         radius: ArcUiTokens.radiusXL,
-        borderOpacity: 0.26,
-        glow: true,
+        borderOpacity: 0.18,
+        glow: false,
       ),
       child: child,
     );
@@ -75,7 +74,7 @@ class ArcCommandSectionHeader extends StatelessWidget {
                 title.toUpperCase(),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: AppTheme.tradingHeading(fontSize: 18, color: accent),
+                style: ArcUiTokens.sectionTitle(fontSize: 17, color: accent),
               ),
               if (subtitle != null) ...[
                 const SizedBox(height: 3),
@@ -114,7 +113,7 @@ class ArcCommandStatusPill extends StatelessWidget {
       child: Text(
         label.toUpperCase(),
         overflow: TextOverflow.ellipsis,
-        style: AppTheme.bodyTextStyle(fontSize: 9, color: accent, isBold: true),
+        style: ArcUiTokens.label(color: accent),
       ),
     );
   }
@@ -136,23 +135,11 @@ class ArcCommandActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton.icon(
+    return TextButton.icon(
       onPressed: onPressed,
       icon: Icon(Icons.arrow_forward_rounded, size: compact ? 14 : 16),
       label: Text(action.label),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: accent,
-        side: BorderSide(color: accent.withValues(alpha: 0.46)),
-        padding: EdgeInsets.symmetric(
-          horizontal: compact ? 9 : 12,
-          vertical: compact ? 7 : 10,
-        ),
-        textStyle: AppTheme.bodyTextStyle(
-          fontSize: compact ? 10 : 11,
-          color: accent,
-          isBold: true,
-        ),
-      ),
+      style: ArcUiTokens.textButtonStyle(accent: accent),
     );
   }
 }
