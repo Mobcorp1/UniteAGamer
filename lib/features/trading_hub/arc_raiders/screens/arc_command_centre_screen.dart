@@ -160,7 +160,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
       backgroundColor: Colors.transparent,
       appBar: UagAppBar(
         title: 'Command Centre',
-        subtitle: 'Live priorities, progression and operations',
+        subtitle: 'Intelligence feed + actions',
         showLogout: true,
         actions: [
           IconButton(
