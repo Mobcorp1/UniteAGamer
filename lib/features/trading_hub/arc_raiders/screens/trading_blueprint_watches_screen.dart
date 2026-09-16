@@ -6,6 +6,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_listing_detail_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_blueprint_workspace_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_card.dart';
@@ -490,10 +491,15 @@ class _TradingBlueprintWatchesScreenState
   }
 
   Widget _emptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
-        child: ArcRaidersStatePanel(
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
+      children: [
+        const ArcBlueprintWorkspaceBar(
+          current: ArcBlueprintWorkspace.watches,
+          padding: EdgeInsets.zero,
+        ),
+        const SizedBox(height: AppTheme.spaceM),
+        ArcRaidersStatePanel(
           title: 'No active watches',
           message:
               'Add a blueprint watch to surface matching traders and listings.',
@@ -509,7 +515,7 @@ class _TradingBlueprintWatchesScreenState
             label: const Text('Add Watch'),
           ),
         ),
-      ),
+      ],
     );
   }
 
@@ -544,6 +550,11 @@ class _TradingBlueprintWatchesScreenState
                 return ListView(
                   padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
                   children: [
+                    const ArcBlueprintWorkspaceBar(
+                      current: ArcBlueprintWorkspace.watches,
+                      padding: EdgeInsets.zero,
+                    ),
+                    const SizedBox(height: AppTheme.spaceM),
                     Row(
                       children: [
                         Expanded(

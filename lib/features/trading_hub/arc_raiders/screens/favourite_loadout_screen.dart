@@ -21,6 +21,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raid_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_smart_build_trade_draft_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_blueprint_workspace_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
@@ -1406,6 +1407,11 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                           maxWidth: 520,
                           bottomPadding: 110,
                           children: [
+                            const ArcBlueprintWorkspaceBar(
+                              current: ArcBlueprintWorkspace.loadout,
+                              padding: EdgeInsets.zero,
+                            ),
+                            const SizedBox(height: 10),
                             _buildPortraitRotationPrompt(blueprintStates),
                           ],
                         );
@@ -1415,6 +1421,11 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                         maxWidth: 1280,
                         bottomPadding: 100,
                         children: [
+                          const ArcBlueprintWorkspaceBar(
+                            current: ArcBlueprintWorkspace.loadout,
+                            padding: EdgeInsets.zero,
+                          ),
+                          const SizedBox(height: 10),
                           if ((hydration?.isLoading ?? false) &&
                               blueprintStates.isEmpty) ...[
                             _buildBlueprintStateNotice(),

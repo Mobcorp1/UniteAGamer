@@ -21,6 +21,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_smart_build_hunt_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_saved_loadout_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_blueprint_workspace_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_blueprint_drop_report_sheet.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_beta_first_run.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/blueprint_tile.dart';
@@ -3035,6 +3036,11 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                       AppTheme.pagePadding.bottom + 82,
                     ),
                     children: [
+                      const ArcBlueprintWorkspaceBar(
+                        current: ArcBlueprintWorkspace.tracker,
+                        padding: EdgeInsets.zero,
+                      ),
+                      const SizedBox(height: 10),
                       if (smartBuildHunt != null)
                         _buildSmartBuildHuntPanel(smartBuildHunt),
                       _buildOverviewGrid(context, filtered, states, loadout),
