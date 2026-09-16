@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -114,7 +115,7 @@ class ArcPageHeader extends StatelessWidget {
     this.subtitle,
     this.leading,
     this.trailing = const [],
-    this.accent = AppTheme.neonCyan,
+    this.accent = ArcUiTokens.primaryAccent,
   });
 
   final String title;
@@ -134,10 +135,9 @@ class ArcPageHeader extends StatelessWidget {
           title,
           maxLines: compact ? 2 : 1,
           overflow: TextOverflow.ellipsis,
-          style: AppTheme.titleTextStyle(
+          style: ArcUiTokens.pageTitle(
             fontSize: compact ? 22 : 28,
             color: accent,
-            isBold: true,
           ),
         ),
         if (subtitle != null && subtitle!.trim().isNotEmpty) ...[
@@ -146,9 +146,9 @@ class ArcPageHeader extends StatelessWidget {
             subtitle!,
             maxLines: compact ? 3 : 2,
             overflow: TextOverflow.ellipsis,
-            style: AppTheme.bodyTextStyle(
+            style: ArcUiTokens.body(
               fontSize: compact ? 13 : 14,
-              color: Colors.white70,
+              color: ArcUiTokens.textSecondary,
             ).copyWith(height: 1.25),
           ),
         ],
@@ -193,8 +193,8 @@ class ArcSection extends StatelessWidget {
     this.title,
     this.subtitle,
     this.trailing,
-    this.padding = const EdgeInsets.all(AppTheme.spaceL),
-    this.accent = AppTheme.neonCyan,
+    this.padding = const EdgeInsets.all(ArcUiTokens.gapL),
+    this.accent = ArcUiTokens.primaryAccent,
   });
 
   final Widget child;
@@ -207,10 +207,11 @@ class ArcSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.78),
-        borderRadius: BorderRadius.circular(AppTheme.cardRadius),
-        border: Border.all(color: accent.withValues(alpha: 0.28)),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.panel,
+        accent: accent,
+        radius: ArcUiTokens.radiusXL,
+        borderOpacity: 0.16,
       ),
       child: Padding(
         padding: padding,
@@ -230,19 +231,18 @@ class ArcSection extends StatelessWidget {
                         if (title != null)
                           Text(
                             title!,
-                            style: AppTheme.titleTextStyle(
+                            style: ArcUiTokens.sectionTitle(
                               fontSize: 18,
                               color: accent,
-                              isBold: true,
                             ),
                           ),
                         if (subtitle != null) ...[
                           const SizedBox(height: 3),
                           Text(
                             subtitle!,
-                            style: AppTheme.bodyTextStyle(
+                            style: ArcUiTokens.body(
                               fontSize: 13,
-                              color: Colors.white70,
+                              color: ArcUiTokens.textSecondary,
                             ),
                           ),
                         ],
@@ -390,7 +390,7 @@ class ArcActionSurface extends StatelessWidget {
     required this.child,
     this.active = false,
     this.onTap,
-    this.accent = AppTheme.neonCyan,
+    this.accent = ArcUiTokens.primaryAccent,
   });
 
   final Widget child;
@@ -404,17 +404,16 @@ class ArcActionSurface extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(AppTheme.cardRadius),
+        borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
         child: AnimatedContainer(
           duration: AppTheme.fastAnimation,
-          padding: const EdgeInsets.all(AppTheme.spaceL),
-          decoration: BoxDecoration(
-            color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.80),
-            borderRadius: BorderRadius.circular(AppTheme.cardRadius),
-            border: Border.all(
-              color: accent.withValues(alpha: active ? 0.82 : 0.30),
-              width: active ? 1.6 : 1,
-            ),
+          padding: const EdgeInsets.all(ArcUiTokens.gapL),
+          decoration: ArcUiTokens.surfaceDecoration(
+            role: ArcSurfaceRole.interactive,
+            accent: accent,
+            radius: ArcUiTokens.radiusXL,
+            borderOpacity: 0.18,
+            selected: active,
           ),
           child: child,
         ),
@@ -425,7 +424,7 @@ class ArcActionSurface extends StatelessWidget {
         MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     return ElectricChargeBorder(
       active: active && !disableAnimations,
-      radius: AppTheme.cardRadius,
+      radius: ArcUiTokens.radiusXL,
       child: surface,
     );
   }
@@ -438,7 +437,7 @@ class ArcStatePanel extends StatelessWidget {
     required this.title,
     required this.message,
     this.action,
-    this.accent = AppTheme.neonCyan,
+    this.accent = ArcUiTokens.primaryAccent,
   });
 
   final IconData icon;
@@ -462,19 +461,15 @@ class ArcStatePanel extends StatelessWidget {
               Text(
                 title,
                 textAlign: TextAlign.center,
-                style: AppTheme.titleTextStyle(
-                  fontSize: 20,
-                  color: accent,
-                  isBold: true,
-                ),
+                style: ArcUiTokens.sectionTitle(fontSize: 20, color: accent),
               ),
               const SizedBox(height: 8),
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: AppTheme.bodyTextStyle(
+                style: ArcUiTokens.body(
                   fontSize: 14,
-                  color: Colors.white70,
+                  color: ArcUiTokens.textSecondary,
                 ),
               ),
               if (action != null) ...[const SizedBox(height: 16), action!],

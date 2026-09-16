@@ -61,33 +61,19 @@ class ArcRaidersScreenShell extends StatelessWidget {
           showForTraderPro: showAdsForTraderPro,
         );
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            ArcUiTokens.primaryAccent.withValues(alpha: 0.045),
-            Colors.transparent,
-            ArcUiTokens.secondaryAccent.withValues(alpha: 0.040),
-          ],
-          stops: const [0.0, 0.52, 1.0],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(child: content),
-          if (shouldReserveAdSlot)
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 76),
-              child: ArcAdBannerCard(
-                tier: adTier,
-                showForTraderPro: showAdsForTraderPro,
-              ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(child: content),
+        if (shouldReserveAdSlot)
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 76),
+            child: ArcAdBannerCard(
+              tier: adTier,
+              showForTraderPro: showAdsForTraderPro,
             ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 }
@@ -96,7 +82,7 @@ class ArcRaidersResponsiveContent extends StatelessWidget {
   const ArcRaidersResponsiveContent({
     super.key,
     required this.child,
-    this.maxWidth = 1160,
+    this.maxWidth = ArcLayoutTokens.standardContentWidth,
     this.padding,
     this.alignTop = true,
   });
@@ -128,7 +114,7 @@ class ArcRaidersPageScaffold extends StatelessWidget {
   const ArcRaidersPageScaffold({
     super.key,
     required this.child,
-    this.maxWidth = 1320,
+    this.maxWidth = ArcLayoutTokens.standardContentWidth,
     this.useSafeArea = true,
     this.showAdBanner = true,
     this.adTier = ArcAdAccessTier.free,
@@ -158,7 +144,7 @@ class ArcRaidersPageList extends StatelessWidget {
   const ArcRaidersPageList({
     super.key,
     required this.children,
-    this.maxWidth = 1160,
+    this.maxWidth = ArcLayoutTokens.standardContentWidth,
     this.padding,
     this.bottomPadding = 38,
     this.physics,
@@ -257,7 +243,7 @@ class ArcRaidersPageHeader extends StatelessWidget {
                   title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTheme.tradingHeading(
+                  style: ArcUiTokens.pageTitle(
                     fontSize: compact ? 15 : 18,
                     color: accent,
                   ),
@@ -268,10 +254,10 @@ class ArcRaidersPageHeader extends StatelessWidget {
                     subtitle!,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTheme.bodyTextStyle(
+                    style: ArcUiTokens.body(
                       fontSize: 11,
                       color: ArcUiTokens.textTertiary,
-                      isBold: true,
+                      weight: FontWeight.w600,
                     ).copyWith(height: 1.15),
                   ),
                 ],
@@ -308,7 +294,7 @@ class ArcRaidersHeroBanner extends StatelessWidget {
         radius: ArcUiTokens.radiusL,
         accent: accent,
         borderOpacity: 0.34,
-        glow: true,
+        glow: false,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -319,12 +305,6 @@ class ArcRaidersHeroBanner extends StatelessWidget {
             decoration: BoxDecoration(
               color: accent,
               borderRadius: BorderRadius.circular(999),
-              boxShadow: [
-                BoxShadow(
-                  color: accent.withValues(alpha: 0.44),
-                  blurRadius: 10,
-                ),
-              ],
             ),
           ),
           const SizedBox(height: ArcUiTokens.gapM),
@@ -356,7 +336,7 @@ class ArcRaidersSectionCard extends StatelessWidget {
     required this.child,
     this.accent = ArcUiTokens.primaryAccent,
     this.padding = const EdgeInsets.all(AppTheme.spaceS),
-    this.radius = 14,
+    this.radius = ArcUiTokens.radiusXL,
     this.selected = false,
     this.onTap,
     this.margin,

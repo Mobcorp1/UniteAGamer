@@ -2,30 +2,30 @@ import 'package:flutter/material.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 
 class AppTheme {
-  static const Color neonPink = Color(0xFFE052B7);
-  static const Color neonCyan = Color(0xFF22DDF2);
-  static const Color darkBackground = Color(0xFF05070D);
-  static const Color cardBackground = Color(0xFF0A1118);
-  static const Color cardBackgroundAlt = Color(0xFF0D151E);
-  static const Color cardBackgroundDeep = Color(0xFF060A10);
-  static const Color dangerRed = Color.fromARGB(255, 255, 80, 80);
-  static const Color warningAmber = Color.fromARGB(255, 255, 190, 70);
+  static const Color neonPink = Color(0xFFFF3B8D);
+  static const Color neonCyan = Color(0xFF19E6F2);
+  static const Color darkBackground = Color(0xFF03060A);
+  static const Color cardBackground = Color(0xFF09131A);
+  static const Color cardBackgroundAlt = Color(0xFF0B1820);
+  static const Color cardBackgroundDeep = Color(0xFF071016);
+  static const Color dangerRed = Color(0xFFFF6B6B);
+  static const Color warningAmber = Color(0xFFFFC857);
 
   // ARC display text shares the bundled modern heading family.
   static const String heroFontFamily = headingFontFamily;
   static const String headingFontFamily = 'SpaceGrotesk';
   static const String bodyFontFamily = 'Inter';
 
-  static const double buttonRadius = 12.0;
-  static const double cardRadius = 20.0;
-  static const double inputRadius = 8.0;
-  static const double buttonBorderWidth = 1.2;
-  static const double cardBorderWidth = 1.1;
+  static const double buttonRadius = 10.0;
+  static const double cardRadius = 12.0;
+  static const double inputRadius = 10.0;
+  static const double buttonBorderWidth = 1.0;
+  static const double cardBorderWidth = 1.0;
   static const double pillBorderWidth = 1.0;
 
-  static const double glowSoft = 4.0;
-  static const double glowMedium = 6.0;
-  static const double glowStrong = 12.0;
+  static const double glowSoft = 2.0;
+  static const double glowMedium = 4.0;
+  static const double glowStrong = 8.0;
 
   static const double bodyLetterSpacing = 0;
   static const double titleLetterSpacing = 0;

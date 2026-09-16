@@ -5,7 +5,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/fou
 
 void main() {
   testWidgets(
-    'ARC companion dock shrink-wraps inside scaffold bottom navigation',
+    'ARC companion dock exposes the five canonical product families',
     (tester) async {
       _setView(tester, const Size(390, 844));
       addTearDown(tester.view.resetPhysicalSize);
@@ -20,8 +20,10 @@ void main() {
       expect(dockBox.size.height, lessThan(96));
       expect(find.text('RUN'), findsOneWidget);
       expect(find.text('DISCOVER'), findsOneWidget);
-      expect(find.text('MESSAGES'), findsOneWidget);
+      expect(find.text('TRACK'), findsOneWidget);
+      expect(find.text('TRADE'), findsOneWidget);
       expect(find.text('PROFILE'), findsOneWidget);
+      expect(find.text('MESSAGES'), findsNothing);
     },
   );
 
@@ -40,12 +42,12 @@ void main() {
 
     expect(dockBox.size.height, lessThan(72));
     expect(
-      tester.widget<Text>(find.text('RUN')).style?.color,
+      tester.widget<Text>(find.text('TRACK')).style?.color,
       ArcUiTokens.primaryAccent,
     );
   });
 
-  testWidgets('social and intel surfaces map to the intended dock lanes', (
+  testWidgets('social and intel surfaces map to deliberate product families', (
     tester,
   ) async {
     _setView(tester, const Size(390, 844));
@@ -53,12 +55,13 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     await _pumpDock(tester, 'Match Raider');
-
-    _expectActiveLane(tester, 'MESSAGES');
+    _expectActiveLane(tester, 'PROFILE');
 
     await _pumpDock(tester, 'Community Intel');
+    _expectActiveLane(tester, 'DISCOVER');
 
-    _expectActiveLane(tester, 'RUN');
+    await _pumpDock(tester, 'My Intel');
+    _expectActiveLane(tester, 'TRACK');
   });
 
   testWidgets('dock stays inside responsive height budgets', (tester) async {
@@ -89,7 +92,7 @@ void main() {
     }
   });
 
-  testWidgets('major beta routes map to the four dock families', (
+  testWidgets('major beta routes map to the five canonical dock families', (
     tester,
   ) async {
     _setView(tester, const Size(390, 844));
@@ -99,19 +102,23 @@ void main() {
     const cases = <String, String>{
       'Command Centre': 'RUN',
       'Raid Planner': 'RUN',
-      'Community Intel': 'RUN',
-      'Progress Trackers': 'RUN',
-      'Favourite Loadout': 'RUN',
-      'Trading': 'RUN',
-      'Smart Trade Assist': 'RUN',
+      'Raid Intelligence': 'RUN',
       'Operations': 'RUN',
       'Discover UAG': 'DISCOVER',
       'Arc Systems': 'DISCOVER',
-      'Match Raider': 'MESSAGES',
-      'Notifications': 'MESSAGES',
+      'Community Intel': 'DISCOVER',
+      'Report a Rat': 'DISCOVER',
+      'Progress Trackers': 'TRACK',
+      'Blueprint Tracker': 'TRACK',
+      'Favourite Loadout': 'TRACK',
+      'My Intel': 'TRACK',
+      'Trading': 'TRADE',
+      'Smart Trade Assist': 'TRADE',
+      'Nomadic Trader': 'TRADE',
       'Profile & Reputation': 'PROFILE',
       'Raider Profile': 'PROFILE',
-      'Locker': 'PROFILE',
+      'Match Raider': 'PROFILE',
+      'Notifications': 'PROFILE',
       'My Hub': 'PROFILE',
     };
 

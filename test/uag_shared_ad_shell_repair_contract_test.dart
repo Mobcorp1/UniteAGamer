@@ -24,7 +24,7 @@ void main() {
     final shell = read(
       'lib/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart',
     );
-    expect(shell, contains('return DecoratedBox('));
+    expect(shell, contains('return Column('));
     expect(shell, contains('Expanded(child: content)'));
     expect(shell, contains('BoxConstraints(maxHeight: 76)'));
     expect(shell, contains('ArcAdBannerCard('));

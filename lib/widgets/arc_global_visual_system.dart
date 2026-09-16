@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 import 'package:uag_arc_raiders_hub/widgets/uag_cinematic_background.dart';
@@ -18,10 +19,10 @@ class ArcBlueprintGridBackground extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        const ColoredBox(color: Color(0xFF020508)),
+        const ColoredBox(color: ArcUiTokens.background),
         const UagCinematicBackground(
           backgroundAsset: UagVisualAssets.arcBackground,
-          backgroundOpacity: 0.26,
+          backgroundOpacity: 0.20,
           // Static UAG watermarking is deliberately disabled. Cinematic art is
           // allowed to breathe and the brand is carried by the app chrome.
           watermarkOpacity: 0.0,
@@ -32,9 +33,9 @@ class ArcBlueprintGridBackground extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  AppTheme.neonCyan.withValues(alpha: 0.105),
+                  ArcUiTokens.primaryAccent.withValues(alpha: 0.055),
                   Colors.transparent,
-                  AppTheme.neonPink.withValues(alpha: 0.082),
+                  ArcUiTokens.secondaryAccent.withValues(alpha: 0.040),
                 ],
                 stops: const [0.0, 0.48, 1.0],
                 begin: Alignment.topLeft,
@@ -50,8 +51,8 @@ class ArcBlueprintGridBackground extends StatelessWidget {
                 center: const Alignment(-0.72, -0.86),
                 radius: 1.08,
                 colors: [
-                  AppTheme.neonCyan.withValues(alpha: 0.13),
-                  AppTheme.neonCyan.withValues(alpha: 0.025),
+                  ArcUiTokens.primaryAccent.withValues(alpha: 0.065),
+                  ArcUiTokens.primaryAccent.withValues(alpha: 0.015),
                   Colors.transparent,
                 ],
                 stops: const [0.0, 0.42, 1.0],
@@ -67,8 +68,8 @@ class ArcBlueprintGridBackground extends StatelessWidget {
                 end: Alignment.bottomCenter,
                 colors: [
                   Colors.transparent,
-                  const Color(0xFF020508).withValues(alpha: 0.28),
-                  const Color(0xFF020508).withValues(alpha: 0.74),
+                  ArcUiTokens.background.withValues(alpha: 0.34),
+                  ArcUiTokens.background.withValues(alpha: 0.82),
                 ],
                 stops: const [0.0, 0.62, 1.0],
               ),
@@ -104,8 +105,8 @@ class ArcVisualSurface extends StatelessWidget {
     super.key,
     required this.child,
     this.padding = const EdgeInsets.all(AppTheme.spaceL),
-    this.radius = AppTheme.cardRadius,
-    this.accent = AppTheme.neonCyan,
+    this.radius = ArcUiTokens.radiusXL,
+    this.accent = ArcUiTokens.primaryAccent,
     this.selected = false,
   });
 
@@ -120,20 +121,13 @@ class ArcVisualSurface extends StatelessWidget {
     return AnimatedContainer(
       duration: AppTheme.fastAnimation,
       padding: padding,
-      decoration: BoxDecoration(
-        color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.86),
-        borderRadius: BorderRadius.circular(radius),
-        border: Border.all(
-          color: accent.withValues(alpha: selected ? 0.92 : 0.42),
-          width: selected ? AppTheme.cardOuterBorderWidth : 1.0,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: accent.withValues(alpha: selected ? 0.24 : 0.08),
-            blurRadius: selected ? AppTheme.glowMedium : 12,
-            spreadRadius: selected ? 0.5 : 0,
-          ),
-        ],
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.panel,
+        radius: radius,
+        accent: accent,
+        borderOpacity: 0.16,
+        selected: selected,
+        glow: selected,
       ),
       child: child,
     );
@@ -146,7 +140,7 @@ class ArcElectricActionBorder extends StatelessWidget {
     super.key,
     required this.child,
     required this.active,
-    this.radius = AppTheme.cardRadius,
+    this.radius = ArcUiTokens.radiusXL,
   });
 
   final Widget child;
