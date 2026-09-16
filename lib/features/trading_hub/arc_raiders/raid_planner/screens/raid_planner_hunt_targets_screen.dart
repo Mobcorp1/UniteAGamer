@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_bottom_action_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_progression_workspace_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
@@ -555,6 +556,11 @@ class _RaidPlannerHuntTargetsScreenState
                   return ListView(
                     padding: const EdgeInsets.all(AppTheme.spaceM),
                     children: [
+                      const ArcProgressionWorkspaceBar(
+                        current: ArcProgressionWorkspace.hunts,
+                        padding: EdgeInsets.zero,
+                      ),
+                      const SizedBox(height: AppTheme.spaceM),
                       _HuntGuidanceAccordion(
                         title: 'EXPEDITION RESET FOCUS',
                         subtitle: 'What to prioritise before the reset',
@@ -565,7 +571,8 @@ class _RaidPlannerHuntTargetsScreenState
                       const SizedBox(height: AppTheme.spaceS),
                       _HuntGuidanceAccordion(
                         title: 'NOMADIC RAIDER PATH',
-                        subtitle: 'Long-term storage, efficiency and reward route',
+                        subtitle:
+                            'Long-term storage, efficiency and reward route',
                         icon: Icons.explore_rounded,
                         accent: ArcUiTokens.secondaryAccent,
                         child: const _NomadicRiderGuidancePanel(),
@@ -731,8 +738,14 @@ class _HuntGuidanceAccordion extends StatelessWidget {
           leading: Icon(icon, color: accent),
           iconColor: accent,
           collapsedIconColor: ArcUiTokens.textSecondary,
-          title: Text(title, style: ArcUiTokens.sectionTitle(fontSize: 19, color: accent)),
-          subtitle: Text(subtitle, style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary)),
+          title: Text(
+            title,
+            style: ArcUiTokens.sectionTitle(fontSize: 19, color: accent),
+          ),
+          subtitle: Text(
+            subtitle,
+            style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
+          ),
           children: [child],
         ),
       ),

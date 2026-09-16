@@ -4,6 +4,7 @@ import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_hunt_targets_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_progression_workspace_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/screens/build/app_bar.dart';
@@ -38,6 +39,11 @@ class ArcProgressTrackersScreen extends StatelessWidget {
                   'Open the focused tracker for the system you are updating.',
               icon: Icons.track_changes_rounded,
               accent: ArcUiTokens.primaryAccent,
+            ),
+            const SizedBox(height: AppTheme.spaceS),
+            const ArcProgressionWorkspaceBar(
+              current: ArcProgressionWorkspace.overview,
+              padding: EdgeInsets.zero,
             ),
             const SizedBox(height: AppTheme.spaceM),
             const ArcRaidersHeroBanner(

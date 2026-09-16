@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/ads/uag_tactical_banner_ad.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_progression_workspace_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 
@@ -114,6 +115,17 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
         return 'ARC Raiders Bench Operations';
       case ArcScrappyTrackerMode.quest:
         return 'Quest Tracker';
+    }
+  }
+
+  ArcProgressionWorkspace get _progressionWorkspace {
+    switch (_mode) {
+      case ArcScrappyTrackerMode.scrappy:
+        return ArcProgressionWorkspace.scrappy;
+      case ArcScrappyTrackerMode.bench:
+        return ArcProgressionWorkspace.bench;
+      case ArcScrappyTrackerMode.quest:
+        return ArcProgressionWorkspace.quest;
     }
   }
 
@@ -1743,6 +1755,11 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
             return ArcRaidersPageList(
               maxWidth: 1220,
               children: [
+                ArcProgressionWorkspaceBar(
+                  current: _progressionWorkspace,
+                  padding: EdgeInsets.zero,
+                ),
+                const SizedBox(height: AppTheme.spaceS),
                 if (_mode == ArcScrappyTrackerMode.scrappy) ...[
                   _buildScrappyHero(counts),
                   const SizedBox(height: 6),
