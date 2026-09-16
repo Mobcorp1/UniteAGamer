@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'package:uag_arc_raiders_hub/features/legal/models/uag_policy_catalog.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_account_journey_bar.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 
 class UagRaiderAgreementScreen extends StatefulWidget {
@@ -65,111 +67,124 @@ class _UagRaiderAgreementScreenState extends State<UagRaiderAgreementScreen> {
         foregroundColor: Colors.white,
         title: const Text('RAIDER AGREEMENT'),
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(18, 12, 18, 12),
-              decoration: BoxDecoration(
-                color: const Color(0xFF07111A),
-                border: Border(
-                  bottom: BorderSide(
-                    color: ArcUiTokens.primaryAccent.withValues(alpha: 0.42),
+      body: ArcRaidersScreenShell(
+        showAdBanner: false,
+        child: SafeArea(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(18, 12, 18, 0),
+                child: const ArcAccountJourneyBar(
+                  stage: ArcAccountJourneyStage.onboarding,
+                  compact: true,
+                ),
+              ),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(18, 12, 18, 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF07111A),
+                  border: Border(
+                    bottom: BorderSide(
+                      color: ArcUiTokens.primaryAccent.withValues(alpha: 0.42),
+                    ),
+                  ),
+                ),
+                child: Text(
+                  'Read the full agreement. The confirmation unlocks only after you reach the bottom.',
+                  style: ArcUiTokens.body(
+                    fontSize: 13,
+                    color: ArcUiTokens.textSecondary,
                   ),
                 ),
               ),
-              child: Text(
-                'Read the full agreement. The confirmation unlocks only after you reach the bottom.',
-                style: ArcUiTokens.body(
-                  fontSize: 13,
-                  color: ArcUiTokens.textSecondary,
-                ),
-              ),
-            ),
-            Expanded(
-              child: Scrollbar(
-                controller: _scrollController,
-                thumbVisibility: true,
-                child: ListView(
+              Expanded(
+                child: Scrollbar(
                   controller: _scrollController,
-                  padding: const EdgeInsets.fromLTRB(18, 20, 18, 28),
-                  children: [
-                    Text(
-                      'UAG RAIDER AGREEMENT',
-                      style: ArcUiTokens.sectionTitle(
-                        fontSize: 24,
-                        color: ArcUiTokens.primaryAccent,
+                  thumbVisibility: true,
+                  child: ListView(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.fromLTRB(18, 20, 18, 28),
+                    children: [
+                      Text(
+                        'UAG RAIDER AGREEMENT',
+                        style: ArcUiTokens.sectionTitle(
+                          fontSize: 24,
+                          color: ArcUiTokens.primaryAccent,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      'Agreement ${UagRaiderAgreementScreen.agreementVersionLabel}',
-                      style: ArcUiTokens.bodySmall(),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      UagPolicyCatalog.legalReviewNotice,
-                      style: ArcUiTokens.bodySmall(color: ArcUiTokens.warning),
-                    ),
-                    const SizedBox(height: 18),
-                    for (final document in _documents) ...[
-                      _AgreementSection(document: document),
-                      const SizedBox(height: 12),
-                    ],
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF07111A),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: _reachedEnd
-                              ? ArcUiTokens.primaryAccent.withValues(
-                                  alpha: 0.55,
+                      const SizedBox(height: 5),
+                      Text(
+                        'Agreement ${UagRaiderAgreementScreen.agreementVersionLabel}',
+                        style: ArcUiTokens.bodySmall(),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        UagPolicyCatalog.legalReviewNotice,
+                        style: ArcUiTokens.bodySmall(
+                          color: ArcUiTokens.warning,
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      for (final document in _documents) ...[
+                        _AgreementSection(document: document),
+                        const SizedBox(height: 12),
+                      ],
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF07111A),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: _reachedEnd
+                                ? ArcUiTokens.primaryAccent.withValues(
+                                    alpha: 0.55,
+                                  )
+                                : Colors.white24,
+                          ),
+                        ),
+                        child: CheckboxListTile(
+                          value: _confirmedRead,
+                          onChanged: _reachedEnd
+                              ? (value) => setState(
+                                  () => _confirmedRead = value == true,
                                 )
-                              : Colors.white24,
+                              : null,
+                          contentPadding: EdgeInsets.zero,
+                          controlAffinity: ListTileControlAffinity.leading,
+                          activeColor: ArcUiTokens.secondaryAccent,
+                          title: const Text(
+                            'I have read and agree to the UAG Raider Agreement.',
+                          ),
+                          subtitle: _reachedEnd
+                              ? const Text(
+                                  'You reached the end of the agreement.',
+                                )
+                              : const Text(
+                                  'Scroll to the bottom before confirming.',
+                                ),
                         ),
                       ),
-                      child: CheckboxListTile(
-                        value: _confirmedRead,
-                        onChanged: _reachedEnd
-                            ? (value) =>
-                                  setState(() => _confirmedRead = value == true)
-                            : null,
-                        contentPadding: EdgeInsets.zero,
-                        controlAffinity: ListTileControlAffinity.leading,
-                        activeColor: ArcUiTokens.secondaryAccent,
-                        title: const Text(
-                          'I have read and agree to the UAG Raider Agreement.',
-                        ),
-                        subtitle: _reachedEnd
-                            ? const Text(
-                                'You reached the end of the agreement.',
-                              )
-                            : const Text(
-                                'Scroll to the bottom before confirming.',
-                              ),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(18, 10, 18, 18),
-              child: SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton.icon(
-                  onPressed: _reachedEnd && _confirmedRead
-                      ? () => Navigator.of(context).pop(true)
-                      : null,
-                  icon: const Icon(Icons.verified_user_outlined),
-                  label: const Text('ACCEPT & RETURN'),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(18, 10, 18, 18),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton.icon(
+                    onPressed: _reachedEnd && _confirmedRead
+                        ? () => Navigator.of(context).pop(true)
+                        : null,
+                    icon: const Icon(Icons.verified_user_outlined),
+                    label: const Text('ACCEPT & RETURN'),
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

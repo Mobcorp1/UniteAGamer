@@ -8,6 +8,7 @@ import '../data/arc_player_session_catalog.dart';
 import '../models/arc_profile_social_models.dart';
 import '../models/arc_trader_profile.dart';
 import '../repositories/arc_trader_profile_repository.dart';
+import '../widgets/arc_account_journey_bar.dart';
 import '../widgets/arc_raiders_screen_shell.dart';
 import '../widgets/arc_social_links_editor.dart';
 import '../widgets/foundation/arc_form_surface.dart';
@@ -332,6 +333,10 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
             key: _formKey,
             child: ArcFormScrollView(
               children: [
+                const ArcAccountJourneyBar(
+                  stage: ArcAccountJourneyStage.profile,
+                ),
+                const SizedBox(height: 12),
                 const ArcFormPageLead(
                   icon: Icons.person_add_alt_1_rounded,
                   title: 'Build Your Raider Identity',

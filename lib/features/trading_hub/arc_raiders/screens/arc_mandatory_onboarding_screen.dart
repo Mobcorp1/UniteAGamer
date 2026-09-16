@@ -19,6 +19,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_trader_profile_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_user_personalisation_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raiders_hub_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_account_journey_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -573,6 +574,11 @@ class _ArcMandatoryOnboardingScreenState
                 child: Column(
                   children: [
                     if (widget.adminPreview) const _PreviewBanner(),
+                    const ArcAccountJourneyBar(
+                      stage: ArcAccountJourneyStage.onboarding,
+                      compact: true,
+                    ),
+                    const SizedBox(height: 10),
                     _TopBar(step: _step, onBack: _back),
                     const SizedBox(height: 10),
                     Expanded(

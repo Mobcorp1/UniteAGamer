@@ -13,6 +13,7 @@ import 'package:uag_arc_raiders_hub/features/legal/screens/privacy_policy_screen
 import 'package:uag_arc_raiders_hub/features/legal/screens/terms_of_use_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_onboarding_setup.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_mandatory_onboarding_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_account_journey_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/screens/build/app_entry_gate.dart';
 import 'package:uag_arc_raiders_hub/widgets/arc_layout_system.dart';
@@ -1487,7 +1488,12 @@ class _AuthScreenState extends State<AuthScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _buildTopBrand(phone),
-              SizedBox(height: phone ? 18 : 28),
+              SizedBox(height: phone ? 14 : 20),
+              const ArcAccountJourneyBar(
+                stage: ArcAccountJourneyStage.access,
+                compact: true,
+              ),
+              SizedBox(height: phone ? 14 : 20),
               _buildAuthCard(phone),
             ],
           ),
