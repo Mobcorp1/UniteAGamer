@@ -1,6 +1,67 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_layout_system.dart';
 
 import 'arc_ui_tokens.dart';
+
+/// Canonical scroll viewport for profile/account forms.
+///
+/// Width and page padding come from the ARC Operations OS layout system so
+/// setup, edit, availability and away screens no longer carry their own
+/// competing max-width and edge-spacing rules.
+class ArcFormScrollView extends StatelessWidget {
+  const ArcFormScrollView({
+    super.key,
+    required this.children,
+    this.controller,
+    this.padding,
+    this.physics,
+  });
+
+  final List<Widget> children;
+  final ScrollController? controller;
+  final EdgeInsetsGeometry? padding;
+  final ScrollPhysics? physics;
+
+  @override
+  Widget build(BuildContext context) {
+    return ArcPageViewport(
+      width: ArcPageWidth.form,
+      padding: EdgeInsets.zero,
+      child: ListView(
+        controller: controller,
+        physics: physics,
+        padding: padding ?? ArcLayoutTokens.pagePadding(context),
+        children: children,
+      ),
+    );
+  }
+}
+
+/// Responsive stat lane for profile/account support screens.
+///
+/// On Sony-class widths this resolves to one readable column. Tablet/desktop
+/// progressively gain columns without allowing tiny, cramped stat cards.
+class ArcFormStatGrid extends StatelessWidget {
+  const ArcFormStatGrid({
+    super.key,
+    required this.children,
+    this.minTileWidth = 190,
+    this.maxColumns = 3,
+  });
+
+  final List<Widget> children;
+  final double minTileWidth;
+  final int maxColumns;
+
+  @override
+  Widget build(BuildContext context) {
+    return ArcAdaptiveGrid(
+      minTileWidth: minTileWidth,
+      maxColumns: maxColumns,
+      children: children,
+    );
+  }
+}
 
 /// Shared compact visual language for account/profile forms.
 ///
@@ -57,7 +118,7 @@ class ArcFormPageLead extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  maxLines: 1,
+                  maxLines: compact ? 2 : 1,
                   overflow: TextOverflow.ellipsis,
                   style: ArcUiTokens.sectionTitle(
                     fontSize: compact ? 16 : 18,

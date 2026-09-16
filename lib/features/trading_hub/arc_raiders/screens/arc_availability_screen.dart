@@ -158,104 +158,92 @@ class _ArcAvailabilityScreenState extends State<ArcAvailabilityScreen> {
                 ),
               )
             : SafeArea(
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 900),
-                    child: ListView(
-                      padding: ArcUiTokens.compactPanelPadding,
+                child: ArcFormScrollView(
+                  children: [
+                    const ArcFormPageLead(
+                      icon: Icons.schedule_rounded,
+                      title: 'Play Windows',
+                      subtitle:
+                          'Set when you normally raid so UAG can improve squad timing.',
+                    ),
+                    const SizedBox(height: 12),
+                    ArcFormStatGrid(
                       children: [
-                        const ArcFormPageLead(
-                          icon: Icons.schedule_rounded,
-                          title: 'Play Windows',
-                          subtitle:
-                              'Set when you normally raid so UAG can improve squad timing.',
+                        ArcTacticalStatTile(
+                          label: 'Schedule',
+                          value: _availability.scheduleType,
+                          icon: Icons.repeat_rounded,
+                          accent: ArcUiTokens.primaryAccent,
                         ),
-                        const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            ArcTacticalStatTile(
-                              label: 'Schedule',
-                              value: _availability.scheduleType,
-                              icon: Icons.repeat_rounded,
-                              accent: ArcUiTokens.primaryAccent,
-                            ),
-                            ArcTacticalStatTile(
-                              label: 'Weeks',
-                              value: _availability.weeks.length.toString(),
-                              icon: Icons.view_week_outlined,
-                              accent: ArcUiTokens.secondaryAccent,
-                            ),
-                            ArcTacticalStatTile(
-                              label: 'Active days',
-                              value: _availability.weeks
-                                  .expand((week) => week.slots)
-                                  .where((slot) => slot.enabled)
-                                  .length
-                                  .toString(),
-                              icon: Icons.check_circle_outline,
-                              accent: ArcUiTokens.success,
-                            ),
-                          ],
+                        ArcTacticalStatTile(
+                          label: 'Weeks',
+                          value: _availability.weeks.length.toString(),
+                          icon: Icons.view_week_outlined,
+                          accent: ArcUiTokens.secondaryAccent,
                         ),
-                        const SizedBox(height: 12),
-                        Container(
-                          padding: const EdgeInsets.all(AppTheme.spaceL),
-                          decoration: ArcUiTokens.surfaceDecoration(
-                            role: ArcSurfaceRole.panel,
-                            accent: ArcUiTokens.primaryAccent,
-                            borderOpacity: 0.18,
-                            radius: ArcUiTokens.radiusL,
-                          ),
-                          child: DropdownButtonFormField<String>(
-                            initialValue: _availability.scheduleType,
-                            dropdownColor: ArcUiTokens.surfaceOverlay,
-                            style: ArcUiTokens.body(
-                              color: ArcUiTokens.textPrimary,
-                            ),
-                            iconEnabledColor: ArcUiTokens.primaryAccent,
-                            decoration: ArcUiTokens.inputDecoration(
-                              labelText: 'Schedule Type',
-                            ),
-                            items: const [
-                              DropdownMenuItem(
-                                value: 'weekly',
-                                child: Text('Same every week'),
-                              ),
-                              DropdownMenuItem(
-                                value: 'rotation',
-                                child: Text('Two-week rotation'),
-                              ),
-                              DropdownMenuItem(
-                                value: 'flexible',
-                                child: Text('Flexible / shift-based'),
-                              ),
-                            ],
-                            onChanged: (value) {
-                              if (value == null) return;
-                              _setScheduleType(value);
-                            },
-                          ),
-                        ),
-                        const SizedBox(height: AppTheme.spaceM),
-                        ...List.generate(_availability.weeks.length, (
-                          weekIndex,
-                        ) {
-                          final week = _availability.weeks[weekIndex];
-                          return _weekCard(week, weekIndex);
-                        }),
-                        ElevatedButton.icon(
-                          style: ArcUiTokens.textButtonStyle(primary: true),
-                          onPressed: _isSaving ? null : _save,
-                          icon: const Icon(Icons.save_rounded),
-                          label: Text(
-                            _isSaving ? 'Saving...' : 'Save Availability',
-                          ),
+                        ArcTacticalStatTile(
+                          label: 'Active days',
+                          value: _availability.weeks
+                              .expand((week) => week.slots)
+                              .where((slot) => slot.enabled)
+                              .length
+                              .toString(),
+                          icon: Icons.check_circle_outline,
+                          accent: ArcUiTokens.success,
                         ),
                       ],
                     ),
-                  ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(AppTheme.spaceL),
+                      decoration: ArcUiTokens.surfaceDecoration(
+                        role: ArcSurfaceRole.panel,
+                        accent: ArcUiTokens.primaryAccent,
+                        borderOpacity: 0.18,
+                        radius: ArcUiTokens.radiusL,
+                      ),
+                      child: DropdownButtonFormField<String>(
+                        initialValue: _availability.scheduleType,
+                        dropdownColor: ArcUiTokens.surfaceOverlay,
+                        style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+                        iconEnabledColor: ArcUiTokens.primaryAccent,
+                        decoration: ArcUiTokens.inputDecoration(
+                          labelText: 'Schedule Type',
+                        ),
+                        items: const [
+                          DropdownMenuItem(
+                            value: 'weekly',
+                            child: Text('Same every week'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'rotation',
+                            child: Text('Two-week rotation'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'flexible',
+                            child: Text('Flexible / shift-based'),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          if (value == null) return;
+                          _setScheduleType(value);
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spaceM),
+                    ...List.generate(_availability.weeks.length, (weekIndex) {
+                      final week = _availability.weeks[weekIndex];
+                      return _weekCard(week, weekIndex);
+                    }),
+                    ElevatedButton.icon(
+                      style: ArcUiTokens.textButtonStyle(primary: true),
+                      onPressed: _isSaving ? null : _save,
+                      icon: const Icon(Icons.save_rounded),
+                      label: Text(
+                        _isSaving ? 'Saving...' : 'Save Availability',
+                      ),
+                    ),
+                  ],
                 ),
               ),
       ),

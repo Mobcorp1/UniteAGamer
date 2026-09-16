@@ -442,263 +442,257 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
       body: ArcRaidersScreenShell(
         showAdBanner: true,
         child: SafeArea(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 860),
-              child: Form(
-                key: _formKey,
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 22),
+          child: Form(
+            key: _formKey,
+            child: ArcFormScrollView(
+              children: [
+                const ArcFormPageLead(
+                  icon: Icons.manage_accounts_rounded,
+                  title: 'Raider Identity',
+                  subtitle:
+                      'Keep the details that power your profile and squad fit current.',
+                ),
+                const SizedBox(height: 12),
+                ArcExpandableFormSection(
+                  initiallyExpanded: true,
+                  summary: 'Core UAG identity and account details',
+                  title: 'Identity',
+                  icon: Icons.badge_outlined,
                   children: [
-                    const ArcFormPageLead(
-                      icon: Icons.manage_accounts_rounded,
-                      title: 'Raider Identity',
-                      subtitle:
-                          'Keep the details that power your profile and squad fit current.',
+                    _field(
+                      _uagIdController,
+                      'UAG ID',
+                      helperText: 'Auto-assigned numeric trader ID',
+                      enabled: false,
                     ),
-                    const SizedBox(height: 12),
-                    ArcExpandableFormSection(
-                      initiallyExpanded: true,
-                      summary: 'Core UAG identity and account details',
-                      title: 'Identity',
-                      icon: Icons.badge_outlined,
-                      children: [
-                        _field(
-                          _uagIdController,
-                          'UAG ID',
-                          helperText: 'Auto-assigned numeric trader ID',
-                          enabled: false,
-                        ),
-                        _field(
-                          _uagNameController,
-                          'UAG Name',
-                          validator: (v) => _required(v, 'UAG Name'),
-                        ),
-                        _field(_embarkIdController, 'Embark ID'),
-                      ],
+                    _field(
+                      _uagNameController,
+                      'UAG Name',
+                      validator: (v) => _required(v, 'UAG Name'),
                     ),
-                    ArcExpandableFormSection(
-                      title: 'Platform & Server',
-                      icon: Icons.travel_explore_rounded,
-                      children: [
-                        _field(
-                          _regionController,
-                          'Region',
-                          validator: (v) => _required(v, 'Region'),
-                        ),
-                        _dropdown(
-                          label: 'Server Preference',
-                          value: _serverPreference,
-                          values: _serverPreferences,
-                          onChanged: (value) => setState(
-                            () => _serverPreference = value ?? 'Automatic',
-                          ),
-                        ),
-                        _field(
-                          _platformController,
-                          'Preferred Platform',
-                          validator: (v) => _required(v, 'Preferred Platform'),
-                        ),
-                        _field(
-                          _timezoneController,
-                          'Timezone',
-                          validator: (v) => _required(v, 'Timezone'),
-                        ),
-                      ],
+                    _field(_embarkIdController, 'Embark ID'),
+                  ],
+                ),
+                ArcExpandableFormSection(
+                  title: 'Platform & Server',
+                  icon: Icons.travel_explore_rounded,
+                  children: [
+                    _field(
+                      _regionController,
+                      'Region',
+                      validator: (v) => _required(v, 'Region'),
                     ),
-                    ArcExpandableFormSection(
-                      title: 'Archetypes & Match Fit',
-                      icon: Icons.hub_rounded,
-                      children: [
-                        Text(
-                          'Choose the tags that best describe how you play.',
-                          style: ArcUiTokens.body(),
-                        ),
-                        const SizedBox(height: AppTheme.spaceM),
-                        Text(
-                          'Player archetypes',
-                          style: ArcUiTokens.sectionTitle(
-                            fontSize: 15,
-                            color: ArcUiTokens.primaryAccent,
-                          ),
-                        ),
-                        const SizedBox(height: AppTheme.spaceS),
-                        _multiSelectChips(
-                          items: _archetypeOptions,
-                          selected: _archetypes,
-                        ),
-                        const SizedBox(height: AppTheme.spaceM),
-                        Text(
-                          'Play style',
-                          style: ArcUiTokens.sectionTitle(
-                            fontSize: 15,
-                            color: ArcUiTokens.primaryAccent,
-                          ),
-                        ),
-                        const SizedBox(height: AppTheme.spaceS),
-                        _multiSelectChips(
-                          items: _playStyleOptions,
-                          selected: _playStyles,
-                        ),
-                        const SizedBox(height: AppTheme.spaceM),
-                        Text(
-                          'Communication style',
-                          style: ArcUiTokens.sectionTitle(
-                            fontSize: 15,
-                            color: ArcUiTokens.primaryAccent,
-                          ),
-                        ),
-                        const SizedBox(height: AppTheme.spaceS),
-                        _singleSelectChips(
-                          items: _communicationOptions,
-                          selected: _communicationStyle,
-                          onChanged: (value) =>
-                              setState(() => _communicationStyle = value),
-                        ),
-                        const SizedBox(height: AppTheme.spaceM),
-                        Text(
-                          'Squad intent',
-                          style: ArcUiTokens.sectionTitle(
-                            fontSize: 15,
-                            color: ArcUiTokens.primaryAccent,
-                          ),
-                        ),
-                        const SizedBox(height: AppTheme.spaceS),
-                        _singleSelectChips(
-                          items: _squadIntentOptions,
-                          selected: _squadIntent,
-                          onChanged: (value) =>
-                              setState(() => _squadIntent = value),
-                        ),
-                        const SizedBox(height: AppTheme.spaceM),
-                        Text(
-                          'What are you doing this session?',
-                          style: ArcUiTokens.sectionTitle(
-                            fontSize: 15,
-                            color: ArcUiTokens.primaryAccent,
-                          ),
-                        ),
-                        const SizedBox(height: AppTheme.spaceS),
-                        _singleSelectChips(
-                          items: ArcPlayerSessionCatalog.sessionIntents,
-                          selected: _sessionIntent,
-                          onChanged: (value) =>
-                              setState(() => _sessionIntent = value),
-                        ),
-                        const SizedBox(height: AppTheme.spaceM),
-                        Text(
-                          'Current priority',
-                          style: ArcUiTokens.sectionTitle(
-                            fontSize: 15,
-                            color: ArcUiTokens.primaryAccent,
-                          ),
-                        ),
-                        const SizedBox(height: AppTheme.spaceS),
-                        _singleSelectChips(
-                          items: ArcPlayerSessionCatalog.priorities,
-                          selected: _currentPriority,
-                          onChanged: (value) =>
-                              setState(() => _currentPriority = value),
-                        ),
-                        const SizedBox(height: AppTheme.spaceM),
-                        Text(
-                          'Current energy',
-                          style: ArcUiTokens.sectionTitle(
-                            fontSize: 15,
-                            color: ArcUiTokens.primaryAccent,
-                          ),
-                        ),
-                        const SizedBox(height: AppTheme.spaceS),
-                        _singleSelectChips(
-                          items: _socialEnergyOptions,
-                          selected: _socialEnergy,
-                          onChanged: (value) =>
-                              setState(() => _socialEnergy = value),
-                        ),
-                      ],
+                    _dropdown(
+                      label: 'Server Preference',
+                      value: _serverPreference,
+                      values: _serverPreferences,
+                      onChanged: (value) => setState(
+                        () => _serverPreference = value ?? 'Automatic',
+                      ),
                     ),
-                    ArcExpandableFormSection(
-                      title: 'Preferences',
-                      icon: Icons.tune_rounded,
-                      children: [
-                        _switchTile(
-                          value: _visibleInSearch,
-                          onChanged: (value) =>
-                              setState(() => _visibleInSearch = value),
-                          title: 'Visible in search',
-                          subtitle: 'Allow other Raiders to find your profile.',
-                        ),
-                        _switchTile(
-                          value: _micOk,
-                          onChanged: (value) => setState(() => _micOk = value),
-                          title: 'Mic okay',
-                          subtitle: 'Show voice chat availability.',
-                        ),
-                        _switchTile(
-                          value: _crossRegionOk,
-                          onChanged: (value) =>
-                              setState(() => _crossRegionOk = value),
-                          title: 'Cross-region okay',
-                          subtitle:
-                              'Open to switching region for squads and events.',
-                        ),
-                        _switchTile(
-                          value: _crossplayEnabled,
-                          onChanged: (value) =>
-                              setState(() => _crossplayEnabled = value),
-                          title: 'Crossplay enabled',
-                          subtitle:
-                              'Used for cross-platform matching and trade planning.',
-                        ),
-                      ],
+                    _field(
+                      _platformController,
+                      'Preferred Platform',
+                      validator: (v) => _required(v, 'Preferred Platform'),
                     ),
-                    ArcExpandableFormSection(
-                      title: 'Public Social Links',
-                      icon: Icons.link_rounded,
-                      children: [
-                        ArcSocialLinksEditor(
-                          initialLinks: _socialLinks,
-                          onChanged: (links) => _socialLinks = links,
-                        ),
-                      ],
-                    ),
-                    ArcExpandableFormSection(
-                      title: 'Account',
-                      icon: Icons.account_balance_wallet_outlined,
-                      children: [
-                        _dropdown(
-                          label: 'Preferred payout method',
-                          value: _payoutMethod,
-                          values: _payoutMethods,
-                          onChanged: (value) => setState(
-                            () => _payoutMethod = value ?? 'Bank Transfer',
-                          ),
-                        ),
-                        _dropdown(
-                          label: 'Subscription status',
-                          value: _subscriptionStatus,
-                          values: _subscriptionOptions,
-                          onChanged: (value) => setState(
-                            () => _subscriptionStatus = value ?? 'inactive',
-                          ),
-                        ),
-                        _switchTile(
-                          value: _affiliateEnabled,
-                          onChanged: (value) =>
-                              setState(() => _affiliateEnabled = value),
-                          title: 'Affiliate programme enabled',
-                        ),
-                      ],
-                    ),
-                    ElevatedButton.icon(
-                      style: ArcUiTokens.textButtonStyle(primary: true),
-                      onPressed: _isSaving ? null : _save,
-                      icon: const Icon(Icons.save_rounded),
-                      label: Text(_isSaving ? 'Saving...' : 'Save Changes'),
+                    _field(
+                      _timezoneController,
+                      'Timezone',
+                      validator: (v) => _required(v, 'Timezone'),
                     ),
                   ],
                 ),
-              ),
+                ArcExpandableFormSection(
+                  title: 'Archetypes & Match Fit',
+                  icon: Icons.hub_rounded,
+                  children: [
+                    Text(
+                      'Choose the tags that best describe how you play.',
+                      style: ArcUiTokens.body(),
+                    ),
+                    const SizedBox(height: AppTheme.spaceM),
+                    Text(
+                      'Player archetypes',
+                      style: ArcUiTokens.sectionTitle(
+                        fontSize: 15,
+                        color: ArcUiTokens.primaryAccent,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spaceS),
+                    _multiSelectChips(
+                      items: _archetypeOptions,
+                      selected: _archetypes,
+                    ),
+                    const SizedBox(height: AppTheme.spaceM),
+                    Text(
+                      'Play style',
+                      style: ArcUiTokens.sectionTitle(
+                        fontSize: 15,
+                        color: ArcUiTokens.primaryAccent,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spaceS),
+                    _multiSelectChips(
+                      items: _playStyleOptions,
+                      selected: _playStyles,
+                    ),
+                    const SizedBox(height: AppTheme.spaceM),
+                    Text(
+                      'Communication style',
+                      style: ArcUiTokens.sectionTitle(
+                        fontSize: 15,
+                        color: ArcUiTokens.primaryAccent,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spaceS),
+                    _singleSelectChips(
+                      items: _communicationOptions,
+                      selected: _communicationStyle,
+                      onChanged: (value) =>
+                          setState(() => _communicationStyle = value),
+                    ),
+                    const SizedBox(height: AppTheme.spaceM),
+                    Text(
+                      'Squad intent',
+                      style: ArcUiTokens.sectionTitle(
+                        fontSize: 15,
+                        color: ArcUiTokens.primaryAccent,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spaceS),
+                    _singleSelectChips(
+                      items: _squadIntentOptions,
+                      selected: _squadIntent,
+                      onChanged: (value) =>
+                          setState(() => _squadIntent = value),
+                    ),
+                    const SizedBox(height: AppTheme.spaceM),
+                    Text(
+                      'What are you doing this session?',
+                      style: ArcUiTokens.sectionTitle(
+                        fontSize: 15,
+                        color: ArcUiTokens.primaryAccent,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spaceS),
+                    _singleSelectChips(
+                      items: ArcPlayerSessionCatalog.sessionIntents,
+                      selected: _sessionIntent,
+                      onChanged: (value) =>
+                          setState(() => _sessionIntent = value),
+                    ),
+                    const SizedBox(height: AppTheme.spaceM),
+                    Text(
+                      'Current priority',
+                      style: ArcUiTokens.sectionTitle(
+                        fontSize: 15,
+                        color: ArcUiTokens.primaryAccent,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spaceS),
+                    _singleSelectChips(
+                      items: ArcPlayerSessionCatalog.priorities,
+                      selected: _currentPriority,
+                      onChanged: (value) =>
+                          setState(() => _currentPriority = value),
+                    ),
+                    const SizedBox(height: AppTheme.spaceM),
+                    Text(
+                      'Current energy',
+                      style: ArcUiTokens.sectionTitle(
+                        fontSize: 15,
+                        color: ArcUiTokens.primaryAccent,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spaceS),
+                    _singleSelectChips(
+                      items: _socialEnergyOptions,
+                      selected: _socialEnergy,
+                      onChanged: (value) =>
+                          setState(() => _socialEnergy = value),
+                    ),
+                  ],
+                ),
+                ArcExpandableFormSection(
+                  title: 'Preferences',
+                  icon: Icons.tune_rounded,
+                  children: [
+                    _switchTile(
+                      value: _visibleInSearch,
+                      onChanged: (value) =>
+                          setState(() => _visibleInSearch = value),
+                      title: 'Visible in search',
+                      subtitle: 'Allow other Raiders to find your profile.',
+                    ),
+                    _switchTile(
+                      value: _micOk,
+                      onChanged: (value) => setState(() => _micOk = value),
+                      title: 'Mic okay',
+                      subtitle: 'Show voice chat availability.',
+                    ),
+                    _switchTile(
+                      value: _crossRegionOk,
+                      onChanged: (value) =>
+                          setState(() => _crossRegionOk = value),
+                      title: 'Cross-region okay',
+                      subtitle:
+                          'Open to switching region for squads and events.',
+                    ),
+                    _switchTile(
+                      value: _crossplayEnabled,
+                      onChanged: (value) =>
+                          setState(() => _crossplayEnabled = value),
+                      title: 'Crossplay enabled',
+                      subtitle:
+                          'Used for cross-platform matching and trade planning.',
+                    ),
+                  ],
+                ),
+                ArcExpandableFormSection(
+                  title: 'Public Social Links',
+                  icon: Icons.link_rounded,
+                  children: [
+                    ArcSocialLinksEditor(
+                      initialLinks: _socialLinks,
+                      onChanged: (links) => _socialLinks = links,
+                    ),
+                  ],
+                ),
+                ArcExpandableFormSection(
+                  title: 'Account',
+                  icon: Icons.account_balance_wallet_outlined,
+                  children: [
+                    _dropdown(
+                      label: 'Preferred payout method',
+                      value: _payoutMethod,
+                      values: _payoutMethods,
+                      onChanged: (value) => setState(
+                        () => _payoutMethod = value ?? 'Bank Transfer',
+                      ),
+                    ),
+                    _dropdown(
+                      label: 'Subscription status',
+                      value: _subscriptionStatus,
+                      values: _subscriptionOptions,
+                      onChanged: (value) => setState(
+                        () => _subscriptionStatus = value ?? 'inactive',
+                      ),
+                    ),
+                    _switchTile(
+                      value: _affiliateEnabled,
+                      onChanged: (value) =>
+                          setState(() => _affiliateEnabled = value),
+                      title: 'Affiliate programme enabled',
+                    ),
+                  ],
+                ),
+                ElevatedButton.icon(
+                  style: ArcUiTokens.textButtonStyle(primary: true),
+                  onPressed: _isSaving ? null : _save,
+                  icon: const Icon(Icons.save_rounded),
+                  label: Text(_isSaving ? 'Saving...' : 'Save Changes'),
+                ),
+              ],
             ),
           ),
         ),

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/screens/monetisation_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_layout_system.dart';
 import '../widgets/foundation/uag_profile_glyph.dart';
 
 import '../data/arc_player_archetype_catalog.dart';
@@ -289,34 +290,19 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
                       final operationsState =
                           operationsSnapshot.data ??
                           ArcOperationsUserState.empty;
-                      return LayoutBuilder(
-                        builder: (context, constraints) {
-                          final contentWidth = constraints.maxWidth > 1440
-                              ? 1360.0
-                              : constraints.maxWidth;
-                          return ListView(
-                            padding: const EdgeInsets.fromLTRB(
-                              AppTheme.spaceM,
-                              AppTheme.spaceS,
-                              AppTheme.spaceM,
-                              AppTheme.spaceL,
+                      return ListView(
+                        padding: EdgeInsets.zero,
+                        children: [
+                          ArcPageViewport(
+                            width: ArcPageWidth.wide,
+                            child: _profileDashboard(
+                              profile,
+                              operationsState,
+                              MediaQuery.sizeOf(context).width,
+                              profileCompletion,
                             ),
-                            children: [
-                              Align(
-                                alignment: Alignment.topCenter,
-                                child: SizedBox(
-                                  width: contentWidth,
-                                  child: _profileDashboard(
-                                    profile,
-                                    operationsState,
-                                    constraints.maxWidth,
-                                    profileCompletion,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          );
-                        },
+                          ),
+                        ],
                       );
                     },
                   );
@@ -362,60 +348,85 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
 
   Widget _profileSectionTabs() {
     const labels = ['OVERVIEW', 'RAIDER', 'REPUTATION', 'LOCKER'];
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: AppTheme.cardBackground.withValues(alpha: 0.94),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.neonPink.withValues(alpha: 0.28)),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.neonPink.withValues(alpha: 0.06),
-            blurRadius: 18,
-          ),
-        ],
-      ),
-      child: Row(
-        children: List.generate(labels.length, (index) {
-          final selected = _selectedProfileTab == index;
-          final accent = index.isEven ? AppTheme.neonCyan : AppTheme.neonPink;
-          return Expanded(
-            child: InkWell(
+
+    Widget buildTab(int index) {
+      final selected = _selectedProfileTab == index;
+      return Semantics(
+        button: true,
+        selected: selected,
+        label: '${labels[index]} profile tab',
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () => setState(() => _selectedProfileTab = index),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+            decoration: BoxDecoration(
+              color: selected
+                  ? AppTheme.neonCyan.withValues(alpha: 0.12)
+                  : Colors.transparent,
               borderRadius: BorderRadius.circular(12),
-              onTap: () => setState(() => _selectedProfileTab = index),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 150),
-                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 3),
-                decoration: BoxDecoration(
-                  color: selected
-                      ? accent.withValues(alpha: 0.13)
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border(
-                    bottom: BorderSide(
-                      color: selected ? accent : Colors.transparent,
-                      width: 2,
-                    ),
-                  ),
+              border: Border(
+                bottom: BorderSide(
+                  color: selected ? AppTheme.neonCyan : Colors.transparent,
+                  width: 2,
                 ),
-                child: Text(
-                  labels[index],
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.fade,
-                  style: TextStyle(
-                    fontFamily: AppTheme.headingFontFamily,
-                    color: selected ? accent : Colors.white60,
-                    fontSize: selected ? 14 : 12,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.35,
-                  ),
+              ),
+            ),
+            child: Text(
+              labels[index],
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.visible,
+              style: TextStyle(
+                color: selected ? AppTheme.neonCyan : Colors.white60,
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.35,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 560;
+        final decoration = BoxDecoration(
+          color: AppTheme.cardBackground.withValues(alpha: 0.94),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.18)),
+        );
+
+        if (compact) {
+          return Container(
+            padding: const EdgeInsets.all(4),
+            decoration: decoration,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              child: Row(
+                children: List.generate(
+                  labels.length,
+                  (index) => SizedBox(width: 126, child: buildTab(index)),
                 ),
               ),
             ),
           );
-        }),
-      ),
+        }
+
+        return Container(
+          padding: const EdgeInsets.all(4),
+          decoration: decoration,
+          child: Row(
+            children: List.generate(
+              labels.length,
+              (index) => Expanded(child: buildTab(index)),
+            ),
+          ),
+        );
+      },
     );
   }
 
