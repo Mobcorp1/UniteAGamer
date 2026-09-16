@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_intelligence_workspace_bar.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raider_network_workspace_bar.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_scrappy_seed_data.dart';
@@ -151,6 +152,11 @@ class _ArcMarketIntelligenceScreenState
       children: [
         const ArcIntelligenceWorkspaceBar(
           current: ArcIntelligenceWorkspace.community,
+          padding: EdgeInsets.zero,
+        ),
+        const SizedBox(height: AppTheme.spaceS),
+        const ArcRaiderNetworkWorkspaceBar(
+          current: ArcRaiderNetworkWorkspace.community,
           padding: EdgeInsets.zero,
         ),
         const SizedBox(height: AppTheme.spaceM),

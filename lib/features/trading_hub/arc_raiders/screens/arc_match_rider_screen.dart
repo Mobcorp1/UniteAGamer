@@ -8,6 +8,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_pl
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_player_session_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raider_network_workspace_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_reference_visuals.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_match_rider_invite.dart';
@@ -298,6 +299,11 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
                     child: ListView(
                       padding: const EdgeInsets.fromLTRB(12, 10, 12, 96),
                       children: [
+                        const ArcRaiderNetworkWorkspaceBar(
+                          current: ArcRaiderNetworkWorkspace.matchRaider,
+                          padding: EdgeInsets.zero,
+                        ),
+                        const SizedBox(height: AppTheme.spaceM),
                         const _MatchRaiderVisualLead(),
                         const SizedBox(height: 12),
                         _buildHeroCard(profile),

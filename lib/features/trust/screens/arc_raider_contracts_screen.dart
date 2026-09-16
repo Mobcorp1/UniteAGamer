@@ -14,6 +14,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/services/ar
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raid_intelligence_map.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raider_network_workspace_bar.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/ads/uag_tactical_banner_ad.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
@@ -63,6 +64,18 @@ class _State extends State<ArcRaiderContractsScreen>
       child: SafeArea(
         child: Column(
           children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(
+                ArcUiTokens.gapM,
+                ArcUiTokens.gapS,
+                ArcUiTokens.gapM,
+                0,
+              ),
+              child: ArcRaiderNetworkWorkspaceBar(
+                current: ArcRaiderNetworkWorkspace.contracts,
+                padding: EdgeInsets.zero,
+              ),
+            ),
             Container(
               margin: const EdgeInsets.fromLTRB(
                 ArcUiTokens.gapM,
