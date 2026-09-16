@@ -21,6 +21,7 @@ import 'package:uag_arc_raiders_hub/features/trust/screens/arc_raider_contracts_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_hunt_targets_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_availability_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_away_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_admin_map_editor_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_intel_explorer_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_beta_feedback_screen.dart';
@@ -163,6 +164,7 @@ class UAGTradersHubApp extends StatefulWidget {
         );
 
       case MonetisationScreen.routeName:
+      case '/monetisation/plans':
         return MaterialPageRoute(
           builder: (_) => const MonetisationScreen(),
           settings: settings,
@@ -293,6 +295,12 @@ class UAGTradersHubApp extends StatefulWidget {
       case ArcAvailabilityScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const ArcAvailabilityScreen(),
+          settings: settings,
+        );
+
+      case ArcAwayScreen.routeName:
+        return MaterialPageRoute(
+          builder: (_) => const ArcAwayScreen(),
           settings: settings,
         );
 
@@ -455,6 +463,7 @@ class UAGTradersHubApp extends StatefulWidget {
         );
 
       case TradingCreateListingScreen.routeName:
+      case '/arc-create-trade-listing':
         return MaterialPageRoute(
           builder: (_) => const FeatureAccessRouteGate(
             flag: FeatureAccessFlag.traderHub,
@@ -466,6 +475,7 @@ class UAGTradersHubApp extends StatefulWidget {
 
       case TradingActivityScreen.routeName:
       case TradingMyListingsScreen.routeName:
+      case '/arc-my-trade-listings':
         return MaterialPageRoute(
           builder: (_) => const FeatureAccessRouteGate(
             flag: FeatureAccessFlag.traderHub,

@@ -146,6 +146,8 @@ String _normalisedActiveLabel(String value) {
       normalised == 'arc systems' ||
       normalised == 'carousel' ||
       normalised == 'community intel' ||
+      normalised == 'community rewards' ||
+      normalised == 'wall of legends' ||
       normalised == 'play like a pro' ||
       normalised == 'report a rat') {
     return 'discover';
@@ -182,6 +184,15 @@ String _normalisedActiveLabel(String value) {
       normalised == 'locker' ||
       normalised == 'account' ||
       normalised == 'reputation' ||
+      normalised == 'settings' ||
+      normalised == 'plans' ||
+      normalised == 'plans & referrals' ||
+      normalised == 'help' ||
+      normalised == 'help centre' ||
+      normalised == 'feedback' ||
+      normalised == 'beta feedback' ||
+      normalised == 'legal' ||
+      normalised == 'legal & privacy' ||
       normalised == 'my hub' ||
       normalised == 'hub' ||
       normalised == 'home' ||

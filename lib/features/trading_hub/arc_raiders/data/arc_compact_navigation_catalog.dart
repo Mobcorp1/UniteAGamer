@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
+import 'package:uag_arc_raiders_hub/features/legal/screens/legal_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/screens/monetisation_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_user_personalisation_profile.dart';
 import 'package:uag_arc_raiders_hub/features/profile/screens/profile_settings_screen.dart';
@@ -9,8 +10,13 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_notification.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_hunt_targets_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_availability_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_away_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_beta_feedback_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_command_centre_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_help_centre_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_match_rider_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_profile_edit_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raiders_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_progress_trackers_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raid_intelligence_screen.dart';
@@ -18,6 +24,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blu
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_future_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/my_hub_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/my_intel_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/nomadic_trader_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/operations_command_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/play_like_a_pro_screen.dart';
@@ -163,6 +170,11 @@ class ArcCompactNavigationCatalog {
           ],
         ),
         ArcCompactNavigationItem(
+          label: 'My Intel',
+          icon: Icons.insights_outlined,
+          routeName: MyIntelScreen.routeName,
+        ),
+        ArcCompactNavigationItem(
           label: 'Favourite Loadout',
           icon: Icons.inventory_2_outlined,
           routeName: FavouriteLoadoutScreen.routeName,
@@ -194,6 +206,8 @@ class ArcCompactNavigationCatalog {
             TradingListingQueuesScreen.routeName,
             TradingTradeSessionsScreen.routeName,
             TradingNotificationsScreen.routeName,
+            '/arc-create-trade-listing',
+            '/arc-my-trade-listings',
           ],
         ),
         ArcCompactNavigationItem(
@@ -265,16 +279,38 @@ class ArcCompactNavigationCatalog {
           label: 'Profile & Reputation',
           icon: Icons.person_outline_rounded,
           routeName: TradingProfileScreen.routeName,
+          selectedRouteNames: [
+            ArcProfileEditScreen.routeName,
+            ArcAvailabilityScreen.routeName,
+            ArcAwayScreen.routeName,
+          ],
         ),
         ArcCompactNavigationItem(
           label: 'Plans & Referrals',
           icon: Icons.workspace_premium_outlined,
           routeName: MonetisationScreen.routeName,
+          selectedRouteNames: ['/monetisation/plans'],
         ),
         ArcCompactNavigationItem(
           label: 'Settings',
           icon: Icons.settings_outlined,
           routeName: ProfileSettingsScreen.routeName,
+        ),
+        ArcCompactNavigationItem(
+          label: 'Help Centre',
+          icon: Icons.support_agent_outlined,
+          routeName: ArcHelpCentreScreen.routeName,
+        ),
+        ArcCompactNavigationItem(
+          label: 'Beta Feedback',
+          icon: Icons.bug_report_outlined,
+          routeName: ArcBetaFeedbackScreen.routeName,
+          selectedRouteNames: ['/feedback'],
+        ),
+        ArcCompactNavigationItem(
+          label: 'Legal & Privacy',
+          icon: Icons.policy_outlined,
+          routeName: LegalHubScreen.routeName,
         ),
       ],
     ),

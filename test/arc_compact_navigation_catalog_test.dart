@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
+import 'package:uag_arc_raiders_hub/features/legal/screens/legal_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/features/profile/screens/profile_settings_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_help_centre_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_beta_feedback_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_compact_navigation_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_match_rider_invite.dart';
@@ -17,6 +20,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/my_hub_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/my_intel_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/smart_trade_assist_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
@@ -52,6 +56,7 @@ void main() {
         'Bench Tracker',
         'Quest Tracker',
         'Progress Trackers',
+        'My Intel',
         'Favourite Loadout',
         'Operations',
         'Trading Hub',
@@ -66,14 +71,15 @@ void main() {
         'Profile & Reputation',
         'Plans & Referrals',
         'Settings',
+        'Help Centre',
+        'Beta Feedback',
+        'Legal & Privacy',
       ]);
 
       for (final oldDrawerItem in const [
         'Intel Snapshot',
         'Tracking',
         'Admin Console',
-        'Beta Feedback',
-        'Help Centre',
       ]) {
         expect(labels, isNot(contains(oldDrawerItem)));
       }
@@ -131,6 +137,7 @@ void main() {
       expect(routeNames, contains(ArcRaidersHubScreen.routeName));
       expect(routeNames, contains(BlueprintGridScreen.routeName));
       expect(routeNames, contains(ArcProgressTrackersScreen.routeName));
+      expect(routeNames, contains(MyIntelScreen.routeName));
       expect(routeNames, contains(ArcRaidIntelligenceScreen.routeName));
       expect(routeNames, contains(RaidPlannerScreen.routeName));
       expect(routeNames, contains(FavouriteLoadoutScreen.routeName));
@@ -138,6 +145,9 @@ void main() {
       expect(routeNames, contains(ArcMatchRiderScreen.routeName));
       expect(routeNames, contains(MyHubScreen.toolDeckRouteName));
       expect(routeNames, contains(ProfileSettingsScreen.routeName));
+      expect(routeNames, contains(ArcHelpCentreScreen.routeName));
+      expect(routeNames, contains(ArcBetaFeedbackScreen.routeName));
+      expect(routeNames, contains(LegalHubScreen.routeName));
     });
 
     test('declares feature gates for controlled drawer destinations', () {

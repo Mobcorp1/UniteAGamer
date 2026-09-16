@@ -107,6 +107,8 @@ void main() {
       'Discover UAG': 'DISCOVER',
       'Arc Systems': 'DISCOVER',
       'Community Intel': 'DISCOVER',
+      'Community Rewards': 'DISCOVER',
+      'Wall of Legends': 'DISCOVER',
       'Report a Rat': 'DISCOVER',
       'Progress Trackers': 'TRACK',
       'Blueprint Tracker': 'TRACK',
@@ -120,6 +122,11 @@ void main() {
       'Match Raider': 'PROFILE',
       'Notifications': 'PROFILE',
       'My Hub': 'PROFILE',
+      'Settings': 'PROFILE',
+      'Plans & Referrals': 'PROFILE',
+      'Help Centre': 'PROFILE',
+      'Beta Feedback': 'PROFILE',
+      'Legal & Privacy': 'PROFILE',
     };
 
     for (final entry in cases.entries) {
