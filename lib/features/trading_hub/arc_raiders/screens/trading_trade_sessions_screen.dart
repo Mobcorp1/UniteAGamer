@@ -6,6 +6,7 @@ import 'package:uag_arc_raiders_hub/features/notifications/models/uag_session_sc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_session.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_trading_workspace_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_card.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_cosmetic_identity_strip.dart';
@@ -1431,52 +1432,73 @@ class _TradingTradeSessionsScreenState
       body: ArcRaidersScreenShell(
         showAdBanner: false,
         child: SafeArea(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(
-                maxWidth: AppTheme.pageMaxWidth,
+          child: Column(
+            children: [
+              const Padding(
+                padding: EdgeInsets.fromLTRB(14, 12, 14, 0),
+                child: ArcTradingWorkspaceBar(
+                  current: ArcTradingWorkspace.sessions,
+                  padding: EdgeInsets.zero,
+                ),
               ),
-              child: StreamBuilder<List<TradingSession>>(
-                stream: _repository.watchMySessions(),
-                builder: (context, snapshot) {
-                  if (snapshot.hasError) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
-                        child: Text(
-                          'Could not load trade sessions right now.',
-                          textAlign: TextAlign.center,
-                          style: AppTheme.bodyTextStyle(
-                            fontSize: 15,
-                            color: AppTheme.tradingDanger,
-                          ),
-                        ),
-                      ),
-                    );
-                  }
+              const SizedBox(height: AppTheme.spaceS),
+              Expanded(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      maxWidth: AppTheme.pageMaxWidth,
+                    ),
+                    child: StreamBuilder<List<TradingSession>>(
+                      stream: _repository.watchMySessions(),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasError) {
+                          return Center(
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                14,
+                                12,
+                                14,
+                                104,
+                              ),
+                              child: Text(
+                                'Could not load trade sessions right now.',
+                                textAlign: TextAlign.center,
+                                style: AppTheme.bodyTextStyle(
+                                  fontSize: 15,
+                                  color: AppTheme.tradingDanger,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
 
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: CircularProgressIndicator(
-                        color: AppTheme.neonCyan,
-                      ),
-                    );
-                  }
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(
+                              color: AppTheme.neonCyan,
+                            ),
+                          );
+                        }
 
-                  final sessions = snapshot.data ?? const <TradingSession>[];
-                  if (sessions.isEmpty) {
-                    return _emptyState();
-                  }
+                        final sessions =
+                            snapshot.data ?? const <TradingSession>[];
+                        if (sessions.isEmpty) {
+                          return _emptyState();
+                        }
 
-                  return ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
-                    itemCount: sessions.length,
-                    itemBuilder: (context, index) =>
-                        _buildSessionCard(sessions[index]),
-                  );
-                },
+                        return ListView.builder(
+                          padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
+                          itemCount: sessions.length,
+                          itemBuilder: (context, index) =>
+                              _buildSessionCard(sessions[index]),
+                        );
+                      },
+                    ),
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ),

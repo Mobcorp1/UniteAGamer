@@ -5,6 +5,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/tra
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_listing_queues_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_my_listings_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_my_offers_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_trading_workspace_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
@@ -111,7 +112,12 @@ class _TradingActivityScreenState extends State<TradingActivityScreen> {
                     icon: Icons.swap_horiz_rounded,
                     accent: ArcUiTokens.secondaryAccent,
                   ),
-                  const SizedBox(height: AppTheme.spaceS),
+                  const SizedBox(height: AppTheme.spaceM),
+                  const ArcTradingWorkspaceBar(
+                    current: ArcTradingWorkspace.activity,
+                    padding: EdgeInsets.zero,
+                  ),
+                  const SizedBox(height: AppTheme.spaceM),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,

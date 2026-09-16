@@ -5,6 +5,7 @@ import '../repositories/arc_trader_search_repository.dart';
 import '../repositories/trading_repository.dart';
 import '../widgets/arc_companion_bottom_dock.dart';
 import '../widgets/arc_raiders_screen_shell.dart';
+import '../widgets/arc_trading_workspace_bar.dart';
 import '../widgets/foundation/arc_ui_tokens.dart';
 import '../widgets/trading_card.dart';
 import '../widgets/trading_cosmetic_identity_strip.dart';
@@ -147,6 +148,11 @@ class _ArcTraderSearchScreenState extends State<ArcTraderSearchScreen> {
                 subtitle: 'Find active Raiders by region, platform or need.',
                 icon: Icons.manage_search_rounded,
                 accent: ArcUiTokens.secondaryAccent,
+              ),
+              const SizedBox(height: AppTheme.spaceM),
+              const ArcTradingWorkspaceBar(
+                current: ArcTradingWorkspace.traders,
+                padding: EdgeInsets.zero,
               ),
               const SizedBox(height: AppTheme.spaceM),
               ArcRaidersSectionCard(

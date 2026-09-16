@@ -4,6 +4,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_reference_visuals.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_trading_workspace_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_trade_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
@@ -443,6 +444,11 @@ class _SmartTradeAssistScreenState extends State<SmartTradeAssistScreen> {
                 return ListView(
                   padding: const EdgeInsets.fromLTRB(12, 10, 12, 112),
                   children: [
+                    const ArcTradingWorkspaceBar(
+                      current: ArcTradingWorkspace.smartTrade,
+                      padding: EdgeInsets.zero,
+                    ),
+                    const SizedBox(height: AppTheme.spaceM),
                     const _SmartTradeVisualLead(),
                     const SizedBox(height: AppTheme.spaceM),
                     _IntroCard(
