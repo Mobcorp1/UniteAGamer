@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_play_like_a_pro_workspace_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:intl/intl.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/play_like_a_pro_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/play_like_a_pro_discover_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/play_like_a_pro_routine_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/play_like_a_pro_repository.dart';
 import 'package:uag_arc_raiders_hub/widgets/dose_action_button.dart';
@@ -21,7 +23,7 @@ class PlayLikeAProScreen extends StatefulWidget {
 
 class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
   final PlayLikeAProRepository _repository = PlayLikeAProRepository();
-  int _workspaceIndex = 0;
+  ArcPlayLikeAProWorkspace _workspace = ArcPlayLikeAProWorkspace.routine;
 
   final TextEditingController _preferredGameController =
       TextEditingController();
@@ -562,40 +564,40 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
           ),
         ),
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(52),
+          preferredSize: const Size.fromHeight(54),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppTheme.spaceM,
-              0,
-              AppTheme.spaceM,
-              AppTheme.spaceS,
-            ),
-            child: SegmentedButton<int>(
-              segments: const <ButtonSegment<int>>[
-                ButtonSegment<int>(
-                  value: 0,
-                  icon: Icon(Icons.sports_esports_rounded),
-                  label: Text('Pro Routine'),
-                ),
-                ButtonSegment<int>(
-                  value: 1,
-                  icon: Icon(Icons.psychology_alt_rounded),
-                  label: Text('Session Coach'),
-                ),
-              ],
-              selected: <int>{_workspaceIndex},
-              onSelectionChanged: (selection) =>
-                  setState(() => _workspaceIndex = selection.first),
+            padding: const EdgeInsets.only(bottom: AppTheme.spaceS),
+            child: ArcPlayLikeAProWorkspaceBar(
+              current: _workspace,
+              onSelected: _selectWorkspace,
             ),
           ),
         ),
       ),
-      body: _workspaceIndex == 0
-          ? PlayLikeAProRoutineScreen(
-              onOpenSessionCoach: () => setState(() => _workspaceIndex = 1),
-            )
-          : _buildSessionCoach(context),
+      body: _buildWorkspace(context),
     );
+  }
+
+  void _selectWorkspace(ArcPlayLikeAProWorkspace workspace) {
+    if (_workspace == workspace) return;
+    setState(() => _workspace = workspace);
+  }
+
+  Widget _buildWorkspace(BuildContext context) {
+    switch (_workspace) {
+      case ArcPlayLikeAProWorkspace.guides:
+        return PlayLikeAProDiscoverScreen(
+          onOpenSessionCoach: () =>
+              _selectWorkspace(ArcPlayLikeAProWorkspace.coach),
+        );
+      case ArcPlayLikeAProWorkspace.routine:
+        return PlayLikeAProRoutineScreen(
+          onOpenSessionCoach: () =>
+              _selectWorkspace(ArcPlayLikeAProWorkspace.coach),
+        );
+      case ArcPlayLikeAProWorkspace.coach:
+        return _buildSessionCoach(context);
+    }
   }
 
   Widget _buildSessionCoach(BuildContext context) {

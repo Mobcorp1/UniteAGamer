@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_asset_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/play_like_a_pro_guide.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_match_rider_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raid_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
@@ -33,6 +35,17 @@ class PlayLikeAProGuideDetailScreen extends StatelessWidget {
       for (final id in guide.relatedGuideIds)
         ...allGuides.where((item) => item.id == id),
     ];
+    final plannerRelevant =
+        guide.isMapRelevant ||
+        guide.category == PlayLikeAProCategory.mapRoutes ||
+        guide.category == PlayLikeAProCategory.lootRoutes ||
+        guide.category == PlayLikeAProCategory.blueprintRoutes ||
+        guide.category == PlayLikeAProCategory.eventPreparation ||
+        guide.category == PlayLikeAProCategory.inventoryPreparation;
+    final matchRelevant =
+        guide.category == PlayLikeAProCategory.squadTactics ||
+        guide.squadScope == PlayLikeAProSquadScope.duo ||
+        guide.squadScope == PlayLikeAProSquadScope.squad;
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
@@ -163,7 +176,9 @@ class PlayLikeAProGuideDetailScreen extends StatelessWidget {
             ),
             if (guide.isMapRelevant ||
                 guide.isLoadoutRelevant ||
-                guide.category == PlayLikeAProCategory.blueprintRoutes) ...[
+                guide.category == PlayLikeAProCategory.blueprintRoutes ||
+                plannerRelevant ||
+                matchRelevant) ...[
               Container(
                 padding: const EdgeInsets.all(ArcUiTokens.gapL),
                 decoration: ArcUiTokens.surfaceDecoration(
@@ -205,6 +220,20 @@ class PlayLikeAProGuideDetailScreen extends StatelessWidget {
                             'Open Favourite Loadout',
                             Icons.backpack_rounded,
                             FavouriteLoadoutScreen.routeName,
+                          ),
+                        if (plannerRelevant)
+                          _routeButton(
+                            context,
+                            'Open Raid Planner',
+                            Icons.route_rounded,
+                            RaidPlannerScreen.routeName,
+                          ),
+                        if (matchRelevant)
+                          _routeButton(
+                            context,
+                            'Open Match Raider',
+                            Icons.groups_rounded,
+                            ArcMatchRiderScreen.routeName,
                           ),
                       ],
                     ),
