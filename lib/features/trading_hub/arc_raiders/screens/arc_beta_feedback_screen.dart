@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/screens/build/app_bar.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_account_support_workspace_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -132,6 +134,7 @@ class _ArcBetaFeedbackScreenState extends State<ArcBetaFeedbackScreen> {
         title: 'Closed Beta Feedback',
         subtitle: 'Report issues with diagnostics attached',
       ),
+      drawer: const AppDrawer(),
       body: ArcRaidersScreenShell(
         showAdBanner: false,
         child: SafeArea(
@@ -145,6 +148,11 @@ class _ArcBetaFeedbackScreenState extends State<ArcBetaFeedbackScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      const ArcAccountSupportWorkspaceBar(
+                        current: ArcAccountSupportWorkspace.feedback,
+                        padding: EdgeInsets.zero,
+                      ),
+                      const SizedBox(height: AppTheme.spaceM),
                       const ArcRaidersPageHeader(
                         title: 'BETA FEEDBACK',
                         subtitle:

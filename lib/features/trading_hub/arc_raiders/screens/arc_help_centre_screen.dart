@@ -4,6 +4,7 @@ import 'package:uag_arc_raiders_hub/features/legal/screens/privacy_policy_screen
 import 'package:uag_arc_raiders_hub/features/legal/screens/terms_of_use_screen.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/trader_code_of_conduct_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_help_centre_catalog.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_account_support_workspace_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
@@ -98,6 +99,11 @@ class _ArcHelpCentreScreenState extends State<ArcHelpCentreScreen> {
           maxWidth: 1180,
           bottomPadding: 96,
           children: [
+            const ArcAccountSupportWorkspaceBar(
+              current: ArcAccountSupportWorkspace.help,
+              padding: EdgeInsets.zero,
+            ),
+            const SizedBox(height: AppTheme.spaceM),
             ArcRaidersPageHeader(
               title: 'HELP CENTRE',
               subtitle: 'Support, safety and account guidance.',

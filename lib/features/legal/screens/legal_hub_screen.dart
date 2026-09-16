@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/build/app_bar.dart';
+import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/features/legal/models/uag_policy_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/arc_data_attribution_screen.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/privacy_policy_screen.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/terms_of_use_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_account_support_workspace_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/arc_layout_system.dart';
 import 'package:uag_arc_raiders_hub/widgets/arc_tactical_page.dart';
 
 class LegalHubScreen extends StatelessWidget {
+  static const routeName = '/legal';
+
   const LegalHubScreen({super.key});
 
   void _open(BuildContext context, Widget screen) {
@@ -18,19 +23,22 @@ class LegalHubScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: Text(
-          'Legal',
-          style: ArcUiTokens.pageTitle(color: ArcUiTokens.primaryAccent),
-        ),
+      appBar: const UagAppBar(
+        title: 'Legal',
+        subtitle: 'Terms, privacy, attribution and network policies.',
+        showLogout: false,
       ),
+      drawer: const AppDrawer(),
       body: ArcTacticalPageList(
         width: ArcPageWidth.standard,
         maxWidth: 980,
         padding: ArcLayoutTokens.pagePadding(context),
         children: [
+          const ArcAccountSupportWorkspaceBar(
+            current: ArcAccountSupportWorkspace.legal,
+            padding: EdgeInsets.zero,
+          ),
+          const SizedBox(height: ArcUiTokens.gapM),
           const ArcTacticalPanel(
             icon: Icons.policy_outlined,
             title: 'Policy Command',

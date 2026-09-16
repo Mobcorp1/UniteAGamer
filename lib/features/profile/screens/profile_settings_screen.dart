@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/build/app_bar.dart';
+import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 
 import 'package:uag_arc_raiders_hub/features/notifications/widgets/uag_notification_preferences_panel.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_account_support_workspace_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_personalisation_preferences_panel.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/arc_layout_system.dart';
@@ -74,8 +76,6 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     );
   }
 
-
-
   Widget _crossplayCard() {
     final activeColor = crossplay
         ? ArcUiTokens.primaryAccent
@@ -139,7 +139,6 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     );
   }
 
-
   Widget _accordion({
     required String title,
     required String subtitle,
@@ -187,11 +186,17 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
         subtitle: 'Region, crossplay, personalisation and notifications.',
         showLogout: false,
       ),
+      drawer: const AppDrawer(),
       body: ArcTacticalPageList(
         width: ArcPageWidth.standard,
         maxWidth: 920,
         padding: ArcLayoutTokens.pagePadding(context),
         children: [
+          const ArcAccountSupportWorkspaceBar(
+            current: ArcAccountSupportWorkspace.settings,
+            padding: EdgeInsets.zero,
+          ),
+          const SizedBox(height: ArcUiTokens.gapM),
           ArcTacticalPanel(
             icon: Icons.manage_accounts_outlined,
             title: 'COMMAND PROFILE',

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_account_support_workspace_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/arc_layout_system.dart';
 import 'package:uag_arc_raiders_hub/widgets/arc_tactical_page.dart';
@@ -34,13 +35,15 @@ class _MonetisationScreenState extends State<MonetisationScreen> {
       await _checkoutService.startCheckout(planId: planId);
     } on UagCheckoutException catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Checkout could not be started. Try again.')),
+        const SnackBar(
+          content: Text('Checkout could not be started. Try again.'),
+        ),
       );
     } finally {
       if (mounted) setState(() => _checkoutBusy = false);
@@ -57,7 +60,9 @@ class _MonetisationScreenState extends State<MonetisationScreen> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not submit payout request. Try again.')),
+        const SnackBar(
+          content: Text('Could not submit payout request. Try again.'),
+        ),
       );
     }
   }
@@ -96,6 +101,11 @@ class _MonetisationScreenState extends State<MonetisationScreen> {
             maxWidth: 1180,
             padding: ArcLayoutTokens.pagePadding(context),
             children: [
+              const ArcAccountSupportWorkspaceBar(
+                current: ArcAccountSupportWorkspace.plans,
+                padding: EdgeInsets.zero,
+              ),
+              const SizedBox(height: ArcUiTokens.gapM),
               _CommercialHero(activeTier: activeTier),
               const SizedBox(height: ArcUiTokens.gapM),
               if (entitlement != null) ...[
@@ -197,16 +207,23 @@ class _CommercialHero extends StatelessWidget {
     return ArcTacticalPanel(
       icon: Icons.workspace_premium_rounded,
       title: 'UAG ACCESS COMMAND',
-      subtitle: 'Simple plans. Flexible Premium passes. Real recurring referral earnings.',
+      subtitle:
+          'Simple plans. Flexible Premium passes. Real recurring referral earnings.',
       accent: ArcUiTokens.secondaryAccent,
       child: Wrap(
         spacing: ArcUiTokens.gapS,
         runSpacing: ArcUiTokens.gapS,
         children: [
-          _Tag('${activeTier.label.toUpperCase()} ACTIVE', ArcUiTokens.primaryAccent),
+          _Tag(
+            '${activeTier.label.toUpperCase()} ACTIVE',
+            ArcUiTokens.primaryAccent,
+          ),
           const _Tag('PREMIUM £9.99 / MONTH', ArcUiTokens.secondaryAccent),
           const _Tag('REFER & EARN 5% → 15%', ArcUiTokens.secondaryAccent),
-          const _Tag('PREMIUM REFERRAL BOOST +2.5PP', ArcUiTokens.primaryAccent),
+          const _Tag(
+            'PREMIUM REFERRAL BOOST +2.5PP',
+            ArcUiTokens.primaryAccent,
+          ),
         ],
       ),
     );
@@ -330,8 +347,7 @@ class _PlanCard extends StatelessWidget {
                   style: ArcUiTokens.sectionTitle(fontSize: 19, color: accent),
                 ),
               ),
-              if (premium)
-                const _Tag('BEST UAG', ArcUiTokens.secondaryAccent),
+              if (premium) const _Tag('BEST UAG', ArcUiTokens.secondaryAccent),
             ],
           ),
           const SizedBox(height: ArcUiTokens.gapXS),
