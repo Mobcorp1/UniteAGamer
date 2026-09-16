@@ -5,6 +5,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/fou
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_reference_visuals.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_intelligence_workspace_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 
 import 'package:uag_arc_raiders_hub/build/app_bar.dart';
@@ -1593,6 +1594,10 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
 
     return Column(
       children: [
+        const SizedBox(height: 8),
+        const ArcIntelligenceWorkspaceBar(
+          current: ArcIntelligenceWorkspace.planner,
+        ),
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
           child: ConstrainedBox(

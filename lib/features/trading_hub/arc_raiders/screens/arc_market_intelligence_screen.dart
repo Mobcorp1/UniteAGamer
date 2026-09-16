@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_intelligence_workspace_bar.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_scrappy_seed_data.dart';
@@ -148,6 +149,13 @@ class _ArcMarketIntelligenceScreenState
     return ArcRaidersPageList(
       bottomPadding: 92,
       children: [
+        const ArcIntelligenceWorkspaceBar(
+          current: ArcIntelligenceWorkspace.community,
+          padding: EdgeInsets.zero,
+        ),
+        const SizedBox(height: AppTheme.spaceM),
+        const ArcLiveMapConditionsStrip(),
+        const SizedBox(height: AppTheme.spaceM),
         _buildHeroCard(
           context,
           totalReports: reports.length,

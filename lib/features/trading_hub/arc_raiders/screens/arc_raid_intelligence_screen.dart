@@ -26,6 +26,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_community_intel_report_sheet.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_map_marker_detail_card.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raid_intelligence_map.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_intelligence_workspace_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
@@ -206,7 +207,13 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     return Scaffold(
       drawer: const AppDrawer(),
       appBar: AppBar(
-        title: Text('RAID INTELLIGENCE', style: ArcUiTokens.display(fontSize: 26, color: ArcUiTokens.secondaryAccent)),
+        title: Text(
+          'RAID INTELLIGENCE',
+          style: ArcUiTokens.display(
+            fontSize: 26,
+            color: ArcUiTokens.secondaryAccent,
+          ),
+        ),
         actions: [
           IconButton(
             tooltip: 'Open Blueprint Tracker',
@@ -262,9 +269,20 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                               activeLayer: _activeLayer,
                               activeRoute: _routePlan,
                             );
-                            return _buildLayout(
-                              intelligence,
-                              communityReports: communityReports,
+                            return Column(
+                              children: [
+                                const SizedBox(height: 8),
+                                const ArcIntelligenceWorkspaceBar(
+                                  current: ArcIntelligenceWorkspace.raidMap,
+                                ),
+                                const SizedBox(height: 8),
+                                Expanded(
+                                  child: _buildLayout(
+                                    intelligence,
+                                    communityReports: communityReports,
+                                  ),
+                                ),
+                              ],
                             );
                           },
                         );
@@ -553,6 +571,11 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
           ],
           _hero(intelligence),
           const SizedBox(height: 10),
+          ArcLiveMapConditionsStrip(
+            mapDisplayName: intelligence.map.displayName,
+            compact: true,
+          ),
+          const SizedBox(height: 10),
           _raidAccordion(
             title: 'RAID SETUP',
             subtitle: 'Map, spawn, extraction and blueprint run',
@@ -580,7 +603,9 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
           const SizedBox(height: 8),
           _raidAccordion(
             title: 'SELECTED INTEL',
-            subtitle: _selectedMarker == null ? 'Tap a map marker to inspect it' : 'Marker selected',
+            subtitle: _selectedMarker == null
+                ? 'Tap a map marker to inspect it'
+                : 'Marker selected',
             icon: Icons.location_searching_rounded,
             accent: ArcUiTokens.primaryAccent,
             child: _selectedMarkerSection(intelligence),
@@ -588,7 +613,9 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
           const SizedBox(height: 8),
           _raidAccordion(
             title: 'ROUTE PLAN',
-            subtitle: intelligence.routePlan == null ? 'No route generated yet' : 'Active run ready',
+            subtitle: intelligence.routePlan == null
+                ? 'No route generated yet'
+                : 'Active run ready',
             icon: Icons.route_rounded,
             accent: ArcUiTokens.secondaryAccent,
             child: _routeSection(intelligence),
@@ -622,8 +649,16 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
           leading: Icon(icon, color: accent, size: 19),
           iconColor: accent,
           collapsedIconColor: ArcUiTokens.textSecondary,
-          title: Text(title, style: ArcUiTokens.sectionTitle(fontSize: 18, color: accent)),
-          subtitle: Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary)),
+          title: Text(
+            title,
+            style: ArcUiTokens.sectionTitle(fontSize: 18, color: accent),
+          ),
+          subtitle: Text(
+            subtitle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
+          ),
           children: [child],
         ),
       ),

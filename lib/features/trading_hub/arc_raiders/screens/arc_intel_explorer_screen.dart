@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_intelligence_workspace_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 
@@ -56,6 +57,13 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
           children: [
+            const ArcIntelligenceWorkspaceBar(
+              current: ArcIntelligenceWorkspace.explorer,
+              padding: EdgeInsets.zero,
+            ),
+            const SizedBox(height: AppTheme.spaceM),
+            const ArcLiveMapConditionsStrip(compact: true),
+            const SizedBox(height: AppTheme.spaceM),
             const ArcRaidersHeroBanner(
               title: 'INTEL EXPLORER',
               subtitle:
