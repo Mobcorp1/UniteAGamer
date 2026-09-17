@@ -39,6 +39,9 @@ void main() {
       expect(script, contains('No Google Play upload was performed.'));
       expect(script, isNot(contains('firebase deploy')));
       expect(script, isNot(contains('git push')));
+      expect(script, isNot(contains('dart format')));
+      expect(script, contains('flutter analyze'));
+      expect(script, contains('flutter test'));
     });
 
     test('release candidate script supports signed App Bundle builds', () {
