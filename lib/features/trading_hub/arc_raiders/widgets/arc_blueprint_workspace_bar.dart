@@ -74,7 +74,7 @@ class ArcBlueprintWorkspaceBar extends StatelessWidget {
                           Navigator.of(context).pushNamed(workspace.routeName),
               ),
               if (workspace != ArcBlueprintWorkspace.values.last)
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
             ],
           ],
         ),
@@ -100,23 +100,28 @@ class ArcBlueprintWorkspaceDock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final content = DecoratedBox(
-      decoration: BoxDecoration(
-        color: ArcUiTokens.background.withValues(alpha: 0.97),
-        border: Border(
-          top: BorderSide(
-            color: ArcUiTokens.borderMedium.withValues(alpha: 0.72),
+    final content = Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 520),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: ArcUiTokens.background.withValues(alpha: 0.94),
+            border: Border(
+              top: BorderSide(
+                color: ArcUiTokens.borderMedium.withValues(alpha: 0.72),
+              ),
+              bottom: BorderSide(
+                color: ArcUiTokens.borderSubtle.withValues(alpha: 0.42),
+              ),
+            ),
           ),
-          bottom: BorderSide(
-            color: ArcUiTokens.borderSubtle.withValues(alpha: 0.42),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 2),
+            child: ArcBlueprintWorkspaceBar(
+              current: current,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+            ),
           ),
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: ArcBlueprintWorkspaceBar(
-          current: current,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
         ),
       ),
     );
@@ -153,7 +158,7 @@ class _BlueprintWorkspaceButton extends StatelessWidget {
         child: AnimatedContainer(
           duration: AppTheme.fastAnimation,
           curve: Curves.easeOutCubic,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
           decoration: ArcUiTokens.chipDecoration(
             color: accent,
             selected: selected,
@@ -161,8 +166,8 @@ class _BlueprintWorkspaceButton extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(workspace.icon, size: 16, color: accent),
-              const SizedBox(width: 7),
+              Icon(workspace.icon, size: 15, color: accent),
+              const SizedBox(width: 6),
               Text(
                 workspace.label.toUpperCase(),
                 style: ArcUiTokens.label(color: accent),

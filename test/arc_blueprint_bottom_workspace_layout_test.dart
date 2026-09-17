@@ -42,10 +42,20 @@ void main() {
     );
 
     expect(source, contains('Landscape is height-first'));
-    expect(source, contains('heightScale.clamp(0.20, 1.20)'));
+    expect(source, contains('heightScale.clamp(0.20, 1.35)'));
     expect(source, contains('constrained: !isLandscape'));
     expect(source, contains('viewportWidth = isLandscape'));
-    expect(source, contains('reservedChromeHeight = isLandscape ? 128.0'));
+    expect(
+      source,
+      contains('final bodyHeight = constraints.maxHeight.isFinite'),
+    );
+    expect(
+      source,
+      contains('final verticalBreathingRoom = isLandscape ? 4.0 : 12.0'),
+    );
+    expect(source, isNot(contains('reservedChromeHeight')));
+    expect(source, contains('width: canvasWidth'));
+    expect(source, contains('height: canvasHeight'));
     expect(
       source,
       contains("key: const Key('blueprint-authoritative-grid-viewport')"),

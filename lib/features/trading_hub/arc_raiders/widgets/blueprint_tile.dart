@@ -17,6 +17,7 @@ class BlueprintTile extends StatelessWidget {
     this.isSelectionMode = false,
     this.isSelected = false,
     this.loadoutAction,
+    this.showOwnershipBadge = true,
     this.contentScale = 1.0,
   });
 
@@ -29,6 +30,7 @@ class BlueprintTile extends StatelessWidget {
   final bool isSelectionMode;
   final bool isSelected;
   final Widget? loadoutAction;
+  final bool showOwnershipBadge;
   final double contentScale;
 
   @override
@@ -82,6 +84,7 @@ class BlueprintTile extends StatelessWidget {
                     isSelectionMode: isSelectionMode,
                     isSelected: isSelected,
                     loadoutAction: loadoutAction,
+                    showOwnershipBadge: showOwnershipBadge,
                   ),
                 ),
                 SizedBox(height: landscape ? 2 : 2),
@@ -124,6 +127,7 @@ class _BlueprintTileVisual extends StatelessWidget {
     required this.isSelectionMode,
     required this.isSelected,
     this.loadoutAction,
+    required this.showOwnershipBadge,
   });
 
   final ArcBlueprint blueprint;
@@ -133,6 +137,7 @@ class _BlueprintTileVisual extends StatelessWidget {
   final bool isSelectionMode;
   final bool isSelected;
   final Widget? loadoutAction;
+  final bool showOwnershipBadge;
 
   @override
   Widget build(BuildContext context) {
@@ -193,16 +198,17 @@ class _BlueprintTileVisual extends StatelessWidget {
     return Stack(
       children: [
         Positioned.fill(child: image),
-        Positioned(
-          top: 4,
-          right: 4,
-          child: _cornerBadge(
-            icon: state.owned
-                ? Icons.check_circle_rounded
-                : Icons.close_rounded,
-            color: state.owned ? Colors.lightGreenAccent : Colors.redAccent,
+        if (showOwnershipBadge)
+          Positioned(
+            top: 4,
+            right: 4,
+            child: _cornerBadge(
+              icon: state.owned
+                  ? Icons.check_circle_rounded
+                  : Icons.close_rounded,
+              color: state.owned ? Colors.lightGreenAccent : Colors.redAccent,
+            ),
           ),
-        ),
         if (state.hasDuplicates)
           Positioned(
             right: 4,

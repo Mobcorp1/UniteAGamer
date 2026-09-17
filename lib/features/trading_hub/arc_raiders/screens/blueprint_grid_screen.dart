@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_blueprint_photo_capture_screen.dart';
@@ -2509,6 +2510,10 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     const spacing = _landscapeSpacing;
     const childAspectRatio = 0.98;
     final searchActive = _searchQuery.trim().isNotEmpty;
+    final isNativeMobile =
+        !kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.android ||
+            defaultTargetPlatform == TargetPlatform.iOS);
 
     Widget buildTiles({required double width, required double height}) {
       return SizedBox(
@@ -2540,11 +2545,10 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                 rarityColor: _rarityColor(blueprint.rarity),
                 isSelectionMode: _selectionMode,
                 isSelected: _selectedBlueprintIds.contains(blueprint.id),
-                loadoutAction: _buildLoadoutAction(
-                  blueprint,
-                  loadout,
-                  compact: true,
-                ),
+                showOwnershipBadge: !isNativeMobile,
+                loadoutAction: isNativeMobile
+                    ? null
+                    : _buildLoadoutAction(blueprint, loadout, compact: true),
                 onTap: () async {
                   if (_selectionMode) {
                     _toggleSelection(blueprint.id);
@@ -2631,11 +2635,14 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                               : layout.size == ArcBlueprintSearchResultSize.grid
                               ? 1.08
                               : 1.20,
-                          loadoutAction: _buildLoadoutAction(
-                            blueprint,
-                            loadout,
-                            compact: false,
-                          ),
+                          showOwnershipBadge: !isNativeMobile,
+                          loadoutAction: isNativeMobile
+                              ? null
+                              : _buildLoadoutAction(
+                                  blueprint,
+                                  loadout,
+                                  compact: false,
+                                ),
                           onTap: () async {
                             if (_selectionMode) {
                               _toggleSelection(blueprint.id);
@@ -2751,13 +2758,17 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
               rightRailWidth: rightRailWidth,
               railGap: railGap,
             );
-        // Keep the landscape grid clear of the app bar plus the two compact
-        // bottom navigation rows while still giving the grid the full visible
-        // vertical workspace between them.
-        final reservedChromeHeight = isLandscape ? 128.0 : 142.0;
-        final availableGridHeight = (safeHeight - reservedChromeHeight).clamp(
+        // Scaffold already lays the body out between the app bar and both
+        // bottom docks. Subtracting that chrome a second time was collapsing
+        // the Sony landscape grid into a shallow strip. Use the real body
+        // constraint so the Blueprint canvas can consume the full height.
+        final bodyHeight = constraints.maxHeight.isFinite
+            ? constraints.maxHeight
+            : safeHeight;
+        final verticalBreathingRoom = isLandscape ? 4.0 : 12.0;
+        final availableGridHeight = (bodyHeight - verticalBreathingRoom).clamp(
           170.0,
-          safeHeight,
+          bodyHeight,
         );
 
         Widget buildFramedGrid() {
@@ -2862,7 +2873,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
           // available screen height and horizontal overflow is handled by the
           // existing pan gesture. Portrait keeps the fit-all overview.
           final fittedScale = isLandscape
-              ? heightScale.clamp(0.20, 1.20).toDouble()
+              ? heightScale.clamp(0.20, 1.35).toDouble()
               : math.min(widthScale, heightScale).clamp(0.20, 1.0).toDouble();
           final fittedHeight = metrics.naturalHeight * fittedScale;
           final fittedWidth = metrics.naturalWidth * fittedScale;
@@ -2870,6 +2881,12 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
               ? availableGridHeight
               : fittedHeight.clamp(170.0, availableGridHeight);
           final viewportWidth = isLandscape ? availableGridWidth : fittedWidth;
+          final canvasWidth = isLandscape
+              ? math.max(viewportWidth, fittedWidth)
+              : fittedWidth;
+          final canvasHeight = isLandscape
+              ? math.max(viewportHeight, fittedHeight)
+              : fittedHeight;
 
           return Center(
             child: SizedBox(
@@ -2908,9 +2925,15 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                         boundaryMargin: const EdgeInsets.all(384),
                         clipBehavior: Clip.none,
                         child: isLandscape
-                            ? buildTiles(
-                                width: fittedWidth,
-                                height: fittedHeight,
+                            ? SizedBox(
+                                width: canvasWidth,
+                                height: canvasHeight,
+                                child: Center(
+                                  child: buildTiles(
+                                    width: fittedWidth,
+                                    height: fittedHeight,
+                                  ),
+                                ),
                               )
                             : FittedBox(
                                 fit: BoxFit.contain,
