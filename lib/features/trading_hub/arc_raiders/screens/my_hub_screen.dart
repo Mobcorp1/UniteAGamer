@@ -599,12 +599,6 @@ class _MyHubScreenState extends State<MyHubScreen> {
                 icon: Icons.swap_horiz_rounded,
                 color: ArcUiTokens.success,
               ),
-              (
-                label: 'Blueprints',
-                value: '$total',
-                icon: Icons.inventory_2_outlined,
-                color: ArcUiTokens.warning,
-              ),
             ];
 
         return LayoutBuilder(
@@ -794,88 +788,39 @@ class _MyHubScreenState extends State<MyHubScreen> {
           if (state.owned) owned++;
           dupes += state.dupesOwned;
         }
-        final total = blueprints.length;
-        final missing = total - owned;
+        final missing = blueprints.length - owned;
+        final alerts = <Widget>[];
 
-        return Column(
-          children: [
-            _alertRow(
-              Icons.grid_view_rounded,
-              '$owned / $total blueprints collected.',
-              ArcUiTokens.primaryAccent,
-            ),
+        if (missing > 0) {
+          alerts.add(
             _alertRow(
               Icons.track_changes_rounded,
-              '$missing missing blueprints remain in your hunt list.',
+              'Hunt queue: $missing blueprints still missing.',
               ArcUiTokens.secondaryAccent,
             ),
+          );
+        }
+        if (dupes > 0) {
+          alerts.add(
             _alertRow(
               Icons.swap_horiz_rounded,
-              dupes > 0
-                  ? '$dupes duplicate blueprints available for trading.'
-                  : 'No duplicate blueprints registered yet.',
+              'Trade opportunity: $dupes duplicate blueprints available.',
               ArcUiTokens.success,
             ),
+          );
+        }
+        if (alerts.isEmpty) {
+          alerts.add(
             _alertRow(
-              Icons.verified_user_outlined,
-              'Signed in as $_displayName.',
-              ArcUiTokens.warning,
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _featureStripBody() {
-    final featured = [
-      _featureByTitle('Blueprint Tracker'),
-      _featureByTitle('Smart Trade Assist'),
-      _featureByTitle('Trading Overview'),
-      _featureByTitle('My Intel'),
-      _featureByTitle('Profile & Reputation'),
-    ];
-
-    return SizedBox(
-      height: 118,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: featured.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          final feature = featured[index];
-          return InkWell(
-            borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
-            onTap: () => _openFeature(feature),
-            child: Container(
-              width: 118,
-              padding: ArcUiTokens.densePanelPadding,
-              decoration: ArcUiTokens.surfaceDecoration(
-                role: ArcSurfaceRole.interactive,
-                radius: ArcUiTokens.radiusM,
-                accent: feature.accent,
-                borderOpacity: index == 0 ? 0.42 : 0.18,
-                selected: index == 0,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(feature.icon, size: 19, color: feature.accent),
-                  const Spacer(),
-                  Text(
-                    feature.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: ArcUiTokens.buttonLabel(
-                      color: ArcUiTokens.textPrimary,
-                    ).copyWith(fontSize: 10.5),
-                  ),
-                ],
-              ),
+              Icons.check_circle_outline_rounded,
+              'No urgent Blueprint priorities right now.',
+              ArcUiTokens.success,
             ),
           );
-        },
-      ),
+        }
+
+        return Column(children: alerts);
+      },
     );
   }
 
@@ -969,9 +914,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
           flex: 4,
           child: Column(
             children: [
-              _hubPanel(title: 'Alerts', child: _alertFeedBody()),
-              const SizedBox(height: 12),
-              _hubPanel(title: 'Features', child: _featureStripBody()),
+              _hubPanel(title: 'Priorities', child: _alertFeedBody()),
               const SizedBox(height: 12),
               _hubPanel(
                 title: 'Quick Actions',
@@ -995,17 +938,15 @@ class _MyHubScreenState extends State<MyHubScreen> {
           child: _hubOverview(),
         ),
         const SizedBox(height: 12),
-        _hubPanel(title: 'Alerts', child: _alertFeedBody()),
-        const SizedBox(height: 12),
-        _hubPanel(title: 'Personal Tools', child: _personalTools()),
-        const SizedBox(height: 12),
-        _hubPanel(title: 'Features', child: _featureStripBody()),
+        _hubPanel(title: 'Priorities', child: _alertFeedBody()),
         const SizedBox(height: 12),
         _hubPanel(
           title: 'Quick Actions',
           accent: ArcUiTokens.secondaryAccent,
           child: _quickActionsBody(),
         ),
+        const SizedBox(height: 12),
+        _hubPanel(title: 'Personal Tools', child: _personalTools()),
       ],
     );
   }
@@ -1616,9 +1557,7 @@ class _HubHeader extends StatelessWidget {
                   selected.title.toUpperCase(),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: ArcUiTokens.label(
-                    color: ArcUiTokens.primaryAccent,
-                  ),
+                  style: ArcUiTokens.label(color: ArcUiTokens.primaryAccent),
                 ),
               ],
             ),

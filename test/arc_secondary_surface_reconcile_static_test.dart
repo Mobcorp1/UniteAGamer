@@ -32,7 +32,9 @@ void main() {
         expect(source, contains('drawer: const AppDrawer()'));
         expect(source, contains('appBar: const UagAppBar('));
         expect(source, contains("activeLabel: 'My Intel'"));
-        expect(source, contains('ArcRaidersPageHeader'));
+        expect(source, isNot(contains('ArcRaidersPageHeader(')));
+        expect(source, contains('_IntelHero('));
+        expect(source, contains("'RECENT INTEL'"));
         expect(source, contains('ArcRaidersSectionCard'));
         expect(source, contains('ArcRaidersStatePanel'));
         expect(source, contains('ArcTacticalStatusPill'));
@@ -74,6 +76,7 @@ void main() {
         expect(source, contains('appBar: const UagAppBar('));
         expect(source, contains("activeLabel: 'DISCOVER'"));
         expect(source, contains('ArcRaidersHeroBanner'));
+        expect(source, isNot(contains('ArcRaidersPageHeader(')));
         expect(source, contains('ArcTacticalStatusPill'));
         expect(source, contains('ArcRaidersSectionCard'));
         expect(source, contains('ArcRaidersStatePanel'));
@@ -86,7 +89,7 @@ void main() {
       () {
         final source = _read('arc_beta_feedback_screen.dart');
 
-        expect(source, contains('ArcRaidersPageHeader'));
+        expect(source, isNot(contains('ArcRaidersPageHeader(')));
         expect(source, contains('ArcRaidersHeroBanner'));
         expect(source, contains('ArcRaidersSectionCard'));
         expect(source, contains('ArcTacticalStatusPill'));

@@ -33,14 +33,6 @@ class ArcProgressTrackersScreen extends StatelessWidget {
           maxWidth: 980,
           bottomPadding: 120,
           children: [
-            const ArcRaidersPageHeader(
-              title: 'PROGRESS TRACKERS',
-              subtitle:
-                  'Open the focused tracker for the system you are updating.',
-              icon: Icons.track_changes_rounded,
-              accent: ArcUiTokens.primaryAccent,
-            ),
-            const SizedBox(height: AppTheme.spaceS),
             const ArcProgressionWorkspaceBar(
               current: ArcProgressionWorkspace.overview,
               padding: EdgeInsets.zero,
@@ -51,33 +43,6 @@ class ArcProgressTrackersScreen extends StatelessWidget {
               subtitle:
                   'Scrappy, bench, quest and hunt-target progress stay split into focused tools.',
               accent: ArcUiTokens.primaryAccent,
-            ),
-            const SizedBox(height: AppTheme.spaceM),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: const [
-                ArcTacticalStatusPill(
-                  label: 'Scrappy resources',
-                  icon: Icons.egg_alt_rounded,
-                  accent: ArcUiTokens.secondaryAccent,
-                ),
-                ArcTacticalStatusPill(
-                  label: 'Bench readiness',
-                  icon: Icons.build_rounded,
-                  accent: ArcUiTokens.primaryAccent,
-                ),
-                ArcTacticalStatusPill(
-                  label: 'Quest blockers',
-                  icon: Icons.assignment_rounded,
-                  accent: ArcUiTokens.warning,
-                ),
-                ArcTacticalStatusPill(
-                  label: 'Hunt targets',
-                  icon: Icons.my_location_rounded,
-                  accent: ArcUiTokens.success,
-                ),
-              ],
             ),
             const SizedBox(height: AppTheme.spaceM),
             ArcRaidersSectionCard(

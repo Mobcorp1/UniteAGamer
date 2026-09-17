@@ -111,11 +111,9 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
       return widget.checklistState[item.id] ?? item.doneByDefault;
     }).length;
     final openChecks = checklist.length - completedChecks;
-    final focus = commandMoves.isEmpty ? null : commandMoves.first;
-
     return Container(
-      constraints: const BoxConstraints(minHeight: 132),
-      padding: const EdgeInsets.all(14),
+      constraints: const BoxConstraints(minHeight: 112),
+      padding: const EdgeInsets.all(12),
       decoration: _imageDecoration(
         _operationAsset('claim_operations_card.webp'),
         AppTheme.neonCyan,
@@ -124,10 +122,8 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final compact = constraints.maxWidth < 700;
-          const title = 'COMMAND CENTRE';
-          final subtitle = focus == null
-              ? 'Live intel, priorities and daily operations.'
-              : 'Priority: ${_cleanText(focus.title)}';
+          const title = 'OPS SNAPSHOT';
+          const subtitle = 'Live operations distilled into the actions below.';
 
           final copy = Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -262,16 +258,10 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
                 icon: Icons.bolt_rounded,
                 accent: AppTheme.neonPink,
                 initiallyExpanded: true,
-                child: primary,
+                child: _actionConsole(commandMoves, showHeader: false),
               ),
               const SizedBox(height: 8),
-              _commandAccordion(
-                title: 'DAILY CHECKLIST',
-                subtitle: 'Collapse routine tasks when you do not need them',
-                icon: Icons.checklist_rounded,
-                accent: AppTheme.neonCyan,
-                child: secondary,
-              ),
+              secondary,
             ],
           );
         }
@@ -301,7 +291,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
                 icon: Icons.hub_rounded,
                 accent: AppTheme.neonCyan,
                 initiallyExpanded: true,
-                child: _systemCarousel(carouselTiles),
+                child: _systemCarousel(carouselTiles, showHeader: false),
               ),
               const SizedBox(height: 8),
               _commandAccordion(
@@ -309,7 +299,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
                 subtitle: 'Season status and reset controls',
                 icon: Icons.restart_alt_rounded,
                 accent: AppTheme.neonPink,
-                child: _seasonResetEntry(),
+                child: _seasonResetEntry(showTitle: false),
               ),
             ],
           );
@@ -375,7 +365,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     );
   }
 
-  Widget _seasonResetEntry() {
+  Widget _seasonResetEntry({bool showTitle = true}) {
     final expeditionState = widget.expeditionState;
     final resetSubtitle = expeditionState.resetInProgress
         ? '${expeditionState.currentSeasonId} reset in progress.'
@@ -408,30 +398,41 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'EXPEDITION RESET',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTheme.tradingHeading(
-                      fontSize: 15,
-                      color: AppTheme.neonPink,
+              child: showTitle
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'EXPEDITION RESET',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTheme.tradingHeading(
+                            fontSize: 15,
+                            color: AppTheme.neonPink,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          resetSubtitle,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTheme.bodyTextStyle(
+                            fontSize: 11,
+                            color: Colors.white60,
+                          ),
+                        ),
+                      ],
+                    )
+                  : Text(
+                      resetSubtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTheme.bodyTextStyle(
+                        fontSize: 11,
+                        color: Colors.white70,
+                        isBold: true,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    resetSubtitle,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTheme.bodyTextStyle(
-                      fontSize: 11,
-                      color: Colors.white60,
-                    ),
-                  ),
-                ],
-              ),
             ),
             const SizedBox(width: 8),
             const Icon(Icons.chevron_right_rounded, color: AppTheme.neonPink),
@@ -441,7 +442,10 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     );
   }
 
-  Widget _systemCarousel(List<_CommandTileData> tiles) {
+  Widget _systemCarousel(
+    List<_CommandTileData> tiles, {
+    bool showHeader = true,
+  }) {
     if (tiles.isEmpty) return const SizedBox.shrink();
 
     final activeIndex = _safeSystemIndex(tiles.length);
@@ -558,12 +562,14 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const ArcCommandSectionHeader(
-                title: 'FEATURES',
-                subtitle: 'Active systems',
-                accent: AppTheme.neonCyan,
-              ),
-              const SizedBox(height: 7),
+              if (showHeader) ...[
+                const ArcCommandSectionHeader(
+                  title: 'FEATURES',
+                  subtitle: 'Active systems',
+                  accent: AppTheme.neonCyan,
+                ),
+                const SizedBox(height: 7),
+              ],
               ring,
               const SizedBox(height: 5),
               _featureRingIndicator(tiles.length, activeIndex),
@@ -830,19 +836,24 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     return moves;
   }
 
-  Widget _actionConsole(List<_CommandMoveData> moves) {
+  Widget _actionConsole(
+    List<_CommandMoveData> moves, {
+    bool showHeader = true,
+  }) {
     return ArcCommandCentreCard(
       accent: AppTheme.neonCyan,
       padding: const EdgeInsets.all(8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const ArcCommandSectionHeader(
-            title: 'Next Move',
-            subtitle: 'Priority actions',
-            accent: AppTheme.neonCyan,
-          ),
-          const SizedBox(height: 8),
+          if (showHeader) ...[
+            const ArcCommandSectionHeader(
+              title: 'Next Move',
+              subtitle: 'Priority actions',
+              accent: AppTheme.neonCyan,
+            ),
+            const SizedBox(height: 8),
+          ],
           if (moves.isEmpty)
             _quietLine('No active command needs attention.')
           else

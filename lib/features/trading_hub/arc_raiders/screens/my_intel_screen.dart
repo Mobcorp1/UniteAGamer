@@ -7,8 +7,6 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 
-import 'package:uag_arc_raiders_hub/widgets/theme.dart';
-
 class MyIntelScreen extends StatelessWidget {
   const MyIntelScreen({super.key});
 
@@ -114,38 +112,11 @@ class MyIntelScreen extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              const ArcRaidersPageHeader(
-                                title: 'MY INTEL',
-                                subtitle:
-                                    'Recent reports attached to your Raider identity.',
-                                icon: Icons.radar_rounded,
-                                accent: ArcUiTokens.primaryAccent,
+                              _IntelHero(
+                                totalReports: docs.length,
+                                visibleReports: latest.length,
                               ),
-                              const SizedBox(height: AppTheme.spaceM),
-                              _IntelHero(totalReports: docs.length),
-                              const SizedBox(height: AppTheme.spaceM),
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                children: [
-                                  ArcTacticalStatusPill(
-                                    label: '${docs.length} submitted',
-                                    icon: Icons.article_outlined,
-                                    accent: ArcUiTokens.primaryAccent,
-                                  ),
-                                  ArcTacticalStatusPill(
-                                    label: '${latest.length} shown',
-                                    icon: Icons.history_rounded,
-                                    accent: ArcUiTokens.secondaryAccent,
-                                  ),
-                                  const ArcTacticalStatusPill(
-                                    label: 'Raider linked',
-                                    icon: Icons.verified_user_outlined,
-                                    accent: ArcUiTokens.success,
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 16),
+                              const SizedBox(height: 12),
                               for (final doc in latest) ...[
                                 _IntelReportCard(doc: doc),
                                 const SizedBox(height: 12),
@@ -176,14 +147,15 @@ class MyIntelScreen extends StatelessWidget {
 }
 
 class _IntelHero extends StatelessWidget {
-  const _IntelHero({required this.totalReports});
+  const _IntelHero({required this.totalReports, required this.visibleReports});
 
   final int totalReports;
+  final int visibleReports;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(14),
       decoration: ArcUiTokens.surfaceDecoration(
         role: ArcSurfaceRole.raised,
         accent: ArcUiTokens.primaryAccent,
@@ -196,7 +168,7 @@ class _IntelHero extends StatelessWidget {
           const Icon(
             Icons.radar_rounded,
             color: ArcUiTokens.primaryAccent,
-            size: 30,
+            size: 24,
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -204,12 +176,12 @@ class _IntelHero extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'LATEST INTEL // $totalReports REPORT${totalReports == 1 ? '' : 'S'}',
-                  style: ArcUiTokens.sectionTitle(fontSize: 17),
+                  'RECENT INTEL',
+                  style: ArcUiTokens.sectionTitle(fontSize: 16),
                 ),
                 const SizedBox(height: 5),
                 Text(
-                  'Review or correct your latest field reports before they feed your personal intelligence history.',
+                  'Showing $visibleReports of $totalReports submitted report${totalReports == 1 ? '' : 's'}. Review or correct recent field intel here.',
                   style: ArcUiTokens.bodySmall(
                     color: ArcUiTokens.textSecondary,
                   ),

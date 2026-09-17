@@ -80,42 +80,12 @@ class _WallOfLegendsScreenState extends State<WallOfLegendsScreen> {
             return ArcRaidersPageList(
               maxWidth: 1120,
               children: [
-                ArcRaidersPageHeader(
-                  title: 'Wall of Legends',
-                  subtitle:
-                      'Admin-curated recognition for founders, beta Raiders, trusted traders, guardians, creators and community heroes.',
-                  icon: Icons.emoji_events_rounded,
-                  accent: AppTheme.neonCyan,
-                ),
-                const SizedBox(height: AppTheme.spaceM),
                 ArcRaidersHeroBanner(
                   title: 'IMMORTALISED IN THE UAG NETWORK',
                   subtitle: entries.isEmpty
                       ? 'Founders, beta Raiders, creators, guardians and community contributors can be permanently recognised here once approved.'
                       : '${entries.length} approved ${entries.length == 1 ? 'legend' : 'legends'} currently recorded across the UAG community.',
                   accent: ArcUiTokens.warning,
-                ),
-                const SizedBox(height: AppTheme.spaceM),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    ArcTacticalStatusPill(
-                      label: '${entries.length} recognised',
-                      icon: Icons.workspace_premium_outlined,
-                      accent: ArcUiTokens.warning,
-                    ),
-                    ArcTacticalStatusPill(
-                      label: _selectedCategory?.label ?? 'All categories',
-                      icon: Icons.filter_alt_outlined,
-                      accent: ArcUiTokens.primaryAccent,
-                    ),
-                    const ArcTacticalStatusPill(
-                      label: 'Admin curated',
-                      icon: Icons.verified_user_outlined,
-                      accent: ArcUiTokens.success,
-                    ),
-                  ],
                 ),
                 const SizedBox(height: AppTheme.spaceM),
                 _categoryFilters(),

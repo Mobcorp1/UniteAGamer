@@ -152,42 +152,12 @@ class _ArcBetaFeedbackScreenState extends State<ArcBetaFeedbackScreen> {
                         current: ArcAccountSupportWorkspace.feedback,
                         padding: EdgeInsets.zero,
                       ),
-                      const SizedBox(height: AppTheme.spaceM),
-                      const ArcRaidersPageHeader(
-                        title: 'BETA FEEDBACK',
-                        subtitle:
-                            'Send a reproducible report with device context.',
-                        icon: Icons.bug_report_outlined,
-                        accent: ArcUiTokens.secondaryAccent,
-                      ),
-                      const SizedBox(height: AppTheme.spaceM),
+                      const SizedBox(height: AppTheme.spaceS),
                       const ArcRaidersHeroBanner(
                         title: 'HELP HARDEN THE ARC NETWORK',
                         subtitle:
                             'Tell us exactly what happened. Route, platform and viewport diagnostics are attached automatically so the report is useful immediately.',
                         accent: ArcUiTokens.secondaryAccent,
-                      ),
-                      const SizedBox(height: AppTheme.spaceM),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: const [
-                          ArcTacticalStatusPill(
-                            label: 'Private beta report',
-                            icon: Icons.lock_outline_rounded,
-                            accent: ArcUiTokens.success,
-                          ),
-                          ArcTacticalStatusPill(
-                            label: 'Diagnostics attached',
-                            icon: Icons.memory_rounded,
-                            accent: ArcUiTokens.primaryAccent,
-                          ),
-                          ArcTacticalStatusPill(
-                            label: 'No screenshot required',
-                            icon: Icons.mobile_friendly_rounded,
-                            accent: ArcUiTokens.warning,
-                          ),
-                        ],
                       ),
                       const SizedBox(height: AppTheme.spaceM),
                       _section(

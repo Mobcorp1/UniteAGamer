@@ -47,7 +47,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 250));
 
     expect(tester.takeException(), isNull);
-    expect(find.text('COMMAND CENTRE'), findsOneWidget);
+    expect(find.text('OPS SNAPSHOT'), findsOneWidget);
     expect(find.text('PRIORITY MOVES'), findsOneWidget);
 
     await tester.scrollUntilVisible(
@@ -59,6 +59,6 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.text('ARC SYSTEMS'), findsOneWidget);
-    expect(find.text('FEATURES'), findsOneWidget);
+    expect(find.text('FEATURES'), findsNothing);
   });
 }

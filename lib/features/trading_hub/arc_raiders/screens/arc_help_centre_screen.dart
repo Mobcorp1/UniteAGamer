@@ -103,45 +103,12 @@ class _ArcHelpCentreScreenState extends State<ArcHelpCentreScreen> {
               current: ArcAccountSupportWorkspace.help,
               padding: EdgeInsets.zero,
             ),
-            const SizedBox(height: AppTheme.spaceM),
-            ArcRaidersPageHeader(
-              title: 'HELP CENTRE',
-              subtitle: 'Support, safety and account guidance.',
-              icon: Icons.support_agent_rounded,
-              accent: ArcUiTokens.primaryAccent,
-              trailing: ArcTacticalStatusPill(
-                label: '${ArcHelpCentreCatalog.categories.length} topics',
-                icon: Icons.library_books_outlined,
-              ),
-            ),
-            const SizedBox(height: AppTheme.spaceM),
+            const SizedBox(height: AppTheme.spaceS),
             const ArcRaidersHeroBanner(
               title: 'FIELD SUPPORT // UAG NETWORK',
               subtitle:
                   'Search practical answers, jump directly into the relevant system, or open the legal and safety policies that govern the network.',
               accent: ArcUiTokens.primaryAccent,
-            ),
-            const SizedBox(height: AppTheme.spaceM),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: const [
-                ArcTacticalStatusPill(
-                  label: 'Searchable guidance',
-                  icon: Icons.manage_search_rounded,
-                  accent: ArcUiTokens.primaryAccent,
-                ),
-                ArcTacticalStatusPill(
-                  label: 'Safety policies',
-                  icon: Icons.shield_outlined,
-                  accent: ArcUiTokens.success,
-                ),
-                ArcTacticalStatusPill(
-                  label: 'Direct system routes',
-                  icon: Icons.alt_route_rounded,
-                  accent: ArcUiTokens.secondaryAccent,
-                ),
-              ],
             ),
             const SizedBox(height: AppTheme.spaceM),
             _buildSearch(),
