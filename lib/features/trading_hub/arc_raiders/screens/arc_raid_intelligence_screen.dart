@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
@@ -305,23 +306,30 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final desktop = constraints.maxWidth >= 980;
+        final compactLandscape =
+            constraints.maxWidth >= 680 &&
+            constraints.maxWidth > constraints.maxHeight * 1.25;
+        final sideBySide = desktop || compactLandscape;
         final panel = _controlPanel(
           intelligence,
-          desktop: desktop,
+          desktop: sideBySide,
           communityReports: communityReports,
         );
         final map = _mapPanel(intelligence);
-        if (desktop) {
+        if (sideBySide) {
+          final expandedPanelWidth = desktop
+              ? 390.0
+              : math.min(340.0, constraints.maxWidth * 0.40);
           return Padding(
-            padding: const EdgeInsets.all(14),
+            padding: EdgeInsets.all(desktop ? 14 : 10),
             child: Row(
               children: [
-                Expanded(flex: 7, child: map),
-                const SizedBox(width: 14),
+                Expanded(flex: desktop ? 7 : 6, child: map),
+                const SizedBox(width: 12),
                 AnimatedContainer(
                   duration: AppTheme.fastAnimation,
                   curve: Curves.easeOutCubic,
-                  width: _controlPanelCollapsed ? 52 : 390,
+                  width: _controlPanelCollapsed ? 52 : expandedPanelWidth,
                   child: _controlPanelCollapsed
                       ? _collapsedControlRail()
                       : panel,
@@ -330,16 +338,30 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
             ),
           );
         }
+
+        final availableHeight = constraints.maxHeight.isFinite
+            ? constraints.maxHeight
+            : MediaQuery.sizeOf(context).height;
+        final preferredMapHeight = availableHeight * 0.52;
+        final compactMapHeight = math.min(
+          math.min(420.0, availableHeight * 0.62),
+          math.max(220.0, preferredMapHeight),
+        );
+
         return Column(
           children: [
-            Expanded(
-              child: Padding(padding: const EdgeInsets.all(10), child: map),
-            ),
-            ConstrainedBox(
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.sizeOf(context).height * 0.46,
+            SizedBox(
+              height: compactMapHeight,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(10, 10, 10, 6),
+                child: map,
               ),
-              child: panel,
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(0, 4, 0, 0),
+                child: panel,
+              ),
             ),
           ],
         );

@@ -48,8 +48,8 @@ class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
               ? constraints.maxHeight
               : MediaQuery.sizeOf(context).height * 0.62;
           final viewportSize = Size(
-            width.clamp(320.0, 1800.0).toDouble(),
-            height.clamp(360.0, 1100.0).toDouble(),
+            width.clamp(1.0, 1800.0).toDouble(),
+            height.clamp(1.0, 1100.0).toDouble(),
           );
           final mapSize = _fittedMapSize(viewportSize);
           return SizedBox.fromSize(
