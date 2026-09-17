@@ -94,19 +94,31 @@ class ArcRaidersResponsiveContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final content = Padding(
-      padding: padding ?? ArcLayoutTokens.pagePadding(context),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: maxWidth),
-          child: SizedBox(width: double.infinity, child: child),
-        ),
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final mediaSize = MediaQuery.sizeOf(context);
+        final localWidth = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : mediaSize.width;
+        final resolvedPadding =
+            padding ??
+            ArcLayoutTokens.pagePaddingForSize(
+              Size(localWidth, mediaSize.height),
+            );
+        final content = Padding(
+          padding: resolvedPadding,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: maxWidth),
+              child: SizedBox(width: double.infinity, child: child),
+            ),
+          ),
+        );
+
+        if (!alignTop) return content;
+        return Align(alignment: Alignment.topCenter, child: content);
+      },
     );
-
-    if (!alignTop) return content;
-
-    return Align(alignment: Alignment.topCenter, child: content);
   }
 }
 
@@ -198,109 +210,134 @@ class ArcRaidersPageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width;
-    final compact = width < 430;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final availableWidth = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : MediaQuery.sizeOf(context).width;
+        final textScale = MediaQuery.textScalerOf(context).scale(14) / 14;
+        final compact = availableWidth < 430 || textScale > 1.45;
+        final stackTrailing =
+            trailing != null && (availableWidth < 560 || textScale > 1.35);
 
-    Widget leadingIcon() {
-      final glyph = logoAsset != null
-          ? Image.asset(
-              logoAsset!,
-              width: compact ? 22 : 25,
-              height: compact ? 22 : 25,
-              filterQuality: FilterQuality.high,
-              errorBuilder: (_, _, _) => Icon(
-                icon ?? Icons.dashboard_rounded,
-                color: accent,
-                size: compact ? 20 : 22,
-              ),
-            )
-          : Icon(
-              icon ?? Icons.dashboard_rounded,
-              color: accent,
-              size: compact ? 20 : 22,
-            );
+        Widget leadingIcon() {
+          final glyph = logoAsset != null
+              ? Image.asset(
+                  logoAsset!,
+                  width: compact ? 22 : 25,
+                  height: compact ? 22 : 25,
+                  filterQuality: FilterQuality.high,
+                  errorBuilder: (_, _, _) => Icon(
+                    icon ?? Icons.dashboard_rounded,
+                    color: accent,
+                    size: compact ? 20 : 22,
+                  ),
+                )
+              : Icon(
+                  icon ?? Icons.dashboard_rounded,
+                  color: accent,
+                  size: compact ? 20 : 22,
+                );
 
-      return Container(
-        width: compact ? 36 : 40,
-        height: compact ? 36 : 40,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              accent.withValues(alpha: 0.16),
-              accent.withValues(alpha: 0.035),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
-          border: Border.all(color: accent.withValues(alpha: 0.28)),
-        ),
-        alignment: Alignment.center,
-        child: glyph,
-      );
-    }
-
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        compact ? 2 : 4,
-        0,
-        compact ? 2 : 4,
-        compact ? 4 : 6,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              leadingIcon(),
-              SizedBox(width: compact ? 9 : 11),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      title,
-                      maxLines: compact ? 2 : 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: ArcUiTokens.pageTitle(
-                        fontSize: compact ? 17 : 20,
-                        color: ArcUiTokens.textPrimary,
-                      ),
-                    ),
-                    if (subtitle != null) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle!,
-                        maxLines: compact ? 2 : 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: ArcUiTokens.bodySmall(
-                          color: ArcUiTokens.textTertiary,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              if (trailing != null) ...[const SizedBox(width: 8), trailing!],
-            ],
-          ),
-          const SizedBox(height: 8),
-          Container(
-            height: 1,
+          return Container(
+            width: compact ? 36 : 40,
+            height: compact ? 36 : 40,
             decoration: BoxDecoration(
               gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
                 colors: [
-                  accent.withValues(alpha: 0.55),
-                  accent.withValues(alpha: 0.10),
-                  Colors.transparent,
+                  accent.withValues(alpha: 0.16),
+                  accent.withValues(alpha: 0.035),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
+              border: Border.all(color: accent.withValues(alpha: 0.28)),
+            ),
+            alignment: Alignment.center,
+            child: glyph,
+          );
+        }
+
+        final identity = Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            leadingIcon(),
+            SizedBox(width: compact ? 9 : 11),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    title,
+                    maxLines: compact ? 2 : 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: ArcUiTokens.pageTitle(
+                      fontSize: compact ? 17 : 20,
+                      color: ArcUiTokens.textPrimary,
+                    ),
+                  ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle!,
+                      maxLines: compact ? 3 : 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: ArcUiTokens.bodySmall(
+                        color: ArcUiTokens.textTertiary,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
+          ],
+        );
+
+        return Padding(
+          padding: EdgeInsets.fromLTRB(
+            compact ? 2 : 4,
+            0,
+            compact ? 2 : 4,
+            compact ? 4 : 6,
           ),
-        ],
-      ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (stackTrailing) ...[
+                identity,
+                const SizedBox(height: ArcUiTokens.gapS),
+                Align(alignment: Alignment.centerLeft, child: trailing!),
+              ] else
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: identity),
+                    if (trailing != null) ...[
+                      const SizedBox(width: 8),
+                      trailing!,
+                    ],
+                  ],
+                ),
+              const SizedBox(height: 8),
+              Container(
+                height: 1,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      accent.withValues(alpha: 0.55),
+                      accent.withValues(alpha: 0.10),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -319,82 +356,100 @@ class ArcRaidersHeroBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final compact = MediaQuery.sizeOf(context).width < 600;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final availableWidth = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : MediaQuery.sizeOf(context).width;
+        final textScale = MediaQuery.textScalerOf(context).scale(13) / 13;
+        final compact = availableWidth < ArcLayoutTokens.compactBreakpoint;
+        final veryCompact = availableWidth < 360 || textScale > 1.55;
 
-    return Container(
-      padding: EdgeInsets.all(compact ? ArcUiTokens.gapM : ArcUiTokens.gapL),
-      decoration: ArcUiTokens.surfaceDecoration(
-        role: ArcSurfaceRole.raised,
-        radius: ArcUiTokens.radiusXXL,
-        accent: accent,
-        borderOpacity: 0.28,
-        glow: true,
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            right: compact ? -4 : 4,
-            top: compact ? -6 : -4,
-            child: IgnorePointer(
-              child: Icon(
-                Icons.blur_on_rounded,
-                size: compact ? 72 : 92,
-                color: accent.withValues(alpha: 0.045),
-              ),
-            ),
+        return Container(
+          padding: EdgeInsets.all(
+            compact ? ArcUiTokens.gapM : ArcUiTokens.gapL,
           ),
-          Padding(
-            padding: EdgeInsets.only(right: compact ? 26 : 54),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+          decoration: ArcUiTokens.surfaceDecoration(
+            role: ArcSurfaceRole.raised,
+            radius: ArcUiTokens.radiusXXL,
+            accent: accent,
+            borderOpacity: 0.28,
+            glow: true,
+          ),
+          child: Stack(
+            children: [
+              if (!veryCompact)
+                Positioned(
+                  right: compact ? -4 : 4,
+                  top: compact ? -6 : -4,
+                  child: IgnorePointer(
+                    child: Icon(
+                      Icons.blur_on_rounded,
+                      size: compact ? 72 : 92,
+                      color: accent.withValues(alpha: 0.045),
+                    ),
+                  ),
+                ),
+              Padding(
+                padding: EdgeInsets.only(
+                  right: veryCompact ? 0 : (compact ? 26 : 54),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: compact ? 36 : 44,
-                      height: 3,
-                      decoration: BoxDecoration(
-                        color: accent,
-                        borderRadius: BorderRadius.circular(999),
-                        boxShadow: [
-                          BoxShadow(
-                            color: accent.withValues(alpha: 0.22),
-                            blurRadius: 10,
+                    Row(
+                      children: [
+                        Container(
+                          width: compact ? 36 : 44,
+                          height: 3,
+                          decoration: BoxDecoration(
+                            color: accent,
+                            borderRadius: BorderRadius.circular(999),
+                            boxShadow: [
+                              BoxShadow(
+                                color: accent.withValues(alpha: 0.22),
+                                blurRadius: 10,
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
+                        const SizedBox(width: 7),
+                        Flexible(
+                          child: Text(
+                            'ARC OPERATIONS',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: ArcUiTokens.label(
+                              color: accent,
+                            ).copyWith(letterSpacing: 1.0),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: ArcUiTokens.gapM),
+                    Text(
+                      title,
+                      style: ArcUiTokens.sectionTitle(
+                        fontSize: compact ? 19 : 23,
+                        color: ArcUiTokens.textPrimary,
                       ),
                     ),
-                    const SizedBox(width: 7),
+                    const SizedBox(height: ArcUiTokens.gapS),
                     Text(
-                      'ARC OPERATIONS',
-                      style: ArcUiTokens.label(
-                        color: accent,
-                      ).copyWith(letterSpacing: 1.0),
+                      subtitle,
+                      style: ArcUiTokens.body(
+                        fontSize: compact ? 12 : 13,
+                        color: ArcUiTokens.textSecondary,
+                        weight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: ArcUiTokens.gapM),
-                Text(
-                  title,
-                  style: ArcUiTokens.sectionTitle(
-                    fontSize: compact ? 19 : 23,
-                    color: ArcUiTokens.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: ArcUiTokens.gapS),
-                Text(
-                  subtitle,
-                  style: ArcUiTokens.body(
-                    fontSize: compact ? 12 : 13,
-                    color: ArcUiTokens.textSecondary,
-                    weight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

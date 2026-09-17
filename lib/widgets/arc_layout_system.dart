@@ -4,7 +4,13 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/fou
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
+enum ArcViewportClass { compact, medium, expanded, wide }
+
 /// Canonical responsive layout tokens used by every user and admin surface.
+///
+/// Breakpoints are intentionally platform-agnostic: Android, iOS and web use
+/// the same width classes so a given viewport receives the same spacing and
+/// density regardless of the host platform.
 class ArcLayoutTokens {
   const ArcLayoutTokens._();
 
@@ -17,6 +23,27 @@ class ArcLayoutTokens {
   static const double formContentWidth = 760;
   static const double standardContentWidth = 1180;
   static const double wideContentWidth = 1480;
+
+  static ArcViewportClass viewportClassForWidth(double width) {
+    if (width >= wideDesktopBreakpoint) return ArcViewportClass.wide;
+    if (width >= desktopBreakpoint) return ArcViewportClass.expanded;
+    if (width >= compactBreakpoint) return ArcViewportClass.medium;
+    return ArcViewportClass.compact;
+  }
+
+  static ArcViewportClass viewportClass(BuildContext context) {
+    return viewportClassForWidth(MediaQuery.sizeOf(context).width);
+  }
+
+  static bool isCompact(BuildContext context) {
+    return viewportClass(context) == ArcViewportClass.compact;
+  }
+
+  static bool isDesktop(BuildContext context) {
+    final viewport = viewportClass(context);
+    return viewport == ArcViewportClass.expanded ||
+        viewport == ArcViewportClass.wide;
+  }
 
   static double contentMaxWidth(
     BuildContext context, {
@@ -31,9 +58,9 @@ class ArcLayoutTokens {
     };
   }
 
-  static EdgeInsets pagePadding(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width;
-    final height = MediaQuery.sizeOf(context).height;
+  static EdgeInsets pagePaddingForSize(Size size) {
+    final width = size.width;
+    final height = size.height;
 
     if (width >= wideDesktopBreakpoint) {
       return const EdgeInsets.fromLTRB(28, 20, 28, 24);
@@ -50,12 +77,24 @@ class ArcLayoutTokens {
     return EdgeInsets.fromLTRB(12, height < 700 ? 8 : 10, 12, 16);
   }
 
+  static EdgeInsets pagePadding(BuildContext context) {
+    return pagePaddingForSize(MediaQuery.sizeOf(context));
+  }
+
+  static double sectionGapForWidth(double width) {
+    return width >= desktopBreakpoint ? 20 : 14;
+  }
+
   static double sectionGap(BuildContext context) {
-    return MediaQuery.sizeOf(context).width >= desktopBreakpoint ? 20 : 14;
+    return sectionGapForWidth(MediaQuery.sizeOf(context).width);
+  }
+
+  static double cardGapForWidth(double width) {
+    return width >= desktopBreakpoint ? 16 : 10;
   }
 
   static double cardGap(BuildContext context) {
-    return MediaQuery.sizeOf(context).width >= desktopBreakpoint ? 16 : 10;
+    return cardGapForWidth(MediaQuery.sizeOf(context).width);
   }
 
   static int columns(

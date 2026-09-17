@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_layout_system.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
 
 /// Canonical primary navigation for the ARC Operations OS.
@@ -24,9 +25,11 @@ class ArcCompanionBottomDock extends StatelessWidget {
     final active = _normalisedActiveLabel(activeLabel);
     final media = MediaQuery.of(context);
     final width = media.size.width;
-    final desktop = width >= 900;
+    final desktop = width >= ArcLayoutTokens.tabletBreakpoint;
+    final narrowPhone = width < 360;
     final landscapeMobile =
         media.orientation == Orientation.landscape && !desktop;
+    final compactChrome = landscapeMobile || narrowPhone;
     final horizontalInset = desktop ? 18.0 : 0.0;
 
     return SafeArea(
@@ -61,7 +64,7 @@ class ArcCompanionBottomDock extends StatelessWidget {
                       activeIcon: Icons.dashboard_rounded,
                       label: 'RUN',
                       active: active == 'run',
-                      compact: landscapeMobile,
+                      compact: compactChrome,
                       onTap: () => _go(
                         context,
                         '/trading-hub/arc-raiders/command-centre',
@@ -74,7 +77,7 @@ class ArcCompanionBottomDock extends StatelessWidget {
                       activeIcon: Icons.explore_rounded,
                       label: 'DISCOVER',
                       active: active == 'discover',
-                      compact: landscapeMobile,
+                      compact: compactChrome,
                       onTap: () => _go(context, '/trading-hub/arc-raiders'),
                     ),
                   ),
@@ -84,7 +87,7 @@ class ArcCompanionBottomDock extends StatelessWidget {
                       activeIcon: Icons.track_changes_rounded,
                       label: 'TRACK',
                       active: active == 'track',
-                      compact: landscapeMobile,
+                      compact: compactChrome,
                       onTap: () => _go(
                         context,
                         '/trading-hub/arc-raiders/progress-trackers',
@@ -97,7 +100,7 @@ class ArcCompanionBottomDock extends StatelessWidget {
                       activeIcon: Icons.swap_horiz_rounded,
                       label: 'TRADE',
                       active: active == 'trade',
-                      compact: landscapeMobile,
+                      compact: compactChrome,
                       onTap: () =>
                           _go(context, '/trading-hub/arc-raiders/trader-hub'),
                     ),
@@ -108,7 +111,7 @@ class ArcCompanionBottomDock extends StatelessWidget {
                       activeIcon: Icons.person_rounded,
                       label: 'PROFILE',
                       active: active == 'profile',
-                      compact: landscapeMobile,
+                      compact: compactChrome,
                       onTap: () =>
                           _go(context, '/trading-hub/arc-raiders/profile'),
                     ),
@@ -251,13 +254,20 @@ class _DockButton extends StatelessWidget {
             size: compact ? 16 : 18,
           ),
           SizedBox(height: compact ? 1 : 2),
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: ArcUiTokens.label(
-              color: color,
-            ).copyWith(fontSize: compact ? 7.5 : 8.25),
+          SizedBox(
+            width: double.infinity,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.center,
+              child: Text(
+                label,
+                maxLines: 1,
+                softWrap: false,
+                style: ArcUiTokens.label(
+                  color: color,
+                ).copyWith(fontSize: compact ? 7.5 : 8.25),
+              ),
+            ),
           ),
         ],
       ),

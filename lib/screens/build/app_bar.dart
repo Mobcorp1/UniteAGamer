@@ -4,8 +4,11 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/fou
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_help_centre_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_notifications_screen.dart';
 import 'package:uag_arc_raiders_hub/screens/build/auth/auth_landing_screen.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_layout_system.dart';
 
 class UagAppBar extends StatelessWidget implements PreferredSizeWidget {
+  static const double toolbarHeight = 60;
+
   const UagAppBar({
     super.key,
     required this.title,
@@ -31,7 +34,8 @@ class UagAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    final compact = MediaQuery.sizeOf(context).width < 600;
+    final compact =
+        MediaQuery.sizeOf(context).width < ArcLayoutTokens.compactBreakpoint;
     final fullBrandTitle = title.trim().toUpperCase() == 'UAG ARC RAIDERS HUB';
     final baseActions = <Widget>[
       IconButton(
@@ -58,7 +62,7 @@ class UagAppBar extends StatelessWidget implements PreferredSizeWidget {
     ];
 
     return AppBar(
-      toolbarHeight: fullBrandTitle && compact ? 58 : (compact ? 54 : 60),
+      toolbarHeight: toolbarHeight,
       elevation: 0,
       scrolledUnderElevation: 0,
       titleSpacing: compact ? 6 : 10,
