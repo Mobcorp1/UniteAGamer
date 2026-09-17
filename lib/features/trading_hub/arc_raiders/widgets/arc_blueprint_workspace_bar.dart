@@ -83,6 +83,49 @@ class ArcBlueprintWorkspaceBar extends StatelessWidget {
   }
 }
 
+/// Bottom-anchored secondary navigation for the Blueprint Intelligence family.
+///
+/// This is intentionally compact so TRACKER / LOADOUT / WATCHES can live at
+/// the bottom of Blueprint-family screens without stealing vertical space from
+/// the main content viewport.
+class ArcBlueprintWorkspaceDock extends StatelessWidget {
+  const ArcBlueprintWorkspaceDock({
+    super.key,
+    required this.current,
+    this.safeBottom = false,
+  });
+
+  final ArcBlueprintWorkspace current;
+  final bool safeBottom;
+
+  @override
+  Widget build(BuildContext context) {
+    final content = DecoratedBox(
+      decoration: BoxDecoration(
+        color: ArcUiTokens.background.withValues(alpha: 0.97),
+        border: Border(
+          top: BorderSide(
+            color: ArcUiTokens.borderMedium.withValues(alpha: 0.72),
+          ),
+          bottom: BorderSide(
+            color: ArcUiTokens.borderSubtle.withValues(alpha: 0.42),
+          ),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: ArcBlueprintWorkspaceBar(
+          current: current,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+        ),
+      ),
+    );
+
+    if (!safeBottom) return content;
+    return SafeArea(top: false, child: content);
+  }
+}
+
 class _BlueprintWorkspaceButton extends StatelessWidget {
   const _BlueprintWorkspaceButton({
     required this.workspace,

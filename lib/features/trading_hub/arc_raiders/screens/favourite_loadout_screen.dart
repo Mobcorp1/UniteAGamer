@@ -1371,8 +1371,15 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
       backgroundColor: Colors.transparent,
-      bottomNavigationBar: const ArcCompanionBottomDock(activeLabel: 'Loadout'),
+      bottomNavigationBar: const Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ArcBlueprintWorkspaceDock(current: ArcBlueprintWorkspace.loadout),
+          ArcCompanionBottomDock(activeLabel: 'Loadout'),
+        ],
+      ),
       body: ArcRaidersScreenShell(
         useSafeArea: false,
         showAdBanner: true,
@@ -1405,13 +1412,8 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                       if (portrait) {
                         return ArcRaidersPageList(
                           maxWidth: 520,
-                          bottomPadding: 110,
+                          bottomPadding: 150,
                           children: [
-                            const ArcBlueprintWorkspaceBar(
-                              current: ArcBlueprintWorkspace.loadout,
-                              padding: EdgeInsets.zero,
-                            ),
-                            const SizedBox(height: 10),
                             _buildPortraitRotationPrompt(blueprintStates),
                           ],
                         );
@@ -1419,13 +1421,8 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
 
                       return ArcRaidersPageList(
                         maxWidth: 1280,
-                        bottomPadding: 100,
+                        bottomPadding: 150,
                         children: [
-                          const ArcBlueprintWorkspaceBar(
-                            current: ArcBlueprintWorkspace.loadout,
-                            padding: EdgeInsets.zero,
-                          ),
-                          const SizedBox(height: 10),
                           if ((hydration?.isLoading ?? false) &&
                               blueprintStates.isEmpty) ...[
                             _buildBlueprintStateNotice(),

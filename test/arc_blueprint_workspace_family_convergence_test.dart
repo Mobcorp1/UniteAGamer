@@ -21,6 +21,7 @@ void main() {
       contains("return '/trading-hub/arc-raiders/blueprint-watches';"),
     );
     expect(source, contains('SingleChildScrollView'));
+    expect(source, contains('class ArcBlueprintWorkspaceDock'));
     expect(source, isNot(contains('ownership summary')));
   });
 
@@ -31,7 +32,12 @@ void main() {
         'lib/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart',
       );
 
-      expect(source, contains('ArcBlueprintWorkspace.tracker'));
+      expect(
+        source,
+        contains(
+          'ArcBlueprintWorkspaceDock(current: ArcBlueprintWorkspace.tracker)',
+        ),
+      );
       expect(
         source,
         contains("key: const Key('blueprint-authoritative-grid')"),
@@ -51,8 +57,10 @@ void main() {
     );
 
     expect(
-      RegExp('ArcBlueprintWorkspace\\.loadout').allMatches(source).length,
-      greaterThanOrEqualTo(2),
+      source,
+      contains(
+        'ArcBlueprintWorkspaceDock(current: ArcBlueprintWorkspace.loadout)',
+      ),
     );
     expect(source, contains('_buildPortraitRotationPrompt(blueprintStates)'));
     expect(source, contains('_buildLoadoutBoard(blueprintStates)'));
@@ -64,8 +72,10 @@ void main() {
     );
 
     expect(
-      RegExp('ArcBlueprintWorkspace\\.watches').allMatches(source).length,
-      greaterThanOrEqualTo(2),
+      source,
+      contains(
+        'ArcBlueprintWorkspaceDock(current: ArcBlueprintWorkspace.watches)',
+      ),
     );
     expect(source, contains("title: 'No active watches'"));
     expect(source, contains("title: 'BLUEPRINT WATCHES'"));

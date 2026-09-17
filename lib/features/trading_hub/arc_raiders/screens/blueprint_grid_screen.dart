@@ -2751,7 +2751,10 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
               rightRailWidth: rightRailWidth,
               railGap: railGap,
             );
-        final reservedChromeHeight = isLandscape ? 72.0 : 142.0;
+        // Keep the landscape grid clear of the app bar plus the two compact
+        // bottom navigation rows while still giving the grid the full visible
+        // vertical workspace between them.
+        final reservedChromeHeight = isLandscape ? 128.0 : 142.0;
         final availableGridHeight = (safeHeight - reservedChromeHeight).clamp(
           170.0,
           safeHeight,
@@ -2854,20 +2857,26 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
           );
           final widthScale = availableGridWidth / metrics.naturalWidth;
           final heightScale = availableGridHeight / metrics.naturalHeight;
-          final fittedScale = math
-              .min(widthScale, heightScale)
-              .clamp(0.20, 1.0)
-              .toDouble();
+
+          // Landscape is height-first: the Blueprint grid should consume the
+          // available screen height and horizontal overflow is handled by the
+          // existing pan gesture. Portrait keeps the fit-all overview.
+          final fittedScale = isLandscape
+              ? heightScale.clamp(0.20, 1.20).toDouble()
+              : math.min(widthScale, heightScale).clamp(0.20, 1.0).toDouble();
           final fittedHeight = metrics.naturalHeight * fittedScale;
           final fittedWidth = metrics.naturalWidth * fittedScale;
-          final viewportHeight = fittedHeight.clamp(170.0, availableGridHeight);
+          final viewportHeight = isLandscape
+              ? availableGridHeight
+              : fittedHeight.clamp(170.0, availableGridHeight);
+          final viewportWidth = isLandscape ? availableGridWidth : fittedWidth;
 
           return Center(
             child: SizedBox(
               width:
                   leftRailWidth +
                   railGap +
-                  fittedWidth +
+                  viewportWidth +
                   railGap +
                   rightRailWidth,
               child: Row(
@@ -2884,7 +2893,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                   SizedBox(width: railGap),
                   SizedBox(
                     key: const Key('blueprint-authoritative-grid-viewport'),
-                    width: fittedWidth,
+                    width: viewportWidth,
                     height: viewportHeight,
                     child: ClipRect(
                       child: InteractiveViewer(
@@ -2893,18 +2902,23 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                         alignment: Alignment.center,
                         panEnabled: true,
                         scaleEnabled: true,
-                        constrained: true,
+                        constrained: !isLandscape,
                         minScale: 1.0,
                         maxScale: isLandscape ? 5.5 : 4.2,
                         boundaryMargin: const EdgeInsets.all(384),
                         clipBehavior: Clip.none,
-                        child: FittedBox(
-                          fit: BoxFit.contain,
-                          child: buildTiles(
-                            width: metrics.naturalWidth,
-                            height: metrics.naturalHeight,
-                          ),
-                        ),
+                        child: isLandscape
+                            ? buildTiles(
+                                width: fittedWidth,
+                                height: fittedHeight,
+                              )
+                            : FittedBox(
+                                fit: BoxFit.contain,
+                                child: buildTiles(
+                                  width: metrics.naturalWidth,
+                                  height: metrics.naturalHeight,
+                                ),
+                              ),
                       ),
                     ),
                   ),
@@ -2996,7 +3010,13 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
           const SizedBox(width: 8),
         ],
       ),
-      bottomNavigationBar: const ArcCompanionBottomDock(activeLabel: 'Track'),
+      bottomNavigationBar: const Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ArcBlueprintWorkspaceDock(current: ArcBlueprintWorkspace.tracker),
+          ArcCompanionBottomDock(activeLabel: 'Track'),
+        ],
+      ),
       body: ArcRaidersScreenShell(
         showAdBanner: false,
         child: SafeArea(
@@ -3033,14 +3053,9 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                       AppTheme.pagePadding.left,
                       8,
                       AppTheme.pagePadding.right,
-                      AppTheme.pagePadding.bottom + 82,
+                      AppTheme.pagePadding.bottom + 132,
                     ),
                     children: [
-                      const ArcBlueprintWorkspaceBar(
-                        current: ArcBlueprintWorkspace.tracker,
-                        padding: EdgeInsets.zero,
-                      ),
-                      const SizedBox(height: 10),
                       if (smartBuildHunt != null)
                         _buildSmartBuildHuntPanel(smartBuildHunt),
                       _buildOverviewGrid(context, filtered, states, loadout),
