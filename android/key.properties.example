@@ -1,0 +1,7 @@
+# Copy this file to android/key.properties for local release builds.
+# android/key.properties and *.jks/*.keystore are ignored by Git.
+# Prefer an absolute storeFile path on Windows, using forward slashes.
+storeFile=C:/Users/YOUR_NAME/.uag-signing/uag-upload-key.jks
+storePassword=REPLACE_WITH_LOCAL_SECRET
+keyAlias=uag-upload
+keyPassword=REPLACE_WITH_LOCAL_SECRET

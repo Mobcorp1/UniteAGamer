@@ -1,7 +1,8 @@
 param(
   [switch]$RequireJava21,
   [switch]$RequireCleanTree,
-  [switch]$RequireAndroidDevice
+  [switch]$RequireAndroidDevice,
+  [switch]$RequireAndroidReleaseSigning
 )
 
 $ErrorActionPreference = 'Stop'
@@ -79,6 +80,86 @@ function Test-AndroidDevice {
   return $true
 }
 
+function Get-UagProperties {
+  param([string]$Path)
+
+  $result = @{}
+  if (-not (Test-Path -LiteralPath $Path)) {
+    return $result
+  }
+
+  foreach ($line in Get-Content -LiteralPath $Path) {
+    $trimmed = $line.Trim()
+    if ([string]::IsNullOrWhiteSpace($trimmed) -or $trimmed.StartsWith('#')) {
+      continue
+    }
+    $parts = $trimmed -split '=', 2
+    if ($parts.Count -eq 2) {
+      $result[$parts[0].Trim()] = $parts[1].Trim()
+    }
+  }
+
+  return $result
+}
+
+function Resolve-UagSigningValue {
+  param(
+    [hashtable]$Properties,
+    [string]$PropertyName,
+    [string]$EnvironmentName
+  )
+
+  $environmentValue = [Environment]::GetEnvironmentVariable($EnvironmentName)
+  if (-not [string]::IsNullOrWhiteSpace($environmentValue)) {
+    return $environmentValue.Trim()
+  }
+
+  if ($Properties.ContainsKey($PropertyName)) {
+    $propertyValue = [string]$Properties[$PropertyName]
+    if (-not [string]::IsNullOrWhiteSpace($propertyValue)) {
+      return $propertyValue.Trim()
+    }
+  }
+
+  return $null
+}
+
+function Assert-AndroidReleaseSigning {
+  $propertiesPath = Join-Path (Get-Location).Path 'android\key.properties'
+  $properties = Get-UagProperties -Path $propertiesPath
+
+  $storeFile = Resolve-UagSigningValue -Properties $properties -PropertyName 'storeFile' -EnvironmentName 'UAG_ANDROID_STORE_FILE'
+  $storePassword = Resolve-UagSigningValue -Properties $properties -PropertyName 'storePassword' -EnvironmentName 'UAG_ANDROID_STORE_PASSWORD'
+  $keyAlias = Resolve-UagSigningValue -Properties $properties -PropertyName 'keyAlias' -EnvironmentName 'UAG_ANDROID_KEY_ALIAS'
+  $keyPassword = Resolve-UagSigningValue -Properties $properties -PropertyName 'keyPassword' -EnvironmentName 'UAG_ANDROID_KEY_PASSWORD'
+
+  $missing = @()
+  if ([string]::IsNullOrWhiteSpace($storeFile)) { $missing += 'storeFile/UAG_ANDROID_STORE_FILE' }
+  if ([string]::IsNullOrWhiteSpace($storePassword)) { $missing += 'storePassword/UAG_ANDROID_STORE_PASSWORD' }
+  if ([string]::IsNullOrWhiteSpace($keyAlias)) { $missing += 'keyAlias/UAG_ANDROID_KEY_ALIAS' }
+  if ([string]::IsNullOrWhiteSpace($keyPassword)) { $missing += 'keyPassword/UAG_ANDROID_KEY_PASSWORD' }
+
+  if ($missing.Count -gt 0) {
+    throw "Android release signing is incomplete. Missing: $($missing -join ', '). Copy android/key.properties.example to android/key.properties or set all four UAG_ANDROID_* signing environment variables."
+  }
+
+  $candidatePaths = @($storeFile)
+  if (-not [System.IO.Path]::IsPathRooted($storeFile)) {
+    $candidatePaths += (Join-Path (Get-Location).Path $storeFile)
+    $candidatePaths += (Join-Path (Join-Path (Get-Location).Path 'android') $storeFile)
+    $candidatePaths += (Join-Path (Join-Path (Get-Location).Path 'android\app') $storeFile)
+  }
+
+  $resolvedStore = $candidatePaths | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+  if ([string]::IsNullOrWhiteSpace($resolvedStore)) {
+    throw "Android release keystore was not found at the configured storeFile path: $storeFile"
+  }
+
+  Write-Host "Android release signing: configured"
+  Write-Host "Keystore: $resolvedStore"
+  Write-Host "Key alias: $keyAlias"
+}
+
 Write-Stage 'Release Environment'
 Write-Host "Workspace: $PWD"
 
@@ -123,6 +204,11 @@ if ($RequireCleanTree) {
   } else {
     Write-Warning "Working tree has changes:`n$status"
   }
+}
+
+if ($RequireAndroidReleaseSigning) {
+  Write-Stage 'Android Release Signing'
+  Assert-AndroidReleaseSigning
 }
 
 Write-Stage 'Android Devices'

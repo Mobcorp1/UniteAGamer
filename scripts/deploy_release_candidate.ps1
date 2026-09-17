@@ -5,6 +5,7 @@ param(
   [switch]$DeployStorageRules,
   [switch]$DeployFunctions,
   [switch]$BuildAndroidRelease,
+  [switch]$BuildAndroidAppBundle,
   [switch]$InstallDebugApk,
   [switch]$RunFirebaseEmulatorTests,
   [switch]$AllowCommit,
@@ -101,7 +102,11 @@ function Test-LiveVersionJson {
 }
 
 Invoke-Checked 'Release environment' {
-  & "$PSScriptRoot\validate_release_environment.ps1" -RequireCleanTree
+  if ($BuildAndroidRelease -or $BuildAndroidAppBundle) {
+    & "$PSScriptRoot\validate_release_environment.ps1" -RequireCleanTree -RequireAndroidReleaseSigning
+  } else {
+    & "$PSScriptRoot\validate_release_environment.ps1" -RequireCleanTree
+  }
 }
 
 Invoke-Checked 'Verify branch and remote head' {
@@ -176,6 +181,10 @@ if ($BuildAndroidRelease) {
   Invoke-Checked 'Android release APK build' { & flutter build apk --release }
 }
 
+if ($BuildAndroidAppBundle) {
+  Invoke-Checked 'Android release App Bundle build' { & flutter build appbundle --release }
+}
+
 Invoke-Checked 'Git diff whitespace check' { & git diff --check }
 
 if ($InstallDebugApk) {
@@ -223,6 +232,9 @@ if ($AllowPush) {
 Write-Stage 'Artifacts'
 Write-Host "Web output: build\web"
 Write-Host "Debug APK: build\app\outputs\flutter-apk\app-debug.apk"
+if ($BuildAndroidAppBundle) {
+  Write-Host "Release AAB: build\app\outputs\bundle\release\app-release.aab"
+}
 Write-Host "Version file: build\web\version.json"
 if ($metadata -ne $null) {
   Write-Host "Build ID: $($metadata.buildId)"
