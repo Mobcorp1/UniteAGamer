@@ -4,6 +4,8 @@ import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/features/legal/models/uag_policy_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/arc_data_attribution_screen.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/privacy_policy_screen.dart';
+import 'package:uag_arc_raiders_hub/features/legal/screens/subscription_refunds_screen.dart';
+import 'package:uag_arc_raiders_hub/features/legal/screens/support_screen.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/terms_of_use_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_account_support_workspace_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
@@ -58,6 +60,19 @@ class LegalHubScreen extends StatelessWidget {
             subtitle: 'How app data is handled inside the companion platform.',
             icon: Icons.privacy_tip_outlined,
             onTap: () => _open(context, const PrivacyPolicyScreen()),
+          ),
+          _LegalTile(
+            title: 'Subscriptions & Refunds',
+            subtitle:
+                'Google Play, Stripe, renewals, cancellation and refunds.',
+            icon: Icons.receipt_long_outlined,
+            onTap: () => _open(context, const SubscriptionRefundsScreen()),
+          ),
+          _LegalTile(
+            title: 'Support & Contact',
+            subtitle: 'Official MobCorp support and public policy links.',
+            icon: Icons.contact_support_outlined,
+            onTap: () => _open(context, const UagSupportScreen()),
           ),
           _LegalTile(
             title: 'Data Attribution',

@@ -2,6 +2,7 @@ enum UagReleaseReadinessState {
   ready,
   configurationRequired,
   manualQaRequired,
+  deferred,
   blocked,
   unknown,
 }
@@ -15,6 +16,8 @@ extension UagReleaseReadinessStateX on UagReleaseReadinessState {
         return 'Config required';
       case UagReleaseReadinessState.manualQaRequired:
         return 'Manual QA';
+      case UagReleaseReadinessState.deferred:
+        return 'Deferred';
       case UagReleaseReadinessState.blocked:
         return 'Blocked';
       case UagReleaseReadinessState.unknown:
@@ -35,6 +38,10 @@ extension UagReleaseReadinessStateX on UagReleaseReadinessState {
       case 'manualqarequired':
       case 'manual qa':
         return UagReleaseReadinessState.manualQaRequired;
+      case 'deferred':
+      case 'defer':
+      case 'later':
+        return UagReleaseReadinessState.deferred;
       case 'blocked':
         return UagReleaseReadinessState.blocked;
       case 'unknown':
@@ -113,6 +120,9 @@ class UagReleaseReadinessSnapshot {
         (check) => check.state == UagReleaseReadinessState.manualQaRequired,
       )
       .length;
+  int get deferredCount => checks
+      .where((check) => check.state == UagReleaseReadinessState.deferred)
+      .length;
 
   bool get canCallClosedBetaReady => blockerCount == 0;
 
@@ -157,11 +167,11 @@ class UagReleaseReadinessSnapshot {
     ),
     UagReleaseReadinessCheck(
       id: 'java_21',
-      label: 'Java 21 emulator runtime',
-      state: UagReleaseReadinessState.configurationRequired,
-      owner: 'Mike',
+      label: 'Java 21 Firebase emulator runtime',
+      state: UagReleaseReadinessState.deferred,
+      owner: 'Mike/dev machine',
       detail:
-          'Install a Java 21 JDK and set JAVA_HOME/PATH for Firebase emulator tests.',
+          'Local Firebase emulator tooling only. Android Studio may already bundle a suitable JBR; verify JAVA_HOME when emulator-suite testing is scheduled. This does not block device beta testing.',
     ),
     UagReleaseReadinessCheck(
       id: 'moderation_provider',
@@ -169,7 +179,7 @@ class UagReleaseReadinessSnapshot {
       state: UagReleaseReadinessState.configurationRequired,
       owner: 'Firebase/Google Cloud',
       detail:
-          'Set UAG_MODERATION_PROVIDER_ENABLED and Google Cloud Natural Language access.',
+          'Provider selected: Google Cloud Natural Language. Deterministic local checks remain active; enable the Cloud API and UAG_MODERATION_PROVIDER_ENABLED for beta/production before claiming external moderation coverage.',
     ),
     UagReleaseReadinessCheck(
       id: 'ocr_provider',
@@ -177,23 +187,23 @@ class UagReleaseReadinessSnapshot {
       state: UagReleaseReadinessState.configurationRequired,
       owner: 'Firebase/Google Cloud',
       detail:
-          'Local matching is gated; Cloud Vision or ML Kit OCR must be configured before claiming OCR success.',
+          'Provider selected: Google Cloud Vision. Enable the API and server-side OCR configuration before claiming cloud OCR success. Existing Blueprint recognition/scanner logic remains separate.',
     ),
     UagReleaseReadinessCheck(
       id: 'stripe_products',
-      label: 'Stripe products and webhooks',
+      label: 'Stripe web billing',
       state: UagReleaseReadinessState.configurationRequired,
       owner: 'Stripe',
       detail:
-          'Configure Essential, Premium and Founding Supporter price IDs plus webhook secret.',
+          'Stripe Checkout, Customer Portal, webhook secrets and plan bindings already exist in the web/function pipeline. Verify the deployed test/live secret and price bindings before accepting web payments.',
     ),
     UagReleaseReadinessCheck(
       id: 'google_play_billing',
       label: 'Google Play Billing',
-      state: UagReleaseReadinessState.configurationRequired,
+      state: UagReleaseReadinessState.deferred,
       owner: 'Google Play Console',
       detail:
-          'Create subscription products and connect server verification before Play distribution.',
+          'Android billing authority selected for all paid digital access. Google account/app verification must complete before subscription product IDs and server verification can be wired.',
     ),
     UagReleaseReadinessCheck(
       id: 'device_push_qa',
@@ -201,15 +211,23 @@ class UagReleaseReadinessSnapshot {
       state: UagReleaseReadinessState.manualQaRequired,
       owner: 'Mike',
       detail:
-          'Verify foreground, background and terminated notification flows on physical devices.',
+          'Verify foreground, background, terminated, notification-tap and deep-link flows on the Sony. Web push QA is deferred until the web beta is ready.',
     ),
     UagReleaseReadinessCheck(
       id: 'legal_operator',
       label: 'Operator and legal details',
-      state: UagReleaseReadinessState.blocked,
-      owner: 'Mike/legal',
+      state: UagReleaseReadinessState.ready,
+      owner: 'MobCorp Limited',
       detail:
-          'Production legal identity, support contacts and policy review are still required.',
+          'MobCorp Limited / Michael Marsh / contact@mobcorp.co.uk and the registered service address are configured. Public Terms, Privacy, Subscriptions & Refunds and Support URLs are defined for Firebase Hosting.',
+    ),
+    UagReleaseReadinessCheck(
+      id: 'legal_review',
+      label: 'Qualified UK legal review',
+      state: UagReleaseReadinessState.manualQaRequired,
+      owner: 'MobCorp/legal',
+      detail:
+          'Operational beta policies are in place. Obtain qualified UK legal review before general public launch, especially subscriptions, privacy, international availability and third-party game IP.',
     ),
   ];
 }

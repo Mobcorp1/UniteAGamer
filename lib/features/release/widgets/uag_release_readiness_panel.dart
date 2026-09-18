@@ -55,7 +55,7 @@ class UagReleaseReadinessPanel extends StatelessWidget {
                         const SizedBox(height: AppTheme.spaceXS),
                         Text(
                           readiness.canCallClosedBetaReady
-                              ? 'Repository checks are release-candidate shaped. Remaining items are configuration or device QA.'
+                              ? 'No hard release blocker is currently recorded. Remaining rows are configuration, deferred external setup or manual QA.'
                               : 'Release blockers remain. Do not call this production-ready until the blocked rows are cleared.',
                           style: ArcUiTokens.body(
                             color: ArcUiTokens.textSecondary,
@@ -77,6 +77,7 @@ class UagReleaseReadinessPanel extends StatelessWidget {
                     readiness.configurationRequiredCount.toString(),
                   ),
                   _MetricPill('Manual QA', readiness.manualQaCount.toString()),
+                  _MetricPill('Deferred', readiness.deferredCount.toString()),
                   _MetricPill('Blocked', readiness.blockerCount.toString()),
                 ],
               ),
@@ -357,6 +358,8 @@ class _ReadinessCheckTile extends StatelessWidget {
         return AppTheme.warningAmber;
       case UagReleaseReadinessState.manualQaRequired:
         return AppTheme.neonPink;
+      case UagReleaseReadinessState.deferred:
+        return Colors.white54;
       case UagReleaseReadinessState.blocked:
         return AppTheme.tradingDanger;
       case UagReleaseReadinessState.unknown:
@@ -372,6 +375,8 @@ class _ReadinessCheckTile extends StatelessWidget {
         return Icons.settings_suggest_outlined;
       case UagReleaseReadinessState.manualQaRequired:
         return Icons.fact_check_outlined;
+      case UagReleaseReadinessState.deferred:
+        return Icons.schedule_outlined;
       case UagReleaseReadinessState.blocked:
         return Icons.report_problem_outlined;
       case UagReleaseReadinessState.unknown:

@@ -7,11 +7,11 @@ void main() {
       final snapshot = UagReleaseReadinessSnapshot.fromMap({
         'checks': [
           {
-            'id': 'legal_operator',
-            'label': 'Operator and legal details',
-            'state': 'configuration_required',
-            'owner': 'Mike/legal',
-            'detail': 'Operator details supplied but solicitor review remains.',
+            'id': 'legal_review',
+            'label': 'Qualified UK legal review',
+            'state': 'manual_qa_required',
+            'owner': 'MobCorp/legal',
+            'detail': 'Solicitor review remains.',
           },
           {
             'id': 'web_build',
@@ -27,19 +27,30 @@ void main() {
       expect(snapshot.checks.any((check) => check.id == 'web_build'), isTrue);
       expect(snapshot.blockerCount, 0);
       expect(snapshot.configurationRequiredCount, greaterThanOrEqualTo(1));
+      expect(snapshot.deferredCount, greaterThanOrEqualTo(1));
       expect(snapshot.canCallClosedBetaReady, isTrue);
     });
 
-    test('keeps default blocker when no operator/legal override exists', () {
+    test('operator details are no longer a default release blocker', () {
       final snapshot = UagReleaseReadinessSnapshot.fromMap({});
 
-      expect(snapshot.blockerCount, 1);
-      expect(snapshot.canCallClosedBetaReady, isFalse);
+      expect(snapshot.blockerCount, 0);
+      expect(snapshot.canCallClosedBetaReady, isTrue);
       expect(
         snapshot.checks
             .firstWhere((check) => check.id == 'legal_operator')
             .state,
-        UagReleaseReadinessState.blocked,
+        UagReleaseReadinessState.ready,
+      );
+      expect(
+        snapshot.checks.firstWhere((check) => check.id == 'java_21').state,
+        UagReleaseReadinessState.deferred,
+      );
+      expect(
+        snapshot.checks
+            .firstWhere((check) => check.id == 'google_play_billing')
+            .state,
+        UagReleaseReadinessState.deferred,
       );
     });
   });
@@ -53,6 +64,10 @@ void main() {
       expect(
         UagReleaseReadinessStateX.fromWire('manual_qa_required'),
         UagReleaseReadinessState.manualQaRequired,
+      );
+      expect(
+        UagReleaseReadinessStateX.fromWire('deferred'),
+        UagReleaseReadinessState.deferred,
       );
     });
   });

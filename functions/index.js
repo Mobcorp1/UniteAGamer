@@ -2533,6 +2533,22 @@ function moderationProviderConfig() {
   };
 }
 
+function ocrProviderConfig() {
+  const enabled = normalizeString(process.env.UAG_OCR_PROVIDER_ENABLED).toLowerCase() === 'true';
+  const provider = normalizeString(process.env.UAG_OCR_PROVIDER || 'google_cloud_vision');
+  const projectId = normalizeString(
+    process.env.UAG_OCR_PROJECT_ID ||
+      process.env.GOOGLE_CLOUD_PROJECT ||
+      process.env.GCLOUD_PROJECT
+  );
+  return {
+    enabled,
+    provider,
+    projectId,
+    region: normalizeString(process.env.UAG_OCR_REGION || 'global'),
+  };
+}
+
 function disabledProviderResult(config) {
   return {
     configured: false,
@@ -3318,6 +3334,7 @@ exports.sendUagNotificationBroadcast = onDocumentCreated(
 exports.uagReleaseHealthCheck = onRequest(async (req, res) => {
   try {
     const moderation = moderationProviderConfig();
+    const ocr = ocrProviderConfig();
     const planChecks = Object.entries(PLAN_CONFIG).map(([id, plan]) => ({
       id,
       kind: plan.kind,
@@ -3335,6 +3352,12 @@ exports.uagReleaseHealthCheck = onRequest(async (req, res) => {
         projectConfigured: Boolean(moderation.projectId),
         region: moderation.region,
         timeoutMs: moderation.timeoutMs,
+      },
+      ocr: {
+        enabled: ocr.enabled,
+        provider: ocr.provider,
+        projectConfigured: Boolean(ocr.projectId),
+        region: ocr.region,
       },
       stripe: {
         secretBound: Boolean(process.env.STRIPE_SECRET_KEY),

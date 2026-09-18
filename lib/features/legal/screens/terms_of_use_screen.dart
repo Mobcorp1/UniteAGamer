@@ -15,8 +15,13 @@ class TermsOfUseScreen extends StatelessWidget {
       sections: [
         ArcLegalSection(
           'Operator and contract',
-          'UAG ARC Raiders Hub is operated by MobCorp Ltd, company number 16857854, registered in England and Wales with registered office at 1711 High Street, Knowle, Solihull, West Midlands, B93 0LN. These Terms govern your use of the UAG service.',
+          'UAG ARC Raiders Hub is operated by MobCorp Limited, company number 16857854, registered in England and Wales with registered office at 107 Langley Hall Road, Solihull, B92 7HD, United Kingdom. These Terms govern your use of the UAG service.',
           Icons.business_outlined,
+        ),
+        ArcLegalSection(
+          'Contact and public policies',
+          'Support and legal enquiries can be sent to contact@mobcorp.co.uk. Public policy copies are available at https://unite-a-gamer.web.app/terms, https://unite-a-gamer.web.app/privacy and https://unite-a-gamer.web.app/subscriptions-refunds.',
+          Icons.contact_mail_outlined,
         ),
         ArcLegalSection(
           'Unofficial fan companion',
@@ -30,12 +35,12 @@ class TermsOfUseScreen extends StatelessWidget {
         ),
         ArcLegalSection(
           'Licence to use UAG',
-          'Subject to these Terms, MobCorp Ltd grants you a limited, personal, revocable, non-exclusive, non-transferable licence to access and use UAG for its intended personal companion and community purposes. No ownership rights are transferred to you.',
+          'Subject to these Terms, MobCorp Limited grants you a limited, personal, revocable, non-exclusive, non-transferable licence to access and use UAG for its intended personal companion and community purposes. No ownership rights are transferred to you.',
           Icons.key_outlined,
         ),
         ArcLegalSection(
           'MobCorp and UAG intellectual property',
-          'Except for third-party material, MobCorp Ltd retains all rights, title and interest in UAG and its original software, source and object code, architecture, databases, data models, algorithms, workflows, documentation, original graphics, interface designs, branding, logos and other proprietary material. Copyright, database rights, trade marks and other intellectual-property rights are reserved.',
+          'Except for third-party material, MobCorp Limited retains all rights, title and interest in UAG and its original software, source and object code, architecture, databases, data models, algorithms, workflows, documentation, original graphics, interface designs, branding, logos and other proprietary material. Copyright, database rights, trade marks and other intellectual-property rights are reserved.',
           Icons.copyright_rounded,
         ),
         ArcLegalSection(
@@ -60,17 +65,17 @@ class TermsOfUseScreen extends StatelessWidget {
         ),
         ArcLegalSection(
           'Third-party and open-source rights',
-          'Third-party software, open-source components and third-party content remain subject to their applicable licences and rights. Nothing in these Terms transfers ARC Raiders or Embark intellectual property to MobCorp Ltd or to a UAG user.',
+          'Third-party software, open-source components and third-party content remain subject to their applicable licences and rights. Nothing in these Terms transfers ARC Raiders or Embark intellectual property to MobCorp Limited or to a UAG user.',
           Icons.extension_outlined,
         ),
         ArcLegalSection(
           'Your content',
-          'You keep ownership of content you create and submit, subject to third-party rights. You confirm you have the right to submit it and grant MobCorp Ltd a non-exclusive, worldwide, royalty-free licence to host, store, reproduce, format, display and process that content only as reasonably necessary to operate, secure, moderate and improve UAG and provide the features you request. This licence ends when the content is deleted except for lawful backups, evidence, dispute records and material we must retain.',
+          'You keep ownership of content you create and submit, subject to third-party rights. You confirm you have the right to submit it and grant MobCorp Limited a non-exclusive, worldwide, royalty-free licence to host, store, reproduce, format, display and process that content only as reasonably necessary to operate, secure, moderate and improve UAG and provide the features you request. This licence ends when the content is deleted except for lawful backups, evidence, dispute records and material we must retain.',
           Icons.edit_note_rounded,
         ),
         ArcLegalSection(
           'Acceptable use and community conduct',
-          'Do not use UAG for unlawful activity, harassment, threats, discrimination, impersonation, spam, scams, fake reports, referral manipulation, exploit abuse, credential collection or other conduct that harms users, rights holders, MobCorp Ltd or the service.',
+          'Do not use UAG for unlawful activity, harassment, threats, discrimination, impersonation, spam, scams, fake reports, referral manipulation, exploit abuse, credential collection or other conduct that harms users, rights holders, MobCorp Limited or the service.',
           Icons.balance_rounded,
         ),
         ArcLegalSection(

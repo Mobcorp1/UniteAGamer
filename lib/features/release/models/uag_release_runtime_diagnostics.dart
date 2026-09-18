@@ -72,33 +72,56 @@ class UagReleaseRuntimeDiagnosticsSnapshot {
 
   static Future<UagReleaseRuntimeDiagnosticsSnapshot> load() async {
     final generatedAt = DateTime.now();
+    final debugMetadataMissing = kDebugMode && appVersion == 'not supplied';
+    final runtimeEnvironment = hostingEnvironment == 'not supplied'
+        ? (kIsWeb
+              ? 'web (not labelled)'
+              : 'native ${kDebugMode ? 'debug' : 'release'}')
+        : hostingEnvironment;
+
     final entries = <UagReleaseDiagnosticEntry>[
       UagReleaseDiagnosticEntry(
         label: 'App version',
-        value: '$appVersion+$buildNumber',
+        value: debugMetadataMissing
+            ? 'debug build (metadata not embedded)'
+            : '$appVersion+$buildNumber',
         level: appVersion == 'not supplied'
-            ? UagReleaseDiagnosticLevel.warning
+            ? (kDebugMode
+                  ? UagReleaseDiagnosticLevel.info
+                  : UagReleaseDiagnosticLevel.warning)
             : UagReleaseDiagnosticLevel.ready,
-        detail: 'Provided by --dart-define at build time.',
+        detail: debugMetadataMissing
+            ? 'Expected for ordinary device debug APKs; signed/release builds embed authoritative version metadata.'
+            : 'Provided by the release build metadata pipeline.',
       ),
       UagReleaseDiagnosticEntry(
         label: 'Build commit',
-        value: gitCommit,
+        value: gitCommit == 'not supplied' && kDebugMode
+            ? 'debug build (not embedded)'
+            : gitCommit,
         level: gitCommit == 'not supplied'
-            ? UagReleaseDiagnosticLevel.warning
+            ? (kDebugMode
+                  ? UagReleaseDiagnosticLevel.info
+                  : UagReleaseDiagnosticLevel.warning)
             : UagReleaseDiagnosticLevel.ready,
-        detail: 'Expected to match the release-candidate Git commit.',
+        detail: gitCommit == 'not supplied' && kDebugMode
+            ? 'Expected for ordinary device debug APKs; signed/release builds embed the Git commit.'
+            : 'Expected to match the release-candidate Git commit.',
       ),
       UagReleaseDiagnosticEntry(
         label: 'Build timestamp',
-        value: buildTimestamp,
+        value: buildTimestamp == 'not supplied' && kDebugMode
+            ? 'debug build (not embedded)'
+            : buildTimestamp,
         level: buildTimestamp == 'not supplied'
-            ? UagReleaseDiagnosticLevel.warning
+            ? (kDebugMode
+                  ? UagReleaseDiagnosticLevel.info
+                  : UagReleaseDiagnosticLevel.warning)
             : UagReleaseDiagnosticLevel.ready,
       ),
       UagReleaseDiagnosticEntry(
         label: 'Hosting environment',
-        value: hostingEnvironment,
+        value: runtimeEnvironment,
         level: hostingEnvironment == 'not supplied'
             ? UagReleaseDiagnosticLevel.info
             : UagReleaseDiagnosticLevel.ready,

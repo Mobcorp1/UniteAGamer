@@ -1,0 +1,50 @@
+:root {
+  color-scheme: dark;
+  --bg: #05090d;
+  --panel: #0b171f;
+  --panel-2: #101e27;
+  --text: #eef8fb;
+  --muted: #a8bbc3;
+  --cyan: #22e6f1;
+  --pink: #ff3f9b;
+  --amber: #ffc857;
+  --line: rgba(34, 230, 241, 0.24);
+}
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body {
+  margin: 0;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background:
+    radial-gradient(circle at 15% 0%, rgba(34,230,241,.10), transparent 32rem),
+    radial-gradient(circle at 85% 10%, rgba(255,63,155,.08), transparent 28rem),
+    var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+a { color: var(--cyan); }
+.shell { width: min(980px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 64px; }
+.brand { display:flex; gap:12px; align-items:center; margin-bottom:22px; color:var(--cyan); font-weight:800; letter-spacing:.06em; }
+.brand-mark { width:13px; height:13px; border:2px solid var(--pink); transform:rotate(45deg); box-shadow:0 0 18px rgba(255,63,155,.45); }
+.hero, .card {
+  border:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(16,30,39,.94), rgba(7,16,23,.94));
+  border-radius:16px;
+  box-shadow:0 14px 44px rgba(0,0,0,.28);
+}
+.hero { padding:28px; margin-bottom:18px; }
+.card { padding:22px; margin:14px 0; }
+h1 { margin:0 0 8px; font-size:clamp(2rem, 5vw, 3.2rem); line-height:1.05; color:var(--cyan); }
+h2 { margin:0 0 8px; font-size:1.15rem; color:var(--text); }
+p { margin:8px 0; }
+.meta { color:var(--muted); font-size:.94rem; }
+.notice { border-color:rgba(255,200,87,.35); }
+.notice h2 { color:var(--amber); }
+.nav { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
+.nav a { text-decoration:none; border:1px solid var(--line); border-radius:999px; padding:8px 12px; background:rgba(34,230,241,.06); }
+ul { padding-left:20px; }
+footer { margin-top:26px; color:var(--muted); font-size:.9rem; }
+@media (max-width: 600px) {
+  .shell { width:min(100% - 20px, 980px); padding-top:16px; }
+  .hero, .card { border-radius:13px; padding:18px; }
+}

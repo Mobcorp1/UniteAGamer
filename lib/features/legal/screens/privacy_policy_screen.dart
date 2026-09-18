@@ -65,8 +65,13 @@ class PrivacyPolicyScreen extends StatelessWidget {
         ),
         ArcLegalSection(
           'Who is responsible for your data',
-          'MobCorp Ltd, company number 16857854, registered office 1711 High Street, Knowle, Solihull, West Midlands, B93 0LN, is the operator of UAG and is responsible for deciding how personal data used by the service is processed, subject to the roles of individual service providers.',
+          'MobCorp Limited, company number 16857854, registered office 107 Langley Hall Road, Solihull, B92 7HD, United Kingdom, is the operator of UAG and is responsible for deciding how personal data used by the service is processed, subject to the roles of individual service providers.',
           Icons.business_outlined,
+        ),
+        ArcLegalSection(
+          'Privacy contact and public copy',
+          'Privacy enquiries and data-rights requests can be sent to contact@mobcorp.co.uk. The public Privacy Policy is available at https://unite-a-gamer.web.app/privacy and support information is available at https://unite-a-gamer.web.app/support.',
+          Icons.contact_mail_outlined,
         ),
         ArcLegalSection(
           'Why we process data and lawful bases',
@@ -77,6 +82,11 @@ class PrivacyPolicyScreen extends StatelessWidget {
           'Sharing and processors',
           'Personal data may be shared with service providers that help us operate authentication, hosting, databases, analytics, communications, advertising, payments, security and support, and with professional advisers, regulators or authorities where legally required. Providers should receive only data reasonably necessary for their role and be subject to appropriate contractual safeguards.',
           Icons.share_outlined,
+        ),
+        ArcLegalSection(
+          'Moderation and image/OCR providers',
+          'When enabled for beta or production, text submitted to safety-sensitive community features may be processed by Google Cloud Natural Language to support moderation. Images submitted to OCR-enabled features may be processed by Google Cloud Vision. We will limit provider use to the data reasonably needed for the requested or safety function and keep Blueprint recognition logic separate from cloud OCR.',
+          Icons.policy_outlined,
         ),
         ArcLegalSection(
           'International transfers',
@@ -95,7 +105,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
         ),
         ArcLegalSection(
           'Complaints',
-          'Please raise privacy concerns with MobCorp Ltd first so they can be investigated. You also have the right to complain to the UK Information Commissioner’s Office about the handling of your personal data.',
+          'Please raise privacy concerns with MobCorp Limited first so they can be investigated. You also have the right to complain to the UK Information Commissioner’s Office about the handling of your personal data.',
           Icons.report_outlined,
         ),
         ArcLegalSection(
