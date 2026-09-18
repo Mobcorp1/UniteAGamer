@@ -200,10 +200,10 @@ class UagReleaseReadinessSnapshot {
     UagReleaseReadinessCheck(
       id: 'google_play_billing',
       label: 'Google Play Billing',
-      state: UagReleaseReadinessState.deferred,
+      state: UagReleaseReadinessState.configurationRequired,
       owner: 'Google Play Console',
       detail:
-          'Android billing authority selected for all paid digital access. Google account/app verification must complete before subscription product IDs and server verification can be wired.',
+          'The Play Console app is now created and verified. Android remains Google Play Billing for paid digital access; create the subscription product IDs/base plans and wire provider-confirmed server verification before accepting Android payments.',
     ),
     UagReleaseReadinessCheck(
       id: 'device_push_qa',
@@ -222,12 +222,28 @@ class UagReleaseReadinessSnapshot {
           'MobCorp Limited / Michael Marsh / contact@mobcorp.co.uk and the registered service address are configured. Public Terms, Privacy, Subscriptions & Refunds and Support URLs are defined for Firebase Hosting.',
     ),
     UagReleaseReadinessCheck(
-      id: 'legal_review',
-      label: 'Qualified UK legal review',
-      state: UagReleaseReadinessState.manualQaRequired,
-      owner: 'MobCorp/legal',
+      id: 'legal_self_audit',
+      label: 'UK legal/compliance self-audit',
+      state: UagReleaseReadinessState.ready,
+      owner: 'MobCorp Limited',
       detail:
-          'Operational beta policies are in place. Obtain qualified UK legal review before general public launch, especially subscriptions, privacy, international availability and third-party game IP.',
+          'Operational policies have been self-audited against current UK government, ICO and Google Play guidance for beta readiness. This is an internal compliance control, not formal legal advice or solicitor sign-off.',
+    ),
+    UagReleaseReadinessCheck(
+      id: 'account_deletion',
+      label: 'Account deletion',
+      state: UagReleaseReadinessState.configurationRequired,
+      owner: 'UAG / Google Play',
+      detail:
+          'The public support page now provides an external deletion-request route. Google Play also requires an in-app account-deletion path for apps that create accounts; verify or implement that path and associated-data deletion before Play release.',
+    ),
+    UagReleaseReadinessCheck(
+      id: 'legal_review',
+      label: 'Independent UK legal review',
+      state: UagReleaseReadinessState.deferred,
+      owner: 'MobCorp Limited',
+      detail:
+          'Independent professional legal review is planned once UAG begins generating revenue or before material commercial/international scale. It is advisory for risk reduction and does not block internal or closed-beta testing.',
     ),
   ];
 }

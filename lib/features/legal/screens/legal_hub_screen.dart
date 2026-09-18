@@ -81,6 +81,17 @@ class LegalHubScreen extends StatelessWidget {
             icon: Icons.dataset_linked_outlined,
             onTap: () => _open(context, const ArcDataAttributionScreen()),
           ),
+          ArcTacticalPanel(
+            icon: Icons.fact_check_outlined,
+            title: 'Compliance assurance',
+            subtitle:
+                'Internal UK compliance self-audit active; independent professional review is planned once UAG generates revenue or before material commercial/international scale.',
+            accent: ArcUiTokens.primaryAccent,
+            child: Text(
+              'The operational policies are maintained against current UK government, ICO and platform guidance. This internal review supports beta readiness but is not solicitor sign-off and does not remove statutory consumer or data-protection rights.',
+              style: ArcUiTokens.body(fontSize: 13),
+            ),
+          ),
           const ArcTacticalPanel(
             icon: Icons.folder_copy_outlined,
             title: 'Policy Catalogue',

@@ -7,8 +7,8 @@ class UagPolicyDocument {
     required this.summary,
     required this.body,
     this.mandatory = true,
-    this.requiresLegalReview = true,
-    this.missingOperatorDetails = true,
+    this.requiresLegalReview = false,
+    this.missingOperatorDetails = false,
   });
 
   final String id;
@@ -44,7 +44,7 @@ class UagPolicyCatalog {
   static const currentPolicyVersion = 2;
   static const effectiveDate = '2026-08-28';
   static const legalReviewNotice =
-      'Operational policy text. Qualified UK legal review is required before general public launch.';
+      'Operational beta policy. MobCorp Limited maintains an internal UK compliance self-audit; independent professional legal review is planned once UAG begins generating revenue or before material commercial or international scale.';
 
   static const documents = <UagPolicyDocument>[
     UagPolicyDocument(
@@ -88,8 +88,9 @@ class UagPolicyCatalog {
           'ad revenue, revenue per active user and lifetime value, and improve '
           'the beta. Sensitive card or bank details should be handled by the '
           'payment provider rather than stored directly by UAG. Users need '
-          'clear correction, deletion and account closure routes before public '
-          'launch.',
+          'clear correction, deletion and account-closure routes. The external '
+          'support route is published; the in-app account-deletion path remains '
+          'a separate Google Play readiness requirement until verified.',
     ),
     UagPolicyDocument(
       id: 'fan_project_notice',
@@ -306,9 +307,10 @@ class UagPolicyCatalog {
       effectiveDate: effectiveDate,
       summary: 'Access, correction, deletion and account closure requests.',
       body:
-          '$legalReviewNotice Users need a clear way to request data access, '
-          'correction, deletion and account closure once operator details are '
-          'confirmed.',
+          '$legalReviewNotice Users can use the published support route to '
+          'request data access, correction, deletion and account closure. The '
+          'Google Play release must also expose a readily discoverable in-app '
+          'account-deletion path for accounts created in UAG.',
     ),
     UagPolicyDocument(
       id: 'copyright_takedown_policy',

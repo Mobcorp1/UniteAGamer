@@ -8,10 +8,10 @@ void main() {
         'checks': [
           {
             'id': 'legal_review',
-            'label': 'Qualified UK legal review',
-            'state': 'manual_qa_required',
-            'owner': 'MobCorp/legal',
-            'detail': 'Solicitor review remains.',
+            'label': 'Independent UK legal review',
+            'state': 'deferred',
+            'owner': 'MobCorp Limited',
+            'detail': 'Professional review is planned after revenue begins.',
           },
           {
             'id': 'web_build',
@@ -50,6 +50,22 @@ void main() {
         snapshot.checks
             .firstWhere((check) => check.id == 'google_play_billing')
             .state,
+        UagReleaseReadinessState.configurationRequired,
+      );
+      expect(
+        snapshot.checks
+            .firstWhere((check) => check.id == 'legal_self_audit')
+            .state,
+        UagReleaseReadinessState.ready,
+      );
+      expect(
+        snapshot.checks
+            .firstWhere((check) => check.id == 'account_deletion')
+            .state,
+        UagReleaseReadinessState.configurationRequired,
+      );
+      expect(
+        snapshot.checks.firstWhere((check) => check.id == 'legal_review').state,
         UagReleaseReadinessState.deferred,
       );
     });

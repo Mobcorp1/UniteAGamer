@@ -37,20 +37,31 @@ void main() {
       },
     );
 
-    test('draft policies flag legal review and missing operator details', () {
-      expect(
-        UagPolicyCatalog.documents.every(
-          (document) => document.requiresLegalReview,
-        ),
-        isTrue,
-      );
-      expect(
-        UagPolicyCatalog.documents.any(
-          (document) => document.missingOperatorDetails,
-        ),
-        isTrue,
-      );
-    });
+    test(
+      'operator details are complete and professional review is advisory',
+      () {
+        expect(
+          UagPolicyCatalog.documents.every(
+            (document) => !document.requiresLegalReview,
+          ),
+          isTrue,
+        );
+        expect(
+          UagPolicyCatalog.documents.every(
+            (document) => !document.missingOperatorDetails,
+          ),
+          isTrue,
+        );
+        expect(
+          UagPolicyCatalog.legalReviewNotice,
+          contains('independent professional legal review is planned'),
+        );
+        expect(
+          UagPolicyCatalog.legalReviewNotice,
+          isNot(contains('required before general public launch')),
+        );
+      },
+    );
 
     test('policy acceptance reads nested policy versions', () {
       final acceptance = LegalAcceptance.fromMap(const <String, dynamic>{

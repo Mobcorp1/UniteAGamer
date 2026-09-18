@@ -50,6 +50,11 @@ class SubscriptionRefundsScreen extends StatelessWidget {
           Icons.science_outlined,
         ),
         ArcLegalSection(
+          'Compliance assurance',
+          'This billing framework is maintained through the UAG internal UK compliance self-audit. Independent professional legal review is planned once UAG begins generating revenue or before material commercial or international scale. Provider rules and statutory consumer rights continue to apply regardless of that review timetable.',
+          Icons.fact_check_outlined,
+        ),
+        ArcLegalSection(
           'Support',
           'Billing and subscription support: contact@mobcorp.co.uk. Public policy copy: https://unite-a-gamer.web.app/subscriptions-refunds.',
           Icons.contact_support_outlined,

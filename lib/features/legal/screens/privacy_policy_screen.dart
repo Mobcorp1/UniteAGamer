@@ -95,8 +95,13 @@ class PrivacyPolicyScreen extends StatelessWidget {
         ),
         ArcLegalSection(
           'How long we keep data',
-          'We keep personal data only for as long as reasonably necessary for the purpose collected, account operation, security, fraud prevention, disputes, legal obligations and establishment or defence of legal claims. Different records may require different periods. We will document and review retention periods before general public launch.',
+          'We keep personal data only for as long as reasonably necessary for the purpose collected, account operation, security, fraud prevention, disputes, legal obligations and establishment or defence of legal claims. Different records may require different periods. Retention periods and deletion rules will be documented and reviewed as processing changes.',
           Icons.schedule_outlined,
+        ),
+        ArcLegalSection(
+          'Account deletion',
+          'You can request deletion of your UAG account and associated personal data through the in-app account route once enabled for Play release, or externally through https://unite-a-gamer.web.app/support#account-deletion and contact@mobcorp.co.uk. We may verify account ownership. Data that must be retained for legal obligations, security, fraud prevention or disputes may be kept only for the necessary period and the reason will be explained where appropriate.',
+          Icons.delete_forever_outlined,
         ),
         ArcLegalSection(
           'Your data-protection rights',
@@ -115,7 +120,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
         ),
         ArcLegalSection(
           'Beta changes',
-          'Because the product is still developing, data models, features, providers, reward systems and legal wording may change as the app improves and receives legal review.',
+          'Because the product is still developing, data models, features, providers, reward systems and legal wording may change as the app improves and the compliance self-audit is maintained. Material privacy changes will be communicated where required.',
           Icons.science_outlined,
         ),
       ],

@@ -18,6 +18,13 @@ void main() {
     expect(privacy, contains('Google Cloud Vision'));
     expect(refunds, contains('Google Play Billing'));
     expect(refunds, contains('Stripe'));
+    expect(support, contains('id="account-deletion"'));
+    expect(privacy, contains('id="account-deletion"'));
+    expect(terms, contains('Independent professional UK legal review'));
+    expect(
+      [privacy, terms, refunds].join(' '),
+      isNot(contains('qualified UK legal review before general public launch')),
+    );
   });
 
   test(

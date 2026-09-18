@@ -29,6 +29,11 @@ class UagSupportScreen extends StatelessWidget {
           Icons.badge_outlined,
         ),
         ArcLegalSection(
+          'Account deletion',
+          'To request deletion of your UAG account and associated personal data, use the in-app deletion route when available or email contact@mobcorp.co.uk with the subject Account deletion. The public request route is https://unite-a-gamer.web.app/support#account-deletion. We may verify account ownership. Cancelling a Google Play or Stripe subscription is a separate step and should be completed through the relevant billing provider.',
+          Icons.delete_forever_outlined,
+        ),
+        ArcLegalSection(
           'Public policies',
           'Privacy: https://unite-a-gamer.web.app/privacy\nTerms: https://unite-a-gamer.web.app/terms\nSubscriptions and refunds: https://unite-a-gamer.web.app/subscriptions-refunds\nSupport: https://unite-a-gamer.web.app/support',
           Icons.link_rounded,

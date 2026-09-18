@@ -114,8 +114,8 @@ class TermsOfUseScreen extends StatelessWidget {
           Icons.account_balance_outlined,
         ),
         ArcLegalSection(
-          'Legal review status',
-          'This release strengthens the operational legal framework but should receive qualified UK legal review before general public launch, particularly subscriptions, consumer cancellation rights, international availability, privacy processing and third-party game intellectual property.',
+          'Compliance assurance plan',
+          'MobCorp Limited maintains an internal UK compliance self-audit for UAG against current government, ICO and platform guidance. Independent professional UK legal review is planned once UAG begins generating revenue or before material commercial or international scale. That future review is an additional risk-reduction step, not a condition of internal or closed-beta testing, and nothing here limits statutory rights.',
           Icons.fact_check_outlined,
         ),
       ],
