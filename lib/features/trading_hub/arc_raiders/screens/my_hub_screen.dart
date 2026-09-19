@@ -395,6 +395,21 @@ class _MyHubScreenState extends State<MyHubScreen> {
     if (personalisation.goals.contains(ArcPersonalisationGoal.planRaids)) {
       return _featureByTitle('Raid Intelligence');
     }
+
+    final blueprintJourney =
+        personalisation.goals.contains(
+          ArcPersonalisationGoal.completeBlueprints,
+        ) ||
+        personalisation.goals.contains(
+          ArcPersonalisationGoal.exploreEverything,
+        );
+
+    if (blueprintJourney &&
+        personalisation.blueprintOwnership ==
+            ArcBlueprintOwnershipState.none) {
+      return _featureByTitle('My Loadout');
+    }
+
     return _featureByTitle('Blueprint Tracker');
   }
 

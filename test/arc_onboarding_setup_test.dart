@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_mandatory_onboarding_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_onboarding_setup.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_user_personalisation_profile.dart';
 
 void main() {
   group('PASS 307 onboarding setup', () {
@@ -59,7 +60,7 @@ void main() {
       expect(payload.containsKey('ageVerification'), isFalse);
 
       final onboarding = payload['arcOnboarding'] as Map<String, dynamic>;
-      expect(onboarding['version'], 6);
+      expect(onboarding['version'], 7);
       expect(onboarding['accountCreatedDuringOnboarding'], isTrue);
       expect(onboarding['platforms'], <String>['PlayStation', 'PC']);
       expect(onboarding['accountCreatedAt'], isA<FieldValue>());
@@ -67,7 +68,7 @@ void main() {
         'account',
         'legal',
         'primaryGoal',
-        'blueprintSetup',
+        'progression',
       ]);
     });
 
@@ -189,17 +190,20 @@ void main() {
       },
     );
 
-    test('builds the essential version 6 completion payload', () {
+    test('builds the progression-aware version 7 completion payload', () {
       final payload = buildArcOnboardingCompletionPayload(
         riderName: '  Mike  ',
         primaryGoal: 'completeBlueprints',
         blueprintSetupMode: 'importScreenshots',
-        recommendedFirstSystem: 'blueprintTracker',
+        recommendedFirstSystem: 'favouriteLoadout',
         legalAccepted: const <String, dynamic>{
           'termsOfServiceAccepted': true,
           'ageConfirmationAccepted': true,
         },
         platforms: const <String>['PlayStation', 'Xbox'],
+        progressStage: ArcRaiderProgressStage.freshExpedition,
+        blueprintOwnership: ArcBlueprintOwnershipState.none,
+        questProgress: ArcQuestProgressState.continuing,
         accountCreatedDuringOnboarding: true,
       );
 
@@ -215,21 +219,24 @@ void main() {
       expect(ageVerification['verifiedAt'], isA<FieldValue>());
 
       final onboarding = payload['arcOnboarding'] as Map<String, dynamic>;
-      expect(onboarding['version'], 6);
+      expect(onboarding['version'], 7);
       expect(onboarding['accountCreatedDuringOnboarding'], isTrue);
       expect(onboarding['flow'], [
         'account',
         'legal',
         'primaryGoal',
-        'blueprintSetup',
+        'progression',
       ]);
       expect(onboarding['riderName'], 'Mike');
       expect(onboarding['platforms'], <String>['PlayStation', 'Xbox']);
       expect(payload['platform'], 'PlayStation');
       expect(payload['platforms'], <String>['PlayStation', 'Xbox']);
       expect(onboarding['primaryGoal'], 'completeBlueprints');
+      expect(onboarding['progressStage'], 'freshExpedition');
+      expect(onboarding['blueprintOwnership'], 'none');
+      expect(onboarding['questProgress'], 'continuing');
       expect(onboarding['blueprintSetupMode'], 'importScreenshots');
-      expect(onboarding['recommendedFirstSystem'], 'blueprintTracker');
+      expect(onboarding['recommendedFirstSystem'], 'favouriteLoadout');
       expect(onboarding['completedAt'], isA<FieldValue>());
     });
   });

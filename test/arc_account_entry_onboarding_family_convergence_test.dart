@@ -43,9 +43,7 @@ void main() {
     expect(auth, contains('AppEntryGate.routeName'));
     expect(
       onboarding,
-      contains(
-        'String get _completionRouteName => ArcRaidersHubScreen.routeName;',
-      ),
+      contains('Widget _completionDestination(String system) {'),
     );
     expect(agreement, contains('Navigator.of(context).pop(true)'));
     expect(profile, contains('await _repository.saveProfile(profile);'));

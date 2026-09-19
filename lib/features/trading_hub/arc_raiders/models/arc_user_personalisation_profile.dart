@@ -59,6 +59,12 @@ enum ArcCommandCentreDensity { compact, balanced, detailed }
 
 enum ArcSoloSquadPreference { solo, duo, squad, flexible }
 
+enum ArcRaiderProgressStage { newRaider, freshExpedition, underway, unsure }
+
+enum ArcBlueprintOwnershipState { none, some, unsure }
+
+enum ArcQuestProgressState { startingOrReset, continuing, unsure }
+
 enum ArcPersonalisationNotificationCategory {
   tradeActivity,
   listingMatches,
@@ -340,6 +346,9 @@ class ArcUserPersonalisationProfile {
         arcDefaultPersonalisationNotificationCategories,
     this.archetypeIds = const <String>{},
     this.playStyleIds = const <String>{},
+    this.progressStage = ArcRaiderProgressStage.unsure,
+    this.blueprintOwnership = ArcBlueprintOwnershipState.unsure,
+    this.questProgress = ArcQuestProgressState.unsure,
     this.showFutureSystems = false,
     this.reduceNoise = true,
   });
@@ -361,6 +370,9 @@ class ArcUserPersonalisationProfile {
   final Set<ArcPersonalisationNotificationCategory> notificationCategories;
   final Set<String> archetypeIds;
   final Set<String> playStyleIds;
+  final ArcRaiderProgressStage progressStage;
+  final ArcBlueprintOwnershipState blueprintOwnership;
+  final ArcQuestProgressState questProgress;
   final bool showFutureSystems;
   final bool reduceNoise;
 
@@ -370,6 +382,11 @@ class ArcUserPersonalisationProfile {
       featureInterests.isNotEmpty ||
       (goals.isNotEmpty &&
           !goals.contains(ArcPersonalisationGoal.exploreEverything));
+
+  bool get hasProgressionContext =>
+      progressStage != ArcRaiderProgressStage.unsure ||
+      blueprintOwnership != ArcBlueprintOwnershipState.unsure ||
+      questProgress != ArcQuestProgressState.unsure;
 
   ArcPersonalisationInterestLevel interestFor(
     ArcPersonalisationFeature feature,
@@ -420,6 +437,9 @@ class ArcUserPersonalisationProfile {
     Set<ArcPersonalisationNotificationCategory>? notificationCategories,
     Set<String>? archetypeIds,
     Set<String>? playStyleIds,
+    ArcRaiderProgressStage? progressStage,
+    ArcBlueprintOwnershipState? blueprintOwnership,
+    ArcQuestProgressState? questProgress,
     bool? showFutureSystems,
     bool? reduceNoise,
   }) {
@@ -438,6 +458,9 @@ class ArcUserPersonalisationProfile {
           notificationCategories ?? this.notificationCategories,
       archetypeIds: archetypeIds ?? this.archetypeIds,
       playStyleIds: playStyleIds ?? this.playStyleIds,
+      progressStage: progressStage ?? this.progressStage,
+      blueprintOwnership: blueprintOwnership ?? this.blueprintOwnership,
+      questProgress: questProgress ?? this.questProgress,
       showFutureSystems: showFutureSystems ?? this.showFutureSystems,
       reduceNoise: reduceNoise ?? this.reduceNoise,
     );
@@ -468,6 +491,16 @@ class ArcUserPersonalisationProfile {
       },
       archetypeIds: {...archetypeIds, ...other.archetypeIds},
       playStyleIds: {...playStyleIds, ...other.playStyleIds},
+      progressStage: other.progressStage == ArcRaiderProgressStage.unsure
+          ? progressStage
+          : other.progressStage,
+      blueprintOwnership:
+          other.blueprintOwnership == ArcBlueprintOwnershipState.unsure
+          ? blueprintOwnership
+          : other.blueprintOwnership,
+      questProgress: other.questProgress == ArcQuestProgressState.unsure
+          ? questProgress
+          : other.questProgress,
       showFutureSystems: showFutureSystems || other.showFutureSystems,
       reduceNoise: other.reduceNoise,
     );
@@ -493,6 +526,9 @@ class ArcUserPersonalisationProfile {
           .toList(growable: false),
       'archetypeIds': archetypeIds.toList(growable: false),
       'playStyleIds': playStyleIds.toList(growable: false),
+      'progressStage': progressStage.name,
+      'blueprintOwnership': blueprintOwnership.name,
+      'questProgress': questProgress.name,
       'showFutureSystems': showFutureSystems,
       'reduceNoise': reduceNoise,
     };
@@ -551,6 +587,21 @@ class ArcUserPersonalisationProfile {
       ),
       archetypeIds: _stringSetValue(map['archetypeIds']),
       playStyleIds: _stringSetValue(map['playStyleIds']),
+      progressStage: _enumByName(
+        ArcRaiderProgressStage.values,
+        map['progressStage'],
+        ArcRaiderProgressStage.unsure,
+      ),
+      blueprintOwnership: _enumByName(
+        ArcBlueprintOwnershipState.values,
+        map['blueprintOwnership'],
+        ArcBlueprintOwnershipState.unsure,
+      ),
+      questProgress: _enumByName(
+        ArcQuestProgressState.values,
+        map['questProgress'],
+        ArcQuestProgressState.unsure,
+      ),
       showFutureSystems: _boolValue(map['showFutureSystems'], false),
       reduceNoise: _boolValue(map['reduceNoise'], true),
     );
@@ -692,6 +743,23 @@ class ArcUserPersonalisationProfile {
       featureInterests: interests,
       archetypeIds: archetypes,
       playStyleIds: playStyles,
+      progressStage: _enumByName(
+        ArcRaiderProgressStage.values,
+        arcOnboarding['progressStage'],
+        ArcRaiderProgressStage.unsure,
+      ),
+      blueprintOwnership: _enumByName(
+        ArcBlueprintOwnershipState.values,
+        arcOnboarding['blueprintOwnership'],
+        hasBlueprintData
+            ? ArcBlueprintOwnershipState.some
+            : ArcBlueprintOwnershipState.unsure,
+      ),
+      questProgress: _enumByName(
+        ArcQuestProgressState.values,
+        arcOnboarding['questProgress'],
+        ArcQuestProgressState.unsure,
+      ),
       migratedAt: DateTime.now(),
     );
   }

@@ -65,9 +65,7 @@ void main() {
     expect(onboarding, contains('markAuthenticatedWithStoredPreference'));
     expect(
       onboarding,
-      contains(
-        'String get _completionRouteName => ArcRaidersHubScreen.routeName;',
-      ),
+      contains('Widget _completionDestination(String system) {'),
     );
     expect(onboarding, isNot(contains(': ArcCommandCentreScreen.routeName')));
     expect(web, contains('interactive-widget=resizes-content'));

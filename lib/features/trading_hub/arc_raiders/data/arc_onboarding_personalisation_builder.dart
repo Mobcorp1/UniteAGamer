@@ -3,6 +3,10 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 ArcUserPersonalisationProfile buildArcOnboardingPersonalisation({
   required ArcPersonalisationGoal primaryGoal,
   Set<ArcPersonalisationGoal> secondaryGoals = const {},
+  ArcRaiderProgressStage progressStage = ArcRaiderProgressStage.unsure,
+  ArcBlueprintOwnershipState blueprintOwnership =
+      ArcBlueprintOwnershipState.unsure,
+  ArcQuestProgressState questProgress = ArcQuestProgressState.unsure,
   DateTime? completedAt,
 }) {
   final goals = <ArcPersonalisationGoal>{primaryGoal, ...secondaryGoals};
@@ -35,10 +39,59 @@ ArcUserPersonalisationProfile buildArcOnboardingPersonalisation({
     }
   }
 
+  final blueprintJourney =
+      goals.contains(ArcPersonalisationGoal.completeBlueprints) ||
+      goals.contains(ArcPersonalisationGoal.buildFavouriteLoadout) ||
+      goals.contains(ArcPersonalisationGoal.exploreEverything);
+
+  if (blueprintJourney) {
+    switch (blueprintOwnership) {
+      case ArcBlueprintOwnershipState.none:
+        interests[ArcPersonalisationFeature.blueprintTracker] =
+            ArcPersonalisationInterestLevel.high;
+        raise(
+          ArcPersonalisationFeature.favouriteLoadout,
+          ArcPersonalisationInterestLevel.primary,
+        );
+        raise(
+          ArcPersonalisationFeature.raidIntelligence,
+          ArcPersonalisationInterestLevel.high,
+        );
+        break;
+      case ArcBlueprintOwnershipState.some:
+        raise(
+          ArcPersonalisationFeature.blueprintTracker,
+          ArcPersonalisationInterestLevel.primary,
+        );
+        raise(
+          ArcPersonalisationFeature.favouriteLoadout,
+          ArcPersonalisationInterestLevel.high,
+        );
+        raise(
+          ArcPersonalisationFeature.raidIntelligence,
+          ArcPersonalisationInterestLevel.high,
+        );
+        break;
+      case ArcBlueprintOwnershipState.unsure:
+        break;
+    }
+  }
+
+  if (questProgress == ArcQuestProgressState.startingOrReset &&
+      (goals.contains(ArcPersonalisationGoal.progressQuests) ||
+          goals.contains(ArcPersonalisationGoal.exploreEverything))) {
+    raise(
+      ArcPersonalisationFeature.questTracker,
+      primaryGoal == ArcPersonalisationGoal.progressQuests
+          ? ArcPersonalisationInterestLevel.primary
+          : ArcPersonalisationInterestLevel.high,
+    );
+  }
+
   return ArcUserPersonalisationProfile(
     completed: true,
     completedAt: completedAt ?? DateTime.now(),
-    source: 'progressive_onboarding_v6',
+    source: 'progressive_onboarding_v7',
     goals: goals,
     featureInterests: interests,
     commandCentre: ArcCommandCentrePreferenceSet(
@@ -63,6 +116,9 @@ ArcUserPersonalisationProfile buildArcOnboardingPersonalisation({
     ),
     squadPreference: ArcSoloSquadPreference.flexible,
     notificationCategories: arcDefaultPersonalisationNotificationCategories,
+    progressStage: progressStage,
+    blueprintOwnership: blueprintOwnership,
+    questProgress: questProgress,
     reduceNoise: true,
   );
 }
@@ -156,10 +212,18 @@ Set<ArcPersonalisationFeature> arcOnboardingFeaturesForGoal(
   }
 }
 
-String arcOnboardingRecommendedSystem(ArcPersonalisationGoal goal) {
+String arcOnboardingRecommendedSystem(
+  ArcPersonalisationGoal goal, {
+  ArcRaiderProgressStage progressStage = ArcRaiderProgressStage.unsure,
+  ArcBlueprintOwnershipState blueprintOwnership =
+      ArcBlueprintOwnershipState.unsure,
+  ArcQuestProgressState questProgress = ArcQuestProgressState.unsure,
+}) {
   switch (goal) {
     case ArcPersonalisationGoal.completeBlueprints:
-      return 'blueprintTracker';
+      return blueprintOwnership == ArcBlueprintOwnershipState.none
+          ? 'favouriteLoadout'
+          : 'blueprintTracker';
     case ArcPersonalisationGoal.findBlueprintIntel:
       return 'blueprintIntelligence';
     case ArcPersonalisationGoal.tradeBlueprints:
@@ -189,6 +253,17 @@ String arcOnboardingRecommendedSystem(ArcPersonalisationGoal goal) {
     case ArcPersonalisationGoal.playLikeAPro:
       return 'playLikeAPro';
     case ArcPersonalisationGoal.exploreEverything:
+      if (blueprintOwnership == ArcBlueprintOwnershipState.none &&
+          (progressStage == ArcRaiderProgressStage.newRaider ||
+              progressStage == ArcRaiderProgressStage.freshExpedition)) {
+        return 'favouriteLoadout';
+      }
+      if (blueprintOwnership == ArcBlueprintOwnershipState.some) {
+        return 'blueprintTracker';
+      }
+      if (questProgress == ArcQuestProgressState.startingOrReset) {
+        return 'questTracker';
+      }
       return 'commandCentre';
   }
 }

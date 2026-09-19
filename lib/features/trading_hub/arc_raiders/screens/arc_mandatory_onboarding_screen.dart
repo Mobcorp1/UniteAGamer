@@ -18,7 +18,13 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_on
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_user_personalisation_profile.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_trader_profile_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_user_personalisation_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_match_rider_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raid_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raiders_hub_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_account_journey_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_game_platform_selector.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
@@ -81,6 +87,9 @@ class _ArcMandatoryOnboardingScreenState
   String? _platformError;
   final Set<String> _selectedPlatforms = <String>{};
   ArcPersonalisationGoal? _primaryGoal;
+  ArcRaiderProgressStage? _progressStage;
+  ArcBlueprintOwnershipState? _blueprintOwnership;
+  ArcQuestProgressState? _questProgress;
   _BlueprintSetupChoice _blueprintSetupChoice =
       _BlueprintSetupChoice.importScreenshots;
   bool _acceptedTraderCode = false;
@@ -183,7 +192,18 @@ class _ArcMandatoryOnboardingScreenState
       _acceptedDataSecurity &&
       _acceptedAgeConfirmation;
 
-  String get _completionRouteName => ArcRaidersHubScreen.routeName;
+  Widget _completionDestination(String system) {
+    return switch (system) {
+      'favouriteLoadout' => const FavouriteLoadoutScreen(),
+      'blueprintTracker' => const BlueprintGridScreen(),
+      'blueprintIntelligence' => const ArcRaidIntelligenceScreen(),
+      'questTracker' => const ScrappyGridScreen.quest(),
+      'raidIntelligence' => const ArcRaidIntelligenceScreen(),
+      'trading' => const TraderHubScreen(),
+      'matchRider' => const ArcMatchRiderScreen(),
+      _ => const ArcRaidersHubScreen(),
+    };
+  }
 
   Future<void> _next() async {
     FocusScope.of(context).unfocus();
@@ -230,6 +250,13 @@ class _ArcMandatoryOnboardingScreenState
     }
     if (_step == 2 && _primaryGoal == null) {
       _showMessage('Choose one main goal.');
+      return;
+    }
+    if (_step == 3 &&
+        (_progressStage == null ||
+            _blueprintOwnership == null ||
+            _questProgress == null)) {
+      _showMessage('Tell UAG where your current Raider is up to.');
       return;
     }
     if (_step >= 3) {
@@ -460,6 +487,9 @@ class _ArcMandatoryOnboardingScreenState
 
     final user = await _currentSignedInUser();
     final primaryGoal = _primaryGoal;
+    final progressStage = _progressStage;
+    final blueprintOwnership = _blueprintOwnership;
+    final questProgress = _questProgress;
     final riderName = _riderNameController.text.trim();
     final nameError = validateArcRiderName(riderName);
 
@@ -472,6 +502,9 @@ class _ArcMandatoryOnboardingScreenState
     if (nameError != null ||
         _selectedPlatforms.isEmpty ||
         primaryGoal == null ||
+        progressStage == null ||
+        blueprintOwnership == null ||
+        questProgress == null ||
         !_legalComplete) {
       setState(() {
         _riderNameError = nameError;
@@ -494,13 +527,22 @@ class _ArcMandatoryOnboardingScreenState
       platform: kIsWeb ? 'web' : defaultTargetPlatform.name,
       appVersion: 'closed-beta',
     );
+    final recommendedFirstSystem = arcOnboardingRecommendedSystem(
+      primaryGoal,
+      progressStage: progressStage,
+      blueprintOwnership: blueprintOwnership,
+      questProgress: questProgress,
+    );
     final payload = buildArcOnboardingCompletionPayload(
       riderName: riderName,
       primaryGoal: primaryGoal.name,
       blueprintSetupMode: _blueprintSetupChoice.name,
-      recommendedFirstSystem: arcOnboardingRecommendedSystem(primaryGoal),
+      recommendedFirstSystem: recommendedFirstSystem,
       legalAccepted: legalAccepted,
       platforms: _selectedPlatforms,
+      progressStage: progressStage,
+      blueprintOwnership: blueprintOwnership,
+      questProgress: questProgress,
       accountCreatedDuringOnboarding: _accountCreatedDuringOnboarding,
     );
     final accountProfilePayload = _accountCreatedDuringOnboarding
@@ -516,6 +558,9 @@ class _ArcMandatoryOnboardingScreenState
     try {
       final personalisation = buildArcOnboardingPersonalisation(
         primaryGoal: primaryGoal,
+        progressStage: progressStage,
+        blueprintOwnership: blueprintOwnership,
+        questProgress: questProgress,
       );
 
       // These writes are part of successful onboarding. Do not navigate into
@@ -551,9 +596,12 @@ class _ArcMandatoryOnboardingScreenState
       unawaited(_profileRepository.refreshProfileCompletion());
 
       if (!mounted) return;
-      Navigator.of(
-        context,
-      ).pushNamedAndRemoveUntil(_completionRouteName, (_) => false);
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute<void>(
+          builder: (_) => _completionDestination(recommendedFirstSystem),
+        ),
+        (_) => false,
+      );
     } catch (error) {
       if (!mounted) return;
       setState(() => _saving = false);
@@ -681,9 +729,23 @@ class _ArcMandatoryOnboardingScreenState
                             onSelected: (goal) =>
                                 setState(() => _primaryGoal = goal),
                           ),
-                          _BlueprintStep(
-                            selected: _blueprintSetupChoice,
-                            onSelected: (choice) =>
+                          _ProgressionStep(
+                            progressStage: _progressStage,
+                            blueprintOwnership: _blueprintOwnership,
+                            questProgress: _questProgress,
+                            blueprintSetup: _blueprintSetupChoice,
+                            onProgressStageChanged: (value) =>
+                                setState(() => _progressStage = value),
+                            onBlueprintOwnershipChanged: (value) => setState(() {
+                              _blueprintOwnership = value;
+                              if (value == ArcBlueprintOwnershipState.none) {
+                                _blueprintSetupChoice =
+                                    _BlueprintSetupChoice.later;
+                              }
+                            }),
+                            onQuestProgressChanged: (value) =>
+                                setState(() => _questProgress = value),
+                            onBlueprintSetupChanged: (choice) =>
                                 setState(() => _blueprintSetupChoice = choice),
                           ),
                         ],
@@ -754,7 +816,7 @@ class _TopBar extends StatelessWidget {
     'IDENTITY',
     'AGREEMENTS',
     'OBJECTIVE',
-    'BLUEPRINTS',
+    'PROGRESSION',
   ];
 
   @override
@@ -1557,37 +1619,255 @@ class _GoalStep extends StatelessWidget {
   }
 }
 
-class _BlueprintStep extends StatelessWidget {
-  const _BlueprintStep({required this.selected, required this.onSelected});
-  final _BlueprintSetupChoice selected;
-  final ValueChanged<_BlueprintSetupChoice> onSelected;
+class _ProgressionStep extends StatelessWidget {
+  const _ProgressionStep({
+    required this.progressStage,
+    required this.blueprintOwnership,
+    required this.questProgress,
+    required this.blueprintSetup,
+    required this.onProgressStageChanged,
+    required this.onBlueprintOwnershipChanged,
+    required this.onQuestProgressChanged,
+    required this.onBlueprintSetupChanged,
+  });
+
+  final ArcRaiderProgressStage? progressStage;
+  final ArcBlueprintOwnershipState? blueprintOwnership;
+  final ArcQuestProgressState? questProgress;
+  final _BlueprintSetupChoice blueprintSetup;
+  final ValueChanged<ArcRaiderProgressStage> onProgressStageChanged;
+  final ValueChanged<ArcBlueprintOwnershipState> onBlueprintOwnershipChanged;
+  final ValueChanged<ArcQuestProgressState> onQuestProgressChanged;
+  final ValueChanged<_BlueprintSetupChoice> onBlueprintSetupChanged;
 
   @override
   Widget build(BuildContext context) {
     return _StepFrame(
-      icon: Icons.grid_on_rounded,
-      title: 'BLUEPRINT SETUP',
-      subtitle: 'Choose how you want to build your tracker.',
+      icon: Icons.route_rounded,
+      title: 'RAIDER PROGRESSION',
+      subtitle:
+          'Tell UAG where this Raider is now so your first tools match your current run.',
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _ChoiceTile(
-            icon: Icons.camera_alt_outlined,
-            title: 'Import screenshots',
-            badge: 'RECOMMENDED',
-            selected: selected == _BlueprintSetupChoice.importScreenshots,
-            onTap: () => onSelected(_BlueprintSetupChoice.importScreenshots),
+          _ProgressionQuestion(
+            title: 'WHERE ARE YOU NOW?',
+            subtitle:
+                'A new Raider and an experienced Raider after an Expedition need different first moves.',
+            children: [
+              _ChoiceTile(
+                icon: Icons.new_releases_outlined,
+                title: 'New to ARC',
+                badge: 'FIRST RAIDER',
+                selected: progressStage == ArcRaiderProgressStage.newRaider,
+                onTap: () => onProgressStageChanged(
+                  ArcRaiderProgressStage.newRaider,
+                ),
+              ),
+              _ChoiceTile(
+                icon: Icons.restart_alt_rounded,
+                title: 'Fresh Expedition',
+                badge: 'EXPERIENCED RESET',
+                selected:
+                    progressStage == ArcRaiderProgressStage.freshExpedition,
+                onTap: () => onProgressStageChanged(
+                  ArcRaiderProgressStage.freshExpedition,
+                ),
+              ),
+              _ChoiceTile(
+                icon: Icons.trending_up_rounded,
+                title: 'Already underway',
+                badge: 'CURRENT PROGRESS',
+                selected: progressStage == ArcRaiderProgressStage.underway,
+                onTap: () =>
+                    onProgressStageChanged(ArcRaiderProgressStage.underway),
+              ),
+            ],
           ),
-          _ChoiceTile(
-            icon: Icons.touch_app_rounded,
-            title: 'Set up manually',
-            selected: selected == _BlueprintSetupChoice.manual,
-            onTap: () => onSelected(_BlueprintSetupChoice.manual),
+          const SizedBox(height: 14),
+          _ProgressionQuestion(
+            title: 'DO YOU OWN ANY BLUEPRINTS RIGHT NOW?',
+            subtitle:
+                'This decides whether UAG starts by defining your target loadout or recording your existing collection.',
+            children: [
+              _ChoiceTile(
+                icon: Icons.filter_none_rounded,
+                title: 'No blueprints yet',
+                badge: 'START WITH LOADOUT',
+                selected:
+                    blueprintOwnership == ArcBlueprintOwnershipState.none,
+                onTap: () => onBlueprintOwnershipChanged(
+                  ArcBlueprintOwnershipState.none,
+                ),
+              ),
+              _ChoiceTile(
+                icon: Icons.grid_view_rounded,
+                title: 'Yes, I own some',
+                badge: 'SET UP TRACKER',
+                selected:
+                    blueprintOwnership == ArcBlueprintOwnershipState.some,
+                onTap: () => onBlueprintOwnershipChanged(
+                  ArcBlueprintOwnershipState.some,
+                ),
+              ),
+              _ChoiceTile(
+                icon: Icons.help_outline_rounded,
+                title: 'Not sure',
+                selected:
+                    blueprintOwnership == ArcBlueprintOwnershipState.unsure,
+                onTap: () => onBlueprintOwnershipChanged(
+                  ArcBlueprintOwnershipState.unsure,
+                ),
+              ),
+            ],
           ),
-          _ChoiceTile(
-            icon: Icons.schedule_rounded,
-            title: 'Skip for now',
-            selected: selected == _BlueprintSetupChoice.later,
-            onTap: () => onSelected(_BlueprintSetupChoice.later),
+          if (blueprintOwnership == ArcBlueprintOwnershipState.none) ...[
+            const SizedBox(height: 10),
+            const _ProgressionHint(
+              icon: Icons.construction_rounded,
+              text:
+                  'UAG will start you in Favourite Loadout so the weapons and attachments you want can become your first Blueprint targets.',
+            ),
+          ] else if (blueprintOwnership != null) ...[
+            const SizedBox(height: 12),
+            Text(
+              'BLUEPRINT TRACKER SETUP',
+              style: AppTheme.tradingHeading(
+                fontSize: 13,
+                color: AppTheme.neonCyan,
+              ),
+            ),
+            const SizedBox(height: 8),
+            _ChoiceTile(
+              icon: Icons.camera_alt_outlined,
+              title: 'Import screenshots',
+              badge: 'RECOMMENDED',
+              selected:
+                  blueprintSetup == _BlueprintSetupChoice.importScreenshots,
+              onTap: () => onBlueprintSetupChanged(
+                _BlueprintSetupChoice.importScreenshots,
+              ),
+            ),
+            _ChoiceTile(
+              icon: Icons.touch_app_rounded,
+              title: 'Set up manually',
+              selected: blueprintSetup == _BlueprintSetupChoice.manual,
+              onTap: () =>
+                  onBlueprintSetupChanged(_BlueprintSetupChoice.manual),
+            ),
+            _ChoiceTile(
+              icon: Icons.schedule_rounded,
+              title: 'Skip tracker setup for now',
+              selected: blueprintSetup == _BlueprintSetupChoice.later,
+              onTap: () => onBlueprintSetupChanged(_BlueprintSetupChoice.later),
+            ),
+          ],
+          const SizedBox(height: 14),
+          _ProgressionQuestion(
+            title: 'WHAT ABOUT YOUR QUESTS?',
+            subtitle:
+                'Expedition state and quest state are separate. Tell UAG whether this Raider is restarting quests or carrying them forward.',
+            children: [
+              _ChoiceTile(
+                icon: Icons.flag_outlined,
+                title: 'Starting / reset quests',
+                selected: questProgress == ArcQuestProgressState.startingOrReset,
+                onTap: () => onQuestProgressChanged(
+                  ArcQuestProgressState.startingOrReset,
+                ),
+              ),
+              _ChoiceTile(
+                icon: Icons.fact_check_outlined,
+                title: 'Continuing my quests',
+                selected: questProgress == ArcQuestProgressState.continuing,
+                onTap: () =>
+                    onQuestProgressChanged(ArcQuestProgressState.continuing),
+              ),
+              _ChoiceTile(
+                icon: Icons.help_outline_rounded,
+                title: 'Not sure yet',
+                selected: questProgress == ArcQuestProgressState.unsure,
+                onTap: () =>
+                    onQuestProgressChanged(ArcQuestProgressState.unsure),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProgressionQuestion extends StatelessWidget {
+  const _ProgressionQuestion({
+    required this.title,
+    required this.subtitle,
+    required this.children,
+  });
+
+  final String title;
+  final String subtitle;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          title,
+          style: AppTheme.tradingHeading(
+            fontSize: 14,
+            color: AppTheme.neonCyan,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          subtitle,
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.62),
+            fontSize: 12,
+            height: 1.3,
+          ),
+        ),
+        const SizedBox(height: 8),
+        ...children,
+      ],
+    );
+  }
+}
+
+class _ProgressionHint extends StatelessWidget {
+  const _ProgressionHint({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.neonPink.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppTheme.neonPink.withValues(alpha: 0.28),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: AppTheme.neonPink, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.78),
+                fontSize: 12,
+                height: 1.35,
+              ),
+            ),
           ),
         ],
       ),

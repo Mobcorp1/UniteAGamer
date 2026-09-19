@@ -50,6 +50,30 @@ void main() {
       expect(profile.toMap()['schemaVersion'], 1);
     });
 
+    test('round-trips Raider progression context safely', () {
+      final profile = ArcUserPersonalisationProfile.fromMap(
+        const <String, dynamic>{
+          'schemaVersion': 1,
+          'completed': true,
+          'goals': <String>['completeBlueprints'],
+          'progressStage': 'freshExpedition',
+          'blueprintOwnership': 'none',
+          'questProgress': 'continuing',
+        },
+      );
+
+      expect(profile.progressStage, ArcRaiderProgressStage.freshExpedition);
+      expect(
+        profile.blueprintOwnership,
+        ArcBlueprintOwnershipState.none,
+      );
+      expect(profile.questProgress, ArcQuestProgressState.continuing);
+      expect(profile.hasProgressionContext, isTrue);
+      expect(profile.toMap()['progressStage'], 'freshExpedition');
+      expect(profile.toMap()['blueprintOwnership'], 'none');
+      expect(profile.toMap()['questProgress'], 'continuing');
+    });
+
     test('specific saved goals override legacy show-everything conflicts', () {
       final profile = ArcUserPersonalisationProfile.fromMap(
         const <String, dynamic>{

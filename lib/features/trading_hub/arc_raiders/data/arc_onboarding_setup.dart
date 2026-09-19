@@ -1,4 +1,5 @@
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_game_platform_catalog.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_user_personalisation_profile.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 String normalizeArcOnboardingEmail(String value) => value.trim().toLowerCase();
@@ -148,10 +149,10 @@ Map<String, dynamic> buildArcOnboardingAccountProfilePayload({
       'preferredPlatform': primaryPlatform,
     },
     'arcOnboarding': <String, dynamic>{
-      'version': 6,
+      'version': 7,
       'accountCreatedDuringOnboarding': true,
       'platforms': normalizedPlatforms,
-      'flow': <String>['account', 'legal', 'primaryGoal', 'blueprintSetup'],
+      'flow': <String>['account', 'legal', 'primaryGoal', 'progression'],
     },
   };
 }
@@ -163,6 +164,10 @@ Map<String, dynamic> buildArcOnboardingCompletionPayload({
   required String recommendedFirstSystem,
   required Map<String, dynamic> legalAccepted,
   Iterable<String> platforms = const <String>[],
+  ArcRaiderProgressStage progressStage = ArcRaiderProgressStage.unsure,
+  ArcBlueprintOwnershipState blueprintOwnership =
+      ArcBlueprintOwnershipState.unsure,
+  ArcQuestProgressState questProgress = ArcQuestProgressState.unsure,
   bool accountCreatedDuringOnboarding = false,
 }) {
   final normalizedName = riderName.trim();
@@ -196,18 +201,21 @@ Map<String, dynamic> buildArcOnboardingCompletionPayload({
         'verifiedAt': FieldValue.serverTimestamp(),
       },
     'arcOnboarding': <String, dynamic>{
-      'version': 6,
+      'version': 7,
       'completedAt': FieldValue.serverTimestamp(),
       'flow': <String>[
         accountCreatedDuringOnboarding ? 'account' : 'identity',
         'legal',
         'primaryGoal',
-        'blueprintSetup',
+        'progression',
       ],
       'accountCreatedDuringOnboarding': accountCreatedDuringOnboarding,
       'riderName': normalizedName,
       'platforms': normalizedPlatforms,
       'primaryGoal': primaryGoal,
+      'progressStage': progressStage.name,
+      'blueprintOwnership': blueprintOwnership.name,
+      'questProgress': questProgress.name,
       'blueprintSetupMode': blueprintSetupMode,
       'recommendedFirstSystem': recommendedFirstSystem,
       'progressiveSetupEnabled': true,

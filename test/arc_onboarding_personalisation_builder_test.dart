@@ -11,7 +11,7 @@ void main() {
       );
 
       expect(profile.completed, isTrue);
-      expect(profile.source, 'progressive_onboarding_v6');
+      expect(profile.source, 'progressive_onboarding_v7');
       expect(
         profile.featureInterests[ArcPersonalisationFeature.blueprintTracker],
         ArcPersonalisationInterestLevel.primary,
@@ -90,6 +90,72 @@ void main() {
           ArcPersonalisationGoal.exploreEverything,
         ),
         'commandCentre',
+      );
+    });
+
+    test('zero-blueprint fresh Raiders start with Favourite Loadout', () {
+      final profile = buildArcOnboardingPersonalisation(
+        primaryGoal: ArcPersonalisationGoal.completeBlueprints,
+        progressStage: ArcRaiderProgressStage.freshExpedition,
+        blueprintOwnership: ArcBlueprintOwnershipState.none,
+        questProgress: ArcQuestProgressState.continuing,
+      );
+
+      expect(profile.progressStage, ArcRaiderProgressStage.freshExpedition);
+      expect(
+        profile.blueprintOwnership,
+        ArcBlueprintOwnershipState.none,
+      );
+      expect(profile.questProgress, ArcQuestProgressState.continuing);
+      expect(
+        profile.featureInterests[ArcPersonalisationFeature.favouriteLoadout],
+        ArcPersonalisationInterestLevel.primary,
+      );
+      expect(
+        profile.featureInterests[ArcPersonalisationFeature.blueprintTracker],
+        ArcPersonalisationInterestLevel.high,
+      );
+      expect(
+        arcOnboardingRecommendedSystem(
+          ArcPersonalisationGoal.completeBlueprints,
+          progressStage: ArcRaiderProgressStage.freshExpedition,
+          blueprintOwnership: ArcBlueprintOwnershipState.none,
+          questProgress: ArcQuestProgressState.continuing,
+        ),
+        'favouriteLoadout',
+      );
+    });
+
+    test('existing Blueprint owners start by establishing tracker state', () {
+      expect(
+        arcOnboardingRecommendedSystem(
+          ArcPersonalisationGoal.completeBlueprints,
+          progressStage: ArcRaiderProgressStage.underway,
+          blueprintOwnership: ArcBlueprintOwnershipState.some,
+          questProgress: ArcQuestProgressState.continuing,
+        ),
+        'blueprintTracker',
+      );
+    });
+
+    test('show-everything routing still uses progression context', () {
+      expect(
+        arcOnboardingRecommendedSystem(
+          ArcPersonalisationGoal.exploreEverything,
+          progressStage: ArcRaiderProgressStage.newRaider,
+          blueprintOwnership: ArcBlueprintOwnershipState.none,
+          questProgress: ArcQuestProgressState.startingOrReset,
+        ),
+        'favouriteLoadout',
+      );
+      expect(
+        arcOnboardingRecommendedSystem(
+          ArcPersonalisationGoal.exploreEverything,
+          progressStage: ArcRaiderProgressStage.underway,
+          blueprintOwnership: ArcBlueprintOwnershipState.some,
+          questProgress: ArcQuestProgressState.continuing,
+        ),
+        'blueprintTracker',
       );
     });
   });
