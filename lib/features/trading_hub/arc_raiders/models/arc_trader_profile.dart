@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_player_archetype_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_player_session_catalog.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_game_platform_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_profile_social_models.dart';
 
 class ArcTraderProfile {
@@ -13,6 +14,7 @@ class ArcTraderProfile {
   final String region;
   final String serverPreference;
   final String platform;
+  final List<String> platforms;
   final String timezone;
   final bool visibleInSearch;
   final bool micOk;
@@ -47,6 +49,7 @@ class ArcTraderProfile {
     required this.region,
     required this.serverPreference,
     required this.platform,
+    this.platforms = const <String>[],
     required this.timezone,
     required this.visibleInSearch,
     required this.micOk,
@@ -83,6 +86,7 @@ class ArcTraderProfile {
       region: 'UK',
       serverPreference: 'Automatic',
       platform: '',
+      platforms: const <String>[],
       timezone: 'Europe/London',
       visibleInSearch: true,
       micOk: true,
@@ -144,11 +148,17 @@ class ArcTraderProfile {
     return null;
   }
 
+  List<String> get normalisedPlatforms =>
+      ArcGamePlatformCatalog.normalize(platforms, fallback: platform);
+
+  String get primaryPlatform =>
+      ArcGamePlatformCatalog.primary(normalisedPlatforms);
+
   bool get hasCoreDetails =>
       uagId.trim().isNotEmpty &&
       uagName.trim().isNotEmpty &&
       region.trim().isNotEmpty &&
-      platform.trim().isNotEmpty;
+      normalisedPlatforms.isNotEmpty;
 
   List<ArcProfileSocialLink> get publicSocialLinks =>
       ArcProfileSocialLinks.publicLinks(socialLinks);
@@ -168,7 +178,8 @@ class ArcTraderProfile {
       'embarkId': embarkId,
       'region': region,
       'serverPreference': serverPreference,
-      'platform': platform,
+      'platform': primaryPlatform,
+      'platforms': normalisedPlatforms,
       'timezone': timezone,
       'visibleInSearch': visibleInSearch,
       'micOk': micOk,
@@ -226,7 +237,8 @@ class ArcTraderProfile {
       'avatarId': avatarId,
       'avatarType': avatarType,
       'region': region.trim(),
-      'platform': platform.trim(),
+      'platform': primaryPlatform,
+      'platforms': normalisedPlatforms,
       'serverPreference': serverPreference.trim().isEmpty
           ? 'Automatic'
           : serverPreference.trim(),
@@ -273,7 +285,16 @@ class ArcTraderProfile {
       embarkId: _string(map['embarkId']),
       region: _string(map['region'], 'UK'),
       serverPreference: _string(map['serverPreference'], 'Automatic'),
-      platform: _string(map['platform']),
+      platform: ArcGamePlatformCatalog.primary(
+        ArcGamePlatformCatalog.normalize(
+          _stringList(map['platforms']),
+          fallback: _string(map['platform'], _string(map['preferredPlatform'])),
+        ),
+      ),
+      platforms: ArcGamePlatformCatalog.normalize(
+        _stringList(map['platforms']),
+        fallback: _string(map['platform'], _string(map['preferredPlatform'])),
+      ),
       timezone: _string(map['timezone'], 'Europe/London'),
       visibleInSearch: _bool(map['visibleInSearch'], true),
       micOk: _bool(map['micOk'], true),
@@ -322,6 +343,7 @@ class ArcTraderProfile {
     String? region,
     String? serverPreference,
     String? platform,
+    List<String>? platforms,
     String? timezone,
     bool? visibleInSearch,
     bool? micOk,
@@ -356,6 +378,7 @@ class ArcTraderProfile {
       region: region ?? this.region,
       serverPreference: serverPreference ?? this.serverPreference,
       platform: platform ?? this.platform,
+      platforms: platforms ?? this.platforms,
       timezone: timezone ?? this.timezone,
       visibleInSearch: visibleInSearch ?? this.visibleInSearch,
       micOk: micOk ?? this.micOk,

@@ -11,7 +11,7 @@ void main() {
       );
 
       expect(profile.completed, isTrue);
-      expect(profile.source, 'progressive_onboarding_v5');
+      expect(profile.source, 'progressive_onboarding_v6');
       expect(
         profile.featureInterests[ArcPersonalisationFeature.blueprintTracker],
         ArcPersonalisationInterestLevel.primary,
@@ -23,6 +23,10 @@ void main() {
       );
       expect(profile.commandCentre.progressionCards, isTrue);
       expect(profile.reduceNoise, isTrue);
+      expect(
+        profile.interestFor(ArcPersonalisationFeature.matchRider),
+        ArcPersonalisationInterestLevel.off,
+      );
     });
 
     test('keeps secondary goal features below primary priority', () {
@@ -49,6 +53,25 @@ void main() {
       expect(profile.commandCentre.tradeActivity, isTrue);
       expect(profile.commandCentre.socialActivity, isTrue);
       expect(profile.commandCentre.raidPreparation, isTrue);
+    });
+
+    test('quest onboarding focus also surfaces bench and Scrappy trackers', () {
+      final profile = buildArcOnboardingPersonalisation(
+        primaryGoal: ArcPersonalisationGoal.progressQuests,
+      );
+
+      expect(
+        profile.interestFor(ArcPersonalisationFeature.questTracker),
+        ArcPersonalisationInterestLevel.primary,
+      );
+      expect(
+        profile.interestFor(ArcPersonalisationFeature.scrappyTracker),
+        ArcPersonalisationInterestLevel.primary,
+      );
+      expect(
+        profile.interestFor(ArcPersonalisationFeature.benchTracker),
+        ArcPersonalisationInterestLevel.primary,
+      );
     });
 
     test('returns stable recommended systems for primary goals', () {

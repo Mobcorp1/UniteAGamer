@@ -46,6 +46,7 @@ void main() {
       final payload = buildArcOnboardingAccountCreationPayload(
         email: '  MIKE@Example.com ',
         riderName: '  Mike  ',
+        platforms: const <String>['PS5', 'PC'],
       );
 
       expect(payload['email'], 'mike@example.com');
@@ -58,8 +59,9 @@ void main() {
       expect(payload.containsKey('ageVerification'), isFalse);
 
       final onboarding = payload['arcOnboarding'] as Map<String, dynamic>;
-      expect(onboarding['version'], 5);
+      expect(onboarding['version'], 6);
       expect(onboarding['accountCreatedDuringOnboarding'], isTrue);
+      expect(onboarding['platforms'], <String>['PlayStation', 'PC']);
       expect(onboarding['accountCreatedAt'], isA<FieldValue>());
       expect(onboarding['flow'], [
         'account',
@@ -73,6 +75,7 @@ void main() {
       final payload = buildArcOnboardingAccountProfilePayload(
         email: '  MIKE@Example.com ',
         riderName: '  Mike  ',
+        platforms: const <String>['Xbox'],
       );
 
       expect(payload['email'], 'mike@example.com');
@@ -85,6 +88,10 @@ void main() {
 
       final onboarding = payload['arcOnboarding'] as Map<String, dynamic>;
       expect(onboarding['accountCreatedDuringOnboarding'], isTrue);
+      expect(onboarding['platforms'], <String>['Xbox']);
+      final basicProfile = payload['basicProfile'] as Map<String, dynamic>;
+      expect(basicProfile['platform'], 'Xbox');
+      expect(basicProfile['platforms'], <String>['Xbox']);
       expect(onboarding.containsKey('accountCreatedAt'), isFalse);
     });
 
@@ -182,7 +189,7 @@ void main() {
       },
     );
 
-    test('builds the essential version 5 completion payload', () {
+    test('builds the essential version 6 completion payload', () {
       final payload = buildArcOnboardingCompletionPayload(
         riderName: '  Mike  ',
         primaryGoal: 'completeBlueprints',
@@ -192,6 +199,7 @@ void main() {
           'termsOfServiceAccepted': true,
           'ageConfirmationAccepted': true,
         },
+        platforms: const <String>['PlayStation', 'Xbox'],
         accountCreatedDuringOnboarding: true,
       );
 
@@ -207,7 +215,7 @@ void main() {
       expect(ageVerification['verifiedAt'], isA<FieldValue>());
 
       final onboarding = payload['arcOnboarding'] as Map<String, dynamic>;
-      expect(onboarding['version'], 5);
+      expect(onboarding['version'], 6);
       expect(onboarding['accountCreatedDuringOnboarding'], isTrue);
       expect(onboarding['flow'], [
         'account',
@@ -216,6 +224,9 @@ void main() {
         'blueprintSetup',
       ]);
       expect(onboarding['riderName'], 'Mike');
+      expect(onboarding['platforms'], <String>['PlayStation', 'Xbox']);
+      expect(payload['platform'], 'PlayStation');
+      expect(payload['platforms'], <String>['PlayStation', 'Xbox']);
       expect(onboarding['primaryGoal'], 'completeBlueprints');
       expect(onboarding['blueprintSetupMode'], 'importScreenshots');
       expect(onboarding['recommendedFirstSystem'], 'blueprintTracker');

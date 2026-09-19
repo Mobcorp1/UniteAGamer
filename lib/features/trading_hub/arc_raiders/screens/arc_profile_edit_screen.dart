@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
+import '../data/arc_game_platform_catalog.dart';
 import '../data/arc_player_archetype_catalog.dart';
 import '../data/arc_player_session_catalog.dart';
 import '../models/arc_profile_social_models.dart';
 import '../models/arc_trader_profile.dart';
 import '../repositories/arc_trader_profile_repository.dart';
+import '../widgets/arc_game_platform_selector.dart';
 import '../widgets/arc_raiders_screen_shell.dart';
 import '../widgets/arc_social_links_editor.dart';
 import '../widgets/foundation/arc_form_surface.dart';
@@ -30,7 +32,6 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
   final TextEditingController _uagNameController = TextEditingController();
   final TextEditingController _embarkIdController = TextEditingController();
   final TextEditingController _regionController = TextEditingController();
-  final TextEditingController _platformController = TextEditingController();
   final TextEditingController _timezoneController = TextEditingController();
 
   bool _visibleInSearch = true;
@@ -40,6 +41,8 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
   bool _affiliateEnabled = false;
   bool _isLoading = true;
   bool _isSaving = false;
+  String? _platformError;
+  final Set<String> _platforms = <String>{};
   DateTime? _createdAt;
   final Set<String> _archetypes = {'Balanced Raider'};
   final Set<String> _playStyles = {'PvE defensive'};
@@ -130,7 +133,6 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
     _uagNameController.dispose();
     _embarkIdController.dispose();
     _regionController.dispose();
-    _platformController.dispose();
     _timezoneController.dispose();
     super.dispose();
   }
@@ -142,7 +144,9 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
     _uagNameController.text = profile.uagName;
     _embarkIdController.text = profile.embarkId;
     _regionController.text = profile.region;
-    _platformController.text = profile.platform;
+    _platforms
+      ..clear()
+      ..addAll(profile.normalisedPlatforms);
     _timezoneController.text = profile.timezone;
     _serverPreference = _serverPreferences.contains(profile.serverPreference)
         ? profile.serverPreference
@@ -193,7 +197,12 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
   }
 
   Future<void> _save() async {
-    if (!_formKey.currentState!.validate()) return;
+    final formValid = _formKey.currentState!.validate();
+    final platformValid = _platforms.isNotEmpty;
+    setState(() {
+      _platformError = platformValid ? null : 'Choose at least one platform.';
+    });
+    if (!formValid || !platformValid) return;
     final ArcTraderProfile current = await _repository.getProfile();
 
     setState(() => _isSaving = true);
@@ -205,7 +214,8 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
           embarkId: _embarkIdController.text.trim(),
           region: _regionController.text.trim(),
           serverPreference: _serverPreference,
-          platform: _platformController.text.trim(),
+          platform: ArcGamePlatformCatalog.primary(_platforms),
+          platforms: _platforms.toList(growable: false),
           timezone: _timezoneController.text.trim(),
           visibleInSearch: _visibleInSearch,
           micOk: _micOk,
@@ -493,11 +503,17 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
                         () => _serverPreference = value ?? 'Automatic',
                       ),
                     ),
-                    _field(
-                      _platformController,
-                      'Preferred Platform',
-                      validator: (v) => _required(v, 'Preferred Platform'),
+                    ArcGamePlatformSelector(
+                      selected: _platforms,
+                      errorText: _platformError,
+                      onChanged: (platforms) => setState(() {
+                        _platforms
+                          ..clear()
+                          ..addAll(platforms);
+                        _platformError = null;
+                      }),
                     ),
+                    const SizedBox(height: AppTheme.spaceM),
                     _field(
                       _timezoneController,
                       'Timezone',
@@ -657,13 +673,14 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
                   ],
                 ),
                 ArcExpandableFormSection(
-                  title: 'Public Social Links',
+                  title: 'Gaming IDs & Social Links',
                   summary: 'Creator, community and platform profiles',
                   icon: Icons.link_rounded,
                   accent: ArcUiTokens.secondaryAccent,
                   children: [
                     ArcSocialLinksEditor(
                       initialLinks: _socialLinks,
+                      selectedGamePlatforms: _platforms,
                       onChanged: (links) => _socialLinks = links,
                     ),
                   ],

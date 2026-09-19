@@ -20,6 +20,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositorie
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_user_personalisation_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raiders_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_account_journey_bar.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_game_platform_selector.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -77,6 +78,8 @@ class _ArcMandatoryOnboardingScreenState
   String? _emailError;
   String? _passwordError;
   String? _riderNameError;
+  String? _platformError;
+  final Set<String> _selectedPlatforms = <String>{};
   ArcPersonalisationGoal? _primaryGoal;
   _BlueprintSetupChoice _blueprintSetupChoice =
       _BlueprintSetupChoice.importScreenshots;
@@ -93,43 +96,18 @@ class _ArcMandatoryOnboardingScreenState
   static const _goalOptions = <_GoalOption>[
     _GoalOption(
       ArcPersonalisationGoal.completeBlueprints,
-      'Complete my Blueprint collection',
+      'Blueprints & map intel',
       Icons.grid_view_rounded,
     ),
     _GoalOption(
-      ArcPersonalisationGoal.findBlueprintIntel,
-      'Find Blueprints and map intel',
-      Icons.radar_rounded,
-    ),
-    _GoalOption(
-      ArcPersonalisationGoal.huntARat,
-      'HUNT A RAT',
-      Icons.pest_control_rodent_outlined,
-    ),
-    _GoalOption(
-      ArcPersonalisationGoal.buildFavouriteLoadout,
-      'Build my ideal loadout',
-      Icons.construction_rounded,
-    ),
-    _GoalOption(
-      ArcPersonalisationGoal.trackResources,
-      'Track Scrappy upgrades',
-      Icons.inventory_2_outlined,
-    ),
-    _GoalOption(
-      ArcPersonalisationGoal.planRaids,
-      'Plan my next raid',
-      Icons.map_outlined,
-    ),
-    _GoalOption(
       ArcPersonalisationGoal.progressQuests,
-      'Track quests and projects',
+      'Track quests & upgrades',
       Icons.flag_rounded,
     ),
     _GoalOption(
-      ArcPersonalisationGoal.findSquads,
-      'Find Raiders to play with',
-      Icons.groups_rounded,
+      ArcPersonalisationGoal.planRaids,
+      'Plan my raids',
+      Icons.map_outlined,
     ),
     _GoalOption(
       ArcPersonalisationGoal.tradeBlueprints,
@@ -137,14 +115,14 @@ class _ArcMandatoryOnboardingScreenState
       Icons.swap_horiz_rounded,
     ),
     _GoalOption(
-      ArcPersonalisationGoal.playLikeAPro,
-      'Get better at ARC Raiders',
-      Icons.school_outlined,
+      ArcPersonalisationGoal.buildFavouriteLoadout,
+      'Build my ideal loadout',
+      Icons.construction_rounded,
     ),
     _GoalOption(
-      ArcPersonalisationGoal.receiveCommunityIntel,
-      'Explore Community Intel',
-      Icons.radar_outlined,
+      ArcPersonalisationGoal.findSquads,
+      'Find Raiders to play with',
+      Icons.groups_rounded,
     ),
     _GoalOption(
       ArcPersonalisationGoal.exploreEverything,
@@ -164,6 +142,23 @@ class _ArcMandatoryOnboardingScreenState
     final user = FirebaseAuth.instance.currentUser;
     final existing = user?.displayName?.trim() ?? '';
     if (existing.isNotEmpty) _riderNameController.text = existing;
+    if (user != null) unawaited(_loadExistingPlatforms());
+  }
+
+  Future<void> _loadExistingPlatforms() async {
+    try {
+      final profile = await _profileRepository.getProfile();
+      if (!mounted || profile.normalisedPlatforms.isEmpty) return;
+      setState(() {
+        _selectedPlatforms
+          ..clear()
+          ..addAll(profile.normalisedPlatforms);
+        _platformError = null;
+      });
+    } catch (error, stackTrace) {
+      debugPrint('Onboarding platform preload skipped safely: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
   }
 
   @override
@@ -219,8 +214,14 @@ class _ArcMandatoryOnboardingScreenState
         if (!created || !mounted) return;
       } else {
         final error = validateArcRiderName(_riderNameController.text);
-        setState(() => _riderNameError = error);
-        if (error != null) return;
+        final platformError = _selectedPlatforms.isEmpty
+            ? 'Choose at least one platform.'
+            : null;
+        setState(() {
+          _riderNameError = error;
+          _platformError = platformError;
+        });
+        if (error != null || platformError != null) return;
       }
     }
     if (_step == 1 && !_legalComplete) {
@@ -251,16 +252,21 @@ class _ArcMandatoryOnboardingScreenState
     final emailError = validateArcOnboardingEmail(email);
     final passwordError = validateArcOnboardingPassword(password);
     final riderNameError = validateArcRiderName(riderName);
+    final platformError = _selectedPlatforms.isEmpty
+        ? 'Choose at least one platform.'
+        : null;
 
     setState(() {
       _emailError = emailError;
       _passwordError = passwordError;
       _riderNameError = riderNameError;
+      _platformError = platformError;
     });
 
     return emailError == null &&
         passwordError == null &&
-        riderNameError == null;
+        riderNameError == null &&
+        platformError == null;
   }
 
   Future<User> _waitForSignedInUser(UserCredential credential) async {
@@ -338,6 +344,7 @@ class _ArcMandatoryOnboardingScreenState
         _emailError = null;
         _passwordError = null;
         _riderNameError = null;
+        _platformError = null;
         _saving = false;
       });
       return true;
@@ -375,6 +382,7 @@ class _ArcMandatoryOnboardingScreenState
             buildArcOnboardingAccountCreationPayload(
               email: email,
               riderName: riderName,
+              platforms: _selectedPlatforms,
             ),
             SetOptions(merge: true),
           ),
@@ -461,7 +469,16 @@ class _ArcMandatoryOnboardingScreenState
       _showMessage('Create your account first.');
       return;
     }
-    if (nameError != null || primaryGoal == null || !_legalComplete) {
+    if (nameError != null ||
+        _selectedPlatforms.isEmpty ||
+        primaryGoal == null ||
+        !_legalComplete) {
+      setState(() {
+        _riderNameError = nameError;
+        _platformError = _selectedPlatforms.isEmpty
+            ? 'Choose at least one platform.'
+            : null;
+      });
       _showMessage('Complete the required setup first.');
       return;
     }
@@ -483,6 +500,7 @@ class _ArcMandatoryOnboardingScreenState
       blueprintSetupMode: _blueprintSetupChoice.name,
       recommendedFirstSystem: arcOnboardingRecommendedSystem(primaryGoal),
       legalAccepted: legalAccepted,
+      platforms: _selectedPlatforms,
       accountCreatedDuringOnboarding: _accountCreatedDuringOnboarding,
     );
     final accountProfilePayload = _accountCreatedDuringOnboarding
@@ -491,10 +509,23 @@ class _ArcMandatoryOnboardingScreenState
               user.email ?? _emailController.text,
             ),
             riderName: riderName,
+            platforms: _selectedPlatforms,
           )
         : const <String, dynamic>{};
 
     try {
+      final personalisation = buildArcOnboardingPersonalisation(
+        primaryGoal: primaryGoal,
+      );
+
+      // These writes are part of successful onboarding. Do not navigate into
+      // the app with a default "show everything" profile if they fail.
+      await Future.wait<void>([
+        _personalisationRepository.markComplete(personalisation),
+        _profileRepository.savePlatformSelection(_selectedPlatforms),
+        if (user.displayName != riderName) user.updateDisplayName(riderName),
+      ]).timeout(const Duration(seconds: 12));
+
       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
         ...accountProfilePayload,
         ...payload,
@@ -517,10 +548,7 @@ class _ArcMandatoryOnboardingScreenState
         );
       }
 
-      final personalisation = buildArcOnboardingPersonalisation(
-        primaryGoal: primaryGoal,
-      );
-      unawaited(_runNonBlockingProfileSync(user, riderName, personalisation));
+      unawaited(_profileRepository.refreshProfileCompletion());
 
       if (!mounted) return;
       Navigator.of(
@@ -531,23 +559,6 @@ class _ArcMandatoryOnboardingScreenState
       setState(() => _saving = false);
       _showMessage('ARC Systems activation failed. Try again.');
       debugPrint('Onboarding completion failed: $error');
-    }
-  }
-
-  Future<void> _runNonBlockingProfileSync(
-    User user,
-    String riderName,
-    ArcUserPersonalisationProfile personalisation,
-  ) async {
-    try {
-      await Future.wait<void>([
-        if (user.displayName != riderName) user.updateDisplayName(riderName),
-        _personalisationRepository.markComplete(personalisation),
-        _profileRepository.refreshProfileCompletion(),
-      ]).timeout(const Duration(seconds: 12));
-    } catch (error, stackTrace) {
-      debugPrint('Deferred onboarding profile sync failed safely: $error');
-      debugPrintStack(stackTrace: stackTrace);
     }
   }
 
@@ -594,6 +605,15 @@ class _ArcMandatoryOnboardingScreenState
                                   emailError: _emailError,
                                   passwordError: _passwordError,
                                   riderNameError: _riderNameError,
+                                  selectedPlatforms: _selectedPlatforms,
+                                  platformError: _platformError,
+                                  onPlatformsChanged: (platforms) =>
+                                      setState(() {
+                                        _selectedPlatforms
+                                          ..clear()
+                                          ..addAll(platforms);
+                                        _platformError = null;
+                                      }),
                                   showPassword: _showPassword,
                                   rememberEmail: _rememberEmail,
                                   keepSignedIn: _keepSignedIn,
@@ -620,6 +640,15 @@ class _ArcMandatoryOnboardingScreenState
                                   email: email,
                                   controller: _riderNameController,
                                   errorText: _riderNameError,
+                                  selectedPlatforms: _selectedPlatforms,
+                                  platformError: _platformError,
+                                  onPlatformsChanged: (platforms) =>
+                                      setState(() {
+                                        _selectedPlatforms
+                                          ..clear()
+                                          ..addAll(platforms);
+                                        _platformError = null;
+                                      }),
                                   onChanged: (_) {
                                     if (_riderNameError != null) {
                                       setState(() => _riderNameError = null);
@@ -876,9 +905,12 @@ class _StepFrame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final compact = MediaQuery.sizeOf(context).width < 600;
+    final width = MediaQuery.sizeOf(context).width;
+    final compact = width < 600;
+    final wide = width >= 760;
+
     return SingleChildScrollView(
-      padding: const EdgeInsets.only(bottom: 4),
+      padding: const EdgeInsets.only(bottom: 24),
       child: Container(
         decoration: BoxDecoration(
           color: const Color(0xF20A0F15),
@@ -893,109 +925,132 @@ class _StepFrame extends StatelessWidget {
           ],
         ),
         clipBehavior: Clip.antiAlias,
+        child: wide
+            ? IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      flex: 4,
+                      child: _artwork(compact: false, wide: true),
+                    ),
+                    Expanded(flex: 6, child: _content(compact: false)),
+                  ],
+                ),
+              )
+            : Column(
+                children: [
+                  _artwork(compact: compact, wide: false),
+                  _content(compact: compact),
+                ],
+              ),
+      ),
+    );
+  }
+
+  Widget _artwork({required bool compact, required bool wide}) {
+    return Container(
+      width: double.infinity,
+      constraints: BoxConstraints(
+        minHeight: wide ? 430 : (compact ? 132 : 158),
+      ),
+      decoration: const BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage('assets/arc_raiders/hub/auth_bg_landscape.webp'),
+          fit: BoxFit.cover,
+          alignment: Alignment.center,
+        ),
+      ),
+      child: Container(
+        padding: EdgeInsets.fromLTRB(
+          compact ? 16 : 24,
+          compact ? 18 : 24,
+          compact ? 16 : 24,
+          compact ? 16 : 22,
+        ),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: wide ? Alignment.topLeft : Alignment.topCenter,
+            end: wide ? Alignment.bottomRight : Alignment.bottomCenter,
+            colors: [
+              Colors.black.withValues(alpha: wide ? 0.18 : 0.28),
+              const Color(0xF20A0F15),
+            ],
+          ),
+        ),
         child: Column(
+          mainAxisAlignment: wide
+              ? MainAxisAlignment.center
+              : MainAxisAlignment.end,
           children: [
             Container(
-              width: double.infinity,
-              constraints: BoxConstraints(minHeight: compact ? 132 : 158),
-              decoration: const BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage(
-                    'assets/arc_raiders/hub/auth_bg_landscape.webp',
-                  ),
-                  fit: BoxFit.cover,
-                  alignment: Alignment.center,
+              width: compact ? 44 : 50,
+              height: compact ? 44 : 50,
+              decoration: BoxDecoration(
+                color: const Color(0xD90A1118),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: AppTheme.neonCyan.withValues(alpha: 0.72),
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.neonCyan.withValues(alpha: 0.20),
+                    blurRadius: 16,
+                  ),
+                ],
               ),
-              child: Container(
-                padding: EdgeInsets.fromLTRB(
-                  compact ? 16 : 24,
-                  compact ? 18 : 24,
-                  compact ? 16 : 24,
-                  compact ? 16 : 22,
-                ),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.black.withValues(alpha: 0.28),
-                      const Color(0xF20A0F15),
-                    ],
-                  ),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Container(
-                      width: compact ? 44 : 50,
-                      height: compact ? 44 : 50,
-                      decoration: BoxDecoration(
-                        color: const Color(0xD90A1118),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: AppTheme.neonCyan.withValues(alpha: 0.72),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppTheme.neonCyan.withValues(alpha: 0.20),
-                            blurRadius: 16,
-                          ),
-                        ],
-                      ),
-                      child: Icon(
-                        icon,
-                        size: compact ? 25 : 29,
-                        color: AppTheme.neonCyan,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      title,
-                      textAlign: TextAlign.center,
-                      style: AppTheme.tradingHeading(
-                        fontSize: compact ? 22 : 27,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.68),
-                        fontSize: compact ? 12 : 13,
-                        height: 1.25,
-                      ),
-                    ),
-                  ],
-                ),
+              child: Icon(
+                icon,
+                size: compact ? 25 : 29,
+                color: AppTheme.neonCyan,
               ),
             ),
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.fromLTRB(
-                compact ? 14 : 22,
-                compact ? 14 : 20,
-                compact ? 14 : 22,
-                compact ? 16 : 22,
+            const SizedBox(height: 10),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: AppTheme.tradingHeading(
+                fontSize: compact ? 22 : 27,
+                color: Colors.white,
               ),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    AppTheme.neonCyan.withValues(alpha: 0.035),
-                    Colors.transparent,
-                    AppTheme.neonPink.withValues(alpha: 0.025),
-                  ],
-                ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.68),
+                fontSize: compact ? 12 : 13,
+                height: 1.25,
               ),
-              child: child,
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _content({required bool compact}) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(
+        compact ? 14 : 22,
+        compact ? 14 : 20,
+        compact ? 14 : 22,
+        compact ? 16 : 22,
+      ),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppTheme.neonCyan.withValues(alpha: 0.035),
+            Colors.transparent,
+            AppTheme.neonPink.withValues(alpha: 0.025),
+          ],
+        ),
+      ),
+      child: child,
     );
   }
 }
@@ -1008,6 +1063,9 @@ class _AccountCreationStep extends StatelessWidget {
     required this.emailError,
     required this.passwordError,
     required this.riderNameError,
+    required this.selectedPlatforms,
+    required this.platformError,
+    required this.onPlatformsChanged,
     required this.showPassword,
     required this.rememberEmail,
     required this.keepSignedIn,
@@ -1023,6 +1081,9 @@ class _AccountCreationStep extends StatelessWidget {
   final String? emailError;
   final String? passwordError;
   final String? riderNameError;
+  final Set<String> selectedPlatforms;
+  final String? platformError;
+  final ValueChanged<Set<String>> onPlatformsChanged;
   final bool showPassword;
   final bool rememberEmail;
   final bool keepSignedIn;
@@ -1036,7 +1097,8 @@ class _AccountCreationStep extends StatelessWidget {
     return _StepFrame(
       icon: Icons.person_add_alt_1_rounded,
       title: 'CREATE YOUR RAIDER ACCOUNT',
-      subtitle: 'Choose your Raider identity, then secure your account.',
+      subtitle:
+          'Choose your Raider identity and platforms, then secure your account.',
       child: AutofillGroup(
         child: Column(
           children: [
@@ -1073,6 +1135,14 @@ class _AccountCreationStep extends StatelessWidget {
                       errorText: riderNameError,
                     ),
                   ),
+                  const SizedBox(height: 4),
+                  ArcGamePlatformSelector(
+                    selected: selectedPlatforms,
+                    errorText: platformError,
+                    compact: true,
+                    onChanged: onPlatformsChanged,
+                  ),
+                  const SizedBox(height: 8),
                 ],
               ),
             ),
@@ -1234,11 +1304,17 @@ class _IdentityStep extends StatelessWidget {
     required this.email,
     required this.controller,
     required this.errorText,
+    required this.selectedPlatforms,
+    required this.platformError,
+    required this.onPlatformsChanged,
     required this.onChanged,
   });
   final String email;
   final TextEditingController controller;
   final String? errorText;
+  final Set<String> selectedPlatforms;
+  final String? platformError;
+  final ValueChanged<Set<String>> onPlatformsChanged;
   final ValueChanged<String> onChanged;
 
   @override
@@ -1247,7 +1323,7 @@ class _IdentityStep extends StatelessWidget {
       icon: Icons.badge_outlined,
       title: 'IDENTIFY YOUR RAIDER',
       subtitle:
-          'Your account is ready. Choose the name other Raiders will see.',
+          'Your account is ready. Confirm your Raider name and platforms.',
       child: Column(
         children: [
           TextField(
@@ -1270,6 +1346,12 @@ class _IdentityStep extends StatelessWidget {
               prefixIcon: const Icon(Icons.person_outline_rounded),
               errorText: errorText,
             ),
+          ),
+          const SizedBox(height: 12),
+          ArcGamePlatformSelector(
+            selected: selectedPlatforms,
+            errorText: platformError,
+            onChanged: onPlatformsChanged,
           ),
         ],
       ),

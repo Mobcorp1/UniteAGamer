@@ -64,7 +64,7 @@ void main() {
 
     expect(find.text('TikTok'), findsOneWidget);
     expect(find.text('YouTube'), findsOneWidget);
-    expect(find.text('PUBLIC'), findsNWidgets(9));
+    expect(find.text('PUBLIC'), findsNWidgets(5));
     expect(find.byType(SwitchListTile), findsNothing);
     expect(tester.takeException(), isNull);
   });

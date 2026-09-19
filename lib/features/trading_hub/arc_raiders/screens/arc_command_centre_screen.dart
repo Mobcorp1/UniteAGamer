@@ -139,7 +139,11 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
   ArcProfileCompletionResult _cachedProfileCompletion =
       ArcProfileCompletionResult.completeResult;
   ArcUserPersonalisationProfile _cachedPersonalisation =
-      ArcUserPersonalisationProfile.defaults;
+      const ArcUserPersonalisationProfile(
+        completed: true,
+        goals: <ArcPersonalisationGoal>{},
+        reduceNoise: true,
+      );
   ArcExpeditionStateSnapshot _cachedExpeditionState =
       ArcExpeditionStateSnapshot.fromSeasonState(ArcSeasonState.initial());
   static ArcCommandCentreState? _lastCommandState;
@@ -483,6 +487,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
                                   progressionRecords: progressionRecords,
                                   nomadicTraderTracker: nomadicTraderTracker,
                                   tradeActivity: tradeActivity,
+                                  personalisation: personalisation,
                                 );
                               },
                             );
@@ -512,6 +517,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
     required ArcProgressionRecords progressionRecords,
     required ArcNomadicTraderTrackerSnapshot nomadicTraderTracker,
     required ArcCommandTradeActivity tradeActivity,
+    required ArcUserPersonalisationProfile personalisation,
   }) {
     if (scrappyState.status == ArcScrappyRepositoryStateStatus.error) {
       return _withSmartBuildStatus(
@@ -523,6 +529,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
           checklistState: _checklistState,
           onAction: _handleAction,
           onChecklistChanged: _handleChecklistChanged,
+          personalisation: personalisation,
           fallbackNotice:
               'Scrappy tracking is temporarily unavailable. Your Command Centre remains usable and will retry automatically.',
         ),
@@ -541,6 +548,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
           checklistState: _checklistState,
           onAction: _handleAction,
           onChecklistChanged: _handleChecklistChanged,
+          personalisation: personalisation,
           fallbackNotice:
               'Restoring your account state... the Command Centre will appear as soon as your tracker data is ready.',
         ),
@@ -556,6 +564,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
         checklistState: _checklistState,
         onAction: _handleAction,
         onChecklistChanged: _handleChecklistChanged,
+        personalisation: personalisation,
       ),
     );
   }

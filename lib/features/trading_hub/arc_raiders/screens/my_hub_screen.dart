@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -6,8 +7,13 @@ import '../widgets/arc_ad_banner_card.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/screens/monetisation_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_user_personalisation_profile.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_user_personalisation_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raid_intelligence_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_match_rider_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/my_intel_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/nomadic_trader_screen.dart';
@@ -41,6 +47,14 @@ class MyHubScreen extends StatefulWidget {
 
 class _MyHubScreenState extends State<MyHubScreen> {
   final ArcBlueprintRepository _blueprintRepository = ArcBlueprintRepository();
+  final ArcUserPersonalisationRepository _personalisationRepository =
+      ArcUserPersonalisationRepository();
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_personalisationRepository.migrateLegacyIfNeeded());
+  }
 
   late final List<_ArcHubFeature> _features = [
     _ArcHubFeature(
@@ -52,6 +66,33 @@ class _MyHubScreenState extends State<MyHubScreen> {
       art: _ArcHubArtKind.blueprints,
       assetName: 'arc_hub_blueprint_grid.webp',
       builder: (_) => const BlueprintGridScreen(),
+    ),
+    _ArcHubFeature(
+      title: 'Raid Intelligence',
+      subtitle: 'Open map intel, Blueprint signals and raid locations.',
+      icon: Icons.map_rounded,
+      accent: AppTheme.neonCyan,
+      art: _ArcHubArtKind.raid,
+      assetName: 'arc_hub_raid_planner.webp',
+      builder: (_) => const ArcRaidIntelligenceScreen(),
+    ),
+    _ArcHubFeature(
+      title: 'Raid Planner',
+      subtitle: 'Plan raid objectives, routes and active hunt targets.',
+      icon: Icons.route_rounded,
+      accent: AppTheme.neonCyan,
+      art: _ArcHubArtKind.raid,
+      assetName: 'arc_hub_raid_planner.webp',
+      builder: (_) => const RaidPlannerScreen(),
+    ),
+    _ArcHubFeature(
+      title: 'Match Raider',
+      subtitle: 'Find Raiders that fit your platform, style and availability.',
+      icon: Icons.groups_rounded,
+      accent: AppTheme.neonPink,
+      art: _ArcHubArtKind.smart,
+      assetName: 'arc_hub_match_a_raider.webp',
+      builder: (_) => const ArcMatchRiderScreen(),
     ),
     _ArcHubFeature(
       title: 'Scrappy Tracker',
@@ -257,6 +298,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
       case 'Community Intel':
       case 'My Intel':
       case 'Intel Explorer':
+      case 'Raid Intelligence':
         return FeatureAccessFlag.intelExplorer;
       case 'Smart Trade':
       case 'Smart Trade Assist':
@@ -282,6 +324,78 @@ class _MyHubScreenState extends State<MyHubScreen> {
 
   _ArcHubFeature _featureByTitle(String title) {
     return _features.firstWhere((feature) => feature.title == title);
+  }
+
+  ArcPersonalisationFeature? _personalisationFeatureForTitle(String title) {
+    return switch (title) {
+      'Blueprint Tracker' => ArcPersonalisationFeature.blueprintTracker,
+      'Raid Intelligence' => ArcPersonalisationFeature.raidIntelligence,
+      'Raid Planner' => ArcPersonalisationFeature.raidPlanner,
+      'Match Raider' => ArcPersonalisationFeature.matchRider,
+      'Scrappy Tracker' => ArcPersonalisationFeature.scrappyTracker,
+      'Bench Tracker' => ArcPersonalisationFeature.benchTracker,
+      'Quest Tracker' => ArcPersonalisationFeature.questTracker,
+      'My Loadout' => ArcPersonalisationFeature.favouriteLoadout,
+      'My Intel' => ArcPersonalisationFeature.communityIntel,
+      'Smart Trade Assist' => ArcPersonalisationFeature.smartTrade,
+      'Trading Overview' => ArcPersonalisationFeature.trading,
+      'Nomadic Trader' => ArcPersonalisationFeature.nomadicTrader,
+      'Profile & Reputation' => ArcPersonalisationFeature.profile,
+      'Play Like a Pro' => ArcPersonalisationFeature.playLikeAPro,
+      'Operation Rewards' => ArcPersonalisationFeature.operations,
+      _ => null,
+    };
+  }
+
+  bool _showEverything(ArcUserPersonalisationProfile personalisation) {
+    return personalisation.goals.contains(
+      ArcPersonalisationGoal.exploreEverything,
+    );
+  }
+
+  bool _isRelevant(
+    ArcUserPersonalisationProfile personalisation,
+    _ArcHubFeature feature,
+  ) {
+    if (feature.title == 'Profile & Reputation') return true;
+    if (_showEverything(personalisation)) return true;
+    final personalisationFeature = _personalisationFeatureForTitle(
+      feature.title,
+    );
+    if (personalisationFeature == null) return false;
+    return personalisation.interestFor(personalisationFeature).isHighSignal;
+  }
+
+  bool _blueprintFocus(ArcUserPersonalisationProfile personalisation) {
+    return _showEverything(personalisation) ||
+        personalisation
+            .interestFor(ArcPersonalisationFeature.blueprintTracker)
+            .isHighSignal;
+  }
+
+  _ArcHubFeature _recommendedFeature(
+    ArcUserPersonalisationProfile personalisation,
+  ) {
+    if (personalisation.goals.contains(
+      ArcPersonalisationGoal.tradeBlueprints,
+    )) {
+      return _featureByTitle('Trading Overview');
+    }
+    if (personalisation.goals.contains(ArcPersonalisationGoal.progressQuests)) {
+      return _featureByTitle('Quest Tracker');
+    }
+    if (personalisation.goals.contains(
+      ArcPersonalisationGoal.buildFavouriteLoadout,
+    )) {
+      return _featureByTitle('My Loadout');
+    }
+    if (personalisation.goals.contains(ArcPersonalisationGoal.findSquads)) {
+      return _featureByTitle('Match Raider');
+    }
+    if (personalisation.goals.contains(ArcPersonalisationGoal.planRaids)) {
+      return _featureByTitle('Raid Intelligence');
+    }
+    return _featureByTitle('Blueprint Tracker');
   }
 
   String get _displayName {
@@ -341,7 +455,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
     );
   }
 
-  Widget _identityHero() {
+  Widget _identityHero(ArcUserPersonalisationProfile personalisation) {
     final width = MediaQuery.sizeOf(context).width;
     final compact = width < 640;
 
@@ -391,7 +505,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
                     children: [
                       _heroGreeting(compact: true),
                       const SizedBox(height: 10),
-                      _nextBestAction(_featureByTitle('Blueprint Tracker')),
+                      _nextBestAction(_recommendedFeature(personalisation)),
                     ],
                   )
                 : Row(
@@ -401,7 +515,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
                       Expanded(
                         flex: 6,
                         child: _nextBestAction(
-                          _featureByTitle('Blueprint Tracker'),
+                          _recommendedFeature(personalisation),
                         ),
                       ),
                     ],
@@ -678,15 +792,33 @@ class _MyHubScreenState extends State<MyHubScreen> {
     );
   }
 
-  Widget _personalTools() {
-    final tools = [
-      _featureByTitle('My Loadout'),
-      _featureByTitle('My Intel'),
-      _featureByTitle('Profile & Reputation'),
+  Widget _personalTools(ArcUserPersonalisationProfile personalisation) {
+    const candidateTitles = <String>[
+      'Blueprint Tracker',
+      'Raid Intelligence',
+      'Raid Planner',
+      'Match Raider',
+      'Quest Tracker',
+      'Scrappy Tracker',
+      'Bench Tracker',
+      'My Loadout',
+      'My Intel',
+      'Smart Trade Assist',
+      'Trading Overview',
+      'Nomadic Trader',
+      'Play Like a Pro',
+      'Operation Rewards',
+      'Profile & Reputation',
+    ];
+    final focusedTools = candidateTitles
+        .map(_featureByTitle)
+        .where((feature) => _isRelevant(personalisation, feature))
+        .take(4)
+        .toList(growable: false);
+    final tools = <_ArcHubFeature>[
+      ...focusedTools,
       _featureByTitle('Community Rewards'),
       _featureByTitle('Plans & Referrals'),
-      _featureByTitle('Play Like a Pro'),
-      _featureByTitle('Operation Rewards'),
     ];
 
     return LayoutBuilder(
@@ -824,8 +956,8 @@ class _MyHubScreenState extends State<MyHubScreen> {
     );
   }
 
-  Widget _quickActionsBody() {
-    final actions = [
+  Widget _quickActionsBody(ArcUserPersonalisationProfile personalisation) {
+    final candidateActions = [
       ('Report Drop', _featureByTitle('My Intel'), Icons.inventory_outlined),
       (
         'Start Hunt',
@@ -839,6 +971,18 @@ class _MyHubScreenState extends State<MyHubScreen> {
       ),
       ('My Loadout', _featureByTitle('My Loadout'), Icons.inventory_2_outlined),
     ];
+    var actions = candidateActions
+        .where((action) => _isRelevant(personalisation, action.$2))
+        .toList(growable: false);
+    if (actions.isEmpty) {
+      actions = [
+        (
+          'Profile',
+          _featureByTitle('Profile & Reputation'),
+          Icons.person_outline_rounded,
+        ),
+      ];
+    }
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -886,7 +1030,8 @@ class _MyHubScreenState extends State<MyHubScreen> {
     );
   }
 
-  Widget _desktopDashboard() {
+  Widget _desktopDashboard(ArcUserPersonalisationProfile personalisation) {
+    final blueprintFocus = _blueprintFocus(personalisation);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -894,17 +1039,18 @@ class _MyHubScreenState extends State<MyHubScreen> {
           flex: 7,
           child: Column(
             children: [
+              if (blueprintFocus) ...[
+                _hubPanel(
+                  title: 'Hub Overview',
+                  subtitle: 'Your live Blueprint collection snapshot',
+                  child: _hubOverview(),
+                ),
+                const SizedBox(height: 12),
+              ],
               _hubPanel(
-                title: 'Hub Overview',
-                subtitle: 'Your live Blueprint collection snapshot',
-                child: _hubOverview(),
-              ),
-              const SizedBox(height: 12),
-              _hubPanel(
-                title: 'Personal Tools',
-                subtitle:
-                    'Your loadout, intel, profile and progression shortcuts',
-                child: _personalTools(),
+                title: 'Your Focus',
+                subtitle: 'Tools surfaced from your onboarding priorities',
+                child: _personalTools(personalisation),
               ),
             ],
           ),
@@ -914,12 +1060,14 @@ class _MyHubScreenState extends State<MyHubScreen> {
           flex: 4,
           child: Column(
             children: [
-              _hubPanel(title: 'Priorities', child: _alertFeedBody()),
-              const SizedBox(height: 12),
+              if (blueprintFocus) ...[
+                _hubPanel(title: 'Priorities', child: _alertFeedBody()),
+                const SizedBox(height: 12),
+              ],
               _hubPanel(
                 title: 'Quick Actions',
                 accent: ArcUiTokens.secondaryAccent,
-                child: _quickActionsBody(),
+                child: _quickActionsBody(personalisation),
               ),
             ],
           ),
@@ -928,25 +1076,32 @@ class _MyHubScreenState extends State<MyHubScreen> {
     );
   }
 
-  Widget _mobileDashboard() {
+  Widget _mobileDashboard(ArcUserPersonalisationProfile personalisation) {
+    final blueprintFocus = _blueprintFocus(personalisation);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _hubPanel(
-          title: 'Hub Overview',
-          subtitle: 'Your live Blueprint collection snapshot',
-          child: _hubOverview(),
-        ),
-        const SizedBox(height: 12),
-        _hubPanel(title: 'Priorities', child: _alertFeedBody()),
-        const SizedBox(height: 12),
+        if (blueprintFocus) ...[
+          _hubPanel(
+            title: 'Hub Overview',
+            subtitle: 'Your live Blueprint collection snapshot',
+            child: _hubOverview(),
+          ),
+          const SizedBox(height: 12),
+          _hubPanel(title: 'Priorities', child: _alertFeedBody()),
+          const SizedBox(height: 12),
+        ],
         _hubPanel(
           title: 'Quick Actions',
           accent: ArcUiTokens.secondaryAccent,
-          child: _quickActionsBody(),
+          child: _quickActionsBody(personalisation),
         ),
         const SizedBox(height: 12),
-        _hubPanel(title: 'Personal Tools', child: _personalTools()),
+        _hubPanel(
+          title: 'Your Focus',
+          subtitle: 'Tools surfaced from your onboarding priorities',
+          child: _personalTools(personalisation),
+        ),
       ],
     );
   }
@@ -960,22 +1115,42 @@ class _MyHubScreenState extends State<MyHubScreen> {
       body: ArcRaidersScreenShell(
         showAdBanner: false,
         child: SafeArea(
-          child: ArcRaidersPageList(
-            maxWidth: 1240,
-            bottomPadding: 96,
-            children: [
-              _referenceHeader(),
-              const SizedBox(height: 8),
-              _identityHero(),
-              const SizedBox(height: 12),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  return constraints.maxWidth >= 940
-                      ? _desktopDashboard()
-                      : _mobileDashboard();
-                },
-              ),
-            ],
+          child: StreamBuilder<ArcUserPersonalisationProfile>(
+            stream: _personalisationRepository.watchProfile(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting &&
+                  !snapshot.hasData) {
+                return const Center(
+                  child: CircularProgressIndicator(
+                    color: ArcUiTokens.primaryAccent,
+                  ),
+                );
+              }
+              final personalisation =
+                  snapshot.data ??
+                  const ArcUserPersonalisationProfile(
+                    completed: true,
+                    goals: <ArcPersonalisationGoal>{},
+                    reduceNoise: true,
+                  );
+              return ArcRaidersPageList(
+                maxWidth: 1240,
+                bottomPadding: 96,
+                children: [
+                  _referenceHeader(),
+                  const SizedBox(height: 8),
+                  _identityHero(personalisation),
+                  const SizedBox(height: 12),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      return constraints.maxWidth >= 940
+                          ? _desktopDashboard(personalisation)
+                          : _mobileDashboard(personalisation);
+                    },
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),

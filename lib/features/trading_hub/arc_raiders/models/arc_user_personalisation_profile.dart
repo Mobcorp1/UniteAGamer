@@ -366,7 +366,10 @@ class ArcUserPersonalisationProfile {
 
   bool get isCurrentSchema => schemaVersion >= currentSchemaVersion;
   bool get hasExplicitPreferences =>
-      completed || featureInterests.isNotEmpty || goals.length > 1;
+      completed ||
+      featureInterests.isNotEmpty ||
+      (goals.isNotEmpty &&
+          !goals.contains(ArcPersonalisationGoal.exploreEverything));
 
   ArcPersonalisationInterestLevel interestFor(
     ArcPersonalisationFeature feature,
@@ -378,6 +381,14 @@ class ArcUserPersonalisationProfile {
     if (explicit != null) return explicit;
     final inferred = _inferredInterestFor(feature, goals);
     if (inferred != null) return inferred;
+    if (reduceNoise && hasExplicitPreferences) {
+      if (feature == ArcPersonalisationFeature.profile ||
+          feature == ArcPersonalisationFeature.settings ||
+          feature == ArcPersonalisationFeature.notifications) {
+        return ArcPersonalisationInterestLevel.normal;
+      }
+      return ArcPersonalisationInterestLevel.off;
+    }
     return ArcPersonalisationInterestLevel.normal;
   }
 
@@ -492,6 +503,14 @@ class ArcUserPersonalisationProfile {
     final map = value.cast<String, dynamic>();
     final interests =
         <ArcPersonalisationFeature, ArcPersonalisationInterestLevel>{};
+    final parsedGoals = _enumSetByName(
+      ArcPersonalisationGoal.values,
+      map['goals'],
+      defaults.goals,
+    );
+    if (parsedGoals.length > 1) {
+      parsedGoals.remove(ArcPersonalisationGoal.exploreEverything);
+    }
     final rawInterests = map['featureInterests'];
     if (rawInterests is Map) {
       for (final entry in rawInterests.entries) {
@@ -515,11 +534,7 @@ class ArcUserPersonalisationProfile {
       migratedAt: _dateTimeValue(map['migratedAt']),
       updatedAt: _dateTimeValue(map['updatedAt']),
       source: _stringValue(map['source'], 'default'),
-      goals: _enumSetByName(
-        ArcPersonalisationGoal.values,
-        map['goals'],
-        defaults.goals,
-      ),
+      goals: parsedGoals,
       featureInterests: interests,
       commandCentre: ArcCommandCentrePreferenceSet.fromMap(
         map['commandCentre'],
@@ -549,9 +564,7 @@ class ArcUserPersonalisationProfile {
     bool hasProgressionData = false,
     bool hasLoadout = false,
   }) {
-    final goals = <ArcPersonalisationGoal>{
-      ArcPersonalisationGoal.exploreEverything,
-    };
+    final goals = <ArcPersonalisationGoal>{};
     final interests =
         <ArcPersonalisationFeature, ArcPersonalisationInterestLevel>{};
     final arcOnboarding = _mapValue(userData['arcOnboarding']);
@@ -575,6 +588,20 @@ class ArcUserPersonalisationProfile {
       final current = interests[feature];
       if (current == null || level.weight > current.weight) {
         interests[feature] = level;
+      }
+    }
+
+    final savedPrimaryGoal = _nullableEnumByName(
+      ArcPersonalisationGoal.values,
+      arcOnboarding['primaryGoal'],
+    );
+    if (savedPrimaryGoal != null &&
+        savedPrimaryGoal != ArcPersonalisationGoal.exploreEverything) {
+      goals.add(savedPrimaryGoal);
+      for (final entry in _goalFeatureMap.entries) {
+        if (entry.value.contains(savedPrimaryGoal)) {
+          raise(entry.key, ArcPersonalisationInterestLevel.high);
+        }
       }
     }
 
@@ -643,6 +670,10 @@ class ArcUserPersonalisationProfile {
       raise(ArcPersonalisationFeature.favouriteLoadout);
     }
 
+    if (goals.isEmpty) {
+      goals.add(ArcPersonalisationGoal.exploreEverything);
+    }
+
     final archetypes = {
       ..._stringListValue(arcOnboarding['archetypes']),
       ..._stringListValue(basicProfile['archetypes']),
@@ -686,9 +717,11 @@ class ArcUserPersonalisationProfile {
     },
     ArcPersonalisationFeature.blueprintIntelligence: {
       ArcPersonalisationGoal.completeBlueprints,
+      ArcPersonalisationGoal.findBlueprintIntel,
     },
     ArcPersonalisationFeature.blueprintWatches: {
       ArcPersonalisationGoal.completeBlueprints,
+      ArcPersonalisationGoal.findBlueprintIntel,
       ArcPersonalisationGoal.tradeBlueprints,
     },
     ArcPersonalisationFeature.trading: {ArcPersonalisationGoal.tradeBlueprints},
@@ -703,6 +736,7 @@ class ArcUserPersonalisationProfile {
     },
     ArcPersonalisationFeature.benchTracker: {
       ArcPersonalisationGoal.upgradeBench,
+      ArcPersonalisationGoal.progressQuests,
     },
     ArcPersonalisationFeature.scrappyTracker: {
       ArcPersonalisationGoal.trackResources,
@@ -712,8 +746,11 @@ class ArcUserPersonalisationProfile {
     ArcPersonalisationFeature.raidPlanner: {ArcPersonalisationGoal.planRaids},
     ArcPersonalisationFeature.huntTargets: {ArcPersonalisationGoal.planRaids},
     ArcPersonalisationFeature.raidIntelligence: {
+      ArcPersonalisationGoal.completeBlueprints,
+      ArcPersonalisationGoal.findBlueprintIntel,
       ArcPersonalisationGoal.planRaids,
       ArcPersonalisationGoal.receiveCommunityIntel,
+      ArcPersonalisationGoal.playLikeAPro,
     },
     ArcPersonalisationFeature.communityIntel: {
       ArcPersonalisationGoal.receiveCommunityIntel,
@@ -735,6 +772,9 @@ class ArcUserPersonalisationProfile {
     },
     ArcPersonalisationFeature.profile: {
       ArcPersonalisationGoal.improveReputation,
+    },
+    ArcPersonalisationFeature.playLikeAPro: {
+      ArcPersonalisationGoal.playLikeAPro,
     },
     ArcPersonalisationFeature.communications: {
       ArcPersonalisationGoal.tradeBlueprints,

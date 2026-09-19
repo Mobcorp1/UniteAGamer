@@ -1,3 +1,4 @@
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_game_platform_catalog.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 String normalizeArcOnboardingEmail(String value) => value.trim().toLowerCase();
@@ -83,10 +84,12 @@ bool shouldOpenBlueprintGridAfterArcOnboarding(String blueprintSetupMode) {
 Map<String, dynamic> buildArcOnboardingAccountCreationPayload({
   required String email,
   required String riderName,
+  Iterable<String> platforms = const <String>[],
 }) {
   final profilePayload = buildArcOnboardingAccountProfilePayload(
     email: email,
     riderName: riderName,
+    platforms: platforms,
   );
   final onboarding = Map<String, dynamic>.from(
     profilePayload['arcOnboarding'] as Map<String, dynamic>,
@@ -107,9 +110,12 @@ Map<String, dynamic> buildArcOnboardingAccountCreationPayload({
 Map<String, dynamic> buildArcOnboardingAccountProfilePayload({
   required String email,
   required String riderName,
+  Iterable<String> platforms = const <String>[],
 }) {
   final normalizedEmail = normalizeArcOnboardingEmail(email);
   final normalizedName = riderName.trim();
+  final normalizedPlatforms = ArcGamePlatformCatalog.normalize(platforms);
+  final primaryPlatform = ArcGamePlatformCatalog.primary(normalizedPlatforms);
 
   if (validateArcOnboardingEmail(normalizedEmail) != null) {
     throw ArgumentError.value(email, 'email', 'Invalid email address');
@@ -130,16 +136,21 @@ Map<String, dynamic> buildArcOnboardingAccountProfilePayload({
       'email': normalizedEmail,
       'bio': '',
       'games': <String>[],
-      'platforms': <String>[],
+      'platform': primaryPlatform,
+      'platforms': normalizedPlatforms,
     },
     'traderProfile': <String, dynamic>{
       'uagName': normalizedName,
       'uagId': '',
       'embarkId': '',
+      'platform': primaryPlatform,
+      'platforms': normalizedPlatforms,
+      'preferredPlatform': primaryPlatform,
     },
     'arcOnboarding': <String, dynamic>{
-      'version': 5,
+      'version': 6,
       'accountCreatedDuringOnboarding': true,
+      'platforms': normalizedPlatforms,
       'flow': <String>['account', 'legal', 'primaryGoal', 'blueprintSetup'],
     },
   };
@@ -151,15 +162,30 @@ Map<String, dynamic> buildArcOnboardingCompletionPayload({
   required String blueprintSetupMode,
   required String recommendedFirstSystem,
   required Map<String, dynamic> legalAccepted,
+  Iterable<String> platforms = const <String>[],
   bool accountCreatedDuringOnboarding = false,
 }) {
   final normalizedName = riderName.trim();
+  final normalizedPlatforms = ArcGamePlatformCatalog.normalize(platforms);
+  final primaryPlatform = ArcGamePlatformCatalog.primary(normalizedPlatforms);
   if (validateArcRiderName(normalizedName) != null) {
     throw ArgumentError.value(riderName, 'riderName', 'Invalid Raider name');
   }
 
   return <String, dynamic>{
     'displayName': normalizedName,
+    'platform': primaryPlatform,
+    'platforms': normalizedPlatforms,
+    'preferredPlatform': primaryPlatform,
+    'basicProfile': <String, dynamic>{
+      'platform': primaryPlatform,
+      'platforms': normalizedPlatforms,
+    },
+    'traderProfile': <String, dynamic>{
+      'platform': primaryPlatform,
+      'platforms': normalizedPlatforms,
+      'preferredPlatform': primaryPlatform,
+    },
     'onboardingComplete': true,
     'arcMandatoryOnboardingComplete': true,
     'updatedAt': FieldValue.serverTimestamp(),
@@ -170,7 +196,7 @@ Map<String, dynamic> buildArcOnboardingCompletionPayload({
         'verifiedAt': FieldValue.serverTimestamp(),
       },
     'arcOnboarding': <String, dynamic>{
-      'version': 5,
+      'version': 6,
       'completedAt': FieldValue.serverTimestamp(),
       'flow': <String>[
         accountCreatedDuringOnboarding ? 'account' : 'identity',
@@ -180,6 +206,7 @@ Map<String, dynamic> buildArcOnboardingCompletionPayload({
       ],
       'accountCreatedDuringOnboarding': accountCreatedDuringOnboarding,
       'riderName': normalizedName,
+      'platforms': normalizedPlatforms,
       'primaryGoal': primaryGoal,
       'blueprintSetupMode': blueprintSetupMode,
       'recommendedFirstSystem': recommendedFirstSystem,

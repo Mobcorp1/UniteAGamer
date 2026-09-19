@@ -1,3 +1,4 @@
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_game_platform_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_player_archetype_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_availability.dart';
 
@@ -41,6 +42,7 @@ class ArcProfileCompletionResult {
   bool get identityComplete => !missingFieldIds.any(
     (id) => const <String>{
       'embarkId',
+      'platform',
       'archetypes',
       'communicationStyle',
       'squadIntent',
@@ -88,6 +90,30 @@ class ArcProfileCompletionEvaluator {
           label: 'Embark ID',
           routeName: profileSetupRouteName,
           section: 'identity',
+        ),
+      );
+    }
+
+    final platforms = ArcGamePlatformCatalog.normalize(<Object?>[
+      ..._stringList(profileData['platforms']),
+      ..._stringList(traderProfile['platforms']),
+      ..._stringList(basicProfile['platforms']),
+      ..._stringList(arcOnboarding['platforms']),
+      profileData['platform'],
+      profileData['preferredPlatform'],
+      traderProfile['platform'],
+      traderProfile['preferredPlatform'],
+      basicProfile['platform'],
+      userData['platform'],
+      userData['preferredPlatform'],
+    ]);
+    if (platforms.isEmpty) {
+      missing.add(
+        const ArcProfileCompletionMissingField(
+          id: 'platform',
+          label: 'Gaming platform',
+          routeName: profileSetupRouteName,
+          section: 'platform',
         ),
       );
     }

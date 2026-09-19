@@ -296,6 +296,7 @@ class ArcCommandCentreRelevanceMapper {
 
   static bool _canHide(ArcCommandStatus status) {
     return status == ArcCommandStatus.neutral ||
+        status == ArcCommandStatus.active ||
         status == ArcCommandStatus.success;
   }
 

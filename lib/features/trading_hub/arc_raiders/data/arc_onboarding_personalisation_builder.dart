@@ -38,7 +38,7 @@ ArcUserPersonalisationProfile buildArcOnboardingPersonalisation({
   return ArcUserPersonalisationProfile(
     completed: true,
     completedAt: completedAt ?? DateTime.now(),
-    source: 'progressive_onboarding_v5',
+    source: 'progressive_onboarding_v6',
     goals: goals,
     featureInterests: interests,
     commandCentre: ArcCommandCentrePreferenceSet(
@@ -103,6 +103,7 @@ Set<ArcPersonalisationFeature> arcOnboardingFeaturesForGoal(
       return const {
         ArcPersonalisationFeature.questTracker,
         ArcPersonalisationFeature.scrappyTracker,
+        ArcPersonalisationFeature.benchTracker,
       };
     case ArcPersonalisationGoal.upgradeBench:
       return const {

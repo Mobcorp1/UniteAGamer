@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/screens/monetisation_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_command_centre_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_command_centre_relevance_mapper.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_user_personalisation_profile.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_expedition_state_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_season_reset_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trust/screens/arc_raider_contracts_screen.dart';
@@ -27,6 +29,7 @@ class ArcCommandCentreContent extends StatefulWidget {
     required this.checklistState,
     required this.onAction,
     required this.onChecklistChanged,
+    this.personalisation = ArcUserPersonalisationProfile.defaults,
     this.fallbackNotice,
   });
 
@@ -35,6 +38,7 @@ class ArcCommandCentreContent extends StatefulWidget {
   final Map<String, bool> checklistState;
   final ValueChanged<ArcCommandAction> onAction;
   final void Function(String id, bool value) onChecklistChanged;
+  final ArcUserPersonalisationProfile personalisation;
   final String? fallbackNotice;
 
   @override
@@ -1009,7 +1013,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
       );
     }
 
-    return [
+    final tiles = <_CommandTileData>[
       _tileFromPanel(
         state.blueprintSummary,
         image: _operationAsset('complete_blueprint_collection_card.webp'),
@@ -1122,6 +1126,53 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
         image: _operationAsset('arc_tool_deck_background.webp'),
       ),
     ];
+
+    final personalisation = widget.personalisation;
+    if (!personalisation.hasExplicitPreferences ||
+        personalisation.goals.contains(
+          ArcPersonalisationGoal.exploreEverything,
+        )) {
+      return tiles;
+    }
+
+    final focused = tiles
+        .where((tile) {
+          if (tile.title == 'Tool Deck') return true;
+          final feature = _featureForSystemTile(tile);
+          return personalisation.interestFor(feature).isHighSignal;
+        })
+        .toList(growable: false);
+
+    return focused;
+  }
+
+  ArcPersonalisationFeature _featureForSystemTile(_CommandTileData tile) {
+    switch (tile.title) {
+      case 'Scrappy Tracker':
+        return ArcPersonalisationFeature.scrappyTracker;
+      case 'Raid Planner':
+        return ArcPersonalisationFeature.raidPlanner;
+      case 'Trading Hub':
+        return ArcPersonalisationFeature.trading;
+      case 'Smart Trade Assist':
+        return ArcPersonalisationFeature.smartTrade;
+      case 'Match Raider':
+        return ArcPersonalisationFeature.matchRider;
+      case 'Report a Rat':
+        return ArcPersonalisationFeature.reportARat;
+      case 'Play Like a Pro':
+        return ArcPersonalisationFeature.playLikeAPro;
+      case 'Communications':
+        return ArcPersonalisationFeature.communications;
+      case 'Wall of Legends':
+        return ArcPersonalisationFeature.operations;
+      case 'Plans & Referrals':
+        return ArcPersonalisationFeature.giftSubscriptions;
+      case 'Nomadic Trader':
+        return ArcPersonalisationFeature.nomadicTrader;
+      default:
+        return ArcCommandCentreRelevanceMapper.featureForAction(tile.action);
+    }
   }
 
   Widget _dailyChecklist(List<ArcCommandChecklistItem> checklist) {

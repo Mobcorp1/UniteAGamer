@@ -33,6 +33,7 @@ void main() {
         result.missingFieldIds,
         containsAll([
           'embarkId',
+          'platform',
           'archetypes',
           'communicationStyle',
           'squadIntent',
@@ -56,6 +57,7 @@ void main() {
         },
         profileData: const {
           'embarkId': 'Raider#1234',
+          'platforms': ['PlayStation'],
           'playStyle': 'Trader',
           'communicationStyle': 'Voice',
           'squadIntent': 'Squad up',
@@ -90,6 +92,7 @@ void main() {
           },
           profileData: const {
             'embarkId': 'Raider#1234',
+            'platforms': ['PlayStation'],
             'playStyle': 'Trader',
             'communicationStyle': 'Voice',
             'squadIntent': 'Squad up',
@@ -112,6 +115,7 @@ void main() {
         },
         profileData: const {
           'embarkId': 'Raider#1234',
+          'platforms': ['PlayStation'],
           'archetypes': ['Trader', 'Explorer'],
           'communicationStyle': 'Voice',
           'squadIntent': 'Squad up',
@@ -134,6 +138,7 @@ void main() {
         },
         profileData: const {
           'embarkId': 'Raider#1234',
+          'platforms': ['PlayStation'],
           'archetypes': ['Trader', 'Explorer'],
           'communicationStyle': 'Voice',
           'squadIntent': 'Squad up',
@@ -155,6 +160,7 @@ void main() {
         },
         profileData: const {
           'embarkId': 'Raider#1234',
+          'platforms': ['PlayStation'],
           'archetypes': ['Trader', 'Explorer'],
           'communicationStyle': 'Voice',
           'squadIntent': 'Squad up',

@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../data/arc_player_archetype_catalog.dart';
+import '../data/arc_game_platform_catalog.dart';
 import '../data/arc_player_session_catalog.dart';
 import '../data/arc_profile_completion_evaluator.dart';
 import '../models/arc_availability.dart';
@@ -377,6 +378,15 @@ class ArcTraderProfileRepository {
       ),
     );
 
+    final platforms = ArcGamePlatformCatalog.normalize(<Object?>[
+      ..._stringList(profileData['platforms']),
+      ..._stringList(traderProfile['platforms']),
+      ..._stringList(basicProfile['platforms']),
+      ..._stringList(baseProfile['platforms']),
+      platform,
+    ], fallback: platform);
+    final primaryPlatform = ArcGamePlatformCatalog.primary(platforms);
+
     final timezone = _string(
       profileData['timezone'],
       _string(
@@ -429,7 +439,8 @@ class ArcTraderProfileRepository {
       ),
       region: region,
       serverPreference: serverPreference,
-      platform: platform,
+      platform: primaryPlatform,
+      platforms: platforms,
       timezone: timezone,
       visibleInSearch: _bool(profileData['visibleInSearch'], true),
       micOk: _bool(profileData['micOk'], true),
@@ -440,7 +451,7 @@ class ArcTraderProfileRepository {
         uagId.isNotEmpty &&
             uagName.isNotEmpty &&
             region.isNotEmpty &&
-            platform.isNotEmpty,
+            platforms.isNotEmpty,
       ),
       archetypes: archetypes,
       playStyles: playStyles.isEmpty ? const ['PvE defensive'] : playStyles,
@@ -535,7 +546,8 @@ class ArcTraderProfileRepository {
       'serverPreference': profile.serverPreference.trim().isEmpty
           ? 'Automatic'
           : profile.serverPreference.trim(),
-      'platform': profile.platform.trim(),
+      'platform': profile.primaryPlatform,
+      'platforms': profile.normalisedPlatforms,
       'timezone': profile.timezone.trim(),
       'visibleInSearch': profile.visibleInSearch,
       'micOk': profile.micOk,
@@ -587,7 +599,7 @@ class ArcTraderProfileRepository {
           ? 'New Trader'
           : profile.uagName.trim(),
       'gamerTag': profile.uagId.trim(),
-      'preferredPlatform': profile.platform.trim(),
+      'preferredPlatform': profile.primaryPlatform,
       'updatedAt': serverNow,
       'lastActiveAt': serverNow,
       'createdAt': profile.createdAt == null
@@ -744,6 +756,43 @@ class ArcTraderProfileRepository {
       profile.uid,
       profileDataOverride: profileMap,
     );
+  }
+
+  Future<void> savePlatformSelection(Iterable<String> platforms) async {
+    final uid = currentUid;
+    if (uid == null) throw StateError('No authenticated user found.');
+
+    final normalised = ArcGamePlatformCatalog.normalize(platforms);
+    if (normalised.isEmpty) {
+      throw ArgumentError('Choose at least one supported gaming platform.');
+    }
+    final primary = ArcGamePlatformCatalog.primary(normalised);
+    final now = FieldValue.serverTimestamp();
+    final batch = _firestore.batch();
+
+    batch.set(_userDoc(uid), <String, dynamic>{
+      'platform': primary,
+      'platforms': normalised,
+      'preferredPlatform': primary,
+      'basicProfile': <String, dynamic>{
+        'platform': primary,
+        'platforms': normalised,
+      },
+      'traderProfile': <String, dynamic>{
+        'platform': primary,
+        'platforms': normalised,
+        'preferredPlatform': primary,
+      },
+      'updatedAt': now,
+    }, SetOptions(merge: true));
+    batch.set(profileDoc(uid), <String, dynamic>{
+      'platform': primary,
+      'platforms': normalised,
+      'preferredPlatform': primary,
+      'updatedAt': now,
+      'lastActiveAt': now,
+    }, SetOptions(merge: true));
+    await batch.commit();
   }
 
   Future<ArcAvailability> getAvailability() async {

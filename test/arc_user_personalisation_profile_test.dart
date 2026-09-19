@@ -50,6 +50,23 @@ void main() {
       expect(profile.toMap()['schemaVersion'], 1);
     });
 
+    test('specific saved goals override legacy show-everything conflicts', () {
+      final profile = ArcUserPersonalisationProfile.fromMap(
+        const <String, dynamic>{
+          'completed': true,
+          'goals': <String>['exploreEverything', 'progressQuests'],
+        },
+      );
+
+      expect(profile.goals, <ArcPersonalisationGoal>{
+        ArcPersonalisationGoal.progressQuests,
+      });
+      expect(
+        profile.interestFor(ArcPersonalisationFeature.trading),
+        ArcPersonalisationInterestLevel.off,
+      );
+    });
+
     test('infers safe legacy interests without completing existing users', () {
       final profile = ArcUserPersonalisationProfile.inferFromLegacy(
         userData: {
@@ -75,12 +92,114 @@ void main() {
         profile.interestFor(ArcPersonalisationFeature.favouriteLoadout),
         ArcPersonalisationInterestLevel.high,
       );
+      expect(
+        profile.goals,
+        isNot(contains(ArcPersonalisationGoal.exploreEverything)),
+      );
+      expect(
+        profile.interestFor(ArcPersonalisationFeature.matchRider),
+        ArcPersonalisationInterestLevel.off,
+      );
     });
+
+    test(
+      'migrates the saved onboarding primary goal without show-all noise',
+      () {
+        final profile = ArcUserPersonalisationProfile.inferFromLegacy(
+          userData: const <String, dynamic>{
+            'arcOnboarding': <String, dynamic>{'primaryGoal': 'progressQuests'},
+          },
+        );
+
+        expect(profile.goals, <ArcPersonalisationGoal>{
+          ArcPersonalisationGoal.progressQuests,
+        });
+        expect(
+          profile.interestFor(ArcPersonalisationFeature.questTracker),
+          ArcPersonalisationInterestLevel.high,
+        );
+        expect(
+          profile.interestFor(ArcPersonalisationFeature.trading),
+          ArcPersonalisationInterestLevel.off,
+        );
+      },
+    );
+
+    test(
+      'single specific goal is treated as an explicit focused preference',
+      () {
+        const profile = ArcUserPersonalisationProfile(
+          goals: <ArcPersonalisationGoal>{
+            ArcPersonalisationGoal.tradeBlueprints,
+          },
+          reduceNoise: true,
+        );
+
+        expect(profile.hasExplicitPreferences, isTrue);
+        expect(
+          profile.interestFor(ArcPersonalisationFeature.trading),
+          isNot(ArcPersonalisationInterestLevel.off),
+        );
+        expect(
+          profile.interestFor(ArcPersonalisationFeature.matchRider),
+          ArcPersonalisationInterestLevel.off,
+        );
+      },
+    );
 
     test('documents canonical Firestore path', () {
       expect(
         ArcUserPersonalisationRepository.profilePath('user-123'),
         'users/user-123/personalisation/profile',
+      );
+    });
+  });
+
+  group('focused onboarding visibility', () {
+    test('completed focused profiles turn unrelated neutral systems off', () {
+      const profile = ArcUserPersonalisationProfile(
+        completed: true,
+        goals: <ArcPersonalisationGoal>{
+          ArcPersonalisationGoal.completeBlueprints,
+        },
+        featureInterests:
+            <ArcPersonalisationFeature, ArcPersonalisationInterestLevel>{
+              ArcPersonalisationFeature.blueprintTracker:
+                  ArcPersonalisationInterestLevel.primary,
+            },
+        reduceNoise: true,
+      );
+
+      expect(
+        profile.interestFor(ArcPersonalisationFeature.blueprintTracker),
+        ArcPersonalisationInterestLevel.primary,
+      );
+      expect(
+        profile.interestFor(ArcPersonalisationFeature.trading),
+        ArcPersonalisationInterestLevel.off,
+      );
+      expect(
+        profile.interestFor(ArcPersonalisationFeature.profile),
+        ArcPersonalisationInterestLevel.normal,
+      );
+    });
+
+    test('show me everything keeps the catalogue discoverable', () {
+      const profile = ArcUserPersonalisationProfile(
+        completed: true,
+        goals: <ArcPersonalisationGoal>{
+          ArcPersonalisationGoal.exploreEverything,
+        },
+        reduceNoise: true,
+      );
+
+      expect(
+        profile.interestFor(ArcPersonalisationFeature.trading),
+        ArcPersonalisationInterestLevel.normal,
+      );
+      expect(
+        profile.interestFor(ArcPersonalisationFeature.matchRider),
+        ArcPersonalisationInterestLevel.normal,
       );
     });
   });
@@ -110,6 +229,32 @@ void main() {
         expect(mapped.alerts.first.title, 'Profile Setup Blocking');
       },
     );
+
+    test('suppresses unrelated active noise for focused users', () {
+      final state = _commandStateWithActiveTrade();
+      const personalisation = ArcUserPersonalisationProfile(
+        completed: true,
+        goals: <ArcPersonalisationGoal>{
+          ArcPersonalisationGoal.completeBlueprints,
+        },
+        featureInterests:
+            <ArcPersonalisationFeature, ArcPersonalisationInterestLevel>{
+              ArcPersonalisationFeature.blueprintTracker:
+                  ArcPersonalisationInterestLevel.primary,
+            },
+        reduceNoise: true,
+      );
+
+      final mapped = ArcCommandCentreRelevanceMapper.apply(
+        state: state,
+        personalisation: personalisation,
+      );
+
+      expect(
+        mapped.objectives.map((item) => item.title),
+        isNot(contains('Active Trade Session')),
+      );
+    });
   });
 
   group('Play Like A Pro registry', () {
@@ -301,6 +446,41 @@ ArcCommandCentreState _commandState() {
     decisionSummary: _panel('Decision Summary'),
     communitySummary: _panel('Community Summary'),
     statisticsSummary: _panel('Statistics Summary'),
+  );
+}
+
+ArcCommandCentreState _commandStateWithActiveTrade() {
+  final base = _commandState();
+  return ArcCommandCentreState(
+    priority: base.priority,
+    snapshots: base.snapshots,
+    objectives: <ArcCommandObjective>[
+      ...base.objectives,
+      const ArcCommandObjective(
+        title: 'Active Trade Session',
+        reason: 'A trade is currently active.',
+        statusLabel: 'Active',
+        progressText: 'In progress',
+        status: ArcCommandStatus.active,
+        action: _openTrading,
+      ),
+    ],
+    alerts: base.alerts,
+    recommendations: base.recommendations,
+    checklist: base.checklist,
+    resources: base.resources,
+    tradeSummary: base.tradeSummary,
+    blueprintSummary: base.blueprintSummary,
+    questSummary: base.questSummary,
+    benchSummary: base.benchSummary,
+    operationsSummary: base.operationsSummary,
+    weeklyTraderSummary: base.weeklyTraderSummary,
+    resourceSummary: base.resourceSummary,
+    raidIntelligenceSummary: base.raidIntelligenceSummary,
+    decisionSummary: base.decisionSummary,
+    communitySummary: base.communitySummary,
+    statisticsSummary: base.statisticsSummary,
+    onboardingFocus: base.onboardingFocus,
   );
 }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_game_platform_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_profile_social_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 
@@ -7,16 +8,26 @@ class ArcSocialLinksEditor extends StatefulWidget {
     super.key,
     required this.initialLinks,
     required this.onChanged,
+    this.selectedGamePlatforms = const <String>{},
   });
 
   final List<ArcProfileSocialLink> initialLinks;
   final ValueChanged<List<ArcProfileSocialLink>> onChanged;
+  final Set<String> selectedGamePlatforms;
 
   @override
   State<ArcSocialLinksEditor> createState() => _ArcSocialLinksEditorState();
 }
 
 class _ArcSocialLinksEditorState extends State<ArcSocialLinksEditor> {
+  static const _communityPlatforms = <ArcSocialPlatform>[
+    ArcSocialPlatform.discord,
+    ArcSocialPlatform.tiktok,
+    ArcSocialPlatform.twitch,
+    ArcSocialPlatform.youtube,
+    ArcSocialPlatform.kick,
+  ];
+
   late final Map<ArcSocialPlatform, TextEditingController> _controllers;
   late Map<ArcSocialPlatform, bool> _hidden;
 
@@ -73,6 +84,26 @@ class _ArcSocialLinksEditorState extends State<ArcSocialLinksEditor> {
     );
   }
 
+  List<ArcSocialPlatform> get _gamingIdentityPlatforms {
+    final selected = ArcGamePlatformCatalog.normalize(
+      widget.selectedGamePlatforms,
+    ).toSet();
+    final output = <ArcSocialPlatform>[];
+    if (selected.contains(ArcGamePlatformCatalog.playStation)) {
+      output.add(ArcSocialPlatform.playStation);
+    }
+    if (selected.contains(ArcGamePlatformCatalog.xbox)) {
+      output.add(ArcSocialPlatform.xbox);
+    }
+    if (selected.contains(ArcGamePlatformCatalog.pc)) {
+      output.addAll(const <ArcSocialPlatform>[
+        ArcSocialPlatform.steam,
+        ArcSocialPlatform.epicGames,
+      ]);
+    }
+    return output;
+  }
+
   IconData _platformIcon(ArcSocialPlatform platform) {
     return switch (platform) {
       ArcSocialPlatform.tiktok => Icons.music_note_rounded,
@@ -94,6 +125,7 @@ class _ArcSocialLinksEditorState extends State<ArcSocialLinksEditor> {
         .toList(growable: false);
     final configured = links.where((link) => link.isConfigured).length;
     final public = links.where((link) => link.isPublic).length;
+    final gamingPlatforms = _gamingIdentityPlatforms;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -116,7 +148,7 @@ class _ArcSocialLinksEditorState extends State<ArcSocialLinksEditor> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Add a username or profile URL, then choose whether each link is public.',
+                  'Gaming IDs follow your selected platforms. Social and creator links stay optional.',
                   style: ArcUiTokens.bodySmall(
                     color: ArcUiTokens.textSecondary,
                   ),
@@ -134,26 +166,90 @@ class _ArcSocialLinksEditorState extends State<ArcSocialLinksEditor> {
             ],
           ),
         ),
-        const SizedBox(height: 10),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            const gap = 8.0;
-            final columns = constraints.maxWidth >= 700 ? 2 : 1;
-            final tileWidth = columns == 1
-                ? constraints.maxWidth
-                : (constraints.maxWidth - gap) / 2;
-
-            return Wrap(
-              spacing: gap,
-              runSpacing: gap,
-              children: [
-                for (final platform in ArcSocialPlatform.values)
-                  SizedBox(width: tileWidth, child: _platformField(platform)),
-              ],
-            );
-          },
+        const SizedBox(height: 12),
+        Text(
+          'GAMING IDENTITIES',
+          style: ArcUiTokens.sectionTitle(
+            fontSize: 14,
+            color: ArcUiTokens.primaryAccent,
+          ),
         ),
+        const SizedBox(height: 4),
+        Text(
+          gamingPlatforms.isEmpty
+              ? 'Choose PlayStation, Xbox or PC in Platform & Server to add the matching gaming IDs.'
+              : 'Only IDs that match your active gaming platforms are shown here.',
+          style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
+        ),
+        const SizedBox(height: 9),
+        if (gamingPlatforms.isEmpty)
+          _emptyGamingIdentityState()
+        else
+          _platformGrid(gamingPlatforms),
+        const SizedBox(height: 16),
+        Text(
+          'SOCIAL & CREATOR LINKS',
+          style: ArcUiTokens.sectionTitle(
+            fontSize: 14,
+            color: ArcUiTokens.secondaryAccent,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'These are independent of the platform you play on.',
+          style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
+        ),
+        const SizedBox(height: 9),
+        _platformGrid(_communityPlatforms),
       ],
+    );
+  }
+
+  Widget _emptyGamingIdentityState() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        accent: ArcUiTokens.primaryAccent,
+        borderOpacity: 0.10,
+        radius: ArcUiTokens.radiusM,
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.sports_esports_outlined,
+            color: ArcUiTokens.textTertiary,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'No gaming platform selected yet.',
+              style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _platformGrid(List<ArcSocialPlatform> platforms) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const gap = 8.0;
+        final columns = constraints.maxWidth >= 700 ? 2 : 1;
+        final tileWidth = columns == 1
+            ? constraints.maxWidth
+            : (constraints.maxWidth - gap) / 2;
+
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: [
+            for (final platform in platforms)
+              SizedBox(width: tileWidth, child: _platformField(platform)),
+          ],
+        );
+      },
     );
   }
 
