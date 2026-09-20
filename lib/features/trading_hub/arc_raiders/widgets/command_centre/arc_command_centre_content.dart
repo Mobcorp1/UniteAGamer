@@ -18,6 +18,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/wal
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/services/arc_text_sanitizer.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/command_centre/arc_command_centre_widgets.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/command_centre/arc_command_centre_layout_policy.dart';
 import 'package:uag_arc_raiders_hub/widgets/arc_global_visual_system.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -116,8 +117,8 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     }).length;
     final openChecks = checklist.length - completedChecks;
     return Container(
-      constraints: const BoxConstraints(minHeight: 112),
-      padding: const EdgeInsets.all(12),
+      constraints: const BoxConstraints(minHeight: 96),
+      padding: const EdgeInsets.all(10),
       decoration: _imageDecoration(
         _operationAsset('claim_operations_card.webp'),
         AppTheme.neonCyan,
@@ -294,7 +295,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
                 subtitle: 'Jump into your active tools and trackers',
                 icon: Icons.hub_rounded,
                 accent: AppTheme.neonCyan,
-                initiallyExpanded: true,
+                initiallyExpanded: false,
                 child: _systemCarousel(carouselTiles, showHeader: false),
               ),
               const SizedBox(height: 8),
@@ -475,7 +476,9 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final compact = constraints.maxWidth < 620;
-          final ringHeight = compact ? 190.0 : 172.0;
+          final ringHeight = ArcCommandCentreLayoutPolicy.systemRingHeight(
+            constraints.maxWidth,
+          );
 
           Widget sideCard(_CommandTileData tile) {
             return Opacity(
@@ -863,17 +866,25 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
           else
             LayoutBuilder(
               builder: (context, constraints) {
-                final columns = constraints.maxWidth >= 760 ? 3 : 2;
+                final columns = ArcCommandCentreLayoutPolicy.moveColumns(
+                  constraints.maxWidth,
+                );
                 const spacing = 8.0;
                 final width =
                     (constraints.maxWidth - (spacing * (columns - 1))) /
                     columns;
+                final tileHeight = ArcCommandCentreLayoutPolicy.moveTileHeight(
+                  constraints.maxWidth,
+                );
                 return Wrap(
                   spacing: spacing,
                   runSpacing: spacing,
                   children: [
                     for (final move in moves)
-                      SizedBox(width: width, child: _moveTile(move)),
+                      SizedBox(
+                        width: width,
+                        child: _moveTile(move, height: tileHeight),
+                      ),
                   ],
                 );
               },
@@ -883,11 +894,11 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     );
   }
 
-  Widget _moveTile(_CommandMoveData move) {
+  Widget _moveTile(_CommandMoveData move, {required double height}) {
     return _tapSurface(
       action: move.action,
       child: Container(
-        height: 96,
+        height: height,
         padding: const EdgeInsets.all(9),
         decoration: _imageDecoration(move.image, move.accent, radius: 16),
         child: Column(
@@ -1187,19 +1198,26 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
           : [
               LayoutBuilder(
                 builder: (context, constraints) {
-                  final columns = constraints.maxWidth >= 760
-                      ? 3
-                      : (constraints.maxWidth >= 430 ? 2 : 1);
+                  final columns = ArcCommandCentreLayoutPolicy.dailyColumns(
+                    constraints.maxWidth,
+                  );
                   const spacing = 8.0;
                   final width =
                       (constraints.maxWidth - (spacing * (columns - 1))) /
                       columns;
+                  final tileHeight =
+                      ArcCommandCentreLayoutPolicy.dailyTileHeight(
+                        constraints.maxWidth,
+                      );
                   return Wrap(
                     spacing: spacing,
                     runSpacing: spacing,
                     children: [
                       for (final item in items)
-                        SizedBox(width: width, child: _checklistTile(item)),
+                        SizedBox(
+                          width: width,
+                          child: _checklistTile(item, height: tileHeight),
+                        ),
                     ],
                   );
                 },
@@ -1208,14 +1226,17 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     );
   }
 
-  Widget _checklistTile(ArcCommandChecklistItem item) {
+  Widget _checklistTile(
+    ArcCommandChecklistItem item, {
+    required double height,
+  }) {
     final checked = widget.checklistState[item.id] ?? item.doneByDefault;
     final accent = checked ? Colors.lightGreenAccent : AppTheme.neonCyan;
     return _tapSurface(
       action: item.action,
       child: Container(
-        height: 68,
-        padding: const EdgeInsets.all(7),
+        height: height,
+        padding: const EdgeInsets.all(8),
         decoration: _imageDecoration(
           _imageForChecklistItem(item),
           accent,
