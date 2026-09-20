@@ -20,7 +20,9 @@ class ArcBlueprintSightingActivity extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                'LIVE SIGHTING ACTIVITY',
+                activity.hasLiveReports
+                    ? 'LIVE SIGHTING ACTIVITY'
+                    : 'Seeded guidance',
                 style: AppTheme.bodyTextStyle(
                   fontSize: 10,
                   color: AppTheme.neonCyan,
@@ -32,32 +34,28 @@ class ArcBlueprintSightingActivity extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 9),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            _metric(
-              '${activity.findsLast24Hours}',
-              'Last 24h',
-              Icons.bolt_rounded,
-            ),
-            _metric(
-              '${activity.findsLast7Days}',
-              'Last 7 days',
-              Icons.calendar_view_week_rounded,
-            ),
-            _metric(
-              '${activity.totalFinds}',
-              'Total finds',
-              Icons.inventory_2_rounded,
-            ),
-            _metric(
-              '${activity.contributorCount}',
-              'Contributors',
-              Icons.groups_rounded,
-            ),
-          ],
-        ),
+        if (activity.hasLiveReports)
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _metric(
+                '${activity.findsLast24Hours}',
+                'Last 24h',
+                Icons.bolt_rounded,
+              ),
+              _metric(
+                '${activity.findsLast7Days}',
+                'Last 7 days',
+                Icons.calendar_view_week_rounded,
+              ),
+              _metric(
+                '${activity.sightings.where((s) => s.reportDriven).fold<int>(0, (n, s) => n + s.totalFinds)}',
+                'Total finds',
+                Icons.inventory_2_rounded,
+              ),
+            ],
+          ),
         const SizedBox(height: 10),
         for (final sighting in activity.sightings) _sightingRow(sighting, now),
       ],
@@ -120,32 +118,35 @@ class ArcBlueprintSightingActivity extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  sighting.recencyLabel(now),
+                  sighting.reportDriven
+                      ? sighting.recencyLabel(now)
+                      : 'Seeded guidance',
                   style: const TextStyle(color: Colors.white54, fontSize: 10),
                 ),
               ],
             ),
           ),
           const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '${sighting.totalFinds} ${sighting.totalFinds == 1 ? 'find' : 'finds'}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
+          if (sighting.reportDriven)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '${sighting.totalFinds} ${sighting.totalFinds == 1 ? 'find' : 'finds'}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ),
-              Text(
-                '${sighting.findsLast7Days} this week',
-                style: TextStyle(
-                  color: _trendColor(sighting.trend),
-                  fontSize: 10,
+                Text(
+                  '${sighting.findsLast7Days} this week',
+                  style: TextStyle(
+                    color: _trendColor(sighting.trend),
+                    fontSize: 10,
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
         ],
       ),
     );

@@ -41,7 +41,7 @@ class _ArcBlueprintOpportunityMarkerState
       onExit: (_) => setState(() => _hovered = false),
       child: Semantics(
         button: true,
-        label: widget.marker.semanticLabel,
+        label: _tooltip(blueprints),
         child: Tooltip(
           message: _tooltip(blueprints),
           child: AnimatedScale(
@@ -105,11 +105,11 @@ class _ArcBlueprintOpportunityMarkerState
                           color: ringColor,
                           size: 22,
                         ),
-                      if (widget.marker.count > 1)
+                      if (widget.marker.blueprintIds.length > 1)
                         Positioned(
                           right: -1,
                           bottom: -1,
-                          child: _countBadge(widget.marker.count),
+                          child: _countBadge(widget.marker.blueprintIds.length),
                         ),
                       if (hasPriority)
                         Positioned(
@@ -207,7 +207,7 @@ class _ArcBlueprintOpportunityMarkerState
     final extra = blueprints.length > 3 ? ' +${blueprints.length - 3}' : '';
     return names.isEmpty
         ? widget.marker.semanticLabel
-        : '$names$extra • ${widget.marker.count} finds • '
+        : '$names$extra • ${widget.marker.blueprintIds.length} Blueprints • '
               '${widget.marker.confidence.label}';
   }
 

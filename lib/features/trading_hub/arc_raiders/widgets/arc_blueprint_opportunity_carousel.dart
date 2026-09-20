@@ -10,12 +10,14 @@ class ArcBlueprintOpportunityCarousel extends StatefulWidget {
     required this.marker,
     required this.cluster,
     this.onOpenBlueprint,
+    this.onSelectedBlueprint,
     super.key,
   });
 
   final ArcRaidMapMarker marker;
   final ArcRaidIntelCluster? cluster;
   final ValueChanged<String>? onOpenBlueprint;
+  final ValueChanged<String>? onSelectedBlueprint;
 
   @override
   State<ArcBlueprintOpportunityCarousel> createState() =>
@@ -24,13 +26,26 @@ class ArcBlueprintOpportunityCarousel extends StatefulWidget {
 
 class _ArcBlueprintOpportunityCarouselState
     extends State<ArcBlueprintOpportunityCarousel> {
-  late final PageController _controller;
+  late PageController _controller;
   int _page = 0;
 
   @override
   void initState() {
     super.initState();
-    _controller = PageController(viewportFraction: 0.78);
+    _controller = PageController(viewportFraction: 0.92);
+  }
+
+  @override
+  void didUpdateWidget(covariant ArcBlueprintOpportunityCarousel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.marker.id != widget.marker.id ||
+        oldWidget.marker.blueprintIds.join('|') !=
+            widget.marker.blueprintIds.join('|')) {
+      final previous = _controller;
+      _controller = PageController(viewportFraction: 0.92);
+      _page = 0;
+      WidgetsBinding.instance.addPostFrameCallback((_) => previous.dispose());
+    }
   }
 
   @override
@@ -51,7 +66,7 @@ class _ArcBlueprintOpportunityCarouselState
           children: [
             Expanded(
               child: Text(
-                blueprints.length == 1 ? 'FOUND BLUEPRINT' : 'FOUND BLUEPRINTS',
+                blueprints.length == 1 ? 'BLUEPRINT' : 'BLUEPRINTS',
                 style: AppTheme.bodyTextStyle(
                   fontSize: 11,
                   color: AppTheme.neonCyan,
@@ -71,11 +86,14 @@ class _ArcBlueprintOpportunityCarouselState
         ),
         const SizedBox(height: 8),
         SizedBox(
-          height: 190,
+          height: 152,
           child: PageView.builder(
             controller: _controller,
             itemCount: blueprints.length,
-            onPageChanged: (value) => setState(() => _page = value),
+            onPageChanged: (value) {
+              setState(() => _page = value);
+              widget.onSelectedBlueprint?.call(blueprints[value].id);
+            },
             itemBuilder: (context, index) => Padding(
               padding: const EdgeInsets.only(right: 10),
               child: _blueprintCard(blueprints[index]),
@@ -97,17 +115,7 @@ class _ArcBlueprintOpportunityCarouselState
                       ),
                 icon: const Icon(Icons.chevron_left_rounded),
               ),
-              for (var index = 0; index < blueprints.length; index++)
-                AnimatedContainer(
-                  duration: AppTheme.fastAnimation,
-                  width: index == _page ? 18 : 6,
-                  height: 6,
-                  margin: const EdgeInsets.symmetric(horizontal: 3),
-                  decoration: BoxDecoration(
-                    color: index == _page ? AppTheme.neonCyan : Colors.white24,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
+              Text('${_page + 1} of ${blueprints.length}'),
               IconButton(
                 tooltip: 'Next Blueprint',
                 onPressed: _page >= blueprints.length - 1
@@ -129,7 +137,15 @@ class _ArcBlueprintOpportunityCarouselState
     final prioritised = widget.marker.prioritizedBlueprintIds.contains(
       blueprint.id,
     );
-    final finds = widget.marker.findsForBlueprint(blueprint.id);
+    final reports =
+        widget.cluster?.evidence
+            .where(
+              (e) =>
+                  e.blueprintId == blueprint.id &&
+                  e.sourceCategory == 'community_drop_report',
+            )
+            .length ??
+        0;
     final imagePath = blueprint.imageAssetPath;
 
     return MouseRegion(
@@ -146,8 +162,8 @@ class _ArcBlueprintOpportunityCarouselState
         child: Row(
           children: [
             Container(
-              width: 96,
-              height: 132,
+              width: 60,
+              height: 96,
               clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
@@ -172,8 +188,8 @@ class _ArcBlueprintOpportunityCarouselState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (prioritised)
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
+                    Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         Icon(
                           Icons.star_rounded,
@@ -196,7 +212,7 @@ class _ArcBlueprintOpportunityCarouselState
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: AppTheme.tradingHeading(
-                      fontSize: 18,
+                      fontSize: 16,
                       color: Colors.white,
                     ),
                   ),
@@ -214,14 +230,8 @@ class _ArcBlueprintOpportunityCarouselState
                     runSpacing: 6,
                     children: [
                       _pill(
-                        '$finds ${finds == 1 ? 'find' : 'finds'}',
+                        reports > 0 ? '$reports reports' : 'Location guidance',
                         AppTheme.neonCyan,
-                      ),
-                      _pill(
-                        widget.marker.confidence.label,
-                        widget.marker.confidence.score >= 70
-                            ? Colors.lightGreenAccent
-                            : Colors.amberAccent,
                       ),
                     ],
                   ),

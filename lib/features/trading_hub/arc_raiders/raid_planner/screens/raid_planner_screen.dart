@@ -1,14 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_bottom_action_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_reference_visuals.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_intelligence_workspace_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 
-import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_intel_seed.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_availability.dart';
@@ -28,34 +25,33 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc
 import 'package:uag_arc_raiders_hub/widgets/collapsible_section_card.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
-import 'package:uag_arc_raiders_hub/widgets/uag_page_carousel.dart';
 
 class RaidPlannerScreen extends StatefulWidget {
   static const routeName = '/trading-hub/arc-raiders/raid-planner';
 
-  const RaidPlannerScreen({super.key});
+  const RaidPlannerScreen({
+    super.key,
+    this.entitlementSource,
+    this.targetsSource,
+    this.statesSource,
+    this.availabilitySource,
+    this.regionalSource,
+  });
+  final Stream<RaidPlannerEntitlement> Function()? entitlementSource;
+  final Stream<List<RaidBlueprintTarget>> Function()? targetsSource;
+  final Stream<Map<String, ArcBlueprintState>> Function()? statesSource;
+  final Stream<ArcAvailability> Function()? availabilitySource;
+  final Future<ArcRegionalMapConditionsSnapshot> Function()? regionalSource;
 
   @override
   State<RaidPlannerScreen> createState() => _RaidPlannerScreenState();
 }
 
-class _RaidPlannerVisualLead extends StatelessWidget {
-  const _RaidPlannerVisualLead();
-  @override
-  Widget build(BuildContext context) => const ArcReferenceSectionFrame(
-    title: 'Raid Planner',
-    subtitle: 'Timeline intelligence, active operations and route preparation.',
-    child: ArcArtworkPlaceholder(
-      assetPath: 'assets/arc_raiders/hub/arc_hub_raid_planner.webp',
-      height: 104,
-    ),
-  );
-}
-
 class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
-  final RaidPlannerRepository _plannerRepository = RaidPlannerRepository();
-  final ArcBlueprintRepository _blueprintRepository = ArcBlueprintRepository();
-  final ArcTraderProfileRepository _profileRepository =
+  late final RaidPlannerRepository _plannerRepository = RaidPlannerRepository();
+  late final ArcBlueprintRepository _blueprintRepository =
+      ArcBlueprintRepository();
+  late final ArcTraderProfileRepository _profileRepository =
       ArcTraderProfileRepository();
   late final TextEditingController _eventFinderController;
   String _eventFinderQuery = '';
@@ -63,6 +59,45 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
   String? _selectedItemTargetId;
   late Future<ArcRegionalMapConditionsSnapshot> _regionalConditionsFuture;
 
+  int _page = 0;
+  final Map<String, Stream<dynamic>> _streams = {};
+  final Map<String, dynamic> _lastData = {};
+  Stream<T> _source<T>(String key, Stream<T> Function() factory) =>
+      _streams.putIfAbsent(key, factory) as Stream<T>;
+  T _retain<T>(String key, AsyncSnapshot<T> snapshot, T fallback) {
+    if (snapshot.hasData) _lastData[key] = snapshot.data;
+    return _lastData.containsKey(key) ? _lastData[key] as T : fallback;
+  }
+
+  Widget _sourceFailure() => Center(
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Text(
+          'Planner data unavailable. Your saved targets have not been cleared.',
+        ),
+        TextButton(
+          onPressed: () => setState(() => _streams.clear()),
+          child: const Text('Retry'),
+        ),
+      ],
+    ),
+  );
+  Widget _regionalFailure() => Column(
+    children: [
+      const Text(
+        'Regional conditions unavailable. The saved target timeline is still available.',
+      ),
+      TextButton(
+        onPressed: () => setState(
+          () => _regionalConditionsFuture =
+              widget.regionalSource?.call() ??
+              ArcRegionalMapConditionsService.load(),
+        ),
+        child: const Text('Retry conditions'),
+      ),
+    ],
+  );
   late DateTime _plannerNowUtc;
   Timer? _plannerClockTimer;
 
@@ -70,7 +105,8 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
   void initState() {
     super.initState();
     _plannerNowUtc = DateTime.now().toUtc();
-    _regionalConditionsFuture = ArcRegionalMapConditionsService.load();
+    _regionalConditionsFuture =
+        widget.regionalSource?.call() ?? ArcRegionalMapConditionsService.load();
     _eventFinderController = TextEditingController();
     _eventFinderController.addListener(_onEventFinderChanged);
     _plannerClockTimer = Timer.periodic(const Duration(seconds: 15), (_) {
@@ -763,6 +799,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
       child: FutureBuilder<ArcRegionalMapConditionsSnapshot>(
         future: _regionalConditionsFuture,
         builder: (context, snapshot) {
+          if (snapshot.hasError) return _regionalFailure();
           final data = snapshot.data;
           if (data == null) {
             return const Padding(
@@ -873,6 +910,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
       child: FutureBuilder<ArcRegionalMapConditionsSnapshot>(
         future: _regionalConditionsFuture,
         builder: (context, snapshot) {
+          if (snapshot.hasError) return _regionalFailure();
           final data = snapshot.data;
           final selected = _selectedItemTargetId;
           final recommendations = data == null || selected == null
@@ -942,6 +980,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
       child: FutureBuilder<ArcRegionalMapConditionsSnapshot>(
         future: _regionalConditionsFuture,
         builder: (context, snapshot) {
+          if (snapshot.hasError) return _regionalFailure();
           final data = snapshot.data;
           final matches = data == null || normalized.length < 2
               ? const <ArcRegionalMapConditionEntry>[]
@@ -1264,9 +1303,28 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
         ? null
         : ArcBlueprintIntelLibrary.resolve(blueprint);
     return StreamBuilder<ArcDropIntel>(
-      stream: _blueprintRepository.watchIntelForBlueprint(target.blueprintId),
+      stream: _source(
+        'intel:${target.blueprintId}',
+        () => _blueprintRepository.watchIntelForBlueprint(target.blueprintId),
+      ),
       builder: (context, snapshot) {
-        final intel = snapshot.data ?? ArcDropIntel.empty(target.blueprintId);
+        if (snapshot.hasError) {
+          return Row(
+            children: [
+              const Expanded(
+                child: Text('Community intel unavailable for this target.'),
+              ),
+              TextButton(
+                onPressed: () => setState(
+                  () => _streams.remove('intel:${target.blueprintId}'),
+                ),
+                child: const Text('Retry intel'),
+              ),
+            ],
+          );
+        }
+        if (!snapshot.hasData) return const Text('Loading community intel...');
+        final intel = snapshot.data!;
         return Container(
           margin: const EdgeInsets.only(bottom: 8),
           padding: const EdgeInsets.all(10),
@@ -1409,7 +1467,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Raid Planner',
+                  'Timeline',
                   style: ArcUiTokens.sectionTitle(
                     color: ArcUiTokens.primaryAccent,
                   ),
@@ -1421,6 +1479,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
               ),
             ],
           ),
+          const Text('Saved target schedule'),
           const SizedBox(height: 12),
           if (visible.isEmpty)
             Text(
@@ -1497,7 +1556,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
                       Expanded(
                         child: Text(
                           opportunity.rule.blueprintName,
-                          maxLines: 1,
+                          maxLines: 3,
                           overflow: TextOverflow.ellipsis,
                           style: ArcUiTokens.cardTitle(fontSize: 13),
                         ),
@@ -1523,7 +1582,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
                   const SizedBox(height: 5),
                   Text(
                     '${opportunity.slot.mapName} - ${opportunity.slot.eventName}',
-                    maxLines: 1,
+                    maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                     style: ArcUiTokens.metadata(
                       color: ArcUiTokens.textSecondary,
@@ -1592,134 +1651,115 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
       RaidTargetTier.later,
     );
 
+    final timeline = _scheduleTimelineCard(
+      opportunities: allOpportunities,
+      utcNow: utcNow,
+    );
+    final regional = <Widget>[
+      const Text('Regional official conditions - separate source'),
+      _regionalBlueprintPlannerCard(
+        states: states,
+        availability: availability,
+        utcNow: utcNow,
+      ),
+      _regionalItemPlannerCard(availability: availability, utcNow: utcNow),
+      _availabilityPlannerCard(
+        allOpportunities: allOpportunities,
+        availability: availability,
+        utcNow: utcNow,
+      ),
+    ];
+    final targetLists = [activeTargets, nextTargets, laterTargets];
+    Widget support() => ListView(
+      key: ValueKey('planner-page-$_page'),
+      padding: const EdgeInsets.all(12),
+      children: [
+        if (_page == 0) ...regional,
+        if (_page == 1) _eventFinderCard(utcNow),
+        if (_page == 2) _communityIntelCard(intelTargets),
+        if (_page >= 3) ...[
+          Text(
+            '${entitlement.tier.label} - ${entitlement.activeHuntSlots.clamp(1, 5)} Active Hunt slots',
+          ),
+          _targetTierCard(
+            tier: RaidTargetTier.values[_page - 3],
+            displayTargets: targetLists[_page - 3],
+            storedTargets: syncedTargets,
+            entitlement: entitlement,
+            states: states,
+            initiallyExpanded: true,
+          ),
+          if (_page == 5 && syncedTargets.isNotEmpty)
+            _smallButton(
+              label: 'Clear Planner Targets',
+              icon: Icons.clear_all_rounded,
+              color: Colors.redAccent,
+              onTap: () => _clearTargets(states),
+            ),
+        ],
+      ],
+    );
     return Column(
       children: [
-        const SizedBox(height: 8),
         const ArcIntelligenceWorkspaceBar(
           current: ArcIntelligenceWorkspace.planner,
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1180),
-            child: const _RaidPlannerVisualLead(),
+        SizedBox(
+          height: 44,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                for (final entry in [
+                  'Timeline',
+                  'Event Finder',
+                  'Community Intel',
+                  'Active Hunt',
+                  'Next Up',
+                  'Later',
+                ].asMap().entries)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 3),
+                    child: ChoiceChip(
+                      key: ValueKey('planner-tab-${entry.key}'),
+                      label: Text(entry.value),
+                      selected: _page == entry.key,
+                      onSelected: (_) => setState(() => _page = entry.key),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
-        const SizedBox(height: 10),
         Expanded(
-          child: UagPageCarousel(
-            pages: [
-              UagCarouselPage(
-                children: [
-                  _entitlementCard(entitlement),
-                  const SizedBox(height: 14),
-                  _scheduleTimelineCard(
-                    opportunities: allOpportunities,
-                    utcNow: utcNow,
-                  ),
-                  const SizedBox(height: 14),
-                  _regionalBlueprintPlannerCard(
-                    states: states,
-                    availability: availability,
-                    utcNow: utcNow,
-                  ),
-                  const SizedBox(height: 14),
-                  _regionalItemPlannerCard(
-                    availability: availability,
-                    utcNow: utcNow,
-                  ),
-                  const SizedBox(height: 14),
-                  _availabilityPlannerCard(
-                    allOpportunities: allOpportunities,
-                    availability: availability,
-                    utcNow: utcNow,
-                  ),
-                ],
-              ),
-              UagCarouselPage(children: [_eventFinderCard(utcNow)]),
-              UagCarouselPage(children: [_communityIntelCard(intelTargets)]),
-              UagCarouselPage(
-                children: [
-                  _targetTierCard(
-                    tier: RaidTargetTier.activeHunt,
-                    displayTargets: activeTargets,
-                    storedTargets: syncedTargets,
-                    entitlement: entitlement,
-                    states: states,
-                    initiallyExpanded: true,
-                  ),
-                ],
-              ),
-              UagCarouselPage(
-                children: [
-                  _targetTierCard(
-                    tier: RaidTargetTier.nextUp,
-                    displayTargets: nextTargets,
-                    storedTargets: syncedTargets,
-                    entitlement: entitlement,
-                    states: states,
-                    initiallyExpanded: true,
-                  ),
-                ],
-              ),
-              UagCarouselPage(
-                children: [
-                  _targetTierCard(
-                    tier: RaidTargetTier.later,
-                    displayTargets: laterTargets,
-                    storedTargets: syncedTargets,
-                    entitlement: entitlement,
-                    states: states,
-                    initiallyExpanded: true,
-                  ),
-                  const SizedBox(height: 14),
-                  if (syncedTargets.isNotEmpty)
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: _smallButton(
-                        label: 'Clear Planner Targets',
-                        icon: Icons.clear_all_rounded,
-                        color: Colors.redAccent,
-                        onTap: () => _clearTargets(states),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth >= 980) {
+                return Row(
+                  key: const Key('planner-wide-layout'),
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: ListView(
+                        padding: const EdgeInsets.all(12),
+                        children: [timeline],
                       ),
                     ),
-                ],
-              ),
-            ],
+                    Expanded(flex: 2, child: support()),
+                  ],
+                );
+              }
+              if (_page != 0) return support();
+              return ListView(
+                key: const Key('planner-timeline-page'),
+                padding: const EdgeInsets.all(12),
+                children: [timeline, const SizedBox(height: 12), ...regional],
+              );
+            },
           ),
         ),
       ],
-    );
-  }
-
-  Widget _entitlementCard(RaidPlannerEntitlement entitlement) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppTheme.spaceM),
-      decoration: ArcUiTokens.surfaceDecoration(
-        role: ArcSurfaceRole.raised,
-        accent: AppTheme.neonPink,
-        radius: 18,
-        borderOpacity: 0.18,
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.workspace_premium_outlined,
-            color: AppTheme.neonPink,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              '${entitlement.tier.label} plan - ${entitlement.activeHuntSlots.clamp(1, 5)} Active Operations slot${entitlement.activeHuntSlots == 1 ? '' : 's'}',
-              style: AppTheme.tradingHeading(
-                fontSize: 18,
-                color: AppTheme.neonPink,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -1727,71 +1767,127 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      extendBody: true,
-      extendBodyBehindAppBar: true,
-      bottomNavigationBar: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const ArcCompanionBottomDock(activeLabel: 'Raid Timeline'),
-          ArcBottomActionDock(
-            actions: [
-              ArcDockAction(
-                label: 'Back',
-                icon: Icons.arrow_back_rounded,
-                onTap: () => Navigator.of(context).maybePop(),
-              ),
-              ArcDockAction(
-                label: 'Assist',
-                icon: Icons.auto_awesome_rounded,
-                onTap: () => Navigator.of(
+      bottomNavigationBar: const ArcCompanionBottomDock(
+        activeLabel: 'Raid Timeline',
+      ),
+      appBar: AppBar(
+        title: const Text('Raid Planner'),
+        actions: [
+          PopupMenuButton<String>(
+            tooltip: 'Planner actions',
+            onSelected: (value) {
+              if (value == 'Back') Navigator.of(context).maybePop();
+              if (value == 'Assist') {
+                Navigator.of(
                   context,
-                ).pushNamed(ArcCommandCentreScreen.routeName),
-              ),
-              ArcDockAction(
-                label: 'Status',
-                icon: Icons.sensors_rounded,
-                onTap: () => Navigator.of(
+                ).pushNamed(ArcCommandCentreScreen.routeName);
+              }
+              if (value == 'Status') {
+                Navigator.of(
                   context,
-                ).pushNamed(RaidPlannerHuntTargetsScreen.routeName),
-              ),
+                ).pushNamed(RaidPlannerHuntTargetsScreen.routeName);
+              }
+            },
+            itemBuilder: (_) => [
+              for (final label in ['Back', 'Assist', 'Status'])
+                PopupMenuItem(value: label, child: Text(label)),
             ],
           ),
         ],
-      ),
-      appBar: const UagAppBar(
-        title: 'Raid Planner',
-        subtitle: 'Schedule view from saved targets and availability.',
       ),
       drawer: const AppDrawer(),
       body: ArcRaidersScreenShell(
         useSafeArea: true,
         showAdBanner: false,
         child: StreamBuilder<RaidPlannerEntitlement>(
-          stream: _plannerRepository.watchEntitlement(),
+          stream: _source(
+            'entitlement',
+            widget.entitlementSource ?? _plannerRepository.watchEntitlement,
+          ),
           builder: (context, entitlementSnapshot) {
-            final entitlement =
-                entitlementSnapshot.data ??
-                const RaidPlannerEntitlement(tier: RaidPlannerTier.free);
+            final entitlement = _retain(
+              'entitlement',
+              entitlementSnapshot,
+              const RaidPlannerEntitlement(tier: RaidPlannerTier.free),
+            );
             return StreamBuilder<List<RaidBlueprintTarget>>(
-              stream: _plannerRepository.watchTargets(),
+              stream: _source(
+                'targets',
+                widget.targetsSource ?? _plannerRepository.watchTargets,
+              ),
               builder: (context, targetsSnapshot) {
-                final targets = targetsSnapshot.data ?? <RaidBlueprintTarget>[];
+                final targets = _retain(
+                  'targets',
+                  targetsSnapshot,
+                  <RaidBlueprintTarget>[],
+                );
                 return StreamBuilder<Map<String, ArcBlueprintState>>(
-                  stream: _blueprintRepository.watchMyBlueprintStates(),
+                  stream: _source(
+                    'states',
+                    widget.statesSource ??
+                        _blueprintRepository.watchMyBlueprintStates,
+                  ),
                   builder: (context, statesSnapshot) {
-                    final states =
-                        statesSnapshot.data ?? <String, ArcBlueprintState>{};
+                    final states = _retain(
+                      'states',
+                      statesSnapshot,
+                      <String, ArcBlueprintState>{},
+                    );
                     return StreamBuilder<ArcAvailability>(
-                      stream: _profileRepository.watchAvailability(),
+                      stream: _source(
+                        'availability',
+                        widget.availabilitySource ??
+                            _profileRepository.watchAvailability,
+                      ),
                       builder: (context, availabilitySnapshot) {
-                        final availability =
-                            availabilitySnapshot.data ??
-                            ArcAvailability.initial();
-                        return _buildContent(
+                        final availability = _retain(
+                          'availability',
+                          availabilitySnapshot,
+                          ArcAvailability.initial(),
+                        );
+                        final snapshots = [
+                          entitlementSnapshot,
+                          targetsSnapshot,
+                          statesSnapshot,
+                          availabilitySnapshot,
+                        ];
+                        final failed = snapshots.any((s) => s.hasError);
+                        if (![
+                          'entitlement',
+                          'targets',
+                          'states',
+                          'availability',
+                        ].every(_lastData.containsKey)) {
+                          if (failed) return _sourceFailure();
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
+                        final content = _buildContent(
                           targets: targets,
                           entitlement: entitlement,
                           states: states,
                           availability: availability,
+                        );
+                        return Column(
+                          children: [
+                            if (failed)
+                              Row(
+                                children: [
+                                  const Expanded(
+                                    child: Text(
+                                      'Sync unavailable. Showing saved Planner data.',
+                                    ),
+                                  ),
+                                  TextButton(
+                                    onPressed: () =>
+                                        setState(() => _streams.clear()),
+                                    child: const Text('Retry'),
+                                  ),
+                                ],
+                              ),
+                            Expanded(child: content),
+                          ],
                         );
                       },
                     );

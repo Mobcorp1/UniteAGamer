@@ -36,36 +36,40 @@ void main() {
       ),
     );
 
-    expect(find.text('7'), findsOneWidget);
+    expect(find.text('2'), findsOneWidget);
     expect(find.byIcon(Icons.star_rounded), findsOneWidget);
     expect(find.byType(Image), findsWidgets);
   });
 
-  testWidgets('Blueprint opportunity carousel shows find totals', (
-    tester,
-  ) async {
-    const marker = ArcRaidMapMarker(
-      id: 'opportunity',
-      mapId: 'blue_gate',
-      category: ArcRaidMapMarkerCategory.blueprintOpportunity,
-      label: 'Blueprint opportunity',
-      point: ArcNormalizedPoint(x: 0.5, y: 0.5),
-      count: 4,
-      blueprintIds: <String>['tempest'],
-      blueprintFindCounts: <String, int>{'tempest': 4},
-      confidence: ArcRaidIntelConfidence.confirmed,
-    );
+  testWidgets(
+    'Blueprint opportunity carousel does not invent find totals without evidence',
+    (tester) async {
+      const marker = ArcRaidMapMarker(
+        id: 'opportunity',
+        mapId: 'blue_gate',
+        category: ArcRaidMapMarkerCategory.blueprintOpportunity,
+        label: 'Blueprint opportunity',
+        point: ArcNormalizedPoint(x: 0.5, y: 0.5),
+        count: 4,
+        blueprintIds: <String>['tempest'],
+        blueprintFindCounts: <String, int>{'tempest': 4},
+        confidence: ArcRaidIntelConfidence.confirmed,
+      );
 
-    await tester.pumpWidget(
-      const MaterialApp(
-        home: Scaffold(
-          body: ArcBlueprintOpportunityCarousel(marker: marker, cluster: null),
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: ArcBlueprintOpportunityCarousel(
+              marker: marker,
+              cluster: null,
+            ),
+          ),
         ),
-      ),
-    );
+      );
 
-    expect(find.text('Tempest'), findsOneWidget);
-    expect(find.text('4 finds'), findsOneWidget);
-    expect(find.text('Confirmed'), findsOneWidget);
-  });
+      expect(find.text('Tempest'), findsOneWidget);
+      expect(find.text('4 finds'), findsNothing);
+      expect(find.text('Location guidance'), findsOneWidget);
+    },
+  );
 }

@@ -80,17 +80,13 @@ class ArcMapMarkerDetailCard extends StatelessWidget {
                       : AppTheme.neonCyan,
                 ),
                 _pill(
-                  marker.approximate ? 'Approximate' : 'Calibrated',
+                  marker.approximate ? 'Approximate area' : 'Known location',
                   marker.approximate
                       ? Colors.amberAccent
                       : Colors.lightGreenAccent,
                 ),
                 if (marker.isCluster)
                   _pill('${marker.count} grouped', AppTheme.neonPink),
-                _pill(
-                  '${(marker.point.x * 100).toStringAsFixed(1)}, ${(marker.point.y * 100).toStringAsFixed(1)}',
-                  Colors.white70,
-                ),
               ],
             ),
             if (marker.detail.trim().isNotEmpty) ...[

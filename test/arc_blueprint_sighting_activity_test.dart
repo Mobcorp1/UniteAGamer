@@ -39,7 +39,7 @@ void main() {
     expect(find.text('LIVE SIGHTING ACTIVITY'), findsOneWidget);
     expect(find.text('SURGING'), findsOneWidget);
     expect(find.text('Last 24h'), findsOneWidget);
-    expect(find.text('Contributors'), findsOneWidget);
+    expect(find.text('Contributors'), findsNothing);
     expect(find.text('Tempest'), findsOneWidget);
     expect(find.text('6 finds'), findsOneWidget);
     expect(find.text('5 this week'), findsOneWidget);

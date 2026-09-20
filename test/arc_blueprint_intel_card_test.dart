@@ -25,6 +25,7 @@ void main() {
           containerSource: 'Weapon Case',
           acquisitionSource: 'Normal Drop',
           sourceReference: 'Community Drop Report',
+          sourceCategory: 'community_drop_report',
           publishedAt: now,
           confidence: ArcRaidIntelConfidence.confirmed,
         ),
@@ -68,15 +69,14 @@ void main() {
     );
 
     expect(find.text('Tempest'), findsWidgets);
-    expect(find.text('7 Reports'), findsNothing);
-    expect(find.text('Reports'), findsOneWidget);
-    expect(find.text('Raiders'), findsOneWidget);
-    expect(find.text('Nearest POI'), findsOneWidget);
-    expect(find.text('Nearest Extraction'), findsOneWidget);
-    expect(find.text('Nearest Raider Hatch'), findsOneWidget);
+    expect(find.text('1 community reports'), findsOneWidget);
+    expect(find.text('Raiders'), findsNothing);
     expect(find.text('Add to Route'), findsOneWidget);
     expect(find.text('Open Raid Planner'), findsOneWidget);
+    await tester.tap(find.text('Evidence and nearby navigation'));
+    await tester.pumpAndSettle();
     expect(find.textContaining('Community Drop Report'), findsOneWidget);
+    expect(find.textContaining('Nearest POI:'), findsOneWidget);
   });
 
   testWidgets('premium Blueprint Intel card action callbacks are wired', (
@@ -174,10 +174,9 @@ void main() {
       ),
     );
 
-    expect(find.text('BLUEPRINTS AT THIS LOCATION'), findsOneWidget);
-    expect(find.text('Tempest'), findsWidgets);
-    expect(find.text('Wolfpack'), findsWidgets);
-    expect(find.text('7 finds'), findsWidgets);
-    expect(find.text('3 finds'), findsWidgets);
+    expect(find.text('Tempest, Wolfpack'), findsOneWidget);
+    expect(find.text('7 finds'), findsNothing);
+    expect(find.text('3 finds'), findsNothing);
+    expect(find.text('No location evidence yet.'), findsOneWidget);
   });
 }

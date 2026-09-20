@@ -25,7 +25,7 @@ void main() {
 
     expect(find.text('Ancient Fort'), findsOneWidget);
     expect(find.text('Confirmed'), findsOneWidget);
-    expect(find.text('Calibrated'), findsOneWidget);
+    expect(find.text('Known location'), findsOneWidget);
     expect(find.text('Southern production POI.'), findsOneWidget);
     expect(find.text('South'), findsOneWidget);
   });

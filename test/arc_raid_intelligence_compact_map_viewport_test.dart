@@ -14,8 +14,8 @@ void main() {
     expect(screen, contains('final compactLandscape ='));
     expect(screen, contains('constraints.maxWidth >= 680'));
     expect(screen, contains('final sideBySide = desktop || compactLandscape;'));
-    expect(screen, contains('final compactMapHeight = math.min('));
-    expect(screen, contains('height: compactMapHeight'));
+    expect(screen, contains('Positioned.fill(child: map)'));
+    expect(screen, contains('if (!_controlPanelCollapsed)'));
 
     expect(renderer, contains('height.clamp(1.0, 1100.0)'));
     expect(renderer, isNot(contains('height.clamp(360.0, 1100.0)')));

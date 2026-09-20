@@ -1,7 +1,40 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/ads/uag_tactical_banner_ad.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/ads/uag_ad_service.dart';
 
 enum ArcAdAccessTier { free, traderPro, elite }
+
+/// Opt-in fixed outer geometry. Creative load/failure never changes this lane.
+/// Eligibility remains owned by the existing commercial/route policy.
+class ArcBlueprintBannerSlot extends StatelessWidget {
+  const ArcBlueprintBannerSlot({super.key, this.eligibility, this.banner});
+
+  final ValueListenable<bool>? eligibility;
+  final Widget? banner;
+
+  Widget _slot(bool eligible) => eligible
+      ? SizedBox(
+          key: const Key('blueprint-banner-slot'),
+          height: 74,
+          child: banner ?? const ArcAdBannerCard(),
+        )
+      : const SizedBox.shrink();
+
+  @override
+  Widget build(BuildContext context) {
+    if (eligibility != null) {
+      return ValueListenableBuilder<bool>(
+        valueListenable: eligibility!,
+        builder: (_, eligible, _) => _slot(eligible),
+      );
+    }
+    return AnimatedBuilder(
+      animation: UagAdService.instance,
+      builder: (_, _) => _slot(UagAdService.instance.canShowBanner),
+    );
+  }
+}
 
 /// Legacy ARC banner compatibility wrapper.
 ///

@@ -17,6 +17,7 @@ class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
     this.onMapTapped,
     this.onIntelReportRequested,
     this.showBlueprintIntel = true,
+    this.playerFacingLabels = false,
   });
 
   final ArcRaidIntelligenceState state;
@@ -26,6 +27,7 @@ class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
   final ValueChanged<ArcNormalizedPoint>? onMapTapped;
   final ValueChanged<ArcNormalizedPoint>? onIntelReportRequested;
   final bool showBlueprintIntel;
+  final bool playerFacingLabels;
 
   Iterable<ArcRaidMapMarker> get _renderableMarkers => showBlueprintIntel
       ? state.visibleMarkers
@@ -180,9 +182,13 @@ class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
       ),
       child: Text(
         calibrated
-            ? '${state.activeLayer.label} • calibrated game map'
+            ? (playerFacingLabels
+                  ? state.activeLayer.label
+                  : '${state.activeLayer.label} • calibrated game map')
             : renderable
-            ? '${state.activeLayer.label} • calibrated game map'
+            ? (playerFacingLabels
+                  ? state.activeLayer.label
+                  : '${state.activeLayer.label} • calibrated game map')
             : '${state.activeLayer.label} • tactical schematic',
         style: AppTheme.bodyTextStyle(
           fontSize: 11,

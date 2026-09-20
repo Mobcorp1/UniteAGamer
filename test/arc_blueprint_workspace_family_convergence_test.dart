@@ -25,31 +25,31 @@ void main() {
     expect(source, isNot(contains('ownership summary')));
   });
 
-  test(
-    'Blueprint tracker gains family navigation without replacing grid shell',
-    () {
-      final source = read(
-        'lib/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart',
-      );
+  test('Blueprint tracker gains family navigation without replacing grid shell', () {
+    final source = read(
+      'lib/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart',
+    );
 
-      expect(
-        source,
-        contains(
-          'ArcBlueprintWorkspaceDock(current: ArcBlueprintWorkspace.tracker)',
+    expect(
+      source,
+      matches(
+        RegExp(
+          r'ArcBlueprintWorkspaceDock\(\s*current:\s*ArcBlueprintWorkspace.tracker,?\s*\)',
         ),
-      );
-      expect(
-        source,
-        contains("key: const Key('blueprint-authoritative-grid')"),
-      );
-      expect(
-        source,
-        contains('_buildOverviewGrid(context, filtered, states, loadout)'),
-      );
-      expect(source, contains('ArcBlueprintGridViewMode.inGameFramed'));
-      expect(source, contains('BlueprintTile('));
-    },
-  );
+      ),
+    );
+    expect(source, contains("key: const Key('blueprint-authoritative-grid')"));
+    expect(
+      source,
+      matches(
+        RegExp(
+          r'_buildOverviewGrid\(\s*context,\s*filtered,\s*states,\s*loadout,?\s*\)',
+        ),
+      ),
+    );
+    expect(source, contains('ArcBlueprintGridViewMode.inGameFramed'));
+    expect(source, contains('BlueprintTile('));
+  });
 
   test('Favourite Loadout exposes family navigation in both orientations', () {
     final source = read(

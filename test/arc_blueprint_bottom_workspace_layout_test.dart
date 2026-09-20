@@ -18,8 +18,10 @@ void main() {
 
     expect(
       tracker,
-      contains(
-        'ArcBlueprintWorkspaceDock(current: ArcBlueprintWorkspace.tracker)',
+      matches(
+        RegExp(
+          r'ArcBlueprintWorkspaceDock\(\s*current:\s*ArcBlueprintWorkspace.tracker,?\s*\)',
+        ),
       ),
     );
     expect(

@@ -23,7 +23,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planne
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_map_marker_filter_panel.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_blueprint_intel_card.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_selected_blueprint_intel.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_community_intel_report_sheet.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_map_marker_detail_card.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raid_intelligence_map.dart';
@@ -33,7 +33,22 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/fou
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class ArcRaidIntelligenceScreen extends StatefulWidget {
-  const ArcRaidIntelligenceScreen({super.key});
+  const ArcRaidIntelligenceScreen({
+    super.key,
+    this.blueprintStates,
+    this.favouriteLoadout,
+    this.dropReports,
+    this.communityReports,
+    this.publishedMarkers,
+    this.loadActiveRoute,
+  });
+  final Stream<Map<String, ArcBlueprintState>> Function()? blueprintStates;
+  final Stream<ArcSavedLoadout?> Function()? favouriteLoadout;
+  final Stream<List<ArcBlueprintDropReport>> Function()? dropReports;
+  final Stream<List<ArcCommunityIntelReport>> Function(String)?
+  communityReports;
+  final Stream<List<ArcAdminMapMarker>> Function(String)? publishedMarkers;
+  final Future<ArcRaidRoutePlan?> Function()? loadActiveRoute;
 
   static const routeName = '/trading-hub/arc-raiders/raid-intelligence';
 
@@ -46,14 +61,15 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   final ArcRaidIntelligenceEngine _engine = const ArcRaidIntelligenceEngine();
   final ArcMapMarkerStackResolver _stackResolver =
       const ArcMapMarkerStackResolver();
-  final ArcBlueprintRepository _blueprintRepository = ArcBlueprintRepository();
-  final ArcSavedLoadoutRepository _loadoutRepository =
+  late final ArcBlueprintRepository _blueprintRepository =
+      ArcBlueprintRepository();
+  late final ArcSavedLoadoutRepository _loadoutRepository =
       ArcSavedLoadoutRepository();
-  final ArcRaidIntelligenceRepository _routeRepository =
+  late final ArcRaidIntelligenceRepository _routeRepository =
       ArcRaidIntelligenceRepository();
-  final ArcCommunityIntelRepository _communityIntelRepository =
+  late final ArcCommunityIntelRepository _communityIntelRepository =
       ArcCommunityIntelRepository();
-  final ArcAdminMapEditorRepository _adminMapRepository =
+  late final ArcAdminMapEditorRepository _adminMapRepository =
       ArcAdminMapEditorRepository();
   final ArcMapViewRepository _mapViewRepository = const ArcMapViewRepository();
   final TransformationController _mapController = TransformationController();
@@ -75,7 +91,31 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   ArcRaidMapMarker? _selectedMarker;
   Timer? _mapViewSaveTimer;
   bool _restoringMapView = false;
-  bool _controlPanelCollapsed = false;
+  bool _controlPanelCollapsed = true;
+  final Map<String, Stream<dynamic>> _streams = {};
+  final Map<String, dynamic> _lastData = {};
+  final ScrollController _panelScroll = ScrollController();
+  Stream<T> _source<T>(String key, Stream<T> Function() factory) =>
+      (_streams.putIfAbsent(key, factory)) as Stream<T>;
+  T _retain<T>(String key, AsyncSnapshot<T> snapshot, T fallback) {
+    if (snapshot.connectionState == ConnectionState.active ||
+        snapshot.connectionState == ConnectionState.done) {
+      if (!snapshot.hasError && (snapshot.hasData || key == 'loadout')) {
+        _lastData[key] = snapshot.data;
+      }
+    }
+    return _lastData.containsKey(key) ? _lastData[key] as T : fallback;
+  }
+
+  void _selectMarker(ArcRaidMapMarker marker) {
+    setState(() {
+      _selectedMarker = marker;
+      _controlPanelCollapsed = false;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_panelScroll.hasClients) _panelScroll.jumpTo(0);
+    });
+  }
 
   @override
   void initState() {
@@ -86,6 +126,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
 
   @override
   void dispose() {
+    _panelScroll.dispose();
     _mapViewSaveTimer?.cancel();
     _mapController.removeListener(_onMapTransformChanged);
     unawaited(_persistMapView());
@@ -95,7 +136,9 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   }
 
   Future<void> _loadActiveRoute() async {
-    final route = await _routeRepository.loadActiveRoute();
+    final route =
+        await (widget.loadActiveRoute?.call() ??
+            _routeRepository.loadActiveRoute());
     if (!mounted || route == null) return;
     setState(() {
       final canonicalRouteMapId =
@@ -118,7 +161,11 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   }
 
   Future<void> _initialiseScreen() async {
-    await _loadActiveRoute();
+    try {
+      await _loadActiveRoute();
+    } catch (_) {
+      if (mounted) setState(() => _lastData['routeError'] = true);
+    }
     await _restoreLastMapView();
   }
 
@@ -211,11 +258,18 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
         title: Text(
           'RAID INTELLIGENCE',
           style: ArcUiTokens.display(
-            fontSize: 26,
+            fontSize: 20,
             color: ArcUiTokens.secondaryAccent,
           ),
         ),
         actions: [
+          IconButton(
+            tooltip: 'Map tools',
+            icon: const Icon(Icons.tune_rounded),
+            onPressed: () => setState(
+              () => _controlPanelCollapsed = !_controlPanelCollapsed,
+            ),
+          ),
           IconButton(
             tooltip: 'Open Blueprint Tracker',
             onPressed: () =>
@@ -234,31 +288,78 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       body: ArcRaidersScreenShell(
         showAdBanner: false,
         child: StreamBuilder<Map<String, ArcBlueprintState>>(
-          stream: _blueprintRepository.watchMyBlueprintStates(),
+          stream: _source(
+            'blueprints',
+            widget.blueprintStates ??
+                _blueprintRepository.watchMyBlueprintStates,
+          ),
           builder: (context, blueprintSnapshot) {
-            final states =
-                blueprintSnapshot.data ?? const <String, ArcBlueprintState>{};
+            final states = _retain(
+              'blueprints',
+              blueprintSnapshot,
+              const <String, ArcBlueprintState>{},
+            );
             return StreamBuilder<ArcSavedLoadout?>(
-              stream: _loadoutRepository.watchFavouriteLoadout(),
+              stream: _source(
+                'loadout',
+                widget.favouriteLoadout ??
+                    _loadoutRepository.watchFavouriteLoadout,
+              ),
               builder: (context, loadoutSnapshot) {
-                final loadout = loadoutSnapshot.data;
+                final loadout = _retain('loadout', loadoutSnapshot, null);
                 return StreamBuilder<List<ArcBlueprintDropReport>>(
-                  stream: _blueprintRepository.watchRecentReports(limit: 300),
+                  stream: _source(
+                    'reports',
+                    widget.dropReports ??
+                        () =>
+                            _blueprintRepository.watchRecentReports(limit: 300),
+                  ),
                   builder: (context, reportSnapshot) {
-                    final reports =
-                        reportSnapshot.data ?? const <ArcBlueprintDropReport>[];
+                    final reports = _retain(
+                      'reports',
+                      reportSnapshot,
+                      const <ArcBlueprintDropReport>[],
+                    );
                     return StreamBuilder<List<ArcCommunityIntelReport>>(
-                      stream: _communityIntelRepository.watchMapReports(_mapId),
+                      stream: _source(
+                        'community:$_mapId',
+                        () =>
+                            widget.communityReports?.call(_mapId) ??
+                            _communityIntelRepository.watchMapReports(_mapId),
+                      ),
                       builder: (context, communitySnapshot) {
-                        final communityReports =
-                            communitySnapshot.data ??
-                            const <ArcCommunityIntelReport>[];
+                        final communityReports = _retain(
+                          'community:$_mapId',
+                          communitySnapshot,
+                          const <ArcCommunityIntelReport>[],
+                        );
                         return StreamBuilder<List<ArcAdminMapMarker>>(
-                          stream: _adminMapRepository.watchPublishedMap(_mapId),
+                          stream: _source(
+                            'admin:$_mapId',
+                            () =>
+                                widget.publishedMarkers?.call(_mapId) ??
+                                _adminMapRepository.watchPublishedMap(_mapId),
+                          ),
                           builder: (context, adminSnapshot) {
-                            final adminMarkers =
-                                adminSnapshot.data ??
-                                const <ArcAdminMapMarker>[];
+                            final adminMarkers = _retain(
+                              'admin:$_mapId',
+                              adminSnapshot,
+                              const <ArcAdminMapMarker>[],
+                            );
+                            final snapshots = <AsyncSnapshot<dynamic>>[
+                              blueprintSnapshot,
+                              loadoutSnapshot,
+                              reportSnapshot,
+                              communitySnapshot,
+                              adminSnapshot,
+                            ];
+                            final failed =
+                                snapshots.any((s) => s.hasError) ||
+                                _lastData['routeError'] == true;
+                            final loading = snapshots.any(
+                              (s) =>
+                                  s.connectionState == ConnectionState.waiting,
+                            );
                             final intelligence = _engine.build(
                               mapId: _mapId,
                               blueprintStates: states,
@@ -276,7 +377,30 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                                 const ArcIntelligenceWorkspaceBar(
                                   current: ArcIntelligenceWorkspace.raidMap,
                                 ),
-                                const SizedBox(height: 8),
+                                if (failed || loading)
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          failed
+                                              ? 'Some intel sources unavailable. Showing saved data and seeded guidance.'
+                                              : 'Loading intel sources...',
+                                          maxLines: 2,
+                                        ),
+                                      ),
+                                      if (failed)
+                                        TextButton(
+                                          onPressed: () {
+                                            setState(() {
+                                              _streams.clear();
+                                              _lastData.remove('routeError');
+                                            });
+                                            unawaited(_initialiseScreen());
+                                          },
+                                          child: const Text('Retry'),
+                                        ),
+                                    ],
+                                  ),
                                 Expanded(
                                   child: _buildLayout(
                                     intelligence,
@@ -339,31 +463,21 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
           );
         }
 
-        final availableHeight = constraints.maxHeight.isFinite
-            ? constraints.maxHeight
-            : MediaQuery.sizeOf(context).height;
-        final preferredMapHeight = availableHeight * 0.52;
-        final compactMapHeight = math.min(
-          math.min(420.0, availableHeight * 0.62),
-          math.max(220.0, preferredMapHeight),
-        );
-
-        return Column(
-          children: [
-            SizedBox(
-              height: compactMapHeight,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(10, 10, 10, 6),
-                child: map,
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(0, 4, 0, 0),
-                child: panel,
-              ),
-            ),
-          ],
+        return Padding(
+          padding: const EdgeInsets.all(8),
+          child: Stack(
+            children: [
+              Positioned.fill(child: map),
+              if (!_controlPanelCollapsed)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  height: constraints.maxHeight * 0.62,
+                  child: panel,
+                ),
+            ],
+          ),
         );
       },
     );
@@ -371,6 +485,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
 
   Widget _mapPanel(ArcRaidIntelligenceState intelligence) {
     return Container(
+      key: const Key('raid-map-viewport'),
       decoration: ArcUiTokens.surfaceDecoration(
         role: ArcSurfaceRole.raised,
         accent: ArcUiTokens.primaryAccent,
@@ -386,22 +501,22 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
               padding: const EdgeInsets.all(8),
               child: ArcRaidIntelligenceMapRenderer(
                 state: intelligence,
+                playerFacingLabels: true,
                 controller: _mapController,
                 selectedMarkerId: _selectedMarker?.id,
-                onMarkerSelected: (marker) =>
-                    setState(() => _selectedMarker = marker),
+                onMarkerSelected: _selectMarker,
                 onMapTapped: _setFreeformSpawn,
                 onIntelReportRequested: (point) =>
                     _openCommunityIntelReport(intelligence.map, point),
               ),
             ),
           ),
-          Positioned(right: 16, top: 16, child: _mapControls(intelligence)),
+          Positioned(right: 8, top: 8, child: _mapControls(intelligence)),
           if (intelligence.map.availableLayers.length > 1)
             Positioned(
-              left: 70,
-              top: 16,
-              right: 86,
+              left: 8,
+              top: 56,
+              right: 8,
               child: Align(
                 alignment: Alignment.topCenter,
                 child: _layerSelector(intelligence.map),
@@ -419,14 +534,22 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   }
 
   Widget _mapControls(ArcRaidIntelligenceState intelligence) {
-    return Column(
+    return Row(
+      key: const Key('map-zoom-controls'),
+      mainAxisSize: MainAxisSize.min,
       children: [
         _mapButton(Icons.add_rounded, 'Zoom in', () => _scaleMap(1.22)),
-        const SizedBox(height: 7),
         _mapButton(Icons.remove_rounded, 'Zoom out', () => _scaleMap(0.82)),
-        const SizedBox(height: 7),
         _mapButton(Icons.center_focus_strong_rounded, 'Fit map', _resetMap),
-        const SizedBox(height: 7),
+      ],
+    );
+  }
+
+  Widget _secondaryMapControls(ArcRaidIntelligenceState intelligence) {
+    return Wrap(
+      spacing: 4,
+      runSpacing: 4,
+      children: [
         _mapButton(
           Icons.add_location_alt_rounded,
           'Report Intel at map centre',
@@ -435,19 +558,16 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
             const ArcNormalizedPoint(x: 0.5, y: 0.5),
           ),
         ),
-        const SizedBox(height: 7),
         _mapButton(
           Icons.my_location_rounded,
           'Jump to spawn',
           _spawn == null ? null : () => _jumpTo(_spawn!.point),
         ),
-        const SizedBox(height: 7),
         _mapButton(
           Icons.exit_to_app_rounded,
           'Jump to extraction',
           _extraction == null ? null : () => _jumpTo(_extraction!.point),
         ),
-        const SizedBox(height: 7),
         _mapButton(
           Icons.route_rounded,
           'Jump to route stop',
@@ -461,6 +581,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
 
   Widget _layerSelector(ArcRaidMap map) {
     return Container(
+      key: const Key('map-layer-selector'),
       padding: const EdgeInsets.all(4),
       decoration: ArcUiTokens.chipDecoration(
         color: ArcUiTokens.primaryAccent,
@@ -540,6 +661,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     return IgnorePointer(
       ignoring: false,
       child: Container(
+        key: const Key('map-route-strip'),
         padding: const EdgeInsets.all(10),
         decoration: ArcUiTokens.surfaceDecoration(
           role: ArcSurfaceRole.overlay,
@@ -573,9 +695,10 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
         borderOpacity: 0.22,
       ),
       child: ListView(
+        controller: _panelScroll,
         padding: const EdgeInsets.all(14),
         children: [
-          if (desktop) ...[
+          ...[
             Align(
               alignment: Alignment.centerRight,
               child: Tooltip(
@@ -591,6 +714,11 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
             ),
             const SizedBox(height: 2),
           ],
+          if (_selectedMarker != null) ...[
+            _selectedMarkerSection(intelligence),
+            const SizedBox(height: 10),
+          ],
+          _secondaryMapControls(intelligence),
           _hero(intelligence),
           const SizedBox(height: 10),
           ArcLiveMapConditionsStrip(
@@ -621,16 +749,6 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
             icon: Icons.radar_rounded,
             accent: ArcUiTokens.secondaryAccent,
             child: _communityIntelSection(intelligence.map, communityReports),
-          ),
-          const SizedBox(height: 8),
-          _raidAccordion(
-            title: 'SELECTED INTEL',
-            subtitle: _selectedMarker == null
-                ? 'Tap a map marker to inspect it'
-                : 'Marker selected',
-            icon: Icons.location_searching_rounded,
-            accent: ArcUiTokens.primaryAccent,
-            child: _selectedMarkerSection(intelligence),
           ),
           const SizedBox(height: 8),
           _raidAccordion(
@@ -740,7 +858,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
             ),
             _pill(
               intelligence.map.hasCalibratedLayer(intelligence.activeLayer)
-                  ? 'Calibrated'
+                  ? 'Map available'
                   : 'Schematic',
               Colors.lightGreenAccent,
             ),
@@ -767,12 +885,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
               for (final map in ArcRaidIntelligenceSeedData.maps)
                 DropdownMenuItem(
                   value: map.id,
-                  child: Text(
-                    ArcMapAssetRegistry.hasRegisteredAsset(map.id)
-                        ? '${map.displayName} - ${ArcMapAssetRegistry.statusFor(map.id)}'
-                        : '${map.displayName} - Schematic',
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  child: Text(map.displayName, overflow: TextOverflow.ellipsis),
                 ),
             ],
             onChanged: (value) {
@@ -1080,16 +1193,6 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
             selected: marker,
             markers: intelligence.visibleMarkers,
           );
-    ArcRaidIntelCluster? cluster;
-    if (marker != null) {
-      for (final item in intelligence.opportunityClusters) {
-        if (item.id == marker.payloadId) {
-          cluster = item;
-          break;
-        }
-      }
-    }
-
     return _section(
       title: 'Selected Intel',
       child: marker == null
@@ -1100,13 +1203,13 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (cluster != null && marker.isBlueprintOpportunity)
-                  ArcBlueprintIntelCard(
+                if (marker.isBlueprintOpportunity)
+                  ArcSelectedBlueprintIntel(
                     marker: marker,
-                    cluster: cluster,
+                    clusters: intelligence.opportunityClusters,
                     map: intelligence.map,
                     onCentreMap: () => _jumpTo(marker.point),
-                    onAddStop: () => _addClusterStop(cluster!),
+                    onAddStop: _addClusterStop,
                     onOpenBlueprint: () => Navigator.of(
                       context,
                     ).pushNamed(BlueprintGridScreen.routeName),
@@ -1127,7 +1230,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                           () => _jumpTo(marker.point),
                         ),
                         _smallButton(
-                          'Add to Raid Planner',
+                          'Open Raid Planner',
                           Icons.playlist_add_rounded,
                           () => Navigator.of(
                             context,
@@ -1188,10 +1291,10 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
               ),
               trailing: IconButton(
                 tooltip: 'View this marker',
-                onPressed: () => setState(() => _selectedMarker = marker),
+                onPressed: () => _selectMarker(marker),
                 icon: const Icon(Icons.chevron_right_rounded),
               ),
-              onTap: () => setState(() => _selectedMarker = marker),
+              onTap: () => _selectMarker(marker),
             ),
         ],
       ),

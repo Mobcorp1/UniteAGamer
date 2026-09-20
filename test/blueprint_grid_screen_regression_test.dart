@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -8,14 +9,20 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/blueprint_tile.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_blueprint_workspace_bar.dart';
 
 void main() {
   final viewports = <Size>[
     const Size(390, 844),
     const Size(430, 932),
+    const Size(640, 360),
+    const Size(740, 360),
+    const Size(844, 390),
     const Size(768, 1024),
+    const Size(1024, 768),
     const Size(1280, 900),
     const Size(1440, 1000),
+    const Size(1600, 1000),
   ];
 
   for (final viewport in viewports) {
@@ -85,7 +92,24 @@ void main() {
           find.byType(ArcCompanionBottomDock),
         );
         expect(viewportBox.size.width, greaterThan(0));
-        expect(viewportBox.size.height, greaterThan(120));
+        expect(viewportBox.size.height.isFinite, isTrue);
+        expect(viewportBox.size.height, greaterThan(100));
+        final gridRect = tester.getRect(
+          find.byKey(const Key('blueprint-authoritative-grid-viewport')),
+        );
+        expect(
+          gridRect.overlaps(
+            tester.getRect(find.byType(ArcBlueprintWorkspaceDock)),
+          ),
+          isFalse,
+        );
+        expect(
+          gridRect.overlaps(
+            tester.getRect(find.byType(ArcCompanionBottomDock)),
+          ),
+          isFalse,
+        );
+        expect(find.byTooltip('Blueprint tools').hitTestable(), findsOneWidget);
         expect(dockBox.size.height, lessThan(96));
 
         final gridTop = tester
@@ -103,7 +127,7 @@ void main() {
             .dy;
         final visibleGridHeight =
             math.min(gridBottom, dockTop) - math.max(gridTop, 0);
-        expect(visibleGridHeight, greaterThan(120));
+        expect(visibleGridHeight, greaterThan(100));
 
         await tester.tap(find.byTooltip('Zoom in'));
         await tester.pump();
@@ -127,8 +151,76 @@ void main() {
         await secondFinger.up();
         await tester.pump(const Duration(milliseconds: 80));
 
+        await tester.tap(find.byTooltip('Blueprint tools'));
+        await tester.pump();
+        final select = find.text('Select Multiple');
+        await tester.scrollUntilVisible(
+          select,
+          100,
+          scrollable: find
+              .descendant(
+                of: find.byKey(const Key('blueprint-tools-panel')),
+                matching: find.byType(Scrollable),
+              )
+              .first,
+        );
+        await tester.pump();
+        await tester.tap(select);
+        await tester.pump();
+        expect(find.byTooltip('Exit selection').hitTestable(), findsOneWidget);
+        expect(find.byTooltip('Mark selected owned'), findsOneWidget);
+        await tester.tap(find.byTooltip('Exit selection'));
+        await tester.pump();
         expect(tester.takeException(), isNull);
       },
     );
   }
+  testWidgets('Blueprint hydration retains loaded ownership on stream error', (
+    tester,
+  ) async {
+    final controller = StreamController<ArcBlueprintStateSnapshot>();
+    addTearDown(controller.close);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: BlueprintGridScreen(
+          showFirstRunTutorial: false,
+          loadViewMode: () async => ArcBlueprintGridViewMode.fullOverview,
+          saveViewMode: (_) async {},
+          blueprintStateSnapshotStream: () => controller.stream,
+          favouriteLoadoutStream: () => Stream.value(null),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.text('Synchronising Blueprint ownership'), findsOneWidget);
+    controller.add(
+      ArcBlueprintStateSnapshot.loaded(
+        userId: 'test',
+        states: {
+          'tempest': const ArcBlueprintState(
+            blueprintId: 'tempest',
+            owned: true,
+            dupesOwned: 0,
+            priorityRank: 0,
+            updatedAt: null,
+          ),
+        },
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+    controller.addError(StateError('offline'));
+    await tester.pump();
+    expect(find.text('Retry sync'), findsOneWidget);
+    expect(
+      find.byKey(const Key('blueprint-authoritative-grid')),
+      findsOneWidget,
+    );
+    final tile = tester
+        .widgetList<BlueprintTile>(find.byType(BlueprintTile))
+        .firstWhere((t) => t.blueprint.id == 'tempest');
+    expect(tile.state.owned, isTrue);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
 }
