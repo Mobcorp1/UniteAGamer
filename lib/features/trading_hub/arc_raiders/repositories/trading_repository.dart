@@ -1,3 +1,4 @@
+import '../../../trust/repositories/arc_raider_contracts_repository.dart';
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -2479,6 +2480,14 @@ class TradingRepository {
     if (uid == null) throw Exception('You must be signed in.');
     if (uid != session.traderOneUid && uid != session.traderTwoUid) {
       throw Exception('You are not part of this trade session.');
+    }
+
+    if (outcome == TradingSessionStatus.betrayal) {
+      await ArcRaiderContractsRepository(
+        firestore: _firestore,
+        auth: _auth,
+      ).recordTradingBetrayal(session.id);
+      return;
     }
 
     _ensureSessionCanBeUpdated(session);

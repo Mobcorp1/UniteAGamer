@@ -316,40 +316,34 @@ service cloud.firestore {
       }
     }
 
+    // Incident activation is server-only. Reporters may withdraw, not rewrite evidence after review.
     match /arc_raider_reports/{reportId} {
-      allow create: if isSignedIn() && request.resource.data.reporterUid == request.auth.uid && request.resource.data.status == 'submitted';
-      allow read: if isTrustModerator() || (isSignedIn() && resource.data.reporterUid == request.auth.uid);
-      allow update: if isTrustModerator() || (isSignedIn() && resource.data.reporterUid == request.auth.uid && request.resource.data.reporterUid == resource.data.reporterUid && request.resource.data.status == 'withdrawn' && (resource.data.status == 'draft' || resource.data.status == 'submitted' || resource.data.status == 'pendingReview'));
+      allow create: if isSignedIn() && request.resource.data.reporterUid == request.auth.uid && request.resource.data.status == 'submitted' &&
+        !request.resource.data.keys().hasAny(['creationSource', 'sourceSessionId', 'incidentVerification', 'verifiedEvidence', 'contractId']);
+      allow read: if (isTrustModerator() && resource.data.targetUid != request.auth.uid) || (isSignedIn() && resource.data.reporterUid == request.auth.uid);
+      allow update: if isSignedIn() && resource.data.reporterUid == request.auth.uid &&
+        request.resource.data.status == 'withdrawn' && resource.data.status in ['draft', 'submitted', 'pendingReview'] &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt']);
       allow delete: if false;
     }
+    match /arc_contract_restrictions/{uid} {
+      allow read, write: if isTrustModerator();
+    }
+    match /arc_contract_challenges/{contractId} {
+      allow read: if isTrustModerator();
+      allow write: if false;
+    }
+    // Reserved private namespace; intelligence is currently derived ephemerally.
+    match /arc_target_intelligence/{uid} { allow read, write: if false; }
+    match /arc_verified_incident_claims/{claimId} { allow read, write: if false; }
 
     match /arc_raider_contracts/{contractId} {
-      allow list: if isSignedIn() &&
-        (resource.data.status == 'available' ||
-         resource.data.reporterUid == request.auth.uid ||
-         resource.data.hunterUid == request.auth.uid ||
-         isTrustModerator());
-      allow get: if isSignedIn() &&
-        (resource.data.status == 'available' ||
-         resource.data.reporterUid == request.auth.uid ||
-         resource.data.hunterUid == request.auth.uid ||
-         isTrustModerator());
-      allow create: if isTrustModerator() &&
-        request.resource.data.status == 'available' &&
-        request.resource.data.hunterUid == '' &&
-        request.resource.data.evidence.size() == 0 &&
-        !request.resource.data.keys().hasAny(['verificationStatus', 'evidenceSubmissionId',
-          'verifiedByUid', 'verifiedAt', 'rejectedAt', 'rejectionReason']);
-      allow update: if isSignedIn() &&
+      allow get, list: if isSignedIn() && resource.data.targetUid != request.auth.uid &&
+        (resource.data.reporterUid == request.auth.uid || resource.data.hunterUid == request.auth.uid || isTrustModerator());
+      allow create: if false;
+      allow update: if isSignedIn() && resource.data.targetUid != request.auth.uid &&
         request.resource.data.blueprintRewardPool == resource.data.blueprintRewardPool &&
         request.resource.data.blueprintRewardCount == resource.data.blueprintRewardCount && (
-        (resource.data.status == 'available' &&
-          request.resource.data.status == 'accepted' &&
-          request.resource.data.hunterUid == request.auth.uid &&
-          request.auth.uid != resource.data.reporterUid &&
-          request.auth.uid != resource.data.targetUid &&
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(
-            ['status', 'hunterUid', 'acceptedAt', 'updatedAt'])) ||
         (resource.data.hunterUid == request.auth.uid &&
           resource.data.status == 'accepted' && request.resource.data.status == 'inProgress' &&
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])) ||
@@ -377,8 +371,12 @@ service cloud.firestore {
           request.resource.data.blueprintRewardsSettled == true)
       );
       allow delete: if false;
+      match /incident_audit/{eventId} {
+        allow read: if isTrustModerator() && get(/databases/$(database)/documents/arc_raider_contracts/$(contractId)).data.targetUid != request.auth.uid;
+        allow write: if false;
+      }
       match /verification_audit/{eventId} {
-        allow read: if isSignedIn() && (
+        allow read: if isSignedIn() && get(/databases/$(database)/documents/arc_raider_contracts/$(contractId)).data.targetUid != request.auth.uid && (
           get(/databases/$(database)/documents/arc_raider_contracts/$(contractId)).data.reporterUid == request.auth.uid ||
           get(/databases/$(database)/documents/arc_raider_contracts/$(contractId)).data.hunterUid == request.auth.uid || isTrustModerator());
         allow write: if false;
@@ -386,7 +384,9 @@ service cloud.firestore {
     }
 
     match /raider_verified_results/{contractId} {
-      allow read: if isSignedIn();
+      allow read: if isSignedIn() &&
+        get(/databases/$(database)/documents/arc_raider_contracts/$(contractId)).data.targetUid != request.auth.uid &&
+        (resource.data.hunterUid == request.auth.uid || resource.data.issuerUid == request.auth.uid || isTrustModerator());
       allow write: if false;
     }
     match /arc_blueprint_drop_reports/{reportId} {

@@ -7,9 +7,13 @@ enum ArcRaiderReportStatus {
   approved,
   rejected,
   withdrawn,
+  overturned,
 }
 
 enum ArcRaiderContractStatus {
+  pending,
+  verifying,
+  overturned,
   available,
   accepted,
   inProgress,
@@ -453,6 +457,7 @@ class ArcRaiderContract {
       !{
         ArcRaiderContractStatus.completed,
         ArcRaiderContractStatus.cancelled,
+        ArcRaiderContractStatus.overturned,
         ArcRaiderContractStatus.rejected,
       }.contains(status);
 
@@ -539,7 +544,7 @@ class ArcRaiderContract {
     status: _enumValue(
       ArcRaiderContractStatus.values,
       map['status'],
-      ArcRaiderContractStatus.available,
+      ArcRaiderContractStatus.pending,
     ),
     rewardItems: (map['rewardItems'] is Iterable)
         ? (map['rewardItems'] as Iterable)

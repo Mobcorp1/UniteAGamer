@@ -8,6 +8,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../models/arc_raider_contract_models.dart';
+import '../models/arc_contract_projections.dart';
 import '../models/arc_hunter_verified_result.dart';
 import '../services/arc_raider_blueprint_reward_service.dart';
 
@@ -44,10 +45,14 @@ class ArcRaiderContractsRepository {
     Query<Map<String, dynamic>> query = _db.collection(
       'raider_verified_results',
     );
+    // Raw verified records are participant-private. Public rankings must use
+    // a separate aggregate projection, never expose contract/hunter joins.
+    if (hunterUid != null && hunterUid != uid) {
+      throw StateError('Only your own verified results are available here.');
+    }
+    query = query.where('hunterUid', isEqualTo: uid);
     if (countryCode != null) {
       query = query.where('countryCode', isEqualTo: countryCode.toUpperCase());
-    } else if (hunterUid != null) {
-      query = query.where('hunterUid', isEqualTo: hunterUid);
     }
     return query.snapshots().map(
       (snapshot) => snapshot.docs
@@ -68,23 +73,81 @@ class ArcRaiderContractsRepository {
         (s) => s.docs.map((d) => ArcRaiderReport.fromMap(d.data())).toList(),
       );
 
-  Stream<List<ArcRaiderContract>> watchLiveContracts() => _contracts
-      .where('status', isEqualTo: 'available')
+  Future<List<ArcContractDiscoveryItem>> discoverContracts([
+    String search = '',
+  ]) async {
+    final data = await _verificationCall('discoverRaiderContracts', {
+      'search': search,
+    });
+    return (data['contracts'] as List)
+        .map(
+          (e) => ArcContractDiscoveryItem.fromMap(
+            Map<String, dynamic>.from(e as Map),
+          ),
+        )
+        .toList();
+  }
+
+  Future<List<ArcContractAccountCase>> accountCases() async {
+    final data = await _verificationCall('raiderAccountCases', {});
+    return (data['cases'] as List)
+        .map(
+          (e) => ArcContractAccountCase.fromMap(
+            Map<String, dynamic>.from(e as Map),
+          ),
+        )
+        .toList();
+  }
+
+  Future<void> recordTradingBetrayal(String sessionId) async {
+    await _verificationCall('recordTradingBetrayal', {'sessionId': sessionId});
+  }
+
+  Future<void> attachReportEvidence(String reportId, XFile file) async {
+    final evidence = await uploadReportVideoEvidence(
+      reportId: reportId,
+      file: file,
+    );
+    await _verificationCall('attachRaiderReportEvidence', {
+      'reportId': reportId,
+      'storagePath': evidence.storagePath,
+    });
+  }
+
+  Future<void> challengeContract(String contractId, String reason) async {
+    await _verificationCall('challengeRaiderContract', {
+      'contractId': contractId,
+      'reason': reason,
+    });
+  }
+
+  Stream<List<Map<String, dynamic>>> watchChallenges() => _db
+      .collection('arc_contract_challenges')
+      .where('status', isEqualTo: 'pending')
       .snapshots()
-      .map((snapshot) {
-        final values = snapshot.docs
-            .map((doc) => ArcRaiderContract.fromMap(doc.data()))
-            .toList(growable: true);
-        values.sort(
-          (a, b) => (b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0))
-              .compareTo(a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)),
-        );
-        return values;
-      });
+      .map((s) => s.docs.map((d) => d.data()).toList());
+
+  Future<Map<String, dynamic>> adminContext(String reportId) =>
+      _verificationCall('raiderContractAdminContext', {'reportId': reportId});
+
+  Future<String> reportEvidenceUrl(ArcRaiderEvidence evidence) =>
+      _storage.ref(evidence.storagePath).getDownloadURL();
+
+  Future<void> reviewChallenge(
+    String contractId,
+    bool overturn,
+    String notes,
+  ) async {
+    await _verificationCall('reviewRaiderContractChallenge', {
+      'contractId': contractId,
+      'overturn': overturn,
+      'notes': notes,
+    });
+  }
 
   Stream<List<ArcRaiderContract>> watchMyContracts() => _contracts
       .where('hunterUid', isEqualTo: uid)
-      .orderBy('updatedAt', descending: true)
+      .where('targetUid', isNotEqualTo: uid)
       .snapshots()
       .map(
         (s) => s.docs.map((d) => ArcRaiderContract.fromMap(d.data())).toList(),
@@ -92,6 +155,7 @@ class ArcRaiderContractsRepository {
 
   Stream<List<ArcRaiderContract>> watchIssuedContracts() => _contracts
       .where('reporterUid', isEqualTo: uid)
+      .where('targetUid', isNotEqualTo: uid)
       .snapshots()
       .map((snapshot) {
         final contracts = snapshot.docs
@@ -145,7 +209,10 @@ class ArcRaiderContractsRepository {
 
   // Firebase callable wire protocol, using the existing HTTP dependency.
   // The server authenticates the ID token and is the sole verification writer.
-  Future<void> _verificationCall(String name, Map<String, dynamic> data) async {
+  Future<Map<String, dynamic>> _verificationCall(
+    String name,
+    Map<String, dynamic> data,
+  ) async {
     final token = await _auth.currentUser?.getIdToken();
     if (token == null || token.isEmpty) throw StateError('Sign in required.');
     final project = _db.app.options.projectId;
@@ -164,9 +231,10 @@ class ArcRaiderContractsRepository {
         decoded is! Map ||
         decoded['error'] != null) {
       throw StateError(
-        'The server could not save this decision. Refresh and retry.',
+        'The Contract service could not complete this request. Refresh and retry.',
       );
     }
+    return Map<String, dynamic>.from(decoded['result'] as Map);
   }
 
   Future<void> reviewEvidence({
@@ -191,7 +259,7 @@ class ArcRaiderContractsRepository {
 
   Stream<List<ArcRaiderReport>> watchModerationReports() => _reports
       .where('status', whereIn: const ['submitted', 'pendingReview'])
-      .orderBy('submittedAt')
+      .where('targetUid', isNotEqualTo: uid)
       .snapshots()
       .map(
         (s) => s.docs.map((d) => ArcRaiderReport.fromMap(d.data())).toList(),
@@ -199,7 +267,7 @@ class ArcRaiderContractsRepository {
 
   Stream<List<ArcRaiderContract>> watchDisputedContracts() => _contracts
       .where('status', isEqualTo: 'disputed')
-      .orderBy('updatedAt')
+      .where('targetUid', isNotEqualTo: uid)
       .snapshots()
       .map(
         (s) => s.docs.map((d) => ArcRaiderContract.fromMap(d.data())).toList(),
@@ -379,90 +447,14 @@ class ArcRaiderContractsRepository {
     String id, {
     required bool approve,
     required String notes,
+    String targetUid = '',
   }) async {
-    await _requireModerator();
-    final moderator = uid;
-    String reporterUid = '';
-    String? contractId;
-
-    await _db.runTransaction((tx) async {
-      final reportRef = _reports.doc(id);
-      final snapshot = await tx.get(reportRef);
-      if (!snapshot.exists) {
-        throw StateError('Report not found.');
-      }
-      final report = ArcRaiderReport.fromMap(snapshot.data()!);
-      reporterUid = report.reporterUid;
-      if (!{
-        ArcRaiderReportStatus.submitted,
-        ArcRaiderReportStatus.pendingReview,
-      }.contains(report.status)) {
-        throw StateError('Invalid report transition.');
-      }
-
-      tx.update(reportRef, {
-        'status': approve ? 'approved' : 'rejected',
-        'moderationNotes': notes.trim(),
-        'moderatedByUid': moderator,
-        'moderatedAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-
-      if (approve && report.requestContract) {
-        final contractRef = _contracts.doc();
-        contractId = contractRef.id;
-        final itemRewardSummary = report.rewardItems
-            .map((e) => '${e.quantity}× ${e.name}')
-            .join(' • ');
-        final blueprintRewardSummary = report.blueprintRewardCount > 0
-            ? '${report.blueprintRewardCount}× Blueprint dupe choice'
-            : '';
-        final rewardSummary = [
-          if (itemRewardSummary.isNotEmpty) itemRewardSummary,
-          if (blueprintRewardSummary.isNotEmpty) blueprintRewardSummary,
-        ].join(' • ');
-        tx.set(contractRef, {
-          'id': contractRef.id,
-          'reportId': id,
-          'targetUid': report.targetUid,
-          'targetDisplayName': report.targetDisplayName,
-          'reporterUid': report.reporterUid,
-          'hunterUid': '',
-          'status': 'available',
-          'rewardItems': report.rewardItems.map((e) => e.toMap()).toList(),
-          'rewardSummary': rewardSummary,
-          'blueprintRewardCount': report.blueprintRewardCount,
-          'blueprintRewardPool': report.blueprintRewardPool,
-          'blueprintRewardSelection': <String>[],
-          'blueprintRewardsSettled': false,
-          'reputationReward': 10,
-          'evidenceRequirements':
-              'Provide clear in-app evidence that identifies the encounter and outcome.',
-          'evidence': <Map<String, dynamic>>[],
-          'resolution': '',
-          'moderationNotes': '',
-          'moderatedByUid': moderator,
-          'socialContentUrl': '',
-          'createdAt': FieldValue.serverTimestamp(),
-          'updatedAt': FieldValue.serverTimestamp(),
-          'expiresAt': Timestamp.fromDate(
-            DateTime.now().add(const Duration(days: 14)),
-          ),
-        });
-      }
+    await _verificationCall('moderateRaiderReport', {
+      'reportId': id,
+      'approve': approve,
+      'notes': notes,
+      'targetUid': targetUid,
     });
-
-    await _notify(
-      targetUid: reporterUid,
-      title: approve ? 'Report approved' : 'Report reviewed',
-      body: approve
-          ? contractId == null
-                ? 'Your report was approved for Rat Activity intelligence.'
-                : 'Your report was approved and your Raider Contract is now live.'
-          : 'Your report was not approved. Review the moderation notes.',
-      entityId: contractId ?? id,
-      type: 'conductReportOutcome',
-    );
   }
 
   Future<int> maxBlueprintRewardsIcanOffer() => ArcRaiderBlueprintRewardService(
@@ -538,32 +530,7 @@ class ArcRaiderContractsRepository {
   }
 
   Future<void> acceptContract(String id) async {
-    _requireSignedIn();
-    String reporterUid = '';
-    await _db.runTransaction((tx) async {
-      final ref = _contracts.doc(id);
-      final snapshot = await tx.get(ref);
-      final contract = ArcRaiderContract.fromMap(snapshot.data() ?? {});
-      reporterUid = contract.reporterUid;
-      if (!contract.canAccept ||
-          contract.reporterUid == uid ||
-          contract.targetUid == uid) {
-        throw StateError('This contract cannot be accepted by this account.');
-      }
-      tx.update(ref, {
-        'status': 'accepted',
-        'hunterUid': uid,
-        'acceptedAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-    });
-    await _notify(
-      targetUid: reporterUid,
-      title: 'Raider Contract accepted',
-      body: 'A hunter has accepted your Raider Contract.',
-      entityId: id,
-      type: 'operations',
-    );
+    await _verificationCall('acceptRaiderContract', {'contractId': id});
   }
 
   Future<void> startContract(String id) =>
@@ -695,12 +662,6 @@ class ArcRaiderContractsRepository {
       'status': next.name,
       'updatedAt': FieldValue.serverTimestamp(),
     });
-  }
-
-  void _requireSignedIn() {
-    if ((_auth.currentUser?.uid ?? '').isEmpty) {
-      throw StateError('Sign in required.');
-    }
   }
 
   Future<void> _requireModerator() async {

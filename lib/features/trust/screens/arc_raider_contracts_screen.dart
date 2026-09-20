@@ -1,3 +1,4 @@
+import '../widgets/arc_contract_discovery.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -1351,53 +1352,61 @@ class _Contracts extends StatelessWidget {
   final bool embedded;
 
   @override
-  Widget build(BuildContext context) => StreamBuilder<List<ArcRaiderContract>>(
-    stream: live ? repo.watchLiveContracts() : repo.watchMyContracts(),
-    builder: (context, snapshot) {
-      if (snapshot.hasError) {
-        return const _TrustLoadProblem(
-          title: 'Contracts unavailable',
-          message:
-              'We could not load Raider Contracts. Reopen this section to try again.',
+  Widget build(BuildContext context) => live
+      ? ArcContractDiscovery(
+          load: repo.discoverContracts,
+          accept: repo.acceptContract,
+        )
+      : StreamBuilder<List<ArcRaiderContract>>(
+          stream: repo.watchMyContracts(),
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return const _TrustLoadProblem(
+                title: 'Contracts unavailable',
+                message:
+                    'We could not load Raider Contracts. Reopen this section to try again.',
+              );
+            }
+            if (!snapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            final items = snapshot.data!;
+            if (items.isEmpty) {
+              return const Padding(
+                padding: ArcUiTokens.panelPadding,
+                child: Text('No Raider Contracts here yet.'),
+              );
+            }
+            return ListView.separated(
+              shrinkWrap: embedded,
+              physics: embedded ? const NeverScrollableScrollPhysics() : null,
+              padding: embedded ? EdgeInsets.zero : AppTheme.pagePadding,
+              itemCount: items.length,
+              separatorBuilder: (_, _) =>
+                  const SizedBox(height: ArcUiTokens.gapM),
+              itemBuilder: (context, index) {
+                final contract = items[index];
+                return ArcHunterContractCard(
+                  contract: contract,
+                  onAccept: live
+                      ? () => repo.acceptContract(contract.id)
+                      : null,
+                  onStart: live ? null : () => repo.startContract(contract.id),
+                  onSubmit: live
+                      ? null
+                      : () => _evidenceDialog(context, repo, contract),
+                  onOpenEvidence: () => _openContractVideo(contract),
+                  onDispute: live
+                      ? null
+                      : () => repo.disputeContract(
+                          contract.id,
+                          'Participant requested moderator review.',
+                        ),
+                );
+              },
+            );
+          },
         );
-      }
-      if (!snapshot.hasData) {
-        return const Center(child: CircularProgressIndicator());
-      }
-      final items = snapshot.data!;
-      if (items.isEmpty) {
-        return const Padding(
-          padding: ArcUiTokens.panelPadding,
-          child: Text('No Raider Contracts here yet.'),
-        );
-      }
-      return ListView.separated(
-        shrinkWrap: embedded,
-        physics: embedded ? const NeverScrollableScrollPhysics() : null,
-        padding: embedded ? EdgeInsets.zero : AppTheme.pagePadding,
-        itemCount: items.length,
-        separatorBuilder: (_, _) => const SizedBox(height: ArcUiTokens.gapM),
-        itemBuilder: (context, index) {
-          final contract = items[index];
-          return ArcHunterContractCard(
-            contract: contract,
-            onAccept: live ? () => repo.acceptContract(contract.id) : null,
-            onStart: live ? null : () => repo.startContract(contract.id),
-            onSubmit: live
-                ? null
-                : () => _evidenceDialog(context, repo, contract),
-            onOpenEvidence: () => _openContractVideo(contract),
-            onDispute: live
-                ? null
-                : () => repo.disputeContract(
-                    contract.id,
-                    'Participant requested moderator review.',
-                  ),
-          );
-        },
-      );
-    },
-  );
 }
 
 /// Private contract detail presentation; callbacks keep verification authority
@@ -1489,6 +1498,9 @@ class _ArcHunterContractCardState extends State<ArcHunterContractCard> {
         : contract.status == ArcRaiderContractStatus.completed
         ? 'COMPLETED · NOT ISSUER VERIFIED'
         : switch (contract.status) {
+            ArcRaiderContractStatus.pending => 'PENDING REVIEW',
+            ArcRaiderContractStatus.verifying => 'VERIFYING INCIDENT',
+            ArcRaiderContractStatus.overturned => 'OVERTURNED',
             ArcRaiderContractStatus.available => 'AVAILABLE',
             ArcRaiderContractStatus.accepted => 'ACCEPTED',
             ArcRaiderContractStatus.inProgress => 'HUNT IN PROGRESS',
@@ -1980,6 +1992,11 @@ class _MyActivity extends StatelessWidget {
   Widget build(BuildContext context) => ListView(
     padding: AppTheme.pagePadding,
     children: [
+      ArcContractAccountStatus(
+        load: repo.accountCases,
+        challenge: repo.challengeContract,
+      ),
+      const Divider(),
       Text(
         'YOUR ISSUED CONTRACTS',
         style: AppTheme.tradingHeading(fontSize: 20),
@@ -2019,9 +2036,18 @@ class _MyActivity extends StatelessWidget {
                       ]),
                     ),
                     trailing: r.canWithdraw
-                        ? TextButton(
-                            onPressed: () => repo.withdrawReport(r.id),
-                            child: const Text('Withdraw'),
+                        ? Wrap(
+                            children: [
+                              TextButton(
+                                onPressed: () =>
+                                    arcAttachReportClip(context, repo, r.id),
+                                child: const Text('Add clip'),
+                              ),
+                              TextButton(
+                                onPressed: () => repo.withdrawReport(r.id),
+                                child: const Text('Withdraw'),
+                              ),
+                            ],
                           )
                         : null,
                   ),

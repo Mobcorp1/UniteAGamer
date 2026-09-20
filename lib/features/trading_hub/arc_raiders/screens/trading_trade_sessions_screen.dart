@@ -1377,7 +1377,8 @@ class _TradingTradeSessionsScreenState
                       session: session,
                       outcome: TradingSessionStatus.betrayal,
                     ),
-                    successMessage: 'Betrayal flagged.',
+                    successMessage:
+                        'Private review case opened. Add an MP4 clip in Report a Rat → Activity.',
                     errorPrefix: 'Could not flag betrayal: ',
                   );
                 },

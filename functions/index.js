@@ -3555,3 +3555,25 @@ const raiderContractVerification = createContractVerification({
 });
 exports.submitRaiderContractEvidence = onCall(raiderContractVerification.submit);
 exports.reviewRaiderContractEvidence = onCall(raiderContractVerification.review);
+
+// Incident verification/discovery is separate from issuer-confirmed completion.
+const { createRaiderContractIntelligence } = require('./raider_contract_intelligence');
+const contractIntelligence = createRaiderContractIntelligence({
+  db, bucket: admin.storage().bucket(), HttpsError,
+  getAuthUser: uid => admin.auth().getUser(uid),
+  timestamp: () => admin.firestore.FieldValue.serverTimestamp(),
+  windowDays: process.env.CONTRACT_INTELLIGENCE_WINDOW_DAYS || 30,
+});
+exports.recordTradingBetrayal = onCall(contractIntelligence.recordBetrayal);
+exports.attachRaiderReportEvidence = onCall(contractIntelligence.attachEvidence);
+exports.moderateRaiderReport = onCall(contractIntelligence.moderateReport);
+exports.discoverRaiderContracts = onCall(contractIntelligence.discover);
+exports.acceptRaiderContract = onCall(contractIntelligence.accept);
+exports.raiderAccountCases = onCall(contractIntelligence.accountStatus);
+exports.challengeRaiderContract = onCall(contractIntelligence.challenge);
+exports.reviewRaiderContractChallenge = onCall(contractIntelligence.reviewChallenge);
+exports.expireRaiderContracts = onSchedule('every 60 minutes', contractIntelligence.expireContracts);
+exports.withdrawRaiderContract = onDocumentWritten('arc_raider_reports/{reportId}', contractIntelligence.reportWithdrawn);
+
+exports.raiderContractAdminContext = onCall(contractIntelligence.adminContext);
+exports.auditRaiderContractLifecycle = onDocumentWritten('arc_raider_contracts/{contractId}', contractIntelligence.lifecycleChanged);

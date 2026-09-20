@@ -112,7 +112,7 @@ service firebase.storage {
       function contract() {
         return firestore.get(/databases/(default)/documents/arc_raider_contracts/$(contractId)).data;
       }
-      allow read: if isSignedIn() &&
+      allow read: if isSignedIn() && contract().targetUid != request.auth.uid &&
         (contract().hunterUid == request.auth.uid || contract().reporterUid == request.auth.uid || isAdminOrModerator());
       allow create: if isOwner(uid) && isAgeVerified() &&
         contract().hunterUid == uid && contract().reporterUid != uid &&

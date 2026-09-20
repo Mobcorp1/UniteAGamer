@@ -85,6 +85,8 @@ function createContractVerification({ db, bucket, timestamp, HttpsError, now = (
         if (c.evidence?.[0]?.storagePath !== d.storagePath) fail('already-exists', 'Submission ID already used.');
         return { status: c.status, verificationStatus: c.verificationStatus, submissionId: d.submissionId };
       }
+      const expiry = c.expiresAt?.toDate ? c.expiresAt.toDate() : c.expiresAt;
+      if (expiry && new Date(expiry) <= now()) fail('failed-precondition', 'This contract has expired.');
       if (!(c.status === 'inProgress' || (c.status === 'evidenceSubmitted' && c.verificationStatus === 'rejected'))) {
         fail('failed-precondition', 'Evidence cannot be changed in this state.');
       }
@@ -94,7 +96,7 @@ function createContractVerification({ db, bucket, timestamp, HttpsError, now = (
       tx.update(ref, { status: 'evidenceSubmitted', verificationStatus: 'pending',
         evidenceSubmissionId: d.submissionId, evidence: [{ id: d.submissionId,
           submittedByUid: d.uid, kind: 'video', storagePath: d.storagePath,
-          storageGeneration: generation, url: '', createdAt: at }],
+          storageGeneration: generation, url: '', createdAt: now() }],
         evidenceSubmittedAt: at, updatedAt: at, verifiedAt: null, verifiedByUid: '',
         rejectedAt: null, rejectionReason: '' });
       tx.create(audit, { action: 'submitted', actorUid: d.uid, submissionId: d.submissionId,
@@ -134,6 +136,8 @@ function createContractVerification({ db, bucket, timestamp, HttpsError, now = (
       if (d.decision === 'reject' && c.status === 'evidenceSubmitted' && c.verificationStatus === 'rejected') {
         return { status: c.status, verificationStatus: c.verificationStatus, submissionId: d.submissionId };
       }
+      const expiry = c.expiresAt?.toDate ? c.expiresAt.toDate() : c.expiresAt;
+      if (expiry && new Date(expiry) <= now()) fail('failed-precondition', 'This contract has expired.');
       if (c.status !== 'evidenceSubmitted' || c.verificationStatus !== 'pending' || result.exists) fail('failed-precondition', 'This submission is no longer awaiting review.');
       const hunter = d.decision === 'confirm' ? await tx.get(db.collection('users').doc(c.hunterUid)) : null;
       const at = timestamp();

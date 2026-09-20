@@ -68,6 +68,11 @@ async function run() {
   assert.equal(invalidCountry.store.get('raider_verified_results/c').countryCode, '');
   const self = harness(); self.store.get('arc_raider_contracts/c').reporterUid = 'hunter';
   await denied(self.api.submit(request('hunter', upload)), 'permission-denied');
-  console.log('Hunter contract transactional authority: PASS');
+  const expired = harness(); expired.store.get('arc_raider_contracts/c').expiresAt = new Date('2026-09-01');
+  await denied(expired.api.submit(request('hunter', upload)), 'failed-precondition');
+  const lateReview = harness(); await lateReview.api.submit(request('hunter', upload));
+  lateReview.store.get('arc_raider_contracts/c').expiresAt = new Date('2026-09-01');
+  await denied(lateReview.api.review(request('issuer', { decision: 'confirm' })), 'failed-precondition');
+  console.log('Hunter contract transactional authority: PASS (including expiry submission/review)');
 }
 run().catch(error => { console.error(error); process.exitCode = 1; });

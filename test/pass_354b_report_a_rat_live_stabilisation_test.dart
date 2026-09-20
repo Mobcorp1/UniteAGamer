@@ -93,12 +93,17 @@ void main() {
     }
   });
 
-  test('live contracts preserve discovery and participant visibility', () {
-    expect(rules, contains("resource.data.status == 'available'"));
-    expect(rules, contains('resource.data.reporterUid == request.auth.uid'));
-    expect(rules, contains('resource.data.hunterUid == request.auth.uid'));
-    expect(repo, contains(".where('status', isEqualTo: 'available')"));
-  });
+  test(
+    'live contracts use authoritative discovery and private participant visibility',
+    () {
+      expect(rules, contains('resource.data.targetUid != request.auth.uid'));
+      expect(rules, contains('allow create: if false;'));
+      expect(rules, contains('resource.data.reporterUid == request.auth.uid'));
+      expect(rules, contains('resource.data.hunterUid == request.auth.uid'));
+      expect(repo, contains("'discoverRaiderContracts'"));
+      expect(repo, isNot(contains('watchLiveContracts()')));
+    },
+  );
 
   test(
     'successful report is not turned into failure by notification denial',
