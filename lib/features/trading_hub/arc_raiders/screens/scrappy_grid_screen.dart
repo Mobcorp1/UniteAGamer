@@ -13,8 +13,11 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_sc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_filter.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_item.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_user_personalisation_profile.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_progression_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_scrappy_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_scrappy_repository_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_user_personalisation_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_scrappy_item_sheet.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/missing_scrappy_dialog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/scrappy_actions_menu.dart';
@@ -55,7 +58,15 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
   final ArcProgressionRepository _progressionRepository =
       ArcProgressionRepository();
   final ArcProgressionEngine _progressionEngine = const ArcProgressionEngine();
+  final ArcUserPersonalisationRepository _personalisationRepository =
+      ArcUserPersonalisationRepository();
   final Set<String> _expandedSections = <String>{};
+
+  late Stream<ArcScrappyRepositoryState<Map<String, ArcScrappyState>>>
+  _scrappyStateStream;
+  late Stream<ArcUserPersonalisationProfile> _personalisationStream;
+  Map<String, ArcScrappyState> _lastScrappyStates =
+      const <String, ArcScrappyState>{};
 
   ArcScrappyFilter _selectedFilter = ArcScrappyFilter.all;
   late ArcScrappyTrackerMode _mode;
@@ -68,6 +79,14 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
   void initState() {
     super.initState();
     _mode = widget.initialMode;
+    _scrappyStateStream = _repository.watchMyScrappyStates();
+    _personalisationStream = _personalisationRepository.watchProfile();
+  }
+
+  void _retryTrackerSync() {
+    setState(() {
+      _scrappyStateStream = _repository.watchMyScrappyStates();
+    });
   }
 
   @override
@@ -759,111 +778,57 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
   }
 
   Widget _buildScrappyHero(Map<ArcScrappyFilter, int> counts) {
+    final needed = counts[ArcScrappyFilter.missing] ?? 0;
+    final ready = counts[ArcScrappyFilter.owned] ?? 0;
+
     return Container(
-      height: 188,
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: ArcUiTokens.primaryAccent.withValues(alpha: 0.42),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: ArcUiTokens.primaryAccent.withValues(alpha: 0.10),
-            blurRadius: 18,
-            spreadRadius: 1,
-          ),
-        ],
+      padding: const EdgeInsets.all(10),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.panel,
+        radius: ArcUiTokens.radiusM,
+        accent: ArcUiTokens.primaryAccent,
+        borderOpacity: 0.22,
       ),
-      child: Stack(
-        fit: StackFit.expand,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Image.asset(
-            'assets/arc_raiders/hub/arc_hub_scrappy_tracker.webp',
-            fit: BoxFit.cover,
-            alignment: Alignment.center,
-            errorBuilder: (_, _, _) => Container(
-              color: ArcUiTokens.surfacePanel,
-              child: Icon(
-                Icons.inventory_2_rounded,
-                size: 72,
-                color: ArcUiTokens.primaryAccent.withValues(alpha: 0.30),
+          Row(
+            children: [
+              Icon(
+                _showFeedScrappy
+                    ? Icons.restaurant_rounded
+                    : Icons.grid_view_rounded,
+                size: 17,
+                color: ArcUiTokens.primaryAccent,
               ),
-            ),
-          ),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.centerRight,
-                end: Alignment.centerLeft,
-                colors: [
-                  Colors.black.withValues(alpha: 0.18),
-                  Colors.black.withValues(alpha: 0.62),
-                  Colors.black.withValues(alpha: 0.90),
-                ],
-                stops: const [0.0, 0.54, 1.0],
-              ),
-            ),
-          ),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.transparent,
-                  Colors.black.withValues(alpha: 0.12),
-                  Colors.black.withValues(alpha: 0.58),
-                ],
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 13, 14, 11),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'ARC OPERATIONS',
-                  style: ArcUiTokens.metadata(color: ArcUiTokens.primaryAccent)
-                      .copyWith(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 2.2,
-                      ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  'SCRAPPY INTELLIGENCE',
-                  style: ArcUiTokens.pageTitle(
-                    color: ArcUiTokens.textPrimary,
-                  ).copyWith(fontSize: 25),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Track upgrades. Feed smarter. Plan the next tier.',
-                  maxLines: 2,
+              const SizedBox(width: 7),
+              Expanded(
+                child: Text(
+                  _showFeedScrappy
+                      ? 'FEED PLAN'
+                      : '$needed NEEDED${_separator()}$ready READY',
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: ArcUiTokens.body(
-                    color: ArcUiTokens.textSecondary,
-                  ).copyWith(fontSize: 13),
-                ),
-                const SizedBox(height: 10),
-                _buildScrappyFeedTabs(),
-                const SizedBox(height: 6),
-                if (_showFeedScrappy)
-                  _buildFeedGoalBar()
-                else
-                  ScrappyFilterBar(
-                    selectedFilter: _selectedFilter,
-                    counts: counts,
-                    onFilterSelected: (filter) {
-                      setState(() => _selectedFilter = filter);
-                    },
+                  style: ArcUiTokens.metadata(
+                    color: ArcUiTokens.primaryAccent,
                   ),
-              ],
-            ),
+                ),
+              ),
+            ],
           ),
+          const SizedBox(height: 7),
+          _buildScrappyFeedTabs(),
+          const SizedBox(height: 6),
+          if (_showFeedScrappy)
+            _buildFeedGoalBar()
+          else
+            ScrappyFilterBar(
+              selectedFilter: _selectedFilter,
+              counts: counts,
+              onFilterSelected: (filter) {
+                setState(() => _selectedFilter = filter);
+              },
+            ),
         ],
       ),
     );
@@ -1184,144 +1149,73 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
     }).length;
 
     return Container(
-      height: 154,
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: ArcUiTokens.primaryAccent.withValues(alpha: 0.42),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: ArcUiTokens.primaryAccent.withValues(alpha: 0.10),
-            blurRadius: 18,
-            spreadRadius: 1,
-          ),
-        ],
+      padding: const EdgeInsets.all(10),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.panel,
+        radius: ArcUiTokens.radiusM,
+        accent: ArcUiTokens.primaryAccent,
+        borderOpacity: 0.22,
       ),
-      child: Stack(
-        fit: StackFit.expand,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Image.asset(
-            'assets/arc_raiders/hub/arc_hub_bench_tracker.webp',
-            fit: BoxFit.cover,
-            alignment: Alignment.center,
-            errorBuilder: (_, _, _) => Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    ArcUiTokens.surfacePanel,
-                    ArcUiTokens.surfaceBase,
-                    ArcUiTokens.secondaryAccent.withValues(alpha: 0.18),
-                  ],
-                ),
-              ),
-              child: Icon(
+          Row(
+            children: [
+              const Icon(
                 Icons.handyman_rounded,
-                size: 84,
-                color: ArcUiTokens.primaryAccent.withValues(alpha: 0.18),
+                size: 17,
+                color: ArcUiTokens.primaryAccent,
               ),
-            ),
-          ),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.centerRight,
-                end: Alignment.centerLeft,
-                colors: [
-                  Colors.black.withValues(alpha: 0.20),
-                  Colors.black.withValues(alpha: 0.64),
-                  Colors.black.withValues(alpha: 0.92),
-                ],
-                stops: const [0.0, 0.52, 1.0],
-              ),
-            ),
-          ),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.transparent,
-                  Colors.black.withValues(alpha: 0.14),
-                  Colors.black.withValues(alpha: 0.66),
-                ],
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 13, 14, 11),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'ARC WORKSHOP',
-                  style: ArcUiTokens.metadata(color: ArcUiTokens.primaryAccent)
-                      .copyWith(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 2.2,
-                      ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  'BENCH OPERATIONS',
-                  style: ArcUiTokens.pageTitle(
-                    color: ArcUiTokens.textPrimary,
-                  ).copyWith(fontSize: 25),
-                ),
-                const SizedBox(height: 4),
-                Text(
+              const SizedBox(width: 7),
+              Expanded(
+                child: Text(
                   selected == null
-                      ? 'Choose a station to plan its upgrade tiers.'
-                      : '$selected${_separator()}$complete / ${stationItems.length} materials complete',
+                      ? 'CHOOSE A BENCH'
+                      : '$selected${_separator()}$complete / ${stationItems.length} READY',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: ArcUiTokens.body(
-                    color: ArcUiTokens.textSecondary,
-                  ).copyWith(fontSize: 13),
-                ),
-                const SizedBox(height: 10),
-                SizedBox(
-                  height: 34,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: categories.length,
-                    separatorBuilder: (_, _) => const SizedBox(width: 6),
-                    itemBuilder: (_, index) {
-                      final category = categories[index];
-                      final isSelected = category == selected;
-                      return ChoiceChip(
-                        selected: isSelected,
-                        showCheckmark: false,
-                        visualDensity: VisualDensity.compact,
-                        label: Text(category.toUpperCase()),
-                        labelStyle: TextStyle(
-                          color: isSelected
-                              ? ArcUiTokens.background
-                              : ArcUiTokens.textSecondary,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w900,
-                        ),
-                        selectedColor: ArcUiTokens.primaryAccent,
-                        backgroundColor: Colors.black.withValues(alpha: 0.58),
-                        side: BorderSide(
-                          color: isSelected
-                              ? ArcUiTokens.primaryAccent
-                              : Colors.white.withValues(alpha: 0.12),
-                        ),
-                        onSelected: (_) => setState(() {
-                          _selectedBenchCategory = category;
-                          _trackerCarouselIndex = 0;
-                        }),
-                      );
-                    },
+                  style: ArcUiTokens.metadata(
+                    color: ArcUiTokens.primaryAccent,
                   ),
                 ),
-              ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 7),
+          SizedBox(
+            height: 34,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: categories.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 6),
+              itemBuilder: (_, index) {
+                final category = categories[index];
+                final isSelected = category == selected;
+                return ChoiceChip(
+                  selected: isSelected,
+                  showCheckmark: false,
+                  visualDensity: VisualDensity.compact,
+                  label: Text(category.toUpperCase()),
+                  labelStyle: TextStyle(
+                    color: isSelected
+                        ? ArcUiTokens.background
+                        : ArcUiTokens.textSecondary,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                  ),
+                  selectedColor: ArcUiTokens.primaryAccent,
+                  backgroundColor: ArcUiTokens.surfaceInteractive,
+                  side: BorderSide(
+                    color: isSelected
+                        ? ArcUiTokens.primaryAccent
+                        : Colors.white.withValues(alpha: 0.12),
+                  ),
+                  onSelected: (_) => setState(() {
+                    _selectedBenchCategory = category;
+                    _trackerCarouselIndex = 0;
+                  }),
+                );
+              },
             ),
           ),
         ],
@@ -1456,6 +1350,189 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
     );
   }
 
+  String _questProgressContextLabel(ArcQuestProgressState state) {
+    switch (state) {
+      case ArcQuestProgressState.startingOrReset:
+        return 'START / RESET';
+      case ArcQuestProgressState.continuing:
+        return 'CONTINUING';
+      case ArcQuestProgressState.unsure:
+        return 'NOT SET';
+    }
+  }
+
+  String _questProgressContextMessage(ArcQuestProgressState state) {
+    switch (state) {
+      case ArcQuestProgressState.startingOrReset:
+        return 'UAG will treat this Expedition as a fresh quest run.';
+      case ArcQuestProgressState.continuing:
+        return 'UAG will treat your existing quest progression as current.';
+      case ArcQuestProgressState.unsure:
+        return 'Set whether this Expedition is restarting or continuing quests.';
+    }
+  }
+
+  Future<void> _saveQuestProgressContext(
+    ArcUserPersonalisationProfile profile,
+    ArcQuestProgressState state,
+  ) async {
+    if (profile.questProgress == state) return;
+    try {
+      await _personalisationRepository.saveProfile(
+        profile.copyWith(questProgress: state),
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Quest plan set to ${_questProgressContextLabel(state)}.',
+          ),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not update quest plan. Try again.'),
+        ),
+      );
+    }
+  }
+
+  Widget _buildQuestProgressContext() {
+    return StreamBuilder<ArcUserPersonalisationProfile>(
+      stream: _personalisationStream,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            !snapshot.hasData) {
+          return const ArcRaidersStatePanel(
+            title: 'Loading quest plan',
+            message: 'Checking your Expedition quest preference.',
+            icon: Icons.sync_rounded,
+            accent: ArcUiTokens.warning,
+            compact: true,
+          );
+        }
+
+        final profile =
+            snapshot.data ?? ArcUserPersonalisationProfile.defaults;
+        final current = profile.questProgress;
+
+        Widget option(ArcQuestProgressState state, String label) {
+          final selected = current == state;
+          return ChoiceChip(
+            selected: selected,
+            showCheckmark: false,
+            visualDensity: VisualDensity.compact,
+            label: Text(label),
+            selectedColor: ArcUiTokens.warning,
+            backgroundColor: ArcUiTokens.surfaceInteractive,
+            side: BorderSide(
+              color: selected
+                  ? ArcUiTokens.warning
+                  : Colors.white.withValues(alpha: 0.12),
+            ),
+            labelStyle: TextStyle(
+              color: selected
+                  ? ArcUiTokens.background
+                  : ArcUiTokens.textSecondary,
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
+            ),
+            onSelected: (_) => _saveQuestProgressContext(profile, state),
+          );
+        }
+
+        return Container(
+          padding: const EdgeInsets.all(10),
+          decoration: ArcUiTokens.surfaceDecoration(
+            role: ArcSurfaceRole.panel,
+            radius: ArcUiTokens.radiusM,
+            accent: ArcUiTokens.warning,
+            borderOpacity: 0.20,
+          ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final narrow = constraints.maxWidth < 560;
+              final copy = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.alt_route_rounded,
+                        color: ArcUiTokens.warning,
+                        size: 17,
+                      ),
+                      const SizedBox(width: 7),
+                      Expanded(
+                        child: Text(
+                          'EXPEDITION QUEST PLAN${_separator()}${_questProgressContextLabel(current)}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: ArcUiTokens.metadata(
+                            color: ArcUiTokens.warning,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _questProgressContextMessage(current),
+                    style: ArcUiTokens.metadata(
+                      color: ArcUiTokens.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    'Context only - changing this does not erase Quest Tracker progress.',
+                    style: ArcUiTokens.metadata(
+                      color: ArcUiTokens.textTertiary,
+                    ),
+                  ),
+                ],
+              );
+
+              final choices = Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  option(
+                    ArcQuestProgressState.startingOrReset,
+                    'START / RESET',
+                  ),
+                  option(ArcQuestProgressState.continuing, 'CONTINUE'),
+                ],
+              );
+
+              if (narrow) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    copy,
+                    const SizedBox(height: 8),
+                    choices,
+                  ],
+                );
+              }
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(child: copy),
+                  const SizedBox(width: 12),
+                  choices,
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildQuestKanban(
     List<ArcScrappyItem> items,
     Map<String, ArcScrappyState> states,
@@ -1482,40 +1559,73 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
         final width = constraints.maxWidth.isFinite
             ? constraints.maxWidth
             : MediaQuery.sizeOf(context).width;
-        final columnWidth = width >= 900
-            ? ((width - 24) / 3).clamp(248.0, 360.0)
-            : 236.0;
+        final useColumns = width >= 720;
 
-        return SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        if (!useColumns) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _questColumn(
                 title: 'Needed',
                 color: ArcUiTokens.secondaryAccent,
                 items: needed,
                 states: states,
+                width: width,
+              ),
+              const SizedBox(height: 8),
+              _questColumn(
+                title: 'In Progress',
+                color: ArcUiTokens.primaryAccent,
+                items: inProgress,
+                states: states,
+                width: width,
+              ),
+              const SizedBox(height: 8),
+              _questColumn(
+                title: 'Complete',
+                color: ArcUiTokens.success,
+                items: complete,
+                states: states,
+                width: width,
+              ),
+            ],
+          );
+        }
+
+        final columnWidth = ((width - 24) / 3).clamp(210.0, 420.0);
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _questColumn(
+                title: 'Needed',
+                color: ArcUiTokens.secondaryAccent,
+                items: needed,
+                states: states,
                 width: columnWidth,
               ),
-              const SizedBox(width: 12),
-              _questColumn(
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _questColumn(
                 title: 'In Progress',
                 color: ArcUiTokens.primaryAccent,
                 items: inProgress,
                 states: states,
                 width: columnWidth,
               ),
-              const SizedBox(width: 12),
-              _questColumn(
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _questColumn(
                 title: 'Complete',
                 color: ArcUiTokens.success,
                 items: complete,
                 states: states,
                 width: columnWidth,
               ),
-            ],
-          ),
+            ),
+          ],
         );
       },
     );
@@ -1729,10 +1839,103 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
       body: ArcRaidersScreenShell(
         useSafeArea: true,
         showAdBanner: false,
-        child: StreamBuilder<Map<String, ArcScrappyState>>(
-          stream: _repository.watchMyScrappyStateMap(),
+        child: StreamBuilder<
+          ArcScrappyRepositoryState<Map<String, ArcScrappyState>>
+        >(
+          stream: _scrappyStateStream,
           builder: (context, snapshot) {
-            final states = snapshot.data ?? <String, ArcScrappyState>{};
+            final repositoryState = snapshot.data;
+            final status =
+                repositoryState?.status ??
+                ArcScrappyRepositoryStateStatus.restoring;
+            final incomingStates = repositoryState?.data;
+            if (incomingStates != null) {
+              _lastScrappyStates = incomingStates;
+            } else if (status == ArcScrappyRepositoryStateStatus.empty ||
+                status == ArcScrappyRepositoryStateStatus.unauthenticated) {
+              _lastScrappyStates = const <String, ArcScrappyState>{};
+            }
+
+            final states =
+                incomingStates ??
+                (_lastScrappyStates.isNotEmpty
+                    ? _lastScrappyStates
+                    : const <String, ArcScrappyState>{});
+
+            if ((status == ArcScrappyRepositoryStateStatus.restoring ||
+                    status == ArcScrappyRepositoryStateStatus.loading) &&
+                states.isEmpty) {
+              return ArcRaidersPageList(
+                maxWidth: 1220,
+                bottomPadding: 120,
+                children: [
+                  ArcProgressionWorkspaceBar(
+                    current: _progressionWorkspace,
+                    padding: EdgeInsets.zero,
+                  ),
+                  const SizedBox(height: AppTheme.spaceS),
+                  const ArcRaidersStatePanel(
+                    title: 'Restoring tracker progress',
+                    message:
+                        'Loading your saved Scrappy, bench and quest material state.',
+                    icon: Icons.sync_rounded,
+                    compact: true,
+                  ),
+                ],
+              );
+            }
+
+            if (status == ArcScrappyRepositoryStateStatus.unauthenticated &&
+                states.isEmpty) {
+              return ArcRaidersPageList(
+                maxWidth: 1220,
+                bottomPadding: 120,
+                children: [
+                  ArcProgressionWorkspaceBar(
+                    current: _progressionWorkspace,
+                    padding: EdgeInsets.zero,
+                  ),
+                  const SizedBox(height: AppTheme.spaceS),
+                  const ArcRaidersStatePanel(
+                    title: 'Sign in to sync progress',
+                    message:
+                        'Tracker progression is saved against your UAG account.',
+                    icon: Icons.lock_outline_rounded,
+                    accent: ArcUiTokens.warning,
+                    compact: true,
+                  ),
+                ],
+              );
+            }
+
+            if (status == ArcScrappyRepositoryStateStatus.error &&
+                states.isEmpty) {
+              return ArcRaidersPageList(
+                maxWidth: 1220,
+                bottomPadding: 120,
+                children: [
+                  ArcProgressionWorkspaceBar(
+                    current: _progressionWorkspace,
+                    padding: EdgeInsets.zero,
+                  ),
+                  const SizedBox(height: AppTheme.spaceS),
+                  ArcRaidersStatePanel(
+                    title: 'Tracker sync unavailable',
+                    message:
+                        'UAG could not load your saved tracker progress. No empty progress has been assumed.',
+                    icon: Icons.cloud_off_rounded,
+                    accent: ArcUiTokens.warning,
+                    compact: true,
+                    action: TextButton.icon(
+                      onPressed: _retryTrackerSync,
+                      icon: const Icon(Icons.refresh_rounded, size: 16),
+                      label: const Text('Retry'),
+                    ),
+                  ),
+                ],
+              );
+            }
+
             final filtered = _applyFilter(allItems, states);
             final counts = _buildCounts(allItems, states);
             final progressItems =
@@ -1754,12 +1957,30 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
 
             return ArcRaidersPageList(
               maxWidth: 1220,
+              bottomPadding: 120,
               children: [
                 ArcProgressionWorkspaceBar(
                   current: _progressionWorkspace,
                   padding: EdgeInsets.zero,
                 ),
                 const SizedBox(height: AppTheme.spaceS),
+                if (status == ArcScrappyRepositoryStateStatus.error &&
+                    states.isNotEmpty) ...[
+                  ArcRaidersStatePanel(
+                    title: 'Live sync paused',
+                    message:
+                        'Showing your last loaded tracker progress while UAG reconnects.',
+                    icon: Icons.cloud_off_rounded,
+                    accent: ArcUiTokens.warning,
+                    compact: true,
+                    action: TextButton.icon(
+                      onPressed: _retryTrackerSync,
+                      icon: const Icon(Icons.refresh_rounded, size: 16),
+                      label: const Text('Retry'),
+                    ),
+                  ),
+                  const SizedBox(height: AppTheme.spaceS),
+                ],
                 if (_mode == ArcScrappyTrackerMode.scrappy) ...[
                   _buildScrappyHero(counts),
                   const SizedBox(height: 6),
@@ -1807,6 +2028,8 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                   const SizedBox(height: AppTheme.spaceS),
                 ] else ...[
                   if (_mode == ArcScrappyTrackerMode.quest) ...[
+                    _buildQuestProgressContext(),
+                    const SizedBox(height: 6),
                     ScrappyProgressHeader(
                       completion: completion,
                       ownedCount: ownedCount,
@@ -1826,7 +2049,6 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                       : _buildBenchCarousel(allItems, states),
                   const SizedBox(height: AppTheme.spaceS),
                 ],
-                const SizedBox(height: AppTheme.spaceXL),
               ],
             );
           },

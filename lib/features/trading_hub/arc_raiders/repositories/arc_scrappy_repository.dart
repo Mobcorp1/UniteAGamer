@@ -97,11 +97,19 @@ class ArcScrappyRepository {
                   Map<String, ArcScrappyState>
                 >.loaded(map);
               })
-              .handleError(
-                (Object error) =>
-                    ArcScrappyRepositoryState<
-                      Map<String, ArcScrappyState>
-                    >.error(error),
+              .transform(
+                StreamTransformer<
+                  ArcScrappyRepositoryState<Map<String, ArcScrappyState>>,
+                  ArcScrappyRepositoryState<Map<String, ArcScrappyState>>
+                >.fromHandlers(
+                  handleError: (error, stackTrace, sink) {
+                    sink.add(
+                      ArcScrappyRepositoryState<
+                        Map<String, ArcScrappyState>
+                      >.error(error),
+                    );
+                  },
+                ),
               );
         });
   }

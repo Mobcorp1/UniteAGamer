@@ -71,7 +71,8 @@ void main() {
     );
 
     expect(text, contains("title: 'Progress Trackers'"));
-    expect(text, contains("title: 'TRACK WHAT MOVES THE RAID'"));
+    expect(text, contains("'TRACKER WORKSPACES'"));
+    expect(text, isNot(contains('ArcRaidersHeroBanner(')));
     expect(text, contains("title: 'Scrappy Tracker'"));
     expect(text, contains("title: 'Bench Tracker'"));
     expect(text, contains("title: 'Quest Tracker'"));

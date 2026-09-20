@@ -38,74 +38,126 @@ class ArcProgressTrackersScreen extends StatelessWidget {
               padding: EdgeInsets.zero,
             ),
             const SizedBox(height: AppTheme.spaceM),
-            const ArcRaidersHeroBanner(
-              title: 'TRACK WHAT MOVES THE RAID',
-              subtitle:
-                  'Scrappy, bench, quest and hunt-target progress stay split into focused tools.',
-              accent: ArcUiTokens.primaryAccent,
-            ),
-            const SizedBox(height: AppTheme.spaceM),
-            ArcRaidersSectionCard(
-              accent: ArcUiTokens.primaryAccent,
-              padding: const EdgeInsets.all(12),
-              child: StreamBuilder<Map<String, FeatureAvailability>>(
-                stream: FeatureAccess.watchAvailabilityMap(
-                  _trackerLinks.map((link) => link.accessFlag),
-                ),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting &&
-                      !snapshot.hasData) {
-                    return const ArcRaidersStatePanel(
-                      title: 'Loading trackers',
-                      message: 'Checking active tracker access.',
-                      icon: Icons.sync_rounded,
-                      compact: true,
-                    );
-                  }
-                  final availability =
-                      snapshot.data ?? const <String, FeatureAvailability>{};
-                  final visibleLinks = _trackerLinks
-                      .where(
-                        (link) =>
-                            (availability[link.accessFlag] ??
-                                    FeatureAvailability.hidden)
-                                .isVisibleToStandardUsers,
-                      )
-                      .toList(growable: false);
-                  if (visibleLinks.isEmpty) {
-                    return const _TrackerEmptyState();
-                  }
-                  return LayoutBuilder(
-                    builder: (context, constraints) {
-                      final twoColumn = constraints.maxWidth >= 720;
-                      final cardWidth = twoColumn
-                          ? (constraints.maxWidth - 12) / 2
-                          : constraints.maxWidth;
-
-                      return Wrap(
-                        spacing: 12,
-                        runSpacing: 12,
-                        children: [
-                          for (final link in visibleLinks)
-                            SizedBox(
-                              width: cardWidth,
-                              child: _TrackerLinkCard(
-                                link: link,
-                                availability:
-                                    availability[link.accessFlag] ??
-                                    FeatureAvailability.hidden,
-                              ),
-                            ),
-                        ],
-                      );
-                    },
-                  );
-                },
+            const _TrackerFamilyHeader(),
+            const SizedBox(height: AppTheme.spaceS),
+            StreamBuilder<Map<String, FeatureAvailability>>(
+              stream: FeatureAccess.watchAvailabilityMap(
+                _trackerLinks.map((link) => link.accessFlag),
               ),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting &&
+                    !snapshot.hasData) {
+                  return const ArcRaidersStatePanel(
+                    title: 'Loading trackers',
+                    message: 'Checking active tracker access.',
+                    icon: Icons.sync_rounded,
+                    compact: true,
+                  );
+                }
+                if (snapshot.hasError && !snapshot.hasData) {
+                  return const ArcRaidersStatePanel(
+                    title: 'Tracker access unavailable',
+                    message:
+                        'UAG could not confirm tracker access. Reopen this screen to retry.',
+                    icon: Icons.cloud_off_rounded,
+                    accent: ArcUiTokens.warning,
+                    compact: true,
+                  );
+                }
+
+                final availability =
+                    snapshot.data ?? const <String, FeatureAvailability>{};
+                final visibleLinks = _trackerLinks
+                    .where(
+                      (link) =>
+                          (availability[link.accessFlag] ??
+                                  FeatureAvailability.hidden)
+                              .isVisibleToStandardUsers,
+                    )
+                    .toList(growable: false);
+                if (visibleLinks.isEmpty) {
+                  return const _TrackerEmptyState();
+                }
+
+                return LayoutBuilder(
+                  builder: (context, constraints) {
+                    final twoColumn = constraints.maxWidth >= 720;
+                    final cardWidth = twoColumn
+                        ? (constraints.maxWidth - 12) / 2
+                        : constraints.maxWidth;
+
+                    return Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: [
+                        for (final link in visibleLinks)
+                          SizedBox(
+                            width: cardWidth,
+                            child: _TrackerLinkCard(
+                              link: link,
+                              availability:
+                                  availability[link.accessFlag] ??
+                                  FeatureAvailability.hidden,
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                );
+              },
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _TrackerFamilyHeader extends StatelessWidget {
+  const _TrackerFamilyHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(
+            color: ArcUiTokens.primaryAccent.withValues(alpha: 0.10),
+            borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
+            border: Border.all(
+              color: ArcUiTokens.primaryAccent.withValues(alpha: 0.30),
+            ),
+          ),
+          child: const Icon(
+            Icons.track_changes_rounded,
+            size: 18,
+            color: ArcUiTokens.primaryAccent,
+          ),
+        ),
+        const SizedBox(width: AppTheme.spaceS),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'TRACKER WORKSPACES',
+                style: ArcUiTokens.label(color: ArcUiTokens.primaryAccent),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'Open the progression tool you need now.',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: ArcUiTokens.metadata(
+                  color: ArcUiTokens.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -188,23 +240,23 @@ class _TrackerLinkCard extends StatelessWidget {
         );
       },
       accent: accent,
-      padding: const EdgeInsets.all(ArcUiTokens.gapM),
+      padding: const EdgeInsets.all(11),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 104),
+        constraints: const BoxConstraints(minHeight: 88),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              width: 42,
-              height: 42,
+              width: 38,
+              height: 38,
               decoration: BoxDecoration(
                 color: accent.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: accent.withValues(alpha: 0.42)),
               ),
-              child: Icon(link.icon, color: accent),
+              child: Icon(link.icon, color: accent, size: 20),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -213,15 +265,15 @@ class _TrackerLinkCard extends StatelessWidget {
                     link.title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: ArcUiTokens.cardTitle(fontSize: 17, color: accent),
+                    style: ArcUiTokens.cardTitle(fontSize: 15.5, color: accent),
                   ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 4),
                   Text(
                     link.subtitle,
-                    maxLines: 3,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: ArcUiTokens.body(
-                      fontSize: 12,
+                      fontSize: 11.5,
                       color: ArcUiTokens.textSecondary,
                     ),
                   ),
@@ -235,8 +287,8 @@ class _TrackerLinkCard extends StatelessWidget {
               children: [
                 if (availability.isComingSoon)
                   _StatusPill(label: availability.label, color: accent),
-                const SizedBox(height: 8),
-                Icon(Icons.chevron_right_rounded, color: accent),
+                const SizedBox(height: 6),
+                Icon(Icons.chevron_right_rounded, color: accent, size: 20),
               ],
             ),
           ],

@@ -50,8 +50,11 @@ void main() {
       expect(source, contains('ArcProgressionWorkspace.scrappy'));
       expect(source, contains('ArcProgressionWorkspace.bench'));
       expect(source, contains('ArcProgressionWorkspace.quest'));
-      expect(source, contains('_repository.watchMyScrappyStateMap()'));
+      expect(source, contains('_repository.watchMyScrappyStates()'));
       expect(source, contains('ArcProgressionRepository'));
+      expect(source, contains('ArcUserPersonalisationRepository'));
+      expect(source, contains('ArcQuestProgressState.startingOrReset'));
+      expect(source, contains('ArcQuestProgressState.continuing'));
       expect(source, contains('ScrappyFeedQueueSection('));
     },
   );
