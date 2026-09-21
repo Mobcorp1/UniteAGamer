@@ -1,3 +1,4 @@
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_events_screen.dart';
 import 'dart:async';
 
 import 'features/monetisation/ads/uag_ad_consent_controller.dart';
@@ -377,6 +378,16 @@ class UAGTradersHubApp extends StatefulWidget {
             flag: FeatureAccessFlag.playLockerPro,
             title: 'Play Like a Pro',
             child: PlayLikeAProScreen(),
+          ),
+          settings: settings,
+        );
+
+      case ArcEventsScreen.routeName:
+        return MaterialPageRoute(
+          builder: (_) => const FeatureAccessRouteGate(
+            flag: FeatureAccessFlag.raidPlanner,
+            title: 'Events',
+            child: ArcEventsScreen(),
           ),
           settings: settings,
         );

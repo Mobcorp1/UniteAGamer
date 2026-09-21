@@ -32,6 +32,7 @@ class ArcCommandCentreContent extends StatefulWidget {
     required this.onChecklistChanged,
     this.personalisation = ArcUserPersonalisationProfile.defaults,
     this.fallbackNotice,
+    this.eventPreview,
   });
 
   final ArcExpeditionStateSnapshot expeditionState;
@@ -41,6 +42,7 @@ class ArcCommandCentreContent extends StatefulWidget {
   final void Function(String id, bool value) onChecklistChanged;
   final ArcUserPersonalisationProfile personalisation;
   final String? fallbackNotice;
+  final Widget? eventPreview;
 
   @override
   State<ArcCommandCentreContent> createState() =>
@@ -97,6 +99,10 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
         const SizedBox(height: 8),
         _topCommandDeck(commandState, commandMoves, carouselTiles),
         const SizedBox(height: 8),
+        if (widget.eventPreview != null) ...[
+          widget.eventPreview!,
+          const SizedBox(height: 8),
+        ],
         _featuresUtilityDeck(carouselTiles),
       ],
     );

@@ -46,6 +46,7 @@ void main() {
 
       expect(labels, [
         'Discover UAG',
+        'Events',
         'Command Centre',
         'Raid Intelligence',
         'Raid Planner',
@@ -75,6 +76,9 @@ void main() {
         'Beta Feedback',
         'Legal & Privacy',
       ]);
+
+      expect(_item('Events').accessFlag, FeatureAccessFlag.raidPlanner);
+      expect(_item('Events').routeName, '/trading-hub/arc-raiders/events');
 
       for (final oldDrawerItem in const [
         'Intel Snapshot',

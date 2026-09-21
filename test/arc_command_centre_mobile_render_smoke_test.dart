@@ -1,3 +1,5 @@
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_event_relevance.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_events_workspace.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_command_centre_engine.dart';
@@ -30,6 +32,11 @@ void main() {
           body: ArcCommandCentreContent(
             expeditionState: expeditionState,
             commandState: commandState,
+            eventPreview: ArcEventsWorkspace(
+              compact: true,
+              nowUtc: DateTime.utc(2026, 9, 21, 12),
+              relevance: const ArcEventRelevance(),
+            ),
             checklistState: const {},
             onAction: (_) {},
             onChecklistChanged: (_, _) {},

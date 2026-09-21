@@ -1,3 +1,6 @@
+import '../data/arc_event_relevance.dart';
+import '../data/arc_progression_engine.dart';
+import '../widgets/arc_events_workspace.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -476,6 +479,11 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
                                     );
                                 _lastCommandState = commandState;
                                 return _buildResilientContent(
+                                  eventsAvailable:
+                                      featureAvailability[FeatureAccessFlag
+                                              .raidPlanner]
+                                          ?.isLive ==
+                                      true,
                                   expeditionState: expeditionState,
                                   commandState:
                                       _lastCommandState ?? commandState,
@@ -506,6 +514,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
   }
 
   Widget _buildResilientContent({
+    required bool eventsAvailable,
     required ArcExpeditionStateSnapshot expeditionState,
     required ArcCommandCentreState commandState,
     required ArcScrappyRepositoryState<Map<String, ArcScrappyState>>
@@ -519,11 +528,28 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
     required ArcCommandTradeActivity tradeActivity,
     required ArcUserPersonalisationProfile personalisation,
   }) {
+    final eventPreview = eventsAvailable
+        ? ArcEventsWorkspace(
+            compact: true,
+            relevance: ArcEventRelevance(
+              profile: personalisation,
+              blueprints: blueprintStates,
+              loadouts: loadouts,
+              progression: scrappyState.data == null
+                  ? ArcProgressionSnapshotBundle.empty
+                  : const ArcProgressionEngine().build(
+                      scrappyStates: scrappyState.data!,
+                      records: progressionRecords,
+                    ),
+            ),
+          )
+        : null;
     if (scrappyState.status == ArcScrappyRepositoryStateStatus.error) {
       return _withSmartBuildStatus(
         blueprintStates: blueprintStates,
         loadouts: loadouts,
         child: ArcCommandCentreContent(
+          eventPreview: eventPreview,
           expeditionState: expeditionState,
           commandState: commandState,
           checklistState: _checklistState,
@@ -543,6 +569,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
         blueprintStates: blueprintStates,
         loadouts: loadouts,
         child: ArcCommandCentreContent(
+          eventPreview: eventPreview,
           expeditionState: expeditionState,
           commandState: commandState,
           checklistState: _checklistState,
@@ -559,6 +586,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
       blueprintStates: blueprintStates,
       loadouts: loadouts,
       child: ArcCommandCentreContent(
+        eventPreview: eventPreview,
         expeditionState: expeditionState,
         commandState: commandState,
         checklistState: _checklistState,

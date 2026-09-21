@@ -1,3 +1,4 @@
+import '../screens/arc_events_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/legal_hub_screen.dart';
@@ -93,6 +94,12 @@ class ArcCompactNavigationCatalog {
           label: 'Discover UAG',
           icon: Icons.explore_outlined,
           routeName: ArcRaidersHubScreen.routeName,
+        ),
+        ArcCompactNavigationItem(
+          label: 'Events',
+          icon: Icons.event_outlined,
+          routeName: ArcEventsScreen.routeName,
+          accessFlag: FeatureAccessFlag.raidPlanner,
         ),
         ArcCompactNavigationItem(
           label: 'Command Centre',
