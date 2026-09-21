@@ -105,21 +105,21 @@ class MyIntelScreen extends StatelessWidget {
                     }
 
                     return SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
+                      padding: const EdgeInsets.fromLTRB(12, 8, 12, 104),
                       child: Center(
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 980),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              _IntelHero(
+                              _IntelSummary(
                                 totalReports: docs.length,
                                 visibleReports: latest.length,
                               ),
-                              const SizedBox(height: 12),
+                              const SizedBox(height: 10),
                               for (final doc in latest) ...[
                                 _IntelReportCard(doc: doc),
-                                const SizedBox(height: 12),
+                                const SizedBox(height: 10),
                               ],
                             ],
                           ),
@@ -146,51 +146,33 @@ class MyIntelScreen extends StatelessWidget {
   }
 }
 
-class _IntelHero extends StatelessWidget {
-  const _IntelHero({required this.totalReports, required this.visibleReports});
+class _IntelSummary extends StatelessWidget {
+  const _IntelSummary({
+    required this.totalReports,
+    required this.visibleReports,
+  });
 
   final int totalReports;
   final int visibleReports;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: ArcUiTokens.surfaceDecoration(
-        role: ArcSurfaceRole.raised,
-        accent: ArcUiTokens.primaryAccent,
-        radius: ArcUiTokens.radiusL,
-        borderOpacity: 0.24,
-        glow: true,
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.radar_rounded,
-            color: ArcUiTokens.primaryAccent,
-            size: 24,
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'RECENT INTEL',
-                  style: ArcUiTokens.sectionTitle(fontSize: 16),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  'Showing $visibleReports of $totalReports submitted report${totalReports == 1 ? '' : 's'}. Review or correct recent field intel here.',
-                  style: ArcUiTokens.bodySmall(
-                    color: ArcUiTokens.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        ArcTacticalStatusPill(
+          label:
+              '$visibleReports recent ${visibleReports == 1 ? 'report' : 'reports'}',
+          icon: Icons.radar_rounded,
+          accent: ArcUiTokens.primaryAccent,
+        ),
+        ArcTacticalStatusPill(
+          label: '$totalReports submitted',
+          icon: Icons.article_outlined,
+          accent: ArcUiTokens.secondaryAccent,
+        ),
+      ],
     );
   }
 }
@@ -263,10 +245,10 @@ class _IntelReportCard extends StatelessWidget {
               _IntelBadge(label: '$confirmations confirm'),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: 6,
+            runSpacing: 6,
             children: [
               _IntelChip(icon: Icons.map_outlined, label: mapName),
               _IntelChip(icon: Icons.place_outlined, label: location),
@@ -275,7 +257,7 @@ class _IntelReportCard extends StatelessWidget {
             ],
           ),
           if (notes.isNotEmpty) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             Text(
               notes,
               maxLines: 2,
@@ -283,7 +265,7 @@ class _IntelReportCard extends StatelessWidget {
               style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
             ),
           ],
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Row(
             children: [
               Expanded(

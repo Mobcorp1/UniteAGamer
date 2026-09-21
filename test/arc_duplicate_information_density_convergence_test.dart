@@ -81,9 +81,15 @@ void main() {
       'lib/features/trading_hub/arc_raiders/screens/my_intel_screen.dart',
     );
 
-    expect(source, contains("'RECENT INTEL'"));
+    expect(source, isNot(contains("'RECENT INTEL'")));
+    expect(source, contains('_IntelSummary('));
     expect(source, contains('visibleReports: latest.length'));
-    expect(source, contains(r'Showing $visibleReports of $totalReports'));
+    expect(source, contains(r"label: '$totalReports submitted'"));
+    expect(source, contains(r"$visibleReports recent"));
+    expect(
+      source,
+      isNot(contains(r'Showing $visibleReports of $totalReports')),
+    );
     expect(source, isNot(contains("label: 'Raider linked'")));
     expect(source, isNot(contains(r"label: '${latest.length} shown'")));
   });

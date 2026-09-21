@@ -91,7 +91,8 @@ class _ArcFutureHubScreenState extends State<ArcFutureHubScreen> {
                 style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
                 decoration: ArcUiTokens.inputDecoration(
                   labelText: 'What should it do?',
-                  hintText: 'Describe the player problem and the useful outcome.',
+                  hintText:
+                      'Describe the player problem and the useful outcome.',
                   prefixIcon: Icons.notes_rounded,
                 ).copyWith(alignLabelWithHint: true),
               ),
@@ -146,9 +147,9 @@ class _ArcFutureHubScreenState extends State<ArcFutureHubScreen> {
             'voteCount': 0,
           });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Suggestion submitted.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Suggestion submitted.')));
       }
     } catch (_) {
       if (mounted) {
@@ -188,7 +189,9 @@ class _ArcFutureHubScreenState extends State<ArcFutureHubScreen> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not update your vote. Try again.')),
+          const SnackBar(
+            content: Text('Could not update your vote. Try again.'),
+          ),
         );
       }
     }
@@ -218,23 +221,11 @@ class _ArcFutureHubScreenState extends State<ArcFutureHubScreen> {
                         icon: Icons.timeline_rounded,
                         accent: ArcUiTokens.secondaryAccent,
                       ),
-                      const SizedBox(height: AppTheme.spaceM),
-                      const ArcRaidersHeroBanner(
-                        title: 'WHAT UAG BUILDS NEXT',
-                        subtitle:
-                            'Roadmap systems, community suggestions and player-voted priorities in one place.',
-                        accent: ArcUiTokens.secondaryAccent,
-                      ),
-                      const SizedBox(height: AppTheme.spaceM),
+                      const SizedBox(height: AppTheme.spaceS),
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
                         children: const [
-                          ArcTacticalStatusPill(
-                            label: 'Roadmap',
-                            icon: Icons.route_rounded,
-                            accent: ArcUiTokens.warning,
-                          ),
                           ArcTacticalStatusPill(
                             label: 'Community votes',
                             icon: Icons.how_to_vote_rounded,
@@ -247,7 +238,7 @@ class _ArcFutureHubScreenState extends State<ArcFutureHubScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppTheme.spaceM),
                       LayoutBuilder(
                         builder: (context, constraints) {
                           final columns = constraints.maxWidth >= 980
@@ -272,30 +263,27 @@ class _ArcFutureHubScreenState extends State<ArcFutureHubScreen> {
                           );
                         },
                       ),
-                      const SizedBox(height: 18),
-                      ArcRaidersSectionCard(
-                        accent: ArcUiTokens.primaryAccent,
-                        padding: const EdgeInsets.all(ArcUiTokens.gapM),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                'COMMUNITY SUGGESTIONS',
-                                style: ArcUiTokens.sectionTitle(
-                                  fontSize: 18,
-                                  color: ArcUiTokens.textPrimary,
-                                ),
+                      const SizedBox(height: AppTheme.spaceL),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'COMMUNITY SUGGESTIONS',
+                              style: ArcUiTokens.sectionTitle(
+                                fontSize: 17,
+                                color: ArcUiTokens.textPrimary,
                               ),
                             ),
-                            FilledButton.icon(
-                              onPressed: _suggest,
-                              icon: const Icon(Icons.add),
-                              label: const Text('SUGGEST'),
-                            ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(width: 8),
+                          FilledButton.icon(
+                            onPressed: _suggest,
+                            icon: const Icon(Icons.add),
+                            label: const Text('SUGGEST'),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppTheme.spaceS),
                       _SuggestionsFeed(onToggleVote: _toggleVote),
                       const SizedBox(height: 100),
                     ],

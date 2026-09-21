@@ -27,7 +27,9 @@ void main() {
       );
 
       expect(text, contains("title: 'Wall of Legends'"));
-      expect(text, contains("title: 'IMMORTALISED IN THE UAG NETWORK'"));
+      expect(text, isNot(contains('ArcRaidersHeroBanner(')));
+      expect(text, contains('_wallSummary(entries.length)'));
+      expect(text, contains("'Permanent recognition'"));
       expect(text, isNot(contains("label: 'Admin curated'")));
       expect(text, contains('ArcCompanionBottomDock'));
       expect(text, contains('UagAppBar'));
@@ -43,7 +45,9 @@ void main() {
 
       expect(text, contains("title: 'My Intel'"));
       expect(text, contains("title: 'Syncing your intel'"));
-      expect(text, contains("'RECENT INTEL'"));
+      expect(text, contains('_IntelSummary('));
+      expect(text, isNot(contains('_IntelHero(')));
+      expect(text, isNot(contains("'RECENT INTEL'")));
       expect(text, contains('visibleReports: latest.length'));
       expect(text, isNot(contains("title: 'MY INTEL'")));
       expect(text, isNot(contains("label: 'Raider linked'")));
@@ -58,7 +62,8 @@ void main() {
       );
 
       expect(text, contains("title: 'Help Centre'"));
-      expect(text, contains("title: 'FIELD SUPPORT // UAG NETWORK'"));
+      expect(text, isNot(contains('ArcRaidersHeroBanner(')));
+      expect(text, isNot(contains("'FIELD SUPPORT // UAG NETWORK'")));
       expect(text, isNot(contains("label: 'Safety policies'")));
       expect(text, contains("labelText: 'Search Help Centre'"));
       expect(text, contains('UagAppBar'));
@@ -91,6 +96,11 @@ void main() {
     expect(text, isNot(contains("'PLANNED'")));
     expect(text, isNot(contains("'ROADMAP'")));
     expect(text, contains("'EXPLORING'"));
+    expect(text, contains('ArcRaidersPageHeader('));
+    expect(text, isNot(contains('ArcRaidersHeroBanner(')));
+    expect(text, isNot(contains("'WHAT UAG BUILDS NEXT'")));
+    expect(text, contains("'Community votes'"));
+    expect(text, contains("'Identity safe'"));
     expect(text, contains('Could not submit your suggestion. Try again.'));
     expect(text, contains('Could not update your vote. Try again.'));
   });

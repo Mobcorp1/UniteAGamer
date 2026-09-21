@@ -33,8 +33,10 @@ void main() {
         expect(source, contains('appBar: const UagAppBar('));
         expect(source, contains("activeLabel: 'My Intel'"));
         expect(source, isNot(contains('ArcRaidersPageHeader(')));
-        expect(source, contains('_IntelHero('));
-        expect(source, contains("'RECENT INTEL'"));
+        expect(source, isNot(contains('_IntelHero(')));
+        expect(source, isNot(contains("'RECENT INTEL'")));
+        expect(source, contains('_IntelSummary('));
+        expect(source, contains('visibleReports: latest.length'));
         expect(source, contains('ArcRaidersSectionCard'));
         expect(source, contains('ArcRaidersStatePanel'));
         expect(source, contains('ArcTacticalStatusPill'));
@@ -75,8 +77,10 @@ void main() {
         expect(source, contains('drawer: const AppDrawer()'));
         expect(source, contains('appBar: const UagAppBar('));
         expect(source, contains("activeLabel: 'DISCOVER'"));
-        expect(source, contains('ArcRaidersHeroBanner'));
+        expect(source, isNot(contains('ArcRaidersHeroBanner(')));
         expect(source, isNot(contains('ArcRaidersPageHeader(')));
+        expect(source, contains('_wallSummary(entries.length)'));
+        expect(source, contains("'Permanent recognition'"));
         expect(source, contains('ArcTacticalStatusPill'));
         expect(source, contains('ArcRaidersSectionCard'));
         expect(source, contains('ArcRaidersStatePanel'));

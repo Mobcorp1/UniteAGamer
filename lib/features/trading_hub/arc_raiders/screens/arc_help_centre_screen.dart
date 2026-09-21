@@ -104,13 +104,6 @@ class _ArcHelpCentreScreenState extends State<ArcHelpCentreScreen> {
               padding: EdgeInsets.zero,
             ),
             const SizedBox(height: AppTheme.spaceS),
-            const ArcRaidersHeroBanner(
-              title: 'FIELD SUPPORT // UAG NETWORK',
-              subtitle:
-                  'Search practical answers, jump directly into the relevant system, or open the legal and safety policies that govern the network.',
-              accent: ArcUiTokens.primaryAccent,
-            ),
-            const SizedBox(height: AppTheme.spaceM),
             _buildSearch(),
             const SizedBox(height: AppTheme.spaceM),
             LayoutBuilder(
@@ -150,27 +143,24 @@ class _ArcHelpCentreScreenState extends State<ArcHelpCentreScreen> {
   }
 
   Widget _buildSearch() {
-    return ArcRaidersSectionCard(
-      padding: const EdgeInsets.all(ArcUiTokens.gapM),
-      child: TextField(
-        controller: _searchController,
-        onChanged: (value) => setState(() => _query = value),
-        style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
-        decoration:
-            ArcUiTokens.inputDecoration(
-              labelText: 'Search Help Centre',
-              hintText: 'Try “trade”, “report”, “account” or “privacy”',
-              prefixIcon: Icons.search_rounded,
-            ).copyWith(
-              suffixIcon: _query.isEmpty
-                  ? null
-                  : IconButton(
-                      tooltip: 'Clear search',
-                      onPressed: _clearSearch,
-                      icon: const Icon(Icons.close_rounded),
-                    ),
-            ),
-      ),
+    return TextField(
+      controller: _searchController,
+      onChanged: (value) => setState(() => _query = value),
+      style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+      decoration:
+          ArcUiTokens.inputDecoration(
+            labelText: 'Search Help Centre',
+            hintText: 'Try “trade”, “report”, “account” or “privacy”',
+            prefixIcon: Icons.search_rounded,
+          ).copyWith(
+            suffixIcon: _query.isEmpty
+                ? null
+                : IconButton(
+                    tooltip: 'Clear search',
+                    onPressed: _clearSearch,
+                    icon: const Icon(Icons.close_rounded),
+                  ),
+          ),
     );
   }
 

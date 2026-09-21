@@ -80,14 +80,8 @@ class _WallOfLegendsScreenState extends State<WallOfLegendsScreen> {
             return ArcRaidersPageList(
               maxWidth: 1120,
               children: [
-                ArcRaidersHeroBanner(
-                  title: 'IMMORTALISED IN THE UAG NETWORK',
-                  subtitle: entries.isEmpty
-                      ? 'Founders, beta Raiders, creators, guardians and community contributors can be permanently recognised here once approved.'
-                      : '${entries.length} approved ${entries.length == 1 ? 'legend' : 'legends'} currently recorded across the UAG community.',
-                  accent: ArcUiTokens.warning,
-                ),
-                const SizedBox(height: AppTheme.spaceM),
+                _wallSummary(entries.length),
+                const SizedBox(height: AppTheme.spaceS),
                 _categoryFilters(),
                 const SizedBox(height: AppTheme.spaceM),
                 if (entries.isEmpty)
@@ -132,6 +126,27 @@ class _WallOfLegendsScreenState extends State<WallOfLegendsScreen> {
           },
         ),
       ),
+    );
+  }
+
+  Widget _wallSummary(int count) {
+    return Wrap(
+      spacing: AppTheme.spaceS,
+      runSpacing: AppTheme.spaceS,
+      children: [
+        ArcTacticalStatusPill(
+          label: count == 0
+              ? 'Awaiting approved legends'
+              : '$count approved ${count == 1 ? 'legend' : 'legends'}',
+          icon: Icons.workspace_premium_outlined,
+          accent: ArcUiTokens.warning,
+        ),
+        const ArcTacticalStatusPill(
+          label: 'Permanent recognition',
+          icon: Icons.history_edu_rounded,
+          accent: ArcUiTokens.primaryAccent,
+        ),
+      ],
     );
   }
 
@@ -188,15 +203,15 @@ class _WallOfLegendsScreenState extends State<WallOfLegendsScreen> {
     return ArcRaidersSectionCard(
       accent: accent,
       radius: 16,
-      padding: const EdgeInsets.all(AppTheme.spaceM),
+      padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Container(
-                width: 44,
-                height: 44,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: accent.withValues(alpha: 0.12),
@@ -204,7 +219,7 @@ class _WallOfLegendsScreenState extends State<WallOfLegendsScreen> {
                 ),
                 child: Icon(Icons.emoji_events_rounded, color: accent),
               ),
-              const SizedBox(width: AppTheme.spaceM),
+              const SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -233,7 +248,7 @@ class _WallOfLegendsScreenState extends State<WallOfLegendsScreen> {
               ),
             ],
           ),
-          const SizedBox(height: AppTheme.spaceM),
+          const SizedBox(height: 10),
           Wrap(
             spacing: AppTheme.spaceS,
             runSpacing: AppTheme.spaceS,
