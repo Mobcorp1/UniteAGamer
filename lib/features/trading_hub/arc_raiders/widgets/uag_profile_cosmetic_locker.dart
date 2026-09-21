@@ -4,6 +4,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trader_profile.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_operations_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/uag_raider_avatar.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -420,34 +421,14 @@ class _UagProfileCosmeticLockerState extends State<UagProfileCosmeticLocker> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 520;
-        final preview = Container(
-          width: compact ? 104 : 126,
-          height: compact ? 104 : 126,
-          padding: const EdgeInsets.all(4),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: AppTheme.neonCyan.withValues(alpha: 0.72),
-              width: 2,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: AppTheme.neonCyan.withValues(alpha: 0.18),
-                blurRadius: 20,
-              ),
-            ],
-          ),
-          child: ClipOval(
-            child: Image.asset(
-              avatar.assetPath,
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => const Icon(
-                Icons.person_rounded,
-                color: AppTheme.neonCyan,
-                size: 48,
-              ),
-            ),
-          ),
+        final preview = UagRaiderAvatar(
+          avatarId: avatar.id,
+          displayName: widget.profile.uagName,
+          size: compact ? 104 : 126,
+          accent: AppTheme.neonCyan,
+          onTap: widget.onManageAvatars,
+          showEditBadge: true,
+          tooltip: 'Manage avatars',
         );
 
         final copy = Column(
@@ -572,7 +553,11 @@ class _UagProfileCosmeticLockerState extends State<UagProfileCosmeticLocker> {
               builder: (context, constraints) {
                 final availableWidth = constraints.maxWidth;
                 final columns = type == ArcOperationRewardType.profileBanner
-                    ? (availableWidth >= 900 ? 3 : availableWidth >= 560 ? 2 : 1)
+                    ? (availableWidth >= 900
+                          ? 3
+                          : availableWidth >= 560
+                          ? 2
+                          : 1)
                     : (availableWidth >= 1180
                           ? 5
                           : availableWidth >= 900

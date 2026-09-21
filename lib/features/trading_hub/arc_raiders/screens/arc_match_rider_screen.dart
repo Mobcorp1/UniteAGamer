@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_match_intelligence_copy.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_subscription_tier.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_user_entitlement.dart';
@@ -10,7 +11,6 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raider_network_workspace_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_reference_visuals.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_match_rider_invite.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_match_rider_profile.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_match_rider_repository.dart';
@@ -25,19 +25,6 @@ class ArcMatchRiderScreen extends StatefulWidget {
 
   @override
   State<ArcMatchRiderScreen> createState() => _ArcMatchRiderScreenState();
-}
-
-class _MatchRaiderVisualLead extends StatelessWidget {
-  const _MatchRaiderVisualLead();
-  @override
-  Widget build(BuildContext context) => const ArcReferenceSectionFrame(
-    title: 'Match Raider',
-    subtitle: 'Squad compatibility, session intent and live Raider discovery.',
-    child: ArcArtworkPlaceholder(
-      assetPath: 'assets/arc_raiders/hub/arc_hub_match_a_raider.webp',
-      height: 104,
-    ),
-  );
 }
 
 class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
@@ -259,16 +246,10 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
       bottomNavigationBar: const ArcCompanionBottomDock(
         activeLabel: 'Match Raider',
       ),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        title: Text(
-          'Match Raider',
-          style: AppTheme.neonTextStyle(
-            fontSize: 20,
-            color: AppTheme.neonCyan,
-            isBold: true,
-          ),
-        ),
+      appBar: const UagAppBar(
+        title: 'Match Raider',
+        subtitle: 'Squad compatibility + live Raider discovery',
+        showLogout: false,
       ),
       body: ArcRaidersScreenShell(
         useSafeArea: false,
@@ -304,8 +285,6 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
                           padding: EdgeInsets.zero,
                         ),
                         const SizedBox(height: AppTheme.spaceM),
-                        const _MatchRaiderVisualLead(),
-                        const SizedBox(height: 12),
                         _buildHeroCard(profile),
                         const SizedBox(height: AppTheme.spaceM),
                         LayoutBuilder(

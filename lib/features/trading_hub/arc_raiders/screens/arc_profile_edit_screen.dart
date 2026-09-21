@@ -4,6 +4,7 @@ import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 import '../data/arc_game_platform_catalog.dart';
+import '../data/uag_avatar_catalog.dart';
 import '../data/arc_player_archetype_catalog.dart';
 import '../data/arc_player_session_catalog.dart';
 import '../models/arc_profile_social_models.dart';
@@ -12,6 +13,8 @@ import '../repositories/arc_trader_profile_repository.dart';
 import '../widgets/arc_game_platform_selector.dart';
 import '../widgets/arc_raiders_screen_shell.dart';
 import '../widgets/arc_social_links_editor.dart';
+import '../widgets/uag_avatar_locker_sheet.dart';
+import '../widgets/uag_raider_avatar.dart';
 import '../widgets/foundation/arc_form_surface.dart';
 import '../widgets/foundation/arc_ui_tokens.dart';
 
@@ -34,6 +37,7 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
   final TextEditingController _regionController = TextEditingController();
   final TextEditingController _timezoneController = TextEditingController();
 
+  String _avatarId = UagAvatarCatalog.defaultId;
   bool _visibleInSearch = true;
   bool _micOk = true;
   bool _crossRegionOk = false;
@@ -142,6 +146,7 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
 
     _uagIdController.text = profile.uagId;
     _uagNameController.text = profile.uagName;
+    _avatarId = UagAvatarCatalog.byId(profile.avatarId).id;
     _embarkIdController.text = profile.embarkId;
     _regionController.text = profile.region;
     _platforms
@@ -211,6 +216,8 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
         current.copyWith(
           uagId: _uagIdController.text.trim(),
           uagName: _uagNameController.text.trim(),
+          avatarId: _avatarId,
+          avatarType: 'preset',
           embarkId: _embarkIdController.text.trim(),
           region: _regionController.text.trim(),
           serverPreference: _serverPreference,
@@ -240,6 +247,27 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
+  }
+
+  Future<void> _chooseAvatar() async {
+    final selected = await UagAvatarLockerSheet.show(
+      context,
+      currentAvatarId: _avatarId,
+    );
+    if (!mounted || selected == null) return;
+    setState(() => _avatarId = UagAvatarCatalog.byId(selected).id);
+  }
+
+  Widget _identityPreview() {
+    return AnimatedBuilder(
+      animation: _uagNameController,
+      builder: (context, _) => UagRaiderIdentityStrip(
+        avatarId: _avatarId,
+        displayName: _uagNameController.text,
+        uagId: _uagIdController.text,
+        onChangeAvatar: _chooseAvatar,
+      ),
+    );
   }
 
   String? _required(String? value, String label) {
@@ -456,7 +484,7 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
             key: _formKey,
             child: ArcFormScrollView(
               children: [
-                const ArcFormPageLead(
+                ArcFormPageLead(
                   icon: Icons.manage_accounts_rounded,
                   title: 'Raider Identity',
                   subtitle:
@@ -470,6 +498,8 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
                   icon: Icons.badge_outlined,
                   accent: ArcUiTokens.primaryAccent,
                   children: [
+                    _identityPreview(),
+                    const SizedBox(height: AppTheme.spaceM),
                     _field(
                       _uagIdController,
                       'UAG ID',

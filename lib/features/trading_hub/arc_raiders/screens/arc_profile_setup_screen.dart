@@ -4,6 +4,7 @@ import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 import '../data/arc_game_platform_catalog.dart';
+import '../data/uag_avatar_catalog.dart';
 import '../data/arc_player_archetype_catalog.dart';
 import '../data/arc_player_session_catalog.dart';
 import '../models/arc_profile_social_models.dart';
@@ -13,6 +14,8 @@ import '../widgets/arc_account_journey_bar.dart';
 import '../widgets/arc_game_platform_selector.dart';
 import '../widgets/arc_raiders_screen_shell.dart';
 import '../widgets/arc_social_links_editor.dart';
+import '../widgets/uag_avatar_locker_sheet.dart';
+import '../widgets/uag_raider_avatar.dart';
 import '../widgets/foundation/arc_form_surface.dart';
 import '../widgets/foundation/arc_ui_tokens.dart';
 
@@ -36,6 +39,7 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
   late final TextEditingController _timezoneController;
   late final TextEditingController _referredByController;
 
+  String _avatarId = UagAvatarCatalog.defaultId;
   bool _visibleInSearch = true;
   bool _micOk = true;
   bool _crossRegionOk = false;
@@ -54,13 +58,6 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
   String _currentPriority = ArcPlayerSessionCatalog.defaultPriority;
   String _payoutMethod = 'Bank Transfer';
   List<ArcProfileSocialLink> _socialLinks = const <ArcProfileSocialLink>[];
-
-  static const List<String> _payoutMethods = <String>[
-    'Bank Transfer',
-    'PayPal',
-    'Stripe Connect',
-    'Not Set',
-  ];
 
   static final List<String> _archetypeOptions =
       ArcPlayerArchetypeCatalog.labels;
@@ -132,6 +129,7 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
 
       _uagIdController.text = profile.uagId;
       _uagNameController.text = profile.uagName;
+      _avatarId = UagAvatarCatalog.byId(profile.avatarId).id;
       _embarkIdController.text = profile.embarkId;
       _regionController.text = profile.region.isEmpty ? 'UK' : profile.region;
       _platforms
@@ -206,6 +204,8 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
       uid: uid,
       uagId: _uagIdController.text.trim(),
       uagName: _uagNameController.text.trim(),
+      avatarId: _avatarId,
+      avatarType: 'preset',
       embarkId: _embarkIdController.text.trim(),
       region: _regionController.text.trim(),
       platform: ArcGamePlatformCatalog.primary(_platforms),
@@ -237,6 +237,27 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
+  }
+
+  Future<void> _chooseAvatar() async {
+    final selected = await UagAvatarLockerSheet.show(
+      context,
+      currentAvatarId: _avatarId,
+    );
+    if (!mounted || selected == null) return;
+    setState(() => _avatarId = UagAvatarCatalog.byId(selected).id);
+  }
+
+  Widget _identityPreview() {
+    return AnimatedBuilder(
+      animation: _uagNameController,
+      builder: (context, _) => UagRaiderIdentityStrip(
+        avatarId: _avatarId,
+        displayName: _uagNameController.text,
+        uagId: _uagIdController.text,
+        onChangeAvatar: _chooseAvatar,
+      ),
+    );
   }
 
   String? _required(String? value, String label) {
@@ -346,7 +367,7 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
                   stage: ArcAccountJourneyStage.profile,
                 ),
                 const SizedBox(height: 12),
-                const ArcFormPageLead(
+                ArcFormPageLead(
                   icon: Icons.person_add_alt_1_rounded,
                   title: 'Build Your Raider Identity',
                   subtitle:
@@ -360,6 +381,8 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
                   icon: Icons.badge_outlined,
                   accent: ArcUiTokens.primaryAccent,
                   children: [
+                    _identityPreview(),
+                    const SizedBox(height: AppTheme.spaceM),
                     _field(
                       _uagIdController,
                       'UAG ID',
@@ -398,34 +421,6 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
                     _field(
                       _referredByController,
                       'Referral Code Used (optional)',
-                    ),
-                  ],
-                ),
-                ArcExpandableFormSection(
-                  title: 'Account',
-                  summary: 'Payout, subscription and affiliate settings',
-                  icon: Icons.account_balance_wallet_outlined,
-                  accent: ArcUiTokens.tertiaryAccent,
-                  children: [
-                    DropdownButtonFormField<String>(
-                      initialValue: _payoutMethod,
-                      dropdownColor: ArcUiTokens.surfaceOverlay,
-                      style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
-                      iconEnabledColor: ArcUiTokens.primaryAccent,
-                      items: _payoutMethods
-                          .map(
-                            (method) => DropdownMenuItem(
-                              value: method,
-                              child: Text(method),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) => setState(() {
-                        _payoutMethod = value ?? 'Bank Transfer';
-                      }),
-                      decoration: ArcUiTokens.inputDecoration(
-                        labelText: 'Preferred payout method',
-                      ),
                     ),
                   ],
                 ),

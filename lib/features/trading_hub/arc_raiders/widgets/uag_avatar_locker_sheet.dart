@@ -4,6 +4,7 @@ import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 import '../data/uag_avatar_catalog.dart';
+import 'uag_raider_avatar.dart';
 
 class UagAvatarLockerSheet extends StatefulWidget {
   const UagAvatarLockerSheet({super.key, required this.currentAvatarId});
@@ -95,21 +96,10 @@ class _UagAvatarLockerSheetState extends State<UagAvatarLockerSheet> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               child: Row(
                 children: [
-                  ClipOval(
-                    child: Image.asset(
-                      selected.assetPath,
-                      width: 64,
-                      height: 64,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => const SizedBox(
-                        width: 64,
-                        height: 64,
-                        child: Icon(
-                          Icons.person_rounded,
-                          color: Colors.white54,
-                        ),
-                      ),
-                    ),
+                  UagRaiderAvatar(
+                    avatarId: selected.id,
+                    displayName: selected.label,
+                    size: 64,
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -179,18 +169,14 @@ class _UagAvatarLockerSheetState extends State<UagAvatarLockerSheet> {
                       child: Column(
                         children: [
                           Expanded(
-                            child: ClipOval(
-                              child: Image.asset(
-                                option.assetPath,
-                                fit: BoxFit.cover,
-                                width: double.infinity,
-                                errorBuilder: (_, _, _) => const Center(
-                                  child: Icon(
-                                    Icons.person_rounded,
-                                    color: Colors.white38,
-                                    size: 32,
-                                  ),
-                                ),
+                            child: Center(
+                              child: UagRaiderAvatar(
+                                avatarId: option.id,
+                                displayName: option.label,
+                                size: 78,
+                                accent: active
+                                    ? AppTheme.neonCyan
+                                    : ArcUiTokens.textTertiary,
                               ),
                             ),
                           ),
