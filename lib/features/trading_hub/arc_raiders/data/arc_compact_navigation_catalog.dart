@@ -2,6 +2,7 @@ import '../screens/arc_events_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/legal_hub_screen.dart';
+import 'package:uag_arc_raiders_hub/features/legal/screens/privacy_data_screen.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/screens/monetisation_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_user_personalisation_profile.dart';
 import 'package:uag_arc_raiders_hub/features/profile/screens/profile_settings_screen.dart';
@@ -304,6 +305,11 @@ class ArcCompactNavigationCatalog {
           routeName: ProfileSettingsScreen.routeName,
         ),
         ArcCompactNavigationItem(
+          label: 'Privacy & Data',
+          icon: Icons.privacy_tip_outlined,
+          routeName: UagPrivacyDataScreen.routeName,
+        ),
+        ArcCompactNavigationItem(
           label: 'Help Centre',
           icon: Icons.support_agent_outlined,
           routeName: ArcHelpCentreScreen.routeName,
@@ -315,7 +321,7 @@ class ArcCompactNavigationCatalog {
           selectedRouteNames: ['/feedback'],
         ),
         ArcCompactNavigationItem(
-          label: 'Legal & Privacy',
+          label: 'Legal',
           icon: Icons.policy_outlined,
           routeName: LegalHubScreen.routeName,
         ),

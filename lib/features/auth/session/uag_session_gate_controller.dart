@@ -156,6 +156,16 @@ class UagSessionGateController {
     await prefs.setBool(_keepSignedInKey, false);
   }
 
+  static Future<void> clearAccountAndDeviceState() async {
+    await clearSession();
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('uag_last_login_email');
+    await prefs.setBool('uag_remember_email', false);
+    await prefs.setBool(_biometricEnabledKey, false);
+    await prefs.remove(_biometricAllowedUidKey);
+  }
+
   static void resetRuntimeForTest() {
     _runtimeAuthenticatedUid = null;
     _runtimeBiometricUnlockedUid = null;

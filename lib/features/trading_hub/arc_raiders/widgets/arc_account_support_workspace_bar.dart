@@ -2,7 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
-enum ArcAccountSupportWorkspace { plans, settings, help, feedback, legal }
+enum ArcAccountSupportWorkspace {
+  plans,
+  settings,
+  privacy,
+  help,
+  feedback,
+  legal,
+}
 
 extension ArcAccountSupportWorkspaceDetails on ArcAccountSupportWorkspace {
   String get label {
@@ -11,6 +18,8 @@ extension ArcAccountSupportWorkspaceDetails on ArcAccountSupportWorkspace {
         return 'Plans';
       case ArcAccountSupportWorkspace.settings:
         return 'Settings';
+      case ArcAccountSupportWorkspace.privacy:
+        return 'Privacy';
       case ArcAccountSupportWorkspace.help:
         return 'Help';
       case ArcAccountSupportWorkspace.feedback:
@@ -26,6 +35,8 @@ extension ArcAccountSupportWorkspaceDetails on ArcAccountSupportWorkspace {
         return Icons.workspace_premium_outlined;
       case ArcAccountSupportWorkspace.settings:
         return Icons.tune_rounded;
+      case ArcAccountSupportWorkspace.privacy:
+        return Icons.privacy_tip_outlined;
       case ArcAccountSupportWorkspace.help:
         return Icons.support_agent_rounded;
       case ArcAccountSupportWorkspace.feedback:
@@ -41,6 +52,8 @@ extension ArcAccountSupportWorkspaceDetails on ArcAccountSupportWorkspace {
         return '/monetisation';
       case ArcAccountSupportWorkspace.settings:
         return '/profile-settings';
+      case ArcAccountSupportWorkspace.privacy:
+        return '/privacy-data';
       case ArcAccountSupportWorkspace.help:
         return '/trading-hub/arc-raiders/help';
       case ArcAccountSupportWorkspace.feedback:

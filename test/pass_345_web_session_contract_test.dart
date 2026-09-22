@@ -62,4 +62,33 @@ void main() {
       isFalse,
     );
   });
+  test(
+    'account deletion clears remembered login and biometric device state',
+    () async {
+      SharedPreferences.setMockInitialValues(<String, Object>{
+        'uag_keep_signed_in': true,
+        'uag_session_allowed_uid': 'deleted-user',
+        'uag_session_contract_version': 2,
+        'uag_biometric_login_enabled': true,
+        'uag_biometric_allowed_uid': 'deleted-user',
+        'uag_last_login_email': 'deleted@example.com',
+        'uag_remember_email': true,
+      });
+
+      await UagSessionGateController.clearAccountAndDeviceState();
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getBool('uag_keep_signed_in'), isFalse);
+      expect(prefs.getString('uag_session_allowed_uid'), isNull);
+      expect(prefs.getInt('uag_session_contract_version'), isNull);
+      expect(prefs.getBool('uag_biometric_login_enabled'), isFalse);
+      expect(prefs.getString('uag_biometric_allowed_uid'), isNull);
+      expect(prefs.getString('uag_last_login_email'), isNull);
+      expect(prefs.getBool('uag_remember_email'), isFalse);
+      expect(
+        await UagSessionGateController.isSessionAllowed('deleted-user'),
+        isFalse,
+      );
+    },
+  );
 }

@@ -47,7 +47,9 @@ void main() {
     expect(catalog, contains("label: 'Beta Feedback'"));
     expect(catalog, contains('routeName: ArcBetaFeedbackScreen.routeName'));
     expect(catalog, contains("selectedRouteNames: ['/feedback']"));
-    expect(catalog, contains("label: 'Legal & Privacy'"));
+    expect(catalog, contains("label: 'Privacy & Data'"));
+    expect(catalog, contains('routeName: UagPrivacyDataScreen.routeName'));
+    expect(catalog, contains("label: 'Legal'"));
     expect(catalog, contains('routeName: LegalHubScreen.routeName'));
   });
 

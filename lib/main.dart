@@ -15,6 +15,7 @@ import 'package:uag_arc_raiders_hub/build/auth/auth_screen.dart';
 import 'package:uag_arc_raiders_hub/build/home_screen.dart';
 import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/legal_hub_screen.dart';
+import 'package:uag_arc_raiders_hub/features/legal/screens/privacy_data_screen.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/screens/monetisation_screen.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/services/uag_creator_referral_bootstrap.dart';
 import 'package:uag_arc_raiders_hub/features/profile/screens/profile_settings_screen.dart';
@@ -180,6 +181,12 @@ class UAGTradersHubApp extends StatefulWidget {
       case LegalHubScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const LegalHubScreen(),
+          settings: settings,
+        );
+
+      case UagPrivacyDataScreen.routeName:
+        return MaterialPageRoute(
+          builder: (_) => const UagPrivacyDataScreen(),
           settings: settings,
         );
 

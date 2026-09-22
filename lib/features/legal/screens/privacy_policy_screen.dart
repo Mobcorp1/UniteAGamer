@@ -100,7 +100,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
         ),
         ArcLegalSection(
           'Account deletion',
-          'You can request deletion of your UAG account and associated personal data through the in-app account route once enabled for Play release, or externally through https://unite-a-gamer.web.app/support#account-deletion and contact@mobcorp.co.uk. We may verify account ownership. Data that must be retained for legal obligations, security, fraud prevention or disputes may be kept only for the necessary period and the reason will be explained where appropriate.',
+          'You can permanently delete your UAG account through Privacy & Data > Delete My Account, or use the external route https://unite-a-gamer.web.app/support#account-deletion and contact@mobcorp.co.uk if the in-app process cannot be completed. The in-app route requires recent account verification. Ordinary account data is erased; narrowly necessary safety, dispute, legal, billing, tax, payout or anti-fraud records may be retained or de-identified for the required period. Subscription cancellation is a separate billing-provider action.',
           Icons.delete_forever_outlined,
         ),
         ArcLegalSection(

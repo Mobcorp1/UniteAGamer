@@ -27,8 +27,8 @@ The Play Console app is now created. Before Android subscriptions go live, creat
 ### 3. Privacy transparency — operationally covered; maintain as features change
 The Privacy Policy identifies MobCorp Limited, the data categories used by UAG, purposes/lawful bases, provider categories, international transfers, rights, complaints, retention principles, moderation/OCR providers and support contact. Update the policy whenever data collection, providers, ads, billing, analytics or moderation materially change.
 
-### 4. Account deletion — external route prepared; in-app route still required for Play
-The public Support and Privacy pages expose an account-deletion request route using contact@mobcorp.co.uk and the support-page anchor. Before Play release, verify or implement a readily discoverable in-app deletion path and ensure associated user data is deleted except for information lawfully retained for security, fraud prevention, disputes or legal obligations. Account deletion must not be represented as automatically cancelling a third-party subscription.
+### 4. Account deletion — implemented in source; production deployment/release verification required
+The source now provides Privacy & Data > Delete My Account with recent password reauthentication, explicit acknowledgement and typed DELETE confirmation. Deletion is backend-orchestrated: ordinary account-owned data and account storage are removed, shared trust/safety/dispute and legal records are minimised where retention is justified, and a server-only tombstone prevents delayed account writes from recreating deleted user records. The public Support and Privacy pages continue to expose the external request route using contact@mobcorp.co.uk and the support-page anchor. Before Play release, deploy the account-deletion Functions, verify the production route end-to-end, and confirm associated user data is deleted except for information lawfully retained for security, fraud prevention, disputes, billing, tax, payout or legal obligations. Account deletion is explicitly separate from third-party subscription cancellation.
 
 ### 5. Age/safeguarding — policy position is 18+
 The current UAG policy catalogue defines the account service as 18+. Play Console target-audience declarations, onboarding age controls and moderation/safeguarding behaviour must stay consistent with that position. If the product later intentionally admits minors, a dedicated child-data and age-appropriate design review is required before that change.
@@ -52,7 +52,7 @@ Re-run this self-audit when any of the following materially change: subscription
 
 - **Legal/compliance self-audit:** Ready for beta operations.
 - **Independent professional legal review:** Deferred until revenue begins or before material commercial/international scale.
-- **Account deletion:** External route prepared; in-app route must be verified/implemented before Play release.
+- **Account deletion:** In-app and external routes implemented in source; Firebase Functions deployment and production end-to-end verification remain required before Play release.
 - **Google Play Billing:** Configuration required now that the Play app exists.
 - **No claim of solicitor sign-off:** Correct.
 

@@ -3577,3 +3577,30 @@ exports.withdrawRaiderContract = onDocumentWritten('arc_raider_reports/{reportId
 
 exports.raiderContractAdminContext = onCall(contractIntelligence.adminContext);
 exports.auditRaiderContractLifecycle = onDocumentWritten('arc_raider_contracts/{contractId}', contractIntelligence.lifecycleChanged);
+
+
+// P0 account deletion: recent reauthentication is required by the callable.
+// Ordinary account/profile data is deleted, shared safety/legal records are
+// minimised where retention is justified, and a server-only tombstone prevents
+// delayed backend jobs from resurrecting users/{uid}.
+const { createAccountDeletionLifecycle } = require('./account_deletion');
+const accountDeletionLifecycle = createAccountDeletionLifecycle({
+  db,
+  auth: admin.auth(),
+  bucket: admin.storage().bucket(),
+  fieldValue: admin.firestore.FieldValue,
+  HttpsError,
+  timestamp: () => admin.firestore.FieldValue.serverTimestamp(),
+});
+exports.deleteUagAccount = onCall(
+  { timeoutSeconds: 300, memory: '512MiB' },
+  accountDeletionLifecycle.deleteAccount,
+);
+exports.preventDeletedAccountResurrection = onDocumentWritten(
+  'users/{userId}',
+  (event) => accountDeletionLifecycle.preventResurrection(event, 'userId'),
+);
+exports.preventDeletedSupporterEntitlementResurrection = onDocumentWritten(
+  'supporter_entitlements/{userId}',
+  (event) => accountDeletionLifecycle.preventResurrection(event, 'userId'),
+);

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/legal_hub_screen.dart';
+import 'package:uag_arc_raiders_hub/features/legal/screens/privacy_data_screen.dart';
 import 'package:uag_arc_raiders_hub/features/profile/screens/profile_settings_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_help_centre_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_beta_feedback_screen.dart';
@@ -72,9 +73,10 @@ void main() {
         'Profile & Reputation',
         'Plans & Referrals',
         'Settings',
+        'Privacy & Data',
         'Help Centre',
         'Beta Feedback',
-        'Legal & Privacy',
+        'Legal',
       ]);
 
       expect(_item('Events').accessFlag, FeatureAccessFlag.raidPlanner);
@@ -149,6 +151,7 @@ void main() {
       expect(routeNames, contains(ArcMatchRiderScreen.routeName));
       expect(routeNames, contains(MyHubScreen.toolDeckRouteName));
       expect(routeNames, contains(ProfileSettingsScreen.routeName));
+      expect(routeNames, contains(UagPrivacyDataScreen.routeName));
       expect(routeNames, contains(ArcHelpCentreScreen.routeName));
       expect(routeNames, contains(ArcBetaFeedbackScreen.routeName));
       expect(routeNames, contains(LegalHubScreen.routeName));
