@@ -1,18 +1,18 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 	<dict>
-        <key>CFBundleURLTypes</key>
-        <array>
-            <dict>
-                <key>CFBundleTypeRole</key>
-                <string>Editor</string>
-                <key>CFBundleURLSchemes</key>
-                <array>
-                    <string>uag</string>
-                </array>
-            </dict>
-        </array>
+		<key>CFBundleURLTypes</key>
+		<array>
+			<dict>
+				<key>CFBundleTypeRole</key>
+				<string>Editor</string>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<string>uag</string>
+				</array>
+			</dict>
+		</array>
 		<key>CADisableMinimumFrameDurationOnPhone</key>
 		<true/>
 		<key>CFBundleDevelopmentRegion</key>
@@ -81,11 +81,13 @@
 		</array>
 		<key>UIStatusBarHidden</key>
 		<false/>
-	
-\t<key>NSCameraUsageDescription</key>
-\t<string>UAG uses the camera only to capture your ARC Raiders Blueprint grid for local ownership matching.</string>
-\t<key>NSPhotoLibraryUsageDescription</key>
-\t<string>UAG uses selected screenshots only to import your ARC Raiders Blueprint ownership.</string>
-</dict>
+		\t
+		<key>NSCameraUsageDescription</key>
+		\t
+		<string>UAG uses the camera only to capture your ARC Raiders Blueprint grid for local ownership matching.</string>
+		\t
+		<key>NSPhotoLibraryUsageDescription</key>
+		\t
+		<string>UAG uses selected screenshots only to import your ARC Raiders Blueprint ownership.</string>
+	</dict>
 </plist>
-
