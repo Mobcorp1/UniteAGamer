@@ -64,7 +64,7 @@ flutter_launcher_icons:
   adaptive_icon_background: "#0A0925"
 
 flutter_native_splash:
-  image: "assets/icon/uag_traders_icon_transparent.png"
+  image: "assets/icon/uag_traders_splash_safe.png"
   color: "#090529"
   android: true
   ios: true

@@ -97,7 +97,7 @@ class _UagCinematicLoadingScreenState extends State<UagCinematicLoadingScreen>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Image.asset(
-                      'assets/icon/uag_traders_icon_transparent.webp',
+                      'assets/icon/uag_traders_icon_transparent.png',
                       width: logoSize,
                       height: logoSize,
                       fit: BoxFit.contain,
