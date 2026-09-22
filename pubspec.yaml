@@ -69,6 +69,7 @@ flutter_native_splash:
   android: true
   ios: true
   android_12:
+    image: "assets/icon/uag_traders_android12_splash_safe.png"
     color: "#090529"
 
 flutter:

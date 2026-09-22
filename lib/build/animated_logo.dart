@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:uag_arc_raiders_hub/build/logo_particle_explosion.dart';
 
@@ -6,7 +6,7 @@ class AnimatedLogo extends StatefulWidget {
   const AnimatedLogo({
     super.key,
     this.size = 150,
-    this.assetPath = 'assets/icon/uag_traders_icon_transparent.webp',
+    this.assetPath = 'assets/icon/uag_traders_header_mark.png',
   });
 
   final double size;

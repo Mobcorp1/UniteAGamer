@@ -67,7 +67,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   ),
                   padding: const EdgeInsets.all(18),
                   child: Image.asset(
-                    'assets/icon/uag_traders_icon_transparent.webp',
+                    'assets/icon/uag_traders_header_mark.png',
                     fit: BoxFit.contain,
                     errorBuilder: (_, _, _) => const Icon(
                       Icons.swap_horiz_rounded,

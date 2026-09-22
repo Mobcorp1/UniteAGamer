@@ -1445,7 +1445,7 @@ class _AuthScreenState extends State<AuthScreen> {
         ),
         const SizedBox(width: 6),
         Image.asset(
-          'assets/icon/uag_traders_icon_transparent.webp',
+          'assets/icon/uag_traders_header_mark.png',
           width: phone ? 34 : 42,
           height: phone ? 34 : 42,
           errorBuilder: (_, _, _) =>

@@ -86,7 +86,7 @@ class _SplashScreenState extends State<SplashScreen> {
                     child: Padding(
                       padding: const EdgeInsets.all(22),
                       child: Image.asset(
-                        'assets/icon/uag_traders_icon_transparent.webp',
+                        'assets/icon/uag_traders_header_mark.png',
                         fit: BoxFit.contain,
                       ),
                     ),

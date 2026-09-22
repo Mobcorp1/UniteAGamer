@@ -155,7 +155,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             children: [
                               AnimatedLogo(
                                 assetPath:
-                                    'assets/icon/uag_traders_icon_transparent.webp',
+                                    'assets/icon/uag_traders_header_mark.png',
                                 size: compact ? 132 : 176,
                               ),
                               const SizedBox(height: 24),

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import 'package:uag_arc_raiders_hub/build/auth/auth_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
@@ -138,7 +138,7 @@ class _AuthLandingScreenState extends State<AuthLandingScreen>
       child: Row(
         children: [
           Image.asset(
-            'assets/icon/uag_traders_icon_transparent.webp',
+            'assets/icon/uag_traders_header_mark.png',
             width: compact ? 34 : 46,
             height: compact ? 34 : 46,
             errorBuilder: (_, _, _) => Icon(
@@ -629,4 +629,3 @@ class _TrustBadge extends StatelessWidget {
     );
   }
 }
-

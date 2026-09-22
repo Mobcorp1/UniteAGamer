@@ -182,7 +182,7 @@ class _AppDrawerState extends State<AppDrawer>
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
                     child: Image.asset(
-                      'assets/icon/uag_traders_icon_transparent.webp',
+                      'assets/icon/uag_traders_header_mark.png',
                       width: 44,
                       height: 44,
                       fit: BoxFit.cover,

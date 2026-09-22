@@ -639,7 +639,7 @@ class _OnboardingBasicProfileScreenState
 
   Widget _logoMark({double size = 82}) {
     return Image.asset(
-      'assets/icon/uag_traders_icon_transparent.webp',
+      'assets/icon/uag_traders_header_mark.png',
       height: size,
       errorBuilder: (_, _, _) => Icon(
         Icons.swap_horiz_rounded,

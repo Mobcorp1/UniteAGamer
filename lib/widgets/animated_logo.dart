@@ -6,7 +6,7 @@ class AnimatedLogo extends StatefulWidget {
   const AnimatedLogo({
     super.key,
     this.size = 150,
-    this.assetPath = 'assets/icon/uag_traders_icon_transparent.webp',
+    this.assetPath = 'assets/icon/uag_traders_header_mark.png',
   });
 
   final double size;
