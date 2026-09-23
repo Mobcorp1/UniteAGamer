@@ -14,7 +14,11 @@ void main() {
     expect(source, contains('_actionConsole(commandMoves, showHeader: false)'));
     expect(
       source,
-      contains('_systemCarousel(carouselTiles, showHeader: false)'),
+      contains('_systemCarousel(state, carouselTiles, showHeader: false)'),
+    );
+    expect(
+      source,
+      contains('_systemIntelligencePanel(state, tiles[activeIndex])'),
     );
     expect(source, contains('_seasonResetEntry(showTitle: false)'));
     expect(source, contains('bool showHeader = true'));

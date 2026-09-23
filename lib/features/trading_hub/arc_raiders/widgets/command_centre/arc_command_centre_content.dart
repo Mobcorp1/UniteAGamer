@@ -19,6 +19,8 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/services/ar
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/command_centre/arc_command_centre_widgets.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/command_centre/arc_command_centre_layout_policy.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/command_centre/arc_command_centre_progress_policy.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/command_centre/arc_command_system_detail_mapper.dart';
 import 'package:uag_arc_raiders_hub/widgets/arc_global_visual_system.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -103,7 +105,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
           widget.eventPreview!,
           const SizedBox(height: 8),
         ],
-        _featuresUtilityDeck(carouselTiles),
+        _featuresUtilityDeck(commandState, carouselTiles),
       ],
     );
   }
@@ -289,7 +291,10 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     );
   }
 
-  Widget _featuresUtilityDeck(List<_CommandTileData> carouselTiles) {
+  Widget _featuresUtilityDeck(
+    ArcCommandCentreState state,
+    List<_CommandTileData> carouselTiles,
+  ) {
     return LayoutBuilder(
       builder: (context, constraints) {
         if (constraints.maxWidth < 900) {
@@ -302,7 +307,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
                 icon: Icons.hub_rounded,
                 accent: AppTheme.neonCyan,
                 initiallyExpanded: false,
-                child: _systemCarousel(carouselTiles, showHeader: false),
+                child: _systemCarousel(state, carouselTiles, showHeader: false),
               ),
               const SizedBox(height: 8),
               _commandAccordion(
@@ -319,7 +324,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(flex: 9, child: _systemCarousel(carouselTiles)),
+            Expanded(flex: 9, child: _systemCarousel(state, carouselTiles)),
             const SizedBox(width: 10),
             Expanded(flex: 3, child: _seasonResetEntry()),
           ],
@@ -454,6 +459,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
   }
 
   Widget _systemCarousel(
+    ArcCommandCentreState state,
     List<_CommandTileData> tiles, {
     bool showHeader = true,
   }) {
@@ -528,17 +534,11 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
           }
 
           Widget compactRing() {
-            return Stack(
-              alignment: Alignment.center,
-              clipBehavior: Clip.none,
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Positioned.fill(
-                  left: 18,
-                  right: 18,
-                  child: _carouselCard(tiles[activeIndex], active: true),
-                ),
-                Positioned(
-                  left: 0,
+                Align(
+                  alignment: Alignment.center,
                   child: _featureArrow(
                     icon: Icons.chevron_left_rounded,
                     tooltip: 'Previous feature',
@@ -546,8 +546,13 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
                     onPressed: () => rotate(-1),
                   ),
                 ),
-                Positioned(
-                  right: 0,
+                const SizedBox(width: 6),
+                Expanded(
+                  child: _carouselCard(tiles[activeIndex], active: true),
+                ),
+                const SizedBox(width: 6),
+                Align(
+                  alignment: Alignment.center,
                   child: _featureArrow(
                     icon: Icons.chevron_right_rounded,
                     tooltip: 'Next feature',
@@ -586,9 +591,130 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
               ring,
               const SizedBox(height: 5),
               _featureRingIndicator(tiles.length, activeIndex),
+              const SizedBox(height: 8),
+              _systemIntelligencePanel(state, tiles[activeIndex]),
             ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _systemIntelligencePanel(
+    ArcCommandCentreState state,
+    _CommandTileData tile,
+  ) {
+    final panel = ArcCommandSystemDetailMapper.panelFor(
+      state: state,
+      title: tile.title,
+      value: tile.value,
+      detail: tile.detail,
+      status: tile.status,
+      action: tile.action,
+    );
+    final accent = arcCommandStatusAccent(panel.status);
+    final details = <String>[
+      for (final detail in panel.details)
+        if (_isUsefulSummaryDetail(detail)) _cleanText(detail),
+    ].take(3).toList(growable: false);
+    final body = _cleanText(panel.body).trim();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(11, 10, 11, 10),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.30),
+        borderRadius: BorderRadius.circular(13),
+        border: Border.all(color: accent.withValues(alpha: 0.30)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.analytics_outlined, color: accent, size: 16),
+              const SizedBox(width: 7),
+              Expanded(
+                child: Text(
+                  'SYSTEM INTELLIGENCE',
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 9,
+                    color: accent,
+                    isBold: true,
+                  ).copyWith(letterSpacing: .8),
+                ),
+              ),
+              ArcCommandStatusPill(
+                label: panel.statusLabel.isEmpty
+                    ? tile.value
+                    : panel.statusLabel,
+                status: panel.status,
+              ),
+            ],
+          ),
+          const SizedBox(height: 7),
+          Text(
+            _cleanText(tile.title),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTheme.tradingHeading(fontSize: 14, color: Colors.white),
+          ),
+          if (body.isNotEmpty) ...[
+            const SizedBox(height: 3),
+            Text(
+              _shortActionText(body),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AppTheme.bodyTextStyle(
+                fontSize: 10,
+                color: Colors.white70,
+              ).copyWith(height: 1.2),
+            ),
+          ],
+          if (details.isNotEmpty) ...[
+            const SizedBox(height: 7),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                for (final detail in details)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: accent.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: accent.withValues(alpha: 0.20)),
+                    ),
+                    child: Text(
+                      detail,
+                      style: AppTheme.bodyTextStyle(
+                        fontSize: 8.5,
+                        color: Colors.white70,
+                        isBold: true,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ],
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerRight,
+            child: Text(
+              _cleanText(tile.action.label).toUpperCase(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTheme.bodyTextStyle(
+                fontSize: 9,
+                color: accent,
+                isBold: true,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -752,8 +878,12 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     }) {
       final resolvedProgress =
           progressPercent ??
-          _progressForMove(status: status, label: label, detail: detail);
-      if (resolvedProgress >= 100 || status == ArcCommandStatus.success) {
+          ArcCommandCentreProgressPolicy.measuredPercent(
+            status: status,
+            label: label,
+            detail: detail,
+          );
+      if (resolvedProgress == 100 || status == ArcCommandStatus.success) {
         return;
       }
       final key = '${title.toLowerCase()}|${action.intent}|${action.routeName}';
@@ -957,10 +1087,13 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
   }
 
   Widget _moveProgressIndicator(_CommandMoveData move) {
-    final progress = (move.progressPercent.clamp(0, 100)) / 100;
+    final progressPercent = move.progressPercent;
+    final progress = progressPercent == null
+        ? null
+        : progressPercent.clamp(0, 100) / 100;
     return SizedBox(
-      width: 28,
-      height: 28,
+      width: 30,
+      height: 30,
       child: Stack(
         alignment: Alignment.center,
         children: [
@@ -970,43 +1103,20 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
             backgroundColor: Colors.black.withValues(alpha: 0.36),
             color: move.accent,
           ),
-          Text(
-            '${move.progressPercent.clamp(0, 100)}',
-            style: AppTheme.bodyTextStyle(
-              fontSize: 7,
-              color: Colors.white.withValues(alpha: 0.90),
-              isBold: true,
-            ),
-          ),
+          if (progressPercent != null)
+            Text(
+              '${progressPercent.clamp(0, 100)}',
+              style: AppTheme.bodyTextStyle(
+                fontSize: 7,
+                color: Colors.white.withValues(alpha: 0.90),
+                isBold: true,
+              ),
+            )
+          else
+            Icon(move.icon, size: 13, color: move.accent),
         ],
       ),
     );
-  }
-
-  int _progressForMove({
-    required ArcCommandStatus status,
-    required String label,
-    required String detail,
-  }) {
-    final text = '$label $detail'.toLowerCase();
-    final percentMatch = RegExp(r'(\d{1,3})\s*%').firstMatch(text);
-    if (percentMatch != null) {
-      return (int.tryParse(percentMatch.group(1) ?? '') ?? 0).clamp(0, 100);
-    }
-    final fractionMatch = RegExp(r'(\d+)\s*/\s*(\d+)').firstMatch(text);
-    if (fractionMatch != null) {
-      final current = int.tryParse(fractionMatch.group(1) ?? '') ?? 0;
-      final target = int.tryParse(fractionMatch.group(2) ?? '') ?? 0;
-      if (target > 0) return ((current / target) * 100).round().clamp(0, 100);
-    }
-    return switch (status) {
-      ArcCommandStatus.success => 100,
-      ArcCommandStatus.ready => 86,
-      ArcCommandStatus.active => 62,
-      ArcCommandStatus.warning => 38,
-      ArcCommandStatus.critical => 18,
-      ArcCommandStatus.neutral => 24,
-    };
   }
 
   List<_CommandTileData> _systemCarouselTiles(ArcCommandCentreState state) {
@@ -1722,7 +1832,7 @@ class _CommandMoveData {
   final IconData icon;
   final Color accent;
   final String image;
-  final int progressPercent;
+  final int? progressPercent;
 }
 
 class _CommandTileData {

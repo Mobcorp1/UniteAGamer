@@ -13,9 +13,9 @@ class ArcCommandCentreLayoutPolicy {
     return 1;
   }
 
-  static double moveTileHeight(double width) => width < 520 ? 104 : 96;
+  static double moveTileHeight(double width) => width < 520 ? 112 : 102;
 
-  static double dailyTileHeight(double width) => width < 430 ? 78 : 74;
+  static double dailyTileHeight(double width) => width < 430 ? 86 : 80;
 
-  static double systemRingHeight(double width) => width < 620 ? 164 : 160;
+  static double systemRingHeight(double width) => width < 620 ? 170 : 164;
 }

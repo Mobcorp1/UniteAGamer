@@ -67,5 +67,11 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.text('ARC SYSTEMS'), findsOneWidget);
     expect(find.text('FEATURES'), findsNothing);
+
+    await tester.tap(find.text('ARC SYSTEMS'));
+    await tester.pump(const Duration(milliseconds: 250));
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('SYSTEM INTELLIGENCE'), findsOneWidget);
   });
 }

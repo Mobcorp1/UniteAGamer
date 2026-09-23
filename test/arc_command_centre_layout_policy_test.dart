@@ -21,17 +21,17 @@ void main() {
     });
 
     test('compact cards reserve enough vertical space for their content', () {
-      expect(ArcCommandCentreLayoutPolicy.moveTileHeight(390), 104);
-      expect(ArcCommandCentreLayoutPolicy.moveTileHeight(520), 96);
-      expect(ArcCommandCentreLayoutPolicy.dailyTileHeight(390), 78);
-      expect(ArcCommandCentreLayoutPolicy.dailyTileHeight(430), 74);
+      expect(ArcCommandCentreLayoutPolicy.moveTileHeight(390), 112);
+      expect(ArcCommandCentreLayoutPolicy.moveTileHeight(520), 102);
+      expect(ArcCommandCentreLayoutPolicy.dailyTileHeight(390), 86);
+      expect(ArcCommandCentreLayoutPolicy.dailyTileHeight(430), 80);
     });
 
     test('systems ring stays compact across mobile and desktop widths', () {
-      expect(ArcCommandCentreLayoutPolicy.systemRingHeight(390), 164);
-      expect(ArcCommandCentreLayoutPolicy.systemRingHeight(619), 164);
-      expect(ArcCommandCentreLayoutPolicy.systemRingHeight(620), 160);
-      expect(ArcCommandCentreLayoutPolicy.systemRingHeight(1280), 160);
+      expect(ArcCommandCentreLayoutPolicy.systemRingHeight(390), 170);
+      expect(ArcCommandCentreLayoutPolicy.systemRingHeight(619), 170);
+      expect(ArcCommandCentreLayoutPolicy.systemRingHeight(620), 164);
+      expect(ArcCommandCentreLayoutPolicy.systemRingHeight(1280), 164);
     });
   });
 }
