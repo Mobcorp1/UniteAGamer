@@ -18,6 +18,13 @@ void main() {
       'loot_combat_supply': 'combat_supply.webp',
       'access_key_room': 'key_room.webp',
       'access_breach_room': 'breach_room.webp',
+      'nature_agave': 'nature_agave.webp',
+      'nature_apricot': 'nature_apricot.webp',
+      'nature_great_mullein': 'nature_great_mullein.webp',
+      'nature_lemon': 'nature_lemon.webp',
+      'nature_mushroom': 'nature_mushroom.webp',
+      'nature_olives': 'nature_olives.webp',
+      'nature_prickly_pear': 'nature_prickly_pear.webp',
       'community_report_rat': 'rat.webp',
       'community_hunt_rat': 'hunt_a_rat.webp',
     };
@@ -107,5 +114,27 @@ void main() {
       ArcAdminMarkerVisualRegistry.assetPathForSubtype('mushroom'),
       'assets/arc_raiders/scrappy_resources/mushrooms.webp',
     );
+  });
+
+  test('PASS 355 nature taxonomy resolves dedicated map-filter artwork', () {
+    const expected = <String, String>{
+      'agave': 'nature_agave.webp',
+      'apricot': 'nature_apricot.webp',
+      'great_mullein': 'nature_great_mullein.webp',
+      'lemon': 'nature_lemon.webp',
+      'mushroom': 'nature_mushroom.webp',
+      'olives': 'nature_olives.webp',
+      'prickly_pear': 'nature_prickly_pear.webp',
+    };
+
+    for (final entry in expected.entries) {
+      final taxonomy = ArcMapFilterTaxonomy.byId(entry.key);
+      expect(taxonomy, isNotNull, reason: entry.key);
+      expect(
+        ArcMapFilterIconRegistry.tryAssetPathFor(taxonomy!.iconKey),
+        '${ArcMapFilterIconRegistry.assetDirectory}/${entry.value}',
+        reason: entry.key,
+      );
+    }
   });
 }

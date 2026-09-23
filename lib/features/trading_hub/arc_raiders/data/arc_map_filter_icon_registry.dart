@@ -64,6 +64,13 @@ class ArcMapFilterIconRegistry {
     'arc_turret': 'arc_turret.webp',
     'arc_vaporizer': 'arc_vaporizer.webp',
     'arc_wasp': 'arc_wasp.webp',
+    'nature_agave': 'nature_agave.webp',
+    'nature_apricot': 'nature_apricot.webp',
+    'nature_great_mullein': 'nature_great_mullein.webp',
+    'nature_lemon': 'nature_lemon.webp',
+    'nature_mushroom': 'nature_mushroom.webp',
+    'nature_olives': 'nature_olives.webp',
+    'nature_prickly_pear': 'nature_prickly_pear.webp',
     communityReportRatIconKey: 'rat.webp',
     communityHuntRatIconKey: 'hunt_a_rat.webp',
   };
