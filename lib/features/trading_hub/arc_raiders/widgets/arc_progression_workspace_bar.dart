@@ -2,7 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
-enum ArcProgressionWorkspace { overview, scrappy, bench, quest, hunts }
+enum ArcProgressionWorkspace {
+  overview,
+  scrappy,
+  bench,
+  quest,
+  crafting,
+  hunts,
+}
 
 extension ArcProgressionWorkspaceDetails on ArcProgressionWorkspace {
   String get label {
@@ -15,6 +22,8 @@ extension ArcProgressionWorkspaceDetails on ArcProgressionWorkspace {
         return 'Bench';
       case ArcProgressionWorkspace.quest:
         return 'Quests';
+      case ArcProgressionWorkspace.crafting:
+        return 'Crafting';
       case ArcProgressionWorkspace.hunts:
         return 'Hunt Targets';
     }
@@ -30,6 +39,8 @@ extension ArcProgressionWorkspaceDetails on ArcProgressionWorkspace {
         return Icons.build_rounded;
       case ArcProgressionWorkspace.quest:
         return Icons.assignment_rounded;
+      case ArcProgressionWorkspace.crafting:
+        return Icons.handyman_rounded;
       case ArcProgressionWorkspace.hunts:
         return Icons.my_location_rounded;
     }
@@ -45,6 +56,8 @@ extension ArcProgressionWorkspaceDetails on ArcProgressionWorkspace {
         return '/trading-hub/arc-raiders/bench';
       case ArcProgressionWorkspace.quest:
         return '/trading-hub/arc-raiders/quests';
+      case ArcProgressionWorkspace.crafting:
+        return '/trading-hub/arc-raiders/crafting';
       case ArcProgressionWorkspace.hunts:
         return '/trading-hub/arc-raiders/raid-planner/hunt-targets';
     }
@@ -54,8 +67,8 @@ extension ArcProgressionWorkspaceDetails on ArcProgressionWorkspace {
 /// Compact navigation across the progression and tracker family.
 ///
 /// This bar is intentionally navigation-only. It does not duplicate resource,
-/// bench, quest, Blueprint hunt or progression summaries; those stay on their
-/// existing source-of-truth screens until the later screen-by-screen audit.
+/// bench, quest, crafting, Blueprint hunt or progression summaries; those stay
+/// on their source-of-truth screens.
 class ArcProgressionWorkspaceBar extends StatelessWidget {
   const ArcProgressionWorkspaceBar({
     super.key,

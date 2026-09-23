@@ -12,7 +12,7 @@ void main() {
     );
 
     expect(source, contains('enum ArcProgressionWorkspace'));
-    expect(source, contains('overview, scrappy, bench, quest, hunts'));
+    expect(source, contains('crafting'));
     expect(
       source,
       contains("return '/trading-hub/arc-raiders/progress-trackers';"),
@@ -20,6 +20,7 @@ void main() {
     expect(source, contains("return '/trading-hub/arc-raiders/scrappy';"));
     expect(source, contains("return '/trading-hub/arc-raiders/bench';"));
     expect(source, contains("return '/trading-hub/arc-raiders/quests';"));
+    expect(source, contains("return '/trading-hub/arc-raiders/crafting';"));
     expect(
       source,
       contains("return '/trading-hub/arc-raiders/raid-planner/hunt-targets';"),
@@ -38,6 +39,7 @@ void main() {
     expect(source, contains('ArcProgressionWorkspaceBar('));
     expect(source, contains('ArcProgressionWorkspace.overview'));
     expect(source, contains('FeatureAccess.watchAvailabilityMap'));
+    expect(source, contains('Crafting Planner'));
   });
 
   test(
@@ -59,6 +61,18 @@ void main() {
     },
   );
 
+  test('crafting joins tracker family as its own workspace', () {
+    final source = read(
+      'lib/features/trading_hub/arc_raiders/screens/'
+      'arc_crafting_planner_screen.dart',
+    );
+    expect(source, contains('ArcProgressionWorkspace.crafting'));
+    expect(source, contains('planForFavouriteLoadout'));
+    expect(source, contains('recyclables.length'));
+    expect(source, contains('SmartTradeAssistScreen.routeName'));
+    expect(source, contains('ArcRaidIntelligenceScreen.routeName'));
+  });
+
   test('hunt targets joins tracker family without replacing hunt logic', () {
     final source = read(
       'lib/features/trading_hub/arc_raiders/raid_planner/screens/'
@@ -72,17 +86,15 @@ void main() {
     expect(source, contains('_saveBlueprintStates('));
   });
 
-  test(
-    'tracker family convergence stays navigation-only ahead of de-dup audit',
-    () {
-      final overview = read(
-        'lib/features/trading_hub/arc_raiders/screens/'
-        'arc_progress_trackers_screen.dart',
-      );
-      expect(overview, contains('Scrappy Tracker'));
-      expect(overview, contains('Bench Tracker'));
-      expect(overview, contains('Quest Tracker'));
-      expect(overview, contains('Hunt Targets'));
-    },
-  );
+  test('tracker family convergence stays navigation-only', () {
+    final overview = read(
+      'lib/features/trading_hub/arc_raiders/screens/'
+      'arc_progress_trackers_screen.dart',
+    );
+    expect(overview, contains('Scrappy Tracker'));
+    expect(overview, contains('Bench Tracker'));
+    expect(overview, contains('Quest Tracker'));
+    expect(overview, contains('Crafting Planner'));
+    expect(overview, contains('Hunt Targets'));
+  });
 }

@@ -71,7 +71,6 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
   ArcScrappyFilter _selectedFilter = ArcScrappyFilter.all;
   late ArcScrappyTrackerMode _mode;
   bool _showFeedScrappy = false;
-  String _feedGoal = 'Overall';
   String? _selectedBenchCategory;
   int _trackerCarouselIndex = 0;
 
@@ -816,10 +815,8 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
           ),
           const SizedBox(height: 7),
           _buildScrappyFeedTabs(),
-          const SizedBox(height: 6),
-          if (_showFeedScrappy)
-            _buildFeedGoalBar()
-          else
+          if (!_showFeedScrappy) ...[
+            const SizedBox(height: 6),
             ScrappyFilterBar(
               selectedFilter: _selectedFilter,
               counts: counts,
@@ -827,43 +824,8 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                 setState(() => _selectedFilter = filter);
               },
             ),
+          ],
         ],
-      ),
-    );
-  }
-
-  Widget _buildFeedGoalBar() {
-    return SizedBox(
-      height: 32,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: ScrappyFeedQueueSection.goals.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 6),
-        itemBuilder: (_, index) {
-          final goal = ScrappyFeedQueueSection.goals[index];
-          final selected = goal == _feedGoal;
-          return ChoiceChip(
-            selected: selected,
-            showCheckmark: false,
-            visualDensity: VisualDensity.compact,
-            label: Text(goal.toUpperCase()),
-            labelStyle: TextStyle(
-              color: selected
-                  ? ArcUiTokens.background
-                  : ArcUiTokens.textSecondary,
-              fontSize: 10,
-              fontWeight: FontWeight.w900,
-            ),
-            selectedColor: ArcUiTokens.primaryAccent,
-            backgroundColor: Colors.black.withValues(alpha: 0.56),
-            side: BorderSide(
-              color: selected
-                  ? ArcUiTokens.primaryAccent
-                  : Colors.white.withValues(alpha: 0.12),
-            ),
-            onSelected: (_) => setState(() => _feedGoal = goal),
-          );
-        },
       ),
     );
   }
@@ -879,10 +841,10 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
       required VoidCallback onTap,
       required IconData icon,
     }) {
-      final color = selected
-          ? ArcUiTokens.secondaryAccent
-          : ArcUiTokens.primaryAccent;
-      final foreground = selected ? ArcUiTokens.background : color;
+      final color = ArcUiTokens.primaryAccent;
+      final foreground = selected
+          ? ArcUiTokens.primaryAccent
+          : ArcUiTokens.textSecondary;
 
       return Expanded(
         child: InkWell(
@@ -1980,17 +1942,13 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                     totalCount: progressItems.length,
                     landscape: landscape,
                     title: _showFeedScrappy
-                        ? (completion >= 1
-                              ? 'Scrappy upgrades complete'
-                              : 'Scrappy upgrade progress')
+                        ? 'Feed Scrappy'
                         : 'Scrappy tracker progress',
                     description: _showFeedScrappy
-                        ? (completion >= 1
-                              ? 'Feed bonuses stay useful after Scrappy upgrades are complete.'
-                              : 'Feed choices target the reward pool you actually want.')
+                        ? 'Food options only. Crafting goals now live in Crafting Planner.'
                         : 'Live completion across Scrappy upgrade materials.',
                     accentColor: _showFeedScrappy
-                        ? AppTheme.neonPink
+                        ? ArcUiTokens.primaryAccent
                         : _modeAccent(),
                   ),
                   const SizedBox(height: 6),
@@ -2014,11 +1972,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                 ],
                 if (_mode == ArcScrappyTrackerMode.scrappy &&
                     _showFeedScrappy) ...[
-                  ScrappyFeedQueueSection(
-                    goal: _feedGoal,
-                    onGoalChanged: (goal) => setState(() => _feedGoal = goal),
-                    showGoalBar: false,
-                  ),
+                  const ScrappyFeedQueueSection(),
                   const SizedBox(height: AppTheme.spaceS),
                 ] else ...[
                   if (_mode == ArcScrappyTrackerMode.quest) ...[

@@ -3,6 +3,7 @@ import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_hunt_targets_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_crafting_planner_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_progression_workspace_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
@@ -21,7 +22,7 @@ class ArcProgressTrackersScreen extends StatelessWidget {
       backgroundColor: Colors.transparent,
       appBar: const UagAppBar(
         title: 'Progress Trackers',
-        subtitle: 'Scrappy, bench, quest and hunt target routing',
+        subtitle: 'Scrappy, bench, quest, crafting and hunt target routing',
         showLogout: true,
       ),
       drawer: const AppDrawer(),
@@ -207,6 +208,16 @@ const _trackerLinks = <_TrackerLinkDefinition>[
     routeName: ScrappyGridScreen.questRouteName,
     accessFlag: FeatureAccessFlag.questTracker,
     heroAsset: 'assets/arc_raiders/hub/arc_hub_quest_tracker.webp',
+  ),
+  _TrackerLinkDefinition(
+    title: 'Crafting Planner',
+    subtitle:
+        'Calculate recipes, recycling returns and full loadout material chains.',
+    icon: Icons.handyman_rounded,
+    accent: ArcUiTokens.primaryAccent,
+    routeName: ArcCraftingPlannerScreen.routeName,
+    accessFlag: FeatureAccessFlag.benchTracker,
+    heroAsset: 'assets/arc_raiders/operations/upgrade_gunsmith_card.webp',
   ),
   _TrackerLinkDefinition(
     title: 'Hunt Targets',

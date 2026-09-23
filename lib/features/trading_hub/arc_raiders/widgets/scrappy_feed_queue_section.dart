@@ -3,301 +3,110 @@ import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_scrappy_food_queue_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_food_queue_item.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
-import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
-class ScrappyFeedQueueSection extends StatefulWidget {
-  const ScrappyFeedQueueSection({
-    super.key,
-    this.goal,
-    this.onGoalChanged,
-    this.showGoalBar = true,
-  });
+class ScrappyFeedQueueSection extends StatelessWidget {
+  const ScrappyFeedQueueSection({super.key});
 
-  final String? goal;
-  final ValueChanged<String>? onGoalChanged;
-  final bool showGoalBar;
-
-  static const goals = [
-    'Overall',
-    'Gunsmith',
-    'Explosives',
-    'Gear',
-    'Medical',
-    'Utility',
-    'Mods',
-  ];
-
-  @override
-  State<ScrappyFeedQueueSection> createState() =>
-      _ScrappyFeedQueueSectionState();
-}
-
-class _ScrappyFeedQueueSectionState extends State<ScrappyFeedQueueSection> {
-  String _goal = 'Overall';
-
-  String get _activeGoal => widget.goal ?? _goal;
-
-  List<ArcScrappyFoodQueueItem> get _ranked {
-    final items = [...ArcScrappyFoodQueueData.items];
-    items.sort((a, b) => b.intelRank.compareTo(a.intelRank));
-
-    if (_activeGoal == 'Overall') {
-      return items;
-    }
-
-    final targeted = items
-        .where((item) => item.goals.contains(_activeGoal))
-        .toList(growable: true);
-    final fruitMix = items.where((item) => item.id == 'fruit-mix');
-
-    for (final item in fruitMix) {
-      if (!targeted.any((candidate) => candidate.id == item.id)) {
-        targeted.add(item);
-      }
-    }
-
-    return targeted;
-  }
+  static const goals = ['Feed'];
 
   @override
   Widget build(BuildContext context) {
-    final ranked = _ranked;
+    final items = [...ArcScrappyFoodQueueData.items]
+      ..sort((a, b) => b.intelRank.compareTo(a.intelRank));
+
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 720),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (widget.showGoalBar)
-              Container(
-                padding: const EdgeInsets.fromLTRB(8, 7, 8, 8),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      ArcUiTokens.primaryAccent.withValues(alpha: .08),
-                      ArcUiTokens.secondaryAccent.withValues(alpha: .05),
-                      ArcUiTokens.surfacePanel.withValues(alpha: .70),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
-                  border: Border.all(
-                    color: ArcUiTokens.primaryAccent.withValues(alpha: .16),
-                  ),
-                ),
-                child: SizedBox(
-                  height: 34,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: ScrappyFeedQueueSection.goals.length,
-                    separatorBuilder: (_, _) => const SizedBox(width: 6),
-                    itemBuilder: (_, i) {
-                      final goal = ScrappyFeedQueueSection.goals[i],
-                          selected = goal == _activeGoal;
-                      return ChoiceChip(
-                        selected: selected,
-                        showCheckmark: false,
-                        visualDensity: VisualDensity.compact,
-                        label: Text(goal.toUpperCase()),
-                        labelStyle: TextStyle(
-                          color: selected
-                              ? ArcUiTokens.background
-                              : ArcUiTokens.textSecondary,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w900,
-                        ),
-                        selectedColor: ArcUiTokens.primaryAccent,
-                        backgroundColor: ArcUiTokens.surfacePanel,
-                        side: BorderSide(
-                          color: selected
-                              ? ArcUiTokens.primaryAccent
-                              : Colors.white.withValues(alpha: .10),
-                        ),
-                        onSelected: (_) {
-                          if (widget.onGoalChanged != null) {
-                            widget.onGoalChanged!(goal);
-                          } else {
-                            setState(() => _goal = goal);
-                          }
-                        },
-                      );
-                    },
-                  ),
-                ),
-              ),
-            if (widget.showGoalBar) const SizedBox(height: 8),
             Text(
-              _activeGoal == 'Overall'
-                  ? 'All feed options, ranked for broad value.'
-                  : 'Only the direct $_activeGoal reward food is shown, with Fruit Mix as the broad fallback.',
+              'Feed Scrappy only. Crafting goals, workbench recipes and material '
+              'planning now live in Crafting Planner.',
               style: ArcUiTokens.metadata(color: ArcUiTokens.textTertiary),
             ),
-            const SizedBox(height: 6),
-            _hero(ranked.first),
             const SizedBox(height: 8),
-            for (var i = 1; i < ranked.length; i++)
+            for (final item in items)
               Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: _row(ranked[i], i + 1),
+                padding: const EdgeInsets.only(bottom: 7),
+                child: _FeedItemCard(item: item),
               ),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _hero(ArcScrappyFoodQueueItem item) => Container(
-    padding: const EdgeInsets.fromLTRB(10, 9, 10, 9),
-    decoration: ArcUiTokens.surfaceDecoration(
-      role: ArcSurfaceRole.raised,
-      radius: ArcUiTokens.radiusM,
-      accent: ArcUiTokens.primaryAccent,
-      borderOpacity: .48,
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            _image(item, 50),
-            const SizedBox(width: 9),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          _activeGoal == 'Overall'
-                              ? 'GENERAL FEED PICK'
-                              : '${_activeGoal.toUpperCase()} REWARD PICK',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: ArcUiTokens.label(
-                            color: ArcUiTokens.primaryAccent,
-                          ),
-                        ),
-                      ),
-                      _pill('#1'),
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    item.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: ArcUiTokens.sectionTitle(fontSize: 18),
-                  ),
-                ],
+class _FeedItemCard extends StatelessWidget {
+  const _FeedItemCard({required this.item});
+
+  final ArcScrappyFoodQueueItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        radius: ArcUiTokens.radiusM,
+        accent: ArcUiTokens.primaryAccent,
+        borderOpacity: .18,
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: ArcUiTokens.surfaceRaised,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: ArcUiTokens.primaryAccent.withValues(alpha: .18),
               ),
             ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        Text(
-          '${item.resourceBonus}  ${String.fromCharCode(0x2022)}  ${item.rewardPool}',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: ArcUiTokens.metadata(color: ArcUiTokens.textSecondary),
-        ),
-        const SizedBox(height: 3),
-        Text(
-          item.highlights.join('  ${String.fromCharCode(0x2022)}  '),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: ArcUiTokens.metadata(color: ArcUiTokens.success),
-        ),
-        if ((item.hint ?? '').isNotEmpty) ...[
-          const SizedBox(height: 3),
-          Text(
-            item.hint!,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: ArcUiTokens.metadata(color: ArcUiTokens.textTertiary),
+            child: Image.asset(
+              item.imageAsset,
+              fit: BoxFit.contain,
+              filterQuality: FilterQuality.high,
+              errorBuilder: (_, _, _) => const Icon(
+                Icons.restaurant_rounded,
+                color: ArcUiTokens.textTertiary,
+              ),
+            ),
           ),
-        ],
-      ],
-    ),
-  );
-
-  Widget _row(ArcScrappyFoodQueueItem item, int rank) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-    decoration: ArcUiTokens.surfaceDecoration(
-      role: ArcSurfaceRole.interactive,
-      radius: ArcUiTokens.radiusS,
-      accent: ArcUiTokens.secondaryAccent,
-      borderOpacity: .12,
-    ),
-    child: Row(
-      children: [
-        _image(item, 38),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      item.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: ArcUiTokens.cardTitle(fontSize: 12.5),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.name,
+                  style: ArcUiTokens.cardTitle(
+                    fontSize: 14,
+                    color: ArcUiTokens.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  'SCRAPPY FEED ITEM',
+                  style: ArcUiTokens.metadata(color: ArcUiTokens.primaryAccent),
+                ),
+                if ((item.hint ?? '').isNotEmpty) ...[
+                  const SizedBox(height: 3),
+                  Text(
+                    item.hint!,
+                    style: ArcUiTokens.metadata(
+                      color: ArcUiTokens.textSecondary,
                     ),
                   ),
-                  _pill('#$rank'),
                 ],
-              ),
-              const SizedBox(height: 2),
-              Text(
-                '${item.resourceBonus}  ${String.fromCharCode(0x2022)}  ${item.rewardPool}',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: ArcUiTokens.metadata(color: ArcUiTokens.textSecondary),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                item.highlights.join('  ${String.fromCharCode(0x2022)}  '),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: ArcUiTokens.metadata(color: ArcUiTokens.textTertiary),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ],
-    ),
-  );
-
-  Widget _image(ArcScrappyFoodQueueItem item, double size) => Container(
-    width: size,
-    height: size,
-    padding: const EdgeInsets.all(4),
-    decoration: BoxDecoration(
-      color: ArcUiTokens.surfaceRaised,
-      borderRadius: BorderRadius.circular(7),
-      border: Border.all(color: Colors.white.withValues(alpha: .10)),
-    ),
-    child: Image.asset(
-      item.imageAsset,
-      fit: BoxFit.contain,
-      filterQuality: FilterQuality.high,
-      errorBuilder: (_, _, _) =>
-          const Icon(Icons.restaurant_rounded, color: Colors.white38),
-    ),
-  );
-
-  Widget _pill(String text) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-    decoration: AppTheme.tradingPillDecoration(
-      color: ArcUiTokens.primaryAccent,
-    ),
-    child: Text(
-      text,
-      style: ArcUiTokens.metadata(color: ArcUiTokens.primaryAccent),
-    ),
-  );
+        ],
+      ),
+    );
+  }
 }

@@ -7,31 +7,37 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/scr
 void main() {
   String source(String path) => File(path).readAsStringSync();
 
-  test('Scrappy feed filters are direct reward-pool choices', () {
-    expect(ScrappyFeedQueueSection.goals, const [
-      'Overall',
-      'Gunsmith',
-      'Explosives',
-      'Gear',
-      'Medical',
-      'Utility',
-      'Mods',
-    ]);
+  test(
+    'Scrappy feed is feed-only and no longer carries crafting station goals',
+    () {
+      expect(ScrappyFeedQueueSection.goals, const ['Feed']);
+      expect(ArcScrappyFoodQueueData.items, isNotEmpty);
 
-    final fruitMix = ArcScrappyFoodQueueData.items.singleWhere(
-      (item) => item.id == 'fruit-mix',
-    );
-    expect(fruitMix.goals, const ['Overall']);
+      for (final item in ArcScrappyFoodQueueData.items) {
+        expect(item.goals, const ['Feed']);
+        expect(item.rewardPool, 'Scrappy');
+        expect(item.resourceBonus, 'FEED ITEM');
+      }
 
-    for (final goal in ScrappyFeedQueueSection.goals.skip(1)) {
-      final direct = ArcScrappyFoodQueueData.items
-          .where((item) => item.goals.contains(goal))
-          .toList();
-      expect(direct, hasLength(1), reason: goal);
-    }
-  });
+      final text = source(
+        'lib/features/trading_hub/arc_raiders/widgets/'
+        'scrappy_feed_queue_section.dart',
+      );
+      for (final oldGoal in const [
+        'Gunsmith',
+        'Explosives',
+        'Gear',
+        'Medical',
+        'Utility',
+        'Mods',
+      ]) {
+        expect(text, isNot(contains("'$oldGoal'")));
+      }
+      expect(text, contains('Crafting Planner'));
+    },
+  );
 
-  test('Progress Tracker landing reuses existing hub hero assets', () {
+  test('Progress Tracker landing reuses existing hero assets', () {
     final text = source(
       'lib/features/trading_hub/arc_raiders/screens/'
       'arc_progress_trackers_screen.dart',
@@ -41,6 +47,7 @@ void main() {
       'assets/arc_raiders/hub/arc_hub_scrappy_tracker.webp',
       'assets/arc_raiders/hub/arc_hub_bench_tracker.webp',
       'assets/arc_raiders/hub/arc_hub_quest_tracker.webp',
+      'assets/arc_raiders/operations/upgrade_gunsmith_card.webp',
       'assets/arc_raiders/hub/arc_hub_hunt_targets.webp',
     ]) {
       expect(text, contains(asset), reason: asset);
@@ -74,15 +81,14 @@ void main() {
     expect(text, contains('UagAdPolicy.free'));
   });
 
-  test('Scrappy tracker removes the old 120px dead bottom padding', () {
+  test('Scrappy tracker keeps compact bottom padding and feed-only copy', () {
     final text = source(
       'lib/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart',
     );
     expect(text, isNot(contains('bottomPadding: 120')));
     expect(text, contains('bottomPadding: 36'));
-    expect(
-      text,
-      contains('Feed bonuses stay useful after Scrappy upgrades are complete.'),
-    );
+    expect(text, contains("'Feed Scrappy'"));
+    expect(text, contains('Crafting Planner'));
+    expect(text, isNot(contains('_buildFeedGoalBar()')));
   });
 }
