@@ -9,12 +9,14 @@ void main() {
       estimatedMinutes: 18,
       opportunityCount: 3,
       blueprintTargetCount: 4,
+      objectiveTargetCount: 3,
       averageConfidence: 78,
       efficiencyScore: 86,
       riskLabel: 'Compact route',
     );
     expect(metrics.hasData, isTrue);
     expect(metrics.blueprintTargetCount, 4);
+    expect(metrics.objectiveTargetCount, 3);
     expect(metrics.riskLabel, 'Compact route');
   });
 }

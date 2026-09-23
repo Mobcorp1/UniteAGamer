@@ -27,7 +27,7 @@ void main() {
         ),
         contains(target.id),
       );
-      expect(intelligence.statusLabel, 'Generate a run');
+      expect(intelligence.statusLabel, 'Generate a smart run');
       expect(
         intelligence.visibleMarkers.any((marker) => marker.count > 0),
         isTrue,

@@ -82,6 +82,7 @@ class ArcRaidIntelligenceRepository {
         'estimatedMinutes': route.metrics.estimatedMinutes,
         'opportunityCount': route.metrics.opportunityCount,
         'blueprintTargetCount': route.metrics.blueprintTargetCount,
+        'objectiveTargetCount': route.metrics.objectiveTargetCount,
         'averageConfidence': route.metrics.averageConfidence,
         'efficiencyScore': route.metrics.efficiencyScore,
         'riskLabel': route.metrics.riskLabel,
@@ -112,6 +113,7 @@ class ArcRaidIntelligenceRepository {
       'clusterId': stop.clusterId,
       'markerId': stop.markerId,
       'blueprintIds': stop.blueprintIds,
+      'objectiveIds': stop.objectiveIds,
       'state': stop.state.name,
       'reason': stop.reason,
       'point': stop.point.toMap(),
@@ -173,6 +175,10 @@ class ArcRaidIntelligenceRepository {
           .map((item) => item.toString())
           .where((item) => item.trim().isNotEmpty)
           .toList(growable: false),
+      objectiveIds: (map['objectiveIds'] as List<dynamic>? ?? const [])
+          .map((item) => item.toString())
+          .where((item) => item.trim().isNotEmpty)
+          .toList(growable: false),
       state: _routeStopState(map['state']),
       reason: _string(map['reason'], ''),
     );
@@ -184,6 +190,7 @@ class ArcRaidIntelligenceRepository {
       estimatedMinutes: (map['estimatedMinutes'] as num?)?.round() ?? 0,
       opportunityCount: (map['opportunityCount'] as num?)?.round() ?? 0,
       blueprintTargetCount: (map['blueprintTargetCount'] as num?)?.round() ?? 0,
+      objectiveTargetCount: (map['objectiveTargetCount'] as num?)?.round() ?? 0,
       averageConfidence: (map['averageConfidence'] as num?)?.round() ?? 0,
       efficiencyScore: (map['efficiencyScore'] as num?)?.round() ?? 0,
       riskLabel: _string(map['riskLabel'], 'Unknown'),

@@ -13,10 +13,14 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_community_intel_report.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_progression_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_admin_map_editor_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_community_intel_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_progression_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_scrappy_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_raid_intelligence_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_saved_loadout_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
@@ -40,6 +44,8 @@ class ArcRaidIntelligenceScreen extends StatefulWidget {
     this.dropReports,
     this.communityReports,
     this.publishedMarkers,
+    this.scrappyStates,
+    this.progressionRecords,
     this.loadActiveRoute,
   });
   final Stream<Map<String, ArcBlueprintState>> Function()? blueprintStates;
@@ -48,6 +54,8 @@ class ArcRaidIntelligenceScreen extends StatefulWidget {
   final Stream<List<ArcCommunityIntelReport>> Function(String)?
   communityReports;
   final Stream<List<ArcAdminMapMarker>> Function(String)? publishedMarkers;
+  final Stream<Map<String, ArcScrappyState>> Function()? scrappyStates;
+  final Stream<ArcProgressionRecords> Function()? progressionRecords;
   final Future<ArcRaidRoutePlan?> Function()? loadActiveRoute;
 
   static const routeName = '/trading-hub/arc-raiders/raid-intelligence';
@@ -71,6 +79,9 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       ArcCommunityIntelRepository();
   late final ArcAdminMapEditorRepository _adminMapRepository =
       ArcAdminMapEditorRepository();
+  late final ArcScrappyRepository _scrappyRepository = ArcScrappyRepository();
+  late final ArcProgressionRepository _progressionRepository =
+      ArcProgressionRepository();
   final ArcMapViewRepository _mapViewRepository = const ArcMapViewRepository();
   final TransformationController _mapController = TransformationController();
   final TextEditingController _searchController = TextEditingController();
@@ -287,129 +298,171 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
           ),
         ],
       ),
-      body: ArcRaidersScreenShell(
-        showAdBanner: false,
-        child: StreamBuilder<Map<String, ArcBlueprintState>>(
+      body: ArcRaidersScreenShell(showAdBanner: false, child: _liveBody()),
+    );
+  }
+
+  Widget _liveBody() {
+    return StreamBuilder<Map<String, ArcScrappyState>>(
+      stream: _source(
+        'scrappy-tracker',
+        widget.scrappyStates ?? _scrappyRepository.watchMyScrappyStateMap,
+      ),
+      builder: (context, scrappySnapshot) {
+        final scrappyStates = _retain(
+          'scrappy-tracker',
+          scrappySnapshot,
+          const <String, ArcScrappyState>{},
+        );
+        return StreamBuilder<ArcProgressionRecords>(
           stream: _source(
-            'blueprints',
-            widget.blueprintStates ??
-                _blueprintRepository.watchMyBlueprintStates,
+            'progression-records',
+            widget.progressionRecords ??
+                _progressionRepository.watchProgressionRecords,
           ),
-          builder: (context, blueprintSnapshot) {
-            final states = _retain(
-              'blueprints',
-              blueprintSnapshot,
-              const <String, ArcBlueprintState>{},
+          builder: (context, progressionSnapshot) {
+            final progressionRecords = _retain(
+              'progression-records',
+              progressionSnapshot,
+              ArcProgressionRecords.empty,
             );
-            return StreamBuilder<ArcSavedLoadout?>(
+            return StreamBuilder<Map<String, ArcBlueprintState>>(
               stream: _source(
-                'loadout',
-                widget.favouriteLoadout ??
-                    _loadoutRepository.watchFavouriteLoadout,
+                'blueprints',
+                widget.blueprintStates ??
+                    _blueprintRepository.watchMyBlueprintStates,
               ),
-              builder: (context, loadoutSnapshot) {
-                final loadout = _retain('loadout', loadoutSnapshot, null);
-                return StreamBuilder<List<ArcBlueprintDropReport>>(
+              builder: (context, blueprintSnapshot) {
+                final states = _retain(
+                  'blueprints',
+                  blueprintSnapshot,
+                  const <String, ArcBlueprintState>{},
+                );
+                return StreamBuilder<ArcSavedLoadout?>(
                   stream: _source(
-                    'reports',
-                    widget.dropReports ??
-                        () =>
-                            _blueprintRepository.watchRecentReports(limit: 300),
+                    'loadout',
+                    widget.favouriteLoadout ??
+                        _loadoutRepository.watchFavouriteLoadout,
                   ),
-                  builder: (context, reportSnapshot) {
-                    final reports = _retain(
-                      'reports',
-                      reportSnapshot,
-                      const <ArcBlueprintDropReport>[],
-                    );
-                    return StreamBuilder<List<ArcCommunityIntelReport>>(
+                  builder: (context, loadoutSnapshot) {
+                    final loadout = _retain('loadout', loadoutSnapshot, null);
+                    return StreamBuilder<List<ArcBlueprintDropReport>>(
                       stream: _source(
-                        'community:$_mapId',
-                        () =>
-                            widget.communityReports?.call(_mapId) ??
-                            _communityIntelRepository.watchMapReports(_mapId),
+                        'reports',
+                        widget.dropReports ??
+                            () => _blueprintRepository.watchRecentReports(
+                              limit: 300,
+                            ),
                       ),
-                      builder: (context, communitySnapshot) {
-                        final communityReports = _retain(
-                          'community:$_mapId',
-                          communitySnapshot,
-                          const <ArcCommunityIntelReport>[],
+                      builder: (context, reportSnapshot) {
+                        final reports = _retain(
+                          'reports',
+                          reportSnapshot,
+                          const <ArcBlueprintDropReport>[],
                         );
-                        return StreamBuilder<List<ArcAdminMapMarker>>(
+                        return StreamBuilder<List<ArcCommunityIntelReport>>(
                           stream: _source(
-                            'admin:$_mapId',
+                            'community:$_mapId',
                             () =>
-                                widget.publishedMarkers?.call(_mapId) ??
-                                _adminMapRepository.watchPublishedMap(_mapId),
+                                widget.communityReports?.call(_mapId) ??
+                                _communityIntelRepository.watchMapReports(
+                                  _mapId,
+                                ),
                           ),
-                          builder: (context, adminSnapshot) {
-                            final adminMarkers = _retain(
-                              'admin:$_mapId',
-                              adminSnapshot,
-                              const <ArcAdminMapMarker>[],
-                            );
-                            final snapshots = <AsyncSnapshot<dynamic>>[
-                              blueprintSnapshot,
-                              loadoutSnapshot,
-                              reportSnapshot,
+                          builder: (context, communitySnapshot) {
+                            final communityReports = _retain(
+                              'community:$_mapId',
                               communitySnapshot,
-                              adminSnapshot,
-                            ];
-                            final failed =
-                                snapshots.any((s) => s.hasError) ||
-                                _lastData['routeError'] == true;
-                            final loading = snapshots.any(
-                              (s) =>
-                                  s.connectionState == ConnectionState.waiting,
+                              const <ArcCommunityIntelReport>[],
                             );
-                            final intelligence = _engine.build(
-                              mapId: _mapId,
-                              blueprintStates: states,
-                              favouriteLoadout: loadout,
-                              dropReports: reports,
-                              communityReports: communityReports,
-                              adminMarkers: adminMarkers,
-                              filters: _filters,
-                              activeLayer: _activeLayer,
-                              activeRoute: _routePlan,
-                            );
-                            return Column(
-                              children: [
-                                const SizedBox(height: 8),
-                                const ArcIntelligenceWorkspaceBar(
-                                  current: ArcIntelligenceWorkspace.raidMap,
-                                ),
-                                if (failed || loading)
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          failed
-                                              ? 'Some intel sources unavailable. Showing saved data and seeded guidance.'
-                                              : 'Loading intel sources...',
-                                          maxLines: 2,
-                                        ),
+                            return StreamBuilder<List<ArcAdminMapMarker>>(
+                              stream: _source(
+                                'admin:$_mapId',
+                                () =>
+                                    widget.publishedMarkers?.call(_mapId) ??
+                                    _adminMapRepository.watchPublishedMap(
+                                      _mapId,
+                                    ),
+                              ),
+                              builder: (context, adminSnapshot) {
+                                final adminMarkers = _retain(
+                                  'admin:$_mapId',
+                                  adminSnapshot,
+                                  const <ArcAdminMapMarker>[],
+                                );
+                                final snapshots = <AsyncSnapshot<dynamic>>[
+                                  scrappySnapshot,
+                                  progressionSnapshot,
+                                  blueprintSnapshot,
+                                  loadoutSnapshot,
+                                  reportSnapshot,
+                                  communitySnapshot,
+                                  adminSnapshot,
+                                ];
+                                final failed =
+                                    snapshots.any(
+                                      (snapshot) => snapshot.hasError,
+                                    ) ||
+                                    _lastData['routeError'] == true;
+                                final loading = snapshots.any(
+                                  (snapshot) =>
+                                      snapshot.connectionState ==
+                                      ConnectionState.waiting,
+                                );
+                                final intelligence = _engine.build(
+                                  mapId: _mapId,
+                                  blueprintStates: states,
+                                  favouriteLoadout: loadout,
+                                  scrappyStates: scrappyStates,
+                                  progressionRecords: progressionRecords,
+                                  dropReports: reports,
+                                  communityReports: communityReports,
+                                  adminMarkers: adminMarkers,
+                                  filters: _filters,
+                                  activeLayer: _activeLayer,
+                                  activeRoute: _routePlan,
+                                );
+                                return Column(
+                                  children: [
+                                    const SizedBox(height: 8),
+                                    const ArcIntelligenceWorkspaceBar(
+                                      current: ArcIntelligenceWorkspace.raidMap,
+                                    ),
+                                    if (failed || loading)
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              failed
+                                                  ? 'Some intel sources unavailable. Showing saved data and seeded guidance.'
+                                                  : 'Loading intel sources...',
+                                              maxLines: 2,
+                                            ),
+                                          ),
+                                          if (failed)
+                                            TextButton(
+                                              onPressed: () {
+                                                setState(() {
+                                                  _streams.clear();
+                                                  _lastData.remove(
+                                                    'routeError',
+                                                  );
+                                                });
+                                                unawaited(_initialiseScreen());
+                                              },
+                                              child: const Text('Retry'),
+                                            ),
+                                        ],
                                       ),
-                                      if (failed)
-                                        TextButton(
-                                          onPressed: () {
-                                            setState(() {
-                                              _streams.clear();
-                                              _lastData.remove('routeError');
-                                            });
-                                            unawaited(_initialiseScreen());
-                                          },
-                                          child: const Text('Retry'),
-                                        ),
-                                    ],
-                                  ),
-                                Expanded(
-                                  child: _buildLayout(
-                                    intelligence,
-                                    communityReports: communityReports,
-                                  ),
-                                ),
-                              ],
+                                    Expanded(
+                                      child: _buildLayout(
+                                        intelligence,
+                                        communityReports: communityReports,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
                             );
                           },
                         );
@@ -420,8 +473,8 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
               },
             );
           },
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -732,7 +785,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
           const SizedBox(height: 10),
           _raidAccordion(
             title: 'RAID SETUP',
-            subtitle: 'Map, spawn, extraction and blueprint run',
+            subtitle: 'Map, spawn, extraction and objective-led run',
             icon: Icons.tune_rounded,
             accent: ArcUiTokens.primaryAccent,
             initiallyExpanded: true,
@@ -838,7 +891,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'GENERATE BLUEPRINT RUN',
+          'GENERATE SMART RAID RUN',
           style: ArcUiTokens.sectionTitle(
             fontSize: 24,
             color: ArcUiTokens.primaryAccent,
@@ -855,8 +908,12 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
           runSpacing: 8,
           children: [
             _pill(
-              '${intelligence.opportunityClusters.length} clusters',
+              '${intelligence.opportunityClusters.length} smart stops',
               ArcUiTokens.secondaryAccent,
+            ),
+            _pill(
+              '${intelligence.trackedObjectives.length} tracker goals',
+              Colors.lightGreenAccent,
             ),
             _pill(
               '${intelligence.visibleMarkers.length} markers',
@@ -1355,7 +1412,9 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                             ),
                           ),
                           subtitle: Text(
-                            _objectiveOnlyStops[index].cautiousSummary,
+                            _objectiveOnlyStops[index].hasTrackedObjectives
+                                ? _objectiveOnlyStops[index].objectiveSummary
+                                : _objectiveOnlyStops[index].cautiousSummary,
                             style: ArcUiTokens.bodySmall(),
                           ),
                           onTap: () =>
@@ -1377,10 +1436,16 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                         '${route.metrics.estimatedMinutes} min',
                         AppTheme.neonCyan,
                       ),
-                      _pill(
-                        '${route.metrics.blueprintTargetCount} targets',
-                        ArcUiTokens.secondaryAccent,
-                      ),
+                      if (route.metrics.objectiveTargetCount > 0)
+                        _pill(
+                          '${route.metrics.objectiveTargetCount} tracker goals',
+                          Colors.lightGreenAccent,
+                        ),
+                      if (route.metrics.blueprintTargetCount > 0)
+                        _pill(
+                          '${route.metrics.blueprintTargetCount} Blueprints',
+                          ArcUiTokens.secondaryAccent,
+                        ),
                       _pill(
                         '${route.metrics.efficiencyScore}% efficiency',
                         Colors.lightGreenAccent,
@@ -1624,9 +1689,9 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       _objectiveOnlyStops = const <ArcRaidIntelCluster>[];
     });
     if (await _saveActiveRoute(route)) {
-      _showSnack('Blueprint Run generated and saved as active route.');
+      _showSnack('Smart Raid Run generated and saved as active route.');
     } else {
-      _showSnack('Blueprint Run generated locally; route save failed.');
+      _showSnack('Smart Raid Run generated locally; route save failed.');
     }
   }
 

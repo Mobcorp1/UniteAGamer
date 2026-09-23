@@ -24,7 +24,7 @@ void main() {
     );
   }
 
-  test('builds an optimised all-map Loot Run with route metrics', () {
+  test('builds an optimised all-map Smart Raid Run with route metrics', () {
     final map = ArcRaidIntelligenceSeedData.mapById('blue_gate');
     final spawn = engine.stopFromSpawn(map.spawnRegions.first);
     final extraction = engine.stopFromExtraction(map.extractions.first);
@@ -44,10 +44,11 @@ void main() {
     expect(route!.stops, isNotEmpty);
     expect(route.metrics.opportunityCount, route.stops.length);
     expect(route.metrics.blueprintTargetCount, 3);
+    expect(route.metrics.objectiveTargetCount, 0);
     expect(route.metrics.estimatedMinutes, greaterThan(0));
     expect(route.metrics.totalDistance, greaterThan(0));
     expect(route.metrics.efficiencyScore, inInclusiveRange(0, 100));
-    expect(route.summary, contains('Loot Run'));
+    expect(route.summary, contains('Smart Raid Run'));
   });
 
   test('recommends an extraction when the player has not selected one', () {

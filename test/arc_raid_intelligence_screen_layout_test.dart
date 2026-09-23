@@ -6,10 +6,13 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raid_intelligence_map.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_progression_models.dart';
 
 ArcRaidIntelligenceScreen screen({
   Stream<Map<String, ArcBlueprintState>> Function()? states,
 }) => ArcRaidIntelligenceScreen(
+  scrappyStates: () => Stream.value({}),
+  progressionRecords: () => Stream.value(ArcProgressionRecords.empty),
   blueprintStates: states ?? () => Stream.value({}),
   favouriteLoadout: () => Stream.value(null),
   dropReports: () => Stream.value([]),

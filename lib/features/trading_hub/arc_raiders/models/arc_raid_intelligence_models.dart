@@ -966,6 +966,9 @@ class ArcRaidIntelCluster {
     this.freshnessLabel = 'Seeded',
     this.commonSource = 'Area-level report',
     this.conditionCorrelation = 'Any condition',
+    this.markerCategory = ArcRaidMapMarkerCategory.blueprintOpportunity,
+    this.objectives = const <ArcRaidObjective>[],
+    this.objectiveScore = 0,
   });
 
   final String id;
@@ -982,6 +985,54 @@ class ArcRaidIntelCluster {
   final String freshnessLabel;
   final String commonSource;
   final String conditionCorrelation;
+  final ArcRaidMapMarkerCategory markerCategory;
+  final List<ArcRaidObjective> objectives;
+  final double objectiveScore;
+
+  int get objectiveCount => objectives.length;
+  bool get hasTrackedObjectives => objectives.isNotEmpty;
+  String get objectiveSummary => objectives.isEmpty
+      ? ''
+      : objectives.take(3).map((objective) => objective.shortLabel).join(', ');
+
+  ArcRaidIntelCluster copyWith({
+    String? label,
+    ArcNormalizedPoint? point,
+    ArcRaidMapLayer? layer,
+    List<String>? blueprintIds,
+    List<ArcRaidIntelEvidence>? evidence,
+    String? poiId,
+    ArcRaidIntelConfidence? confidence,
+    int? reportCount,
+    int? independentReporterCount,
+    String? freshnessLabel,
+    String? commonSource,
+    String? conditionCorrelation,
+    ArcRaidMapMarkerCategory? markerCategory,
+    List<ArcRaidObjective>? objectives,
+    double? objectiveScore,
+  }) {
+    return ArcRaidIntelCluster(
+      id: id,
+      mapId: mapId,
+      label: label ?? this.label,
+      point: point ?? this.point,
+      layer: layer ?? this.layer,
+      blueprintIds: blueprintIds ?? this.blueprintIds,
+      evidence: evidence ?? this.evidence,
+      poiId: poiId ?? this.poiId,
+      confidence: confidence ?? this.confidence,
+      reportCount: reportCount ?? this.reportCount,
+      independentReporterCount:
+          independentReporterCount ?? this.independentReporterCount,
+      freshnessLabel: freshnessLabel ?? this.freshnessLabel,
+      commonSource: commonSource ?? this.commonSource,
+      conditionCorrelation: conditionCorrelation ?? this.conditionCorrelation,
+      markerCategory: markerCategory ?? this.markerCategory,
+      objectives: objectives ?? this.objectives,
+      objectiveScore: objectiveScore ?? this.objectiveScore,
+    );
+  }
 
   String get cautiousSummary {
     if (confidence == ArcRaidIntelConfidence.confirmed) {
@@ -1007,6 +1058,10 @@ class ArcRaidObjective {
     required this.label,
     required this.reason,
     required this.category,
+    this.system = 'Tracker',
+    this.itemName = '',
+    this.missingCount = 0,
+    this.sourceHint,
     this.blueprintId,
     this.weight = 1,
     this.private = true,
@@ -1016,9 +1071,18 @@ class ArcRaidObjective {
   final String label;
   final String reason;
   final ArcRaidMapMarkerCategory category;
+  final String system;
+  final String itemName;
+  final int missingCount;
+  final String? sourceHint;
   final String? blueprintId;
   final double weight;
   final bool private;
+
+  String get shortLabel {
+    final item = itemName.trim().isEmpty ? label : itemName.trim();
+    return missingCount > 0 ? '$item x$missingCount' : item;
+  }
 }
 
 @immutable
@@ -1048,6 +1112,7 @@ class ArcRaidRouteStop {
     this.clusterId,
     this.markerId,
     this.blueprintIds = const <String>[],
+    this.objectiveIds = const <String>[],
     this.state = ArcRaidRouteStopState.planned,
     this.reason = '',
   });
@@ -1059,6 +1124,7 @@ class ArcRaidRouteStop {
   final String? clusterId;
   final String? markerId;
   final List<String> blueprintIds;
+  final List<String> objectiveIds;
   final ArcRaidRouteStopState state;
   final String reason;
 
@@ -1071,6 +1137,7 @@ class ArcRaidRouteStop {
       clusterId: clusterId,
       markerId: markerId,
       blueprintIds: blueprintIds,
+      objectiveIds: objectiveIds,
       state: state ?? this.state,
       reason: reason,
     );
@@ -1084,6 +1151,7 @@ class ArcRaidRouteMetrics {
     this.estimatedMinutes = 0,
     this.opportunityCount = 0,
     this.blueprintTargetCount = 0,
+    this.objectiveTargetCount = 0,
     this.averageConfidence = 0,
     this.efficiencyScore = 0,
     this.riskLabel = 'Unknown',
@@ -1095,6 +1163,7 @@ class ArcRaidRouteMetrics {
   final int estimatedMinutes;
   final int opportunityCount;
   final int blueprintTargetCount;
+  final int objectiveTargetCount;
   final int averageConfidence;
   final int efficiencyScore;
   final String riskLabel;
@@ -1286,6 +1355,7 @@ class ArcRaidIntelligenceState {
     required this.activeConditionLabel,
     required this.statusLabel,
     required this.recommendation,
+    this.trackedObjectives = const <ArcRaidObjective>[],
   });
 
   final ArcRaidMap map;
@@ -1297,4 +1367,5 @@ class ArcRaidIntelligenceState {
   final String activeConditionLabel;
   final String statusLabel;
   final String recommendation;
+  final List<ArcRaidObjective> trackedObjectives;
 }

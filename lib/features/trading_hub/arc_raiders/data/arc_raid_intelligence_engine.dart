@@ -8,6 +8,8 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bl
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_filter_icon_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_marker_cluster_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_progression_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_objective_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_runtime_map_resolver.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_world_intel_population_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_map_marker.dart';
@@ -17,6 +19,8 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_community_intel_report.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_progression_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
 
 class ArcRaidIntelligenceEngine {
@@ -28,6 +32,9 @@ class ArcRaidIntelligenceEngine {
         const <String, ArcBlueprintState>{},
     ArcSavedLoadout? favouriteLoadout,
     ArcOperationsUserState operationsState = ArcOperationsUserState.empty,
+    Map<String, ArcScrappyState> scrappyStates =
+        const <String, ArcScrappyState>{},
+    ArcProgressionRecords progressionRecords = ArcProgressionRecords.empty,
     List<ArcBlueprintDropReport> dropReports = const <ArcBlueprintDropReport>[],
     List<ArcCommunityIntelReport> communityReports =
         const <ArcCommunityIntelReport>[],
@@ -52,6 +59,15 @@ class ArcRaidIntelligenceEngine {
         : (map.availableLayers.isEmpty
               ? ArcRaidMapLayer.surface
               : map.availableLayers.first);
+    final progression = const ArcProgressionEngine().build(
+      scrappyStates: scrappyStates,
+      records: progressionRecords,
+    );
+    final trackedObjectives = const ArcRaidObjectiveIntelligenceEngine()
+        .trackedObjectives(
+          progression: progression,
+          scrappyStates: scrappyStates,
+        );
     final clusters = opportunityClusters(
       map: map,
       blueprintStates: blueprintStates,
@@ -59,6 +75,7 @@ class ArcRaidIntelligenceEngine {
       operationsState: operationsState,
       dropReports: dropReports,
       canonicalMarkers: adminMarkers,
+      trackedObjectives: trackedObjectives,
     );
     final clusterMarkers = clusters
         .map((cluster) => _markerForCluster(cluster, blueprintStates))
@@ -113,15 +130,23 @@ class ArcRaidIntelligenceEngine {
     final visibleMarkers = const ArcMapMarkerClusterEngine().cluster(
       rawVisibleMarkers,
     )..sort(_markerSort);
-    final relevantCount = clusters.fold<int>(
-      0,
-      (total, cluster) => total + cluster.blueprintIds.length,
-    );
+    final blueprintTargetCount = clusters
+        .expand((cluster) => cluster.blueprintIds)
+        .toSet()
+        .length;
+    final objectiveTargetCount = trackedObjectives.length;
+    final mappedObjectiveCount = clusters
+        .expand((cluster) => cluster.objectives)
+        .map((objective) => objective.id)
+        .toSet()
+        .length;
     final status = activeRoute != null
         ? 'Route ready'
-        : relevantCount == 0
+        : clusters.isEmpty && objectiveTargetCount > 0
+        ? 'Tracker goals need location intel'
+        : clusters.isEmpty
         ? 'No current priority'
-        : 'Generate a run';
+        : 'Generate a smart run';
     return ArcRaidIntelligenceState(
       map: map,
       activeLayer: resolvedLayer,
@@ -131,9 +156,12 @@ class ArcRaidIntelligenceEngine {
       routePlan: activeRoute,
       activeConditionLabel: _activeConditionLabel(clusters),
       statusLabel: status,
-      recommendation: relevantCount == 0
-          ? 'No evidence-backed Blueprint opportunities for current needs on ${map.displayName}.'
-          : 'Generate a Blueprint Run through $relevantCount relevant opportunity ${_plural(relevantCount, 'cluster', 'clusters')}.',
+      recommendation: clusters.isEmpty && objectiveTargetCount > 0
+          ? '$objectiveTargetCount tracked ${_plural(objectiveTargetCount, 'goal', 'goals')} detected, but none can be mapped confidently to ${map.displayName} yet. Add verified POI/resource intel or choose another map.'
+          : clusters.isEmpty
+          ? 'No current tracked objectives or evidence-backed Blueprint opportunities on ${map.displayName}.'
+          : 'Generate a Smart Raid Run using ${clusters.length} relevant ${_plural(clusters.length, 'stop', 'stops')} for $mappedObjectiveCount mapped of $objectiveTargetCount tracked ${_plural(objectiveTargetCount, 'goal', 'goals')} and $blueprintTargetCount Blueprint ${_plural(blueprintTargetCount, 'target', 'targets')}.',
+      trackedObjectives: trackedObjectives,
     );
   }
 
@@ -233,6 +261,7 @@ class ArcRaidIntelligenceEngine {
     ArcOperationsUserState operationsState = ArcOperationsUserState.empty,
     List<ArcBlueprintDropReport> dropReports = const <ArcBlueprintDropReport>[],
     List<ArcAdminMapMarker> canonicalMarkers = const <ArcAdminMapMarker>[],
+    List<ArcRaidObjective> trackedObjectives = const <ArcRaidObjective>[],
   }) {
     final loadoutNames = _loadoutItemNames(favouriteLoadout);
     final mapClusters = <ArcRaidIntelCluster>[];
@@ -403,6 +432,16 @@ class ArcRaidIntelligenceEngine {
       _clusterScores[mapClusters.last.id] = score;
     }
 
+    if (trackedObjectives.isNotEmpty) {
+      final objectiveClusters = const ArcRaidObjectiveIntelligenceEngine()
+          .buildClusters(
+            map: map,
+            objectives: trackedObjectives,
+            adminMarkers: canonicalMarkers,
+          );
+      _mergeTrackedObjectiveClusters(mapClusters, objectiveClusters);
+    }
+
     mapClusters.sort((a, b) {
       final scoreCompare = (_clusterScores[b.id] ?? 0).compareTo(
         _clusterScores[a.id] ?? 0,
@@ -515,7 +554,10 @@ class ArcRaidIntelligenceEngine {
           order: index + 1,
           clusterId: ordered[index].id,
           blueprintIds: ordered[index].blueprintIds,
-          reason: ordered[index].cautiousSummary,
+          objectiveIds: ordered[index].objectives
+              .map((objective) => objective.id)
+              .toList(growable: false),
+          reason: _routeStopReason(ordered[index]),
         ),
     ];
     final metrics = _buildRouteMetrics(
@@ -544,7 +586,7 @@ class ArcRaidIntelligenceEngine {
       metrics: metrics,
       score: metrics.efficiencyScore,
       summary:
-          '${routeStyle.label} ${squadMode.label} Loot Run: ${metrics.opportunityCount} opportunity ${_plural(metrics.opportunityCount, 'stop', 'stops')}, ${metrics.blueprintTargetCount} Blueprint ${_plural(metrics.blueprintTargetCount, 'target', 'targets')}, about ${metrics.estimatedMinutes} min, then ${extraction.label}.',
+          '${routeStyle.label} ${squadMode.label} Smart Raid Run: ${metrics.opportunityCount} ${_plural(metrics.opportunityCount, 'stop', 'stops')}, ${metrics.objectiveTargetCount} tracked ${_plural(metrics.objectiveTargetCount, 'goal', 'goals')}, ${metrics.blueprintTargetCount} Blueprint ${_plural(metrics.blueprintTargetCount, 'target', 'targets')}, about ${metrics.estimatedMinutes} min, then ${extraction.label}.',
       approximate: true,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
@@ -596,7 +638,10 @@ class ArcRaidIntelligenceEngine {
         order: plan.stops.length + 1,
         clusterId: cluster.id,
         blueprintIds: cluster.blueprintIds,
-        reason: cluster.cautiousSummary,
+        objectiveIds: cluster.objectives
+            .map((objective) => objective.id)
+            .toList(growable: false),
+        reason: _routeStopReason(cluster),
       ),
     ];
     return _renumber(plan.copyWith(stops: nextStops));
@@ -685,6 +730,11 @@ class ArcRaidIntelligenceEngine {
         .expand((cluster) => cluster.blueprintIds)
         .toSet()
         .length;
+    final objectiveCount = clusters
+        .expand((cluster) => cluster.objectives)
+        .map((objective) => objective.id)
+        .toSet()
+        .length;
     final averageConfidence = clusters.isEmpty
         ? 0
         : (clusters.fold<int>(
@@ -710,7 +760,7 @@ class ArcRaidIntelligenceEngine {
         )
         .toInt();
     final efficiency =
-        ((blueprintCount * 120 + averageConfidence * 2) /
+        ((blueprintCount * 120 + objectiveCount * 84 + averageConfidence * 2) /
                 math.max(1.0, travelCost + estimatedMinutes * 0.55))
             .round()
             .clamp(0, 100)
@@ -728,6 +778,7 @@ class ArcRaidIntelligenceEngine {
       estimatedMinutes: estimatedMinutes,
       opportunityCount: clusters.length,
       blueprintTargetCount: blueprintCount,
+      objectiveTargetCount: objectiveCount,
       averageConfidence: averageConfidence,
       efficiencyScore: efficiency,
       riskLabel: riskLabel,
@@ -939,24 +990,38 @@ class ArcRaidIntelligenceEngine {
                   .clamp(1, math.max(1, cluster.reportCount)),
     };
 
+    final objectiveOnly =
+        sortedBlueprintIds.isEmpty && cluster.hasTrackedObjectives;
+    final objectiveDetail = cluster.hasTrackedObjectives
+        ? ' Supports ${cluster.objectiveCount} tracked ${_plural(cluster.objectiveCount, 'goal', 'goals')}: ${cluster.objectiveSummary}. Category/POI match only; resource drops are not guaranteed.'
+        : '';
     return ArcRaidMapMarker(
       id: '${cluster.id}_marker',
       mapId: cluster.mapId,
-      category: ArcRaidMapMarkerCategory.blueprintOpportunity,
+      category: objectiveOnly
+          ? cluster.markerCategory
+          : ArcRaidMapMarkerCategory.blueprintOpportunity,
       label: cluster.label,
       point: cluster.point,
       layer: cluster.layer,
       payloadId: cluster.id,
       confidence: cluster.confidence,
-      count: math.max(cluster.reportCount, sortedBlueprintIds.length),
+      count: math.max(
+        math.max(cluster.reportCount, sortedBlueprintIds.length),
+        cluster.objectiveCount,
+      ),
       approximate: !reportDriven,
-      detail: researchDriven
+      detail: objectiveOnly
+          ? '${cluster.cautiousSummary}. ${cluster.objectiveSummary}. Tracker guidance based on POI/loot classification; not a guaranteed resource spawn. ${cluster.freshnessLabel}.'
+          : researchDriven
           ? cluster.reportCount > 0
-                ? '${cluster.cautiousSummary}. Baseline POI/container match with ${cluster.reportCount} separately documented find ${_plural(cluster.reportCount, 'lead', 'leads')}. Not a guaranteed spawn. ${cluster.freshnessLabel}.'
-                : '${cluster.cautiousSummary}. Baseline POI/container match for route planning; not an individually verified Blueprint spawn. ${cluster.freshnessLabel}.'
-          : '${cluster.cautiousSummary}. ${cluster.reportCount} report confirmations from ${cluster.independentReporterCount} independent Raiders. ${cluster.freshnessLabel}.',
+                ? '${cluster.cautiousSummary}. Baseline POI/container match with ${cluster.reportCount} separately documented find ${_plural(cluster.reportCount, 'lead', 'leads')}. Not a guaranteed spawn. ${cluster.freshnessLabel}.$objectiveDetail'
+                : '${cluster.cautiousSummary}. Baseline POI/container match for route planning; not an individually verified Blueprint spawn. ${cluster.freshnessLabel}.$objectiveDetail'
+          : '${cluster.cautiousSummary}. ${cluster.reportCount} report confirmations from ${cluster.independentReporterCount} independent Raiders. ${cluster.freshnessLabel}.$objectiveDetail',
       tags: <String>[
-        if (reportDriven)
+        if (objectiveOnly)
+          'Tracker Objectives'
+        else if (reportDriven)
           'Drop Reports'
         else if (researchDriven)
           'Research Baseline'
@@ -965,6 +1030,7 @@ class ArcRaidIntelligenceEngine {
         cluster.commonSource,
         cluster.conditionCorrelation,
         cluster.freshnessLabel,
+        ...cluster.objectives.map((objective) => objective.system),
       ],
       blueprintIds: sortedBlueprintIds,
       blueprintFindCounts: findsPerBlueprint,
@@ -1064,6 +1130,55 @@ class ArcRaidIntelligenceEngine {
     return score;
   }
 
+  static void _mergeTrackedObjectiveClusters(
+    List<ArcRaidIntelCluster> base,
+    List<ArcRaidIntelCluster> objectiveClusters,
+  ) {
+    for (final objectiveCluster in objectiveClusters) {
+      var matchIndex = -1;
+      for (var index = 0; index < base.length; index++) {
+        final current = base[index];
+        final samePoi =
+            current.poiId?.trim().isNotEmpty == true &&
+            objectiveCluster.poiId?.trim().isNotEmpty == true &&
+            _normalize(current.poiId!) == _normalize(objectiveCluster.poiId!);
+        final sameNamedLocation =
+            current.layer == objectiveCluster.layer &&
+            _locationIdentity(current) == _locationIdentity(objectiveCluster);
+        if (samePoi || sameNamedLocation) {
+          matchIndex = index;
+          break;
+        }
+      }
+
+      if (matchIndex < 0) {
+        base.add(objectiveCluster);
+        _clusterScores[objectiveCluster.id] =
+            40 + objectiveCluster.objectiveScore;
+        continue;
+      }
+
+      final current = base[matchIndex];
+      final objectivesById = <String, ArcRaidObjective>{
+        for (final objective in current.objectives) objective.id: objective,
+        for (final objective in objectiveCluster.objectives)
+          objective.id: objective,
+      };
+      final merged = current.copyWith(
+        objectives: objectivesById.values.toList(growable: false),
+        objectiveScore:
+            current.objectiveScore + objectiveCluster.objectiveScore,
+        markerCategory: current.blueprintIds.isNotEmpty
+            ? ArcRaidMapMarkerCategory.blueprintOpportunity
+            : objectiveCluster.markerCategory,
+      );
+      base[matchIndex] = merged;
+      _clusterScores[merged.id] =
+          (_clusterScores[current.id] ?? current.confidence.score.toDouble()) +
+          objectiveCluster.objectiveScore;
+    }
+  }
+
   static List<ArcRaidIntelCluster> _mergeNearbyClusters(
     List<ArcRaidIntelCluster> clusters,
   ) {
@@ -1097,7 +1212,9 @@ class ArcRaidIntelligenceEngine {
           id: '${anchor.id}_merged',
           mapId: anchor.mapId,
           label: reportDriven.isEmpty
-              ? '${all.length} Blueprint opportunities'
+              ? all.any((item) => item.hasTrackedObjectives)
+                    ? anchor.label
+                    : '${all.length} Blueprint opportunities'
               : anchor.label,
           point: anchor.point,
           layer: anchor.layer,
@@ -1119,11 +1236,31 @@ class ArcRaidIntelligenceEngine {
             (total, item) => total + item.independentReporterCount,
           ),
           freshnessLabel: reportDriven.isEmpty
-              ? 'Seed reviewed'
+              ? all.any((item) => item.hasTrackedObjectives)
+                    ? 'Live tracker guidance'
+                    : 'Seed reviewed'
               : anchor.freshnessLabel,
           commonSource: anchor.commonSource,
           conditionCorrelation: anchor.conditionCorrelation,
+          markerCategory: all.any((item) => item.blueprintIds.isNotEmpty)
+              ? ArcRaidMapMarkerCategory.blueprintOpportunity
+              : anchor.markerCategory,
+          objectives: <String, ArcRaidObjective>{
+            for (final item in all)
+              for (final objective in item.objectives) objective.id: objective,
+          }.values.toList(growable: false),
+          objectiveScore: all.fold<double>(
+            0,
+            (total, item) => total + item.objectiveScore,
+          ),
         ),
+      );
+      final mergedCluster = merged.last;
+      _clusterScores[mergedCluster.id] = all.fold<double>(
+        0,
+        (total, item) =>
+            total +
+            (_clusterScores[item.id] ?? item.confidence.score.toDouble()),
       );
     }
     return merged;
@@ -1132,6 +1269,9 @@ class ArcRaidIntelligenceEngine {
   static bool _canMergeClusters(ArcRaidIntelCluster a, ArcRaidIntelCluster b) {
     final aReportDriven = _reportDriven(a);
     final bReportDriven = _reportDriven(b);
+    if (a.hasTrackedObjectives || b.hasTrackedObjectives) {
+      return _locationIdentity(a) == _locationIdentity(b);
+    }
     if (!aReportDriven && !bReportDriven) return true;
     return _locationIdentity(a) == _locationIdentity(b);
   }
@@ -1159,6 +1299,14 @@ class ArcRaidIntelligenceEngine {
     return 'label:${_normalize(label)}';
   }
 
+  static String _routeStopReason(ArcRaidIntelCluster cluster) {
+    if (!cluster.hasTrackedObjectives) return cluster.cautiousSummary;
+    if (cluster.blueprintIds.isEmpty) {
+      return '${cluster.objectiveSummary}. Tracker-guided POI match; drops are not guaranteed.';
+    }
+    return '${cluster.cautiousSummary}. Also supports ${cluster.objectiveCount} tracked ${_plural(cluster.objectiveCount, 'goal', 'goals')}: ${cluster.objectiveSummary}.';
+  }
+
   static double _routeStopScore({
     required ArcRaidMap map,
     required ArcRaidIntelCluster cluster,
@@ -1173,8 +1321,12 @@ class ArcRaidIntelligenceEngine {
         _graphTravelCost(map, spawn, cluster.point) +
         _graphTravelCost(map, cluster.point, extraction);
     final distancePenalty = travelCost * 3.4;
-    var score = (cluster.confidence.score + (cluster.blueprintIds.length * 24))
-        .toDouble();
+    var score =
+        (cluster.confidence.score +
+                (cluster.blueprintIds.length * 24) +
+                (cluster.objectiveCount * 18))
+            .toDouble();
+    score += cluster.objectiveScore * 0.55;
     score -= distancePenalty;
     if (routeStyle == ArcRaidRouteStyle.safer) {
       score -=
@@ -1183,6 +1335,7 @@ class ArcRaidIntelligenceEngine {
     }
     if (routeStyle == ArcRaidRouteStyle.thorough) {
       score += cluster.blueprintIds.length * 8;
+      score += cluster.objectiveCount * 6;
     }
     if (objectivePriority == ArcRaidObjectivePriority.balancedSquad) {
       score +=
