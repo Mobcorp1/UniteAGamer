@@ -134,7 +134,15 @@ class UagAdService extends ChangeNotifier with WidgetsBindingObserver {
           // Commercial policy comes from the canonical effective entitlement.
           // Admin/dev identity remains a security concern and must not force
           // Premium while entitlement test mode is active.
-          _policy = entitlement.adPolicy;
+          // Internal admin/dev builds must be able to QA the free-tier ad lane.
+          // Release builds keep the canonical commercial entitlement unchanged,
+          // and an explicit entitlement test override still wins.
+          _policy =
+              !kReleaseMode &&
+                  entitlement.hasAdminBypass &&
+                  !entitlement.hasTestOverride
+              ? UagAdPolicy.free
+              : entitlement.adPolicy;
           _disposeAdsThatAreNoLongerEligible();
           _preloadEligibleFullScreenAds();
           notifyListeners();

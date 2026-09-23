@@ -809,9 +809,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                       : '$needed NEEDED${_separator()}$ready READY',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: ArcUiTokens.metadata(
-                    color: ArcUiTokens.primaryAccent,
-                  ),
+                  style: ArcUiTokens.metadata(color: ArcUiTokens.primaryAccent),
                 ),
               ),
             ],
@@ -884,6 +882,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
       final color = selected
           ? ArcUiTokens.secondaryAccent
           : ArcUiTokens.primaryAccent;
+      final foreground = selected ? ArcUiTokens.background : color;
 
       return Expanded(
         child: InkWell(
@@ -907,7 +906,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(icon, color: color, size: 18),
+                Icon(icon, color: foreground, size: 18),
                 const SizedBox(width: AppTheme.spaceXS),
                 Flexible(
                   child: Text(
@@ -915,7 +914,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: color,
+                      color: foreground,
                       fontWeight: FontWeight.w900,
                       fontSize: 13,
                     ),
@@ -1174,9 +1173,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                       : '$selected${_separator()}$complete / ${stationItems.length} READY',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: ArcUiTokens.metadata(
-                    color: ArcUiTokens.primaryAccent,
-                  ),
+                  style: ArcUiTokens.metadata(color: ArcUiTokens.primaryAccent),
                 ),
               ),
             ],
@@ -1414,8 +1411,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
           );
         }
 
-        final profile =
-            snapshot.data ?? ArcUserPersonalisationProfile.defaults;
+        final profile = snapshot.data ?? ArcUserPersonalisationProfile.defaults;
         final current = profile.questProgress;
 
         Widget option(ArcQuestProgressState state, String label) {
@@ -1510,11 +1506,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
               if (narrow) {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    copy,
-                    const SizedBox(height: 8),
-                    choices,
-                  ],
+                  children: [copy, const SizedBox(height: 8), choices],
                 );
               }
 
@@ -1839,9 +1831,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
       body: ArcRaidersScreenShell(
         useSafeArea: true,
         showAdBanner: false,
-        child: StreamBuilder<
-          ArcScrappyRepositoryState<Map<String, ArcScrappyState>>
-        >(
+        child: StreamBuilder<ArcScrappyRepositoryState<Map<String, ArcScrappyState>>>(
           stream: _scrappyStateStream,
           builder: (context, snapshot) {
             final repositoryState = snapshot.data;
@@ -1867,7 +1857,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                 states.isEmpty) {
               return ArcRaidersPageList(
                 maxWidth: 1220,
-                bottomPadding: 120,
+                bottomPadding: 36,
                 children: [
                   ArcProgressionWorkspaceBar(
                     current: _progressionWorkspace,
@@ -1889,7 +1879,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                 states.isEmpty) {
               return ArcRaidersPageList(
                 maxWidth: 1220,
-                bottomPadding: 120,
+                bottomPadding: 36,
                 children: [
                   ArcProgressionWorkspaceBar(
                     current: _progressionWorkspace,
@@ -1912,7 +1902,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                 states.isEmpty) {
               return ArcRaidersPageList(
                 maxWidth: 1220,
-                bottomPadding: 120,
+                bottomPadding: 36,
                 children: [
                   ArcProgressionWorkspaceBar(
                     current: _progressionWorkspace,
@@ -1957,7 +1947,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
 
             return ArcRaidersPageList(
               maxWidth: 1220,
-              bottomPadding: 120,
+              bottomPadding: 36,
               children: [
                 ArcProgressionWorkspaceBar(
                   current: _progressionWorkspace,
@@ -1990,10 +1980,14 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                     totalCount: progressItems.length,
                     landscape: landscape,
                     title: _showFeedScrappy
-                        ? 'Scrappy upgrade progress'
+                        ? (completion >= 1
+                              ? 'Scrappy upgrades complete'
+                              : 'Scrappy upgrade progress')
                         : 'Scrappy tracker progress',
                     description: _showFeedScrappy
-                        ? 'Upgrade progress stays visible while feed recommendations change.'
+                        ? (completion >= 1
+                              ? 'Feed bonuses stay useful after Scrappy upgrades are complete.'
+                              : 'Feed choices target the reward pool you actually want.')
                         : 'Live completion across Scrappy upgrade materials.',
                     accentColor: _showFeedScrappy
                         ? AppTheme.neonPink

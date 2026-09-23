@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 
 import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bench_upgrade_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_filter_icon_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_filter_taxonomy.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_quest_requirement_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_scrappy_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_item.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_map_filter_icon.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_admin_workspace_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
@@ -89,17 +93,49 @@ class ArcMapFilterIconReviewAtlas extends StatelessWidget {
     ),
   ];
 
+  static List<_TrackerAssetReviewItem> _trackerAssets(
+    Iterable<ArcScrappyItem> items,
+    String source,
+  ) {
+    final seen = <String>{};
+    return [
+      for (final item in items)
+        if (seen.add(item.imageAsset))
+          _TrackerAssetReviewItem(
+            id: item.id,
+            label: item.name,
+            assetPath: item.imageAsset,
+            source: source,
+          ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
+    final scrappyAssets = _trackerAssets(
+      ArcScrappySeedData.items.whereType<ArcScrappyItem>(),
+      'Scrappy',
+    );
+    final benchAssets = _trackerAssets(
+      ArcBenchUpgradeSeedData.items.whereType<ArcScrappyItem>(),
+      'Bench',
+    );
+    final questAssets = _trackerAssets(
+      ArcQuestRequirementSeedData.items.whereType<ArcScrappyItem>(),
+      'Quest',
+    );
+    final trackerAssetCount =
+        scrappyAssets.length + benchAssets.length + questAssets.length;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         ArcPageHeader(
           title: 'Map Filter Icon Atlas',
           subtitle:
-              '${ArcMapFilterTaxonomy.all.length} canonical icons '
-              'plus ${_uagCommunityItems.length} UAG community icon rendered '
-              'at marker, menu, cluster, review and audit sizes.',
+              '${ArcMapFilterTaxonomy.all.length} canonical map icons, '
+              '${_uagCommunityItems.length} UAG community icon and '
+              '$trackerAssetCount existing tracker item assets reviewed in place.',
           leading: const Icon(
             Icons.travel_explore_rounded,
             color: ArcUiTokens.primaryAccent,
@@ -128,7 +164,220 @@ class ArcMapFilterIconReviewAtlas extends StatelessWidget {
           items: _uagCommunityItems,
         ),
         const SizedBox(height: AppTheme.spaceL),
+        _TrackerAssetReviewSection(
+          title: 'Scrappy Tracker Assets',
+          subtitle:
+              'Existing Scrappy item artwork, referenced directly from its current asset path.',
+          items: scrappyAssets,
+        ),
+        const SizedBox(height: AppTheme.spaceL),
+        _TrackerAssetReviewSection(
+          title: 'Bench Tracker Assets',
+          subtitle:
+              'Existing bench requirement artwork, reused without copying files into map_filter_icons.',
+          items: benchAssets,
+        ),
+        const SizedBox(height: AppTheme.spaceL),
+        _TrackerAssetReviewSection(
+          title: 'Quest Tracker Assets',
+          subtitle:
+              'Existing quest-item artwork, reused from the Quest Tracker asset references.',
+          items: questAssets,
+        ),
+        const SizedBox(height: AppTheme.spaceL),
       ],
+    );
+  }
+}
+
+class _TrackerAssetReviewItem {
+  const _TrackerAssetReviewItem({
+    required this.id,
+    required this.label,
+    required this.assetPath,
+    required this.source,
+  });
+
+  final String id;
+  final String label;
+  final String assetPath;
+  final String source;
+}
+
+class _TrackerAssetReviewSection extends StatelessWidget {
+  const _TrackerAssetReviewSection({
+    required this.title,
+    required this.subtitle,
+    required this.items,
+  });
+
+  final String title;
+  final String subtitle;
+  final List<_TrackerAssetReviewItem> items;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: AppTheme.sectionCardPadding,
+      decoration: AppTheme.tradingCardDecoration(
+        borderColor: AppTheme.neonPink.withValues(alpha: 0.20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: AppTheme.tradingHeading(fontSize: 22)),
+          const SizedBox(height: 4),
+          Text(
+            '$subtitle  ${items.length} unique assets.',
+            style: AppTheme.bodyTextStyle(
+              fontSize: 13,
+              color: AppTheme.tradingMutedText,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spaceM),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final columns = constraints.maxWidth >= 1100
+                  ? 4
+                  : constraints.maxWidth >= 760
+                  ? 3
+                  : constraints.maxWidth >= 520
+                  ? 2
+                  : 1;
+              final gap = AppTheme.spaceM;
+              final tileWidth =
+                  (constraints.maxWidth - ((columns - 1) * gap)) / columns;
+
+              return Wrap(
+                spacing: gap,
+                runSpacing: gap,
+                children: [
+                  for (final item in items)
+                    SizedBox(
+                      width: tileWidth,
+                      child: _TrackerAssetReviewTile(item: item),
+                    ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TrackerAssetReviewTile extends StatelessWidget {
+  const _TrackerAssetReviewTile({required this.item});
+
+  final _TrackerAssetReviewItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key: ValueKey<String>('tracker-asset-review-${item.source}-${item.id}'),
+      padding: const EdgeInsets.all(11),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.76),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 58,
+                height: 58,
+                padding: const EdgeInsets.all(5),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.28),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppTheme.neonCyan.withValues(alpha: 0.16),
+                  ),
+                ),
+                child: Image.asset(
+                  item.assetPath,
+                  fit: BoxFit.contain,
+                  filterQuality: FilterQuality.high,
+                  errorBuilder: (_, _, _) => const Icon(
+                    Icons.image_not_supported_outlined,
+                    color: Colors.white38,
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppTheme.spaceS),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.label,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTheme.bodyTextStyle(
+                        fontSize: 14,
+                        color: AppTheme.neonCyan,
+                        isBold: true,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      item.source,
+                      style: AppTheme.bodyTextStyle(
+                        fontSize: 11,
+                        color: AppTheme.neonPink,
+                        isBold: true,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            item.assetPath,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: AppTheme.bodyTextStyle(
+              fontSize: 10.5,
+              color: AppTheme.tradingMutedText,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final size in const [24.0, 32.0, 48.0])
+                Container(
+                  width: 58,
+                  height: 58,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: AppTheme.neonCyan.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: AppTheme.neonCyan.withValues(alpha: 0.12),
+                    ),
+                  ),
+                  child: Image.asset(
+                    item.assetPath,
+                    width: size,
+                    height: size,
+                    fit: BoxFit.contain,
+                    filterQuality: FilterQuality.high,
+                    errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

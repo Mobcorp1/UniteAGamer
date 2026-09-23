@@ -31,7 +31,7 @@ class ArcProgressTrackersScreen extends StatelessWidget {
         showAdBanner: true,
         child: ArcRaidersPageList(
           maxWidth: 980,
-          bottomPadding: 120,
+          bottomPadding: 36,
           children: [
             const ArcProgressionWorkspaceBar(
               current: ArcProgressionWorkspace.overview,
@@ -150,9 +150,7 @@ class _TrackerFamilyHeader extends StatelessWidget {
                 'Open the progression tool you need now.',
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: ArcUiTokens.metadata(
-                  color: ArcUiTokens.textSecondary,
-                ),
+                style: ArcUiTokens.metadata(color: ArcUiTokens.textSecondary),
               ),
             ],
           ),
@@ -170,6 +168,7 @@ class _TrackerLinkDefinition {
     required this.accent,
     required this.routeName,
     required this.accessFlag,
+    required this.heroAsset,
   });
 
   final String title;
@@ -178,6 +177,7 @@ class _TrackerLinkDefinition {
   final Color accent;
   final String routeName;
   final String accessFlag;
+  final String heroAsset;
 }
 
 const _trackerLinks = <_TrackerLinkDefinition>[
@@ -188,6 +188,7 @@ const _trackerLinks = <_TrackerLinkDefinition>[
     accent: ArcUiTokens.secondaryAccent,
     routeName: ScrappyGridScreen.routeName,
     accessFlag: FeatureAccessFlag.scrappyTracker,
+    heroAsset: 'assets/arc_raiders/hub/arc_hub_scrappy_tracker.webp',
   ),
   _TrackerLinkDefinition(
     title: 'Bench Tracker',
@@ -196,6 +197,7 @@ const _trackerLinks = <_TrackerLinkDefinition>[
     accent: ArcUiTokens.primaryAccent,
     routeName: ScrappyGridScreen.benchRouteName,
     accessFlag: FeatureAccessFlag.benchTracker,
+    heroAsset: 'assets/arc_raiders/hub/arc_hub_bench_tracker.webp',
   ),
   _TrackerLinkDefinition(
     title: 'Quest Tracker',
@@ -204,6 +206,7 @@ const _trackerLinks = <_TrackerLinkDefinition>[
     accent: ArcUiTokens.warning,
     routeName: ScrappyGridScreen.questRouteName,
     accessFlag: FeatureAccessFlag.questTracker,
+    heroAsset: 'assets/arc_raiders/hub/arc_hub_quest_tracker.webp',
   ),
   _TrackerLinkDefinition(
     title: 'Hunt Targets',
@@ -212,6 +215,7 @@ const _trackerLinks = <_TrackerLinkDefinition>[
     accent: ArcUiTokens.success,
     routeName: RaidPlannerHuntTargetsScreen.routeName,
     accessFlag: FeatureAccessFlag.raidPlanner,
+    heroAsset: 'assets/arc_raiders/hub/arc_hub_hunt_targets.webp',
   ),
 ];
 
@@ -240,56 +244,111 @@ class _TrackerLinkCard extends StatelessWidget {
         );
       },
       accent: accent,
-      padding: const EdgeInsets.all(11),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 88),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      padding: EdgeInsets.zero,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
+        child: Stack(
           children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: accent.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: accent.withValues(alpha: 0.42)),
-              ),
-              child: Icon(link.icon, color: accent, size: 20),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    link.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: ArcUiTokens.cardTitle(fontSize: 15.5, color: accent),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    link.subtitle,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: ArcUiTokens.body(
-                      fontSize: 11.5,
-                      color: ArcUiTokens.textSecondary,
+            Positioned.fill(
+              child: Image.asset(
+                link.heroAsset,
+                fit: BoxFit.cover,
+                alignment: Alignment.centerRight,
+                filterQuality: FilterQuality.high,
+                errorBuilder: (_, _, _) => ColoredBox(
+                  color: ArcUiTokens.surfacePanel,
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Icon(
+                      link.icon,
+                      size: 72,
+                      color: accent.withValues(alpha: 0.10),
                     ),
                   ),
-                ],
+                ),
               ),
             ),
-            const SizedBox(width: 8),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                if (availability.isComingSoon)
-                  _StatusPill(label: availability.label, color: accent),
-                const SizedBox(height: 6),
-                Icon(Icons.chevron_right_rounded, color: accent, size: 20),
-              ],
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    colors: [
+                      Colors.black.withValues(alpha: 0.94),
+                      Colors.black.withValues(alpha: 0.80),
+                      Colors.black.withValues(alpha: 0.48),
+                      accent.withValues(alpha: 0.10),
+                    ],
+                    stops: const [0.0, 0.46, 0.78, 1.0],
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(13),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 88),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.54),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: accent.withValues(alpha: 0.58),
+                        ),
+                      ),
+                      child: Icon(link.icon, color: accent, size: 21),
+                    ),
+                    const SizedBox(width: 11),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            link.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: ArcUiTokens.cardTitle(
+                              fontSize: 16,
+                              color: accent,
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            link.subtitle,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: ArcUiTokens.body(
+                              fontSize: 11.5,
+                              color: Colors.white.withValues(alpha: 0.86),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        if (availability.isComingSoon)
+                          _StatusPill(label: availability.label, color: accent),
+                        const SizedBox(height: 6),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          color: accent,
+                          size: 22,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),

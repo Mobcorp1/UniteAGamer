@@ -19,15 +19,12 @@ class ScrappyFeedQueueSection extends StatefulWidget {
 
   static const goals = [
     'Overall',
-    'Profit',
-    'Reactors',
-    'Augments',
-    'Mods',
-    'Explosives',
-    'Utility',
-    'Medical',
     'Gunsmith',
-    'Expedition',
+    'Explosives',
+    'Gear',
+    'Medical',
+    'Utility',
+    'Mods',
   ];
 
   @override
@@ -42,13 +39,24 @@ class _ScrappyFeedQueueSectionState extends State<ScrappyFeedQueueSection> {
 
   List<ArcScrappyFoodQueueItem> get _ranked {
     final items = [...ArcScrappyFoodQueueData.items];
-    items.sort((a, b) {
-      final am = a.goals.contains(_activeGoal) ? 1 : 0;
-      final bm = b.goals.contains(_activeGoal) ? 1 : 0;
-      if (am != bm) return bm.compareTo(am);
-      return b.intelRank.compareTo(a.intelRank);
-    });
-    return items;
+    items.sort((a, b) => b.intelRank.compareTo(a.intelRank));
+
+    if (_activeGoal == 'Overall') {
+      return items;
+    }
+
+    final targeted = items
+        .where((item) => item.goals.contains(_activeGoal))
+        .toList(growable: true);
+    final fruitMix = items.where((item) => item.id == 'fruit-mix');
+
+    for (final item in fruitMix) {
+      if (!targeted.any((candidate) => candidate.id == item.id)) {
+        targeted.add(item);
+      }
+    }
+
+    return targeted;
   }
 
   @override
@@ -119,6 +127,13 @@ class _ScrappyFeedQueueSectionState extends State<ScrappyFeedQueueSection> {
                 ),
               ),
             if (widget.showGoalBar) const SizedBox(height: 8),
+            Text(
+              _activeGoal == 'Overall'
+                  ? 'All feed options, ranked for broad value.'
+                  : 'Only the direct $_activeGoal reward food is shown, with Fruit Mix as the broad fallback.',
+              style: ArcUiTokens.metadata(color: ArcUiTokens.textTertiary),
+            ),
+            const SizedBox(height: 6),
             _hero(ranked.first),
             const SizedBox(height: 8),
             for (var i = 1; i < ranked.length; i++)
@@ -155,7 +170,9 @@ class _ScrappyFeedQueueSectionState extends State<ScrappyFeedQueueSection> {
                     children: [
                       Expanded(
                         child: Text(
-                          'BEST FOR ${_activeGoal.toUpperCase()}',
+                          _activeGoal == 'Overall'
+                              ? 'GENERAL FEED PICK'
+                              : '${_activeGoal.toUpperCase()} REWARD PICK',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: ArcUiTokens.label(
