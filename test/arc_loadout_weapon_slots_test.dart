@@ -53,7 +53,12 @@ void main() {
     'Rascal': [],
     'Rattler': ['Stock Mod', 'Converter'],
     'Renegade': ['Muzzle Mod', 'Underbarrel Mod', 'Stock Mod'],
-    'Stitcher': ['Muzzle Mod', 'Underbarrel Mod', 'Magazine Mod', 'Stock Mod'],
+    'Stitcher': [
+      'Muzzle Mod',
+      'Underbarrel Mod',
+      'Light Magazine Mod',
+      'Stock Mod',
+    ],
     'Tempest': ['Muzzle Mod', 'Underbarrel Mod', 'Medium Magazine Mod'],
     'Torrente': ['Muzzle Mod', 'Medium Magazine Mod', 'Stock Mod'],
     'Venator': ['Underbarrel Mod', 'Medium Magazine Mod'],
@@ -86,7 +91,7 @@ void main() {
     expect(ArcLoadoutCompatibilityRegistry.slotsForWeapon('Stitcher'), [
       'Muzzle Mod',
       'Underbarrel Mod',
-      'Magazine Mod',
+      'Light Magazine Mod',
       'Stock Mod',
     ]);
     expect(ArcLoadoutCompatibilityRegistry.slotsForWeapon('Ferro'), [

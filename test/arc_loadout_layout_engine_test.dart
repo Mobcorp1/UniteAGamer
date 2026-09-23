@@ -117,15 +117,13 @@ void main() {
       );
       final labels = conflicts.map((conflict) => conflict.label);
 
-      expect(conflicts, hasLength(18));
+      expect(conflicts, hasLength(11));
       expect(
         labels,
         containsAll(<String>[
           'Extended Medium Mag I -> Renegade',
           'Vertical Grip II -> Rattler',
           'Extended Medium Mag II -> Renegade',
-          'Extended Barrel -> Osprey',
-          'Extended Barrel -> Kettle',
           'Extended Medium Mag III -> Renegade',
           'Kinetic Converter -> Arpeggio',
           'Kinetic Converter -> Il Toro',

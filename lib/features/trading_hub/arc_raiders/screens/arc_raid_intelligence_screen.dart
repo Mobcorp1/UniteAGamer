@@ -88,6 +88,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   bool _usesHatch = false;
   bool _hatchKeyConfirmed = false;
   ArcRaidRoutePlan? _routePlan;
+  List<ArcRaidIntelCluster> _objectiveOnlyStops = const <ArcRaidIntelCluster>[];
   ArcRaidMapMarker? _selectedMarker;
   Timer? _mapViewSaveTimer;
   bool _restoringMapView = false;
@@ -245,6 +246,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       _spawn = null;
       _extraction = null;
       _routePlan = null;
+      _objectiveOnlyStops = const <ArcRaidIntelCluster>[];
       _selectedMarker = null;
     });
     await _restoreLayerView(mapId: canonicalMapId, layer: nextLayer);
@@ -671,7 +673,9 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
         ),
         child: Text(
           route == null
-              ? intelligence.recommendation
+              ? _objectiveOnlyStops.isEmpty
+                    ? intelligence.recommendation
+                    : 'Objective-only run: ${_objectiveOnlyStops.length} prioritized stops. Sync/select an extraction to complete the route.'
               : '${route.summary} ${route.approximate ? 'Area-to-area route, approximate.' : ''}',
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
@@ -754,7 +758,9 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
           _raidAccordion(
             title: 'ROUTE PLAN',
             subtitle: intelligence.routePlan == null
-                ? 'No route generated yet'
+                ? _objectiveOnlyStops.isEmpty
+                      ? 'No route generated yet'
+                      : 'Objective stop order ready'
                 : 'Active run ready',
             icon: Icons.route_rounded,
             accent: ArcUiTokens.secondaryAccent,
@@ -1306,12 +1312,57 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     return _section(
       title: 'Route',
       child: route == null
-          ? Text(
-              _usesHatch && !_hatchKeyConfirmed
-                  ? 'Confirm Raider Hatch Key before generating a hatch route.'
-                  : 'Choose a spawn. UAG can select the best extraction automatically.',
-              style: ArcUiTokens.bodySmall(),
-            )
+          ? _objectiveOnlyStops.isEmpty
+                ? Text(
+                    _usesHatch && !_hatchKeyConfirmed
+                        ? 'Confirm Raider Hatch Key before generating a hatch route.'
+                        : 'Choose a spawn. UAG can select the best extraction automatically.',
+                    style: ArcUiTokens.bodySmall(),
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'No synced extraction is required to start planning. These are the highest-value objective stops from your selected spawn. Add/sync an extraction later to calculate the complete run.',
+                        style: ArcUiTokens.bodySmall(),
+                      ),
+                      const SizedBox(height: 8),
+                      for (
+                        var index = 0;
+                        index < _objectiveOnlyStops.length;
+                        index++
+                      )
+                        ListTile(
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                          leading: CircleAvatar(
+                            backgroundColor: AppTheme.neonCyan.withValues(
+                              alpha: 0.16,
+                            ),
+                            child: Text(
+                              '${index + 1}',
+                              style: ArcUiTokens.body(
+                                color: ArcUiTokens.textPrimary,
+                                weight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                          title: Text(
+                            _objectiveOnlyStops[index].label,
+                            style: ArcUiTokens.body(
+                              color: ArcUiTokens.textPrimary,
+                              weight: FontWeight.w700,
+                            ),
+                          ),
+                          subtitle: Text(
+                            _objectiveOnlyStops[index].cautiousSummary,
+                            style: ArcUiTokens.bodySmall(),
+                          ),
+                          onTap: () =>
+                              _jumpTo(_objectiveOnlyStops[index].point),
+                        ),
+                    ],
+                  )
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1524,7 +1575,24 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       usesRaiderHatch: _usesHatch,
     );
     if (extraction == null) {
-      _showSnack('No valid extraction is available for this map.');
+      final objectiveStops = _engine.orderObjectiveStops(
+        map: intelligence.map,
+        clusters: intelligence.opportunityClusters,
+        spawn: spawn,
+        routeStyle: _routeStyle,
+        raidStage: _raidStage,
+      );
+      if (objectiveStops.isEmpty) {
+        _showSnack('No current objective stops are available for this map.');
+        return;
+      }
+      setState(() {
+        _routePlan = null;
+        _objectiveOnlyStops = objectiveStops;
+      });
+      _showSnack(
+        'Objective stop order ready. Sync/select an extraction when available to complete the run.',
+      );
       return;
     }
     final resolvedExtraction = extraction;
@@ -1551,7 +1619,10 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       );
       return;
     }
-    setState(() => _routePlan = route);
+    setState(() {
+      _routePlan = route;
+      _objectiveOnlyStops = const <ArcRaidIntelCluster>[];
+    });
     if (await _saveActiveRoute(route)) {
       _showSnack('Blueprint Run generated and saved as active route.');
     } else {

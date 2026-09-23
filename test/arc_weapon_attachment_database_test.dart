@@ -14,7 +14,7 @@ void main() {
           .map((attachment) => attachment.id)
           .toSet();
 
-      expect(ArcWeaponAttachmentDatabase.attachments, hasLength(37));
+      expect(ArcWeaponAttachmentDatabase.attachments, hasLength(39));
       expect(ids, hasLength(ArcWeaponAttachmentDatabase.attachments.length));
       for (final attachment in ArcWeaponAttachmentDatabase.attachments) {
         expect(attachment.id.trim(), isNotEmpty, reason: attachment.name);
@@ -58,7 +58,7 @@ void main() {
           .where((attachment) => attachment.craftable)
           .toList(growable: false);
 
-      expect(craftable, hasLength(35));
+      expect(craftable, hasLength(37));
       for (final attachment in craftable) {
         expect(
           attachment.craftingRequirements,
@@ -110,9 +110,9 @@ void main() {
       );
       expect(
         ArcWeaponAttachmentDatabase.attachmentForName(
-          'Extended Barrel',
+          'Extended Barrel III',
         )?.slotType,
-        ArcAttachmentSlotType.barrel,
+        ArcAttachmentSlotType.muzzle,
       );
       expect(
         ArcWeaponAttachmentDatabase.attachmentForName(
@@ -153,6 +153,96 @@ void main() {
         contains('Kinetic Converter'),
       );
     });
+
+    test(
+      'Stitcher and Anvil expose current compatible attachment families',
+      () {
+        const stitcherExpected = <String, List<String>>{
+          'Muzzle Mod': <String>[
+            'Compensator I',
+            'Compensator II',
+            'Compensator III',
+            'Muzzle Brake I',
+            'Muzzle Brake II',
+            'Muzzle Brake III',
+            'Silencer I',
+            'Silencer II',
+            'Silencer III',
+            'Extended Barrel III',
+          ],
+          'Underbarrel Mod': <String>[
+            'Angled Grip I',
+            'Angled Grip II',
+            'Angled Grip III',
+            'Vertical Grip I',
+            'Vertical Grip II',
+            'Vertical Grip III',
+            'Horizontal Grip',
+          ],
+          'Light Magazine Mod': <String>[
+            'Extended Light Mag I',
+            'Extended Light Mag II',
+            'Extended Light Mag III',
+          ],
+          'Stock Mod': <String>[
+            'Stable Stock I',
+            'Stable Stock II',
+            'Stable Stock III',
+            'Padded Stock',
+          ],
+        };
+
+        for (final entry in stitcherExpected.entries) {
+          final names =
+              ArcLoadoutCompatibilityRegistry.compatibleAttachmentsForSlot(
+                weaponName: 'Stitcher',
+                slotLabel: entry.key,
+              ).map((attachment) => attachment.name).toSet();
+          expect(names, containsAll(entry.value), reason: entry.key);
+        }
+
+        final anvilMuzzle =
+            ArcLoadoutCompatibilityRegistry.compatibleAttachmentsForSlot(
+              weaponName: 'Anvil',
+              slotLabel: 'Muzzle Mod',
+            ).map((attachment) => attachment.name).toSet();
+        expect(
+          anvilMuzzle,
+          containsAll(<String>[
+            'Compensator I',
+            'Compensator II',
+            'Compensator III',
+            'Muzzle Brake I',
+            'Muzzle Brake II',
+            'Muzzle Brake III',
+            'Silencer I',
+            'Silencer II',
+            'Silencer III',
+            'Extended Barrel I',
+            'Extended Barrel II',
+            'Extended Barrel III',
+          ]),
+        );
+
+        final anvilTech =
+            ArcLoadoutCompatibilityRegistry.compatibleAttachmentsForSlot(
+              weaponName: 'Anvil',
+              slotLabel: 'Tech Mod',
+            ).map((attachment) => attachment.name);
+        expect(anvilTech, contains('Anvil Splitter'));
+      },
+    );
+
+    test(
+      'legacy Extended Barrel saved name resolves to Extended Barrel III',
+      () {
+        final legacy = ArcWeaponAttachmentDatabase.attachmentForName(
+          'Extended Barrel',
+        );
+        expect(legacy?.name, 'Extended Barrel III');
+        expect(legacy?.slotType, ArcAttachmentSlotType.muzzle);
+      },
+    );
 
     test('Kinetic Converter and Anvil Splitter are find-only', () {
       final kinetic = ArcWeaponAttachmentDatabase.attachmentForName(

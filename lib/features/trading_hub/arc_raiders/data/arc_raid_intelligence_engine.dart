@@ -2,10 +2,13 @@ import 'dart:math' as math;
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_intel_seed.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_opportunity_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_research_catalog.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_intelligence_location_resolver.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_filter_icon_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_marker_cluster_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_runtime_map_resolver.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_world_intel_population_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_map_marker.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
@@ -33,7 +36,11 @@ class ArcRaidIntelligenceEngine {
     ArcRaidMapLayer activeLayer = ArcRaidMapLayer.surface,
     ArcRaidRoutePlan? activeRoute,
   }) {
-    final map = ArcRaidIntelligenceSeedData.mapById(mapId);
+    final seedMap = ArcRaidIntelligenceSeedData.mapById(mapId);
+    final map = const ArcRaidRuntimeMapResolver().resolve(
+      seedMap: seedMap,
+      adminMarkers: adminMarkers,
+    );
     final worldIntel = const ArcWorldIntelPopulationEngine().build(
       maps: <ArcRaidMap>[map],
       dropReports: dropReports,
@@ -249,14 +256,97 @@ class ArcRaidIntelligenceEngine {
     }
     for (final blueprint in missing) {
       if (reportBlueprintIds.contains(blueprint.id)) continue;
-      final hint = ArcBlueprintIntelLibrary.resolve(blueprint);
-      if (!_hintSupportsMap(hint, map)) continue;
-      final poi = _poiForBlueprint(map, blueprint);
+
       final state = blueprintStates[blueprint.id];
       final topWanted = (state?.priorityRank ?? 0) > 0;
       final loadoutRelevant = loadoutNames.contains(
         blueprint.name.trim().toLowerCase(),
       );
+      final research = ArcBlueprintResearchCatalog.forBlueprintOnMap(
+        blueprint.id,
+        map.id,
+      );
+
+      if (research != null) {
+        if (!research.canAutoRoute) {
+          continue;
+        }
+
+        for (final site in research.autoRouteSites.take(3)) {
+          final resolution = const ArcIntelligenceLocationResolver().resolve(
+            map: map,
+            adminMarkers: canonicalMarkers,
+            canonicalPoiId: site.poiId,
+            currentPoiName: site.poiName,
+          );
+          if (resolution == null || resolution.needsAdminReview) continue;
+
+          final confidence = research.reportedFindCount > 0
+              ? ArcRaidIntelConfidence.moderate
+              : ArcRaidIntelConfidence.limited;
+          final score = _opportunityScore(
+            blueprint: blueprint,
+            state: state,
+            confidence: confidence,
+            loadoutRelevant: loadoutRelevant,
+            operationsState: operationsState,
+          );
+          final evidence = ArcRaidIntelEvidence(
+            id: '${map.id}_${blueprint.id}_${site.poiId}_research',
+            blueprintId: blueprint.id,
+            mapId: map.id,
+            poiId: site.poiId,
+            approximateArea: resolution.label,
+            point: resolution.point,
+            containerSource: research.container,
+            conditionId: research.condition.trim().isEmpty
+                ? null
+                : research.condition,
+            raidStage: 'Full',
+            acquisitionSource: 'research_baseline',
+            claimSummary:
+                '${blueprint.name}: search ${research.container.toLowerCase()} around ${resolution.label}.',
+            sourceCategory: 'uag_research_baseline',
+            sourceReference: ArcBlueprintResearchCatalog.dataVersion,
+            reviewedAt: DateTime.utc(2026, 9, 23),
+            direct: false,
+            confidence: confidence,
+            notes:
+                '${research.evidenceSummary}. Candidate POI, not a guaranteed Blueprint spawn.',
+          );
+          final cluster = ArcRaidIntelCluster(
+            id: '${map.id}_${blueprint.id}_${site.poiId}_research_cluster',
+            mapId: map.id,
+            label: '${blueprint.name} search — ${resolution.label}',
+            point: resolution.point,
+            layer: resolution.layer,
+            poiId: site.poiId,
+            blueprintIds: <String>[blueprint.id],
+            evidence: <ArcRaidIntelEvidence>[evidence],
+            confidence: confidence,
+            reportCount: research.reportedFindCount,
+            independentReporterCount: 0,
+            freshnessLabel: 'Research baseline — 23 Sep 2026',
+            commonSource: research.container,
+            conditionCorrelation: research.condition.trim().isEmpty
+                ? 'Any condition'
+                : research.condition,
+          );
+          mapClusters.add(cluster);
+          _clusterScores[cluster.id] = score + (research.reportedFindCount * 8);
+        }
+
+        // The research catalogue is authoritative for whether a baseline POI
+        // is safe to auto-route. Never fall back to an arbitrary hashed POI
+        // for a researched blueprint/map pair.
+        continue;
+      }
+
+      // Compatibility fallback for future blueprints that are not yet in the
+      // research catalogue. Current baseline records should not reach here.
+      final hint = ArcBlueprintIntelLibrary.resolve(blueprint);
+      if (!_hintSupportsMap(hint, map)) continue;
+      final poi = _poiForBlueprint(map, blueprint);
       final confidence = _confidenceFromHint(hint, topWanted: topWanted);
       final source = hint.likelyContainers.isEmpty
           ? 'Area-level report'
@@ -298,8 +388,8 @@ class ArcRaidIntelligenceEngine {
               : '${blueprint.name} near ${poi.name}',
           point: poi?.point ?? const ArcNormalizedPoint(x: 0.5, y: 0.5),
           poiId: poi?.id,
-          blueprintIds: [blueprint.id],
-          evidence: [evidence],
+          blueprintIds: <String>[blueprint.id],
+          evidence: <ArcRaidIntelEvidence>[evidence],
           confidence: confidence,
           reportCount: confidence.score ~/ 18,
           independentReporterCount: confidence.score ~/ 26,
@@ -321,6 +411,46 @@ class ArcRaidIntelligenceEngine {
       return a.label.compareTo(b.label);
     });
     return _mergeNearbyClusters(mapClusters);
+  }
+
+  List<ArcRaidIntelCluster> orderObjectiveStops({
+    required ArcRaidMap map,
+    required List<ArcRaidIntelCluster> clusters,
+    required ArcRaidRouteStop spawn,
+    ArcRaidRouteStyle routeStyle = ArcRaidRouteStyle.balanced,
+    String raidStage = 'Full',
+  }) {
+    if (clusters.isEmpty) return const <ArcRaidIntelCluster>[];
+    final stopLimit = routeStyle.stopLimitForStage(raidStage);
+    final remaining = [...clusters]
+      ..sort((a, b) {
+        final aScore =
+            (_clusterScores[a.id] ?? a.confidence.score.toDouble()) -
+            (_graphTravelCost(map, spawn.point, a.point) * 2.2);
+        final bScore =
+            (_clusterScores[b.id] ?? b.confidence.score.toDouble()) -
+            (_graphTravelCost(map, spawn.point, b.point) * 2.2);
+        final compare = bScore.compareTo(aScore);
+        if (compare != 0) return compare;
+        return a.label.compareTo(b.label);
+      });
+    final candidates = remaining.take(math.max(stopLimit * 2, stopLimit));
+    final selected = <ArcRaidIntelCluster>[];
+    var current = spawn.point;
+    final pool = candidates.toList();
+    while (pool.isNotEmpty && selected.length < stopLimit) {
+      pool.sort((a, b) {
+        final aCost = _graphTravelCost(map, current, a.point);
+        final bCost = _graphTravelCost(map, current, b.point);
+        final compare = aCost.compareTo(bCost);
+        if (compare != 0) return compare;
+        return (_clusterScores[b.id] ?? 0).compareTo(_clusterScores[a.id] ?? 0);
+      });
+      final next = pool.removeAt(0);
+      selected.add(next);
+      current = next.point;
+    }
+    return List<ArcRaidIntelCluster>.unmodifiable(selected);
   }
 
   ArcRaidRoutePlan? generateRoute({
@@ -781,6 +911,9 @@ class ArcRaidIntelligenceEngine {
     final reportDriven = cluster.evidence.any(
       (item) => item.sourceCategory == 'community_drop_report',
     );
+    final researchDriven = cluster.evidence.any(
+      (item) => item.sourceCategory == 'uag_research_baseline',
+    );
     final sortedBlueprintIds = List<String>.from(cluster.blueprintIds)
       ..sort((a, b) {
         final aState = blueprintStates[a];
@@ -798,10 +931,12 @@ class ArcRaidIntelligenceEngine {
         .toList(growable: false);
     final findsPerBlueprint = <String, int>{
       for (final id in sortedBlueprintIds)
-        id: cluster.evidence
-            .where((item) => item.blueprintId == id)
-            .fold<int>(0, (total, _) => total + 1)
-            .clamp(1, cluster.reportCount),
+        id: researchDriven
+            ? cluster.reportCount
+            : cluster.evidence
+                  .where((item) => item.blueprintId == id)
+                  .fold<int>(0, (total, _) => total + 1)
+                  .clamp(1, math.max(1, cluster.reportCount)),
     };
 
     return ArcRaidMapMarker(
@@ -815,10 +950,18 @@ class ArcRaidIntelligenceEngine {
       confidence: cluster.confidence,
       count: math.max(cluster.reportCount, sortedBlueprintIds.length),
       approximate: !reportDriven,
-      detail:
-          '${cluster.cautiousSummary}. ${cluster.reportCount} report confirmations from ${cluster.independentReporterCount} independent Raiders. ${cluster.freshnessLabel}.',
+      detail: researchDriven
+          ? cluster.reportCount > 0
+                ? '${cluster.cautiousSummary}. Baseline POI/container match with ${cluster.reportCount} separately documented find ${_plural(cluster.reportCount, 'lead', 'leads')}. Not a guaranteed spawn. ${cluster.freshnessLabel}.'
+                : '${cluster.cautiousSummary}. Baseline POI/container match for route planning; not an individually verified Blueprint spawn. ${cluster.freshnessLabel}.'
+          : '${cluster.cautiousSummary}. ${cluster.reportCount} report confirmations from ${cluster.independentReporterCount} independent Raiders. ${cluster.freshnessLabel}.',
       tags: <String>[
-        if (reportDriven) 'Drop Reports' else 'Seeded Intel',
+        if (reportDriven)
+          'Drop Reports'
+        else if (researchDriven)
+          'Research Baseline'
+        else
+          'Seeded Intel',
         cluster.commonSource,
         cluster.conditionCorrelation,
         cluster.freshnessLabel,
@@ -946,14 +1089,19 @@ class ArcRaidIntelligenceEngine {
       used.add(cluster.id);
       used.addAll(nearby.map((item) => item.id));
       final all = [cluster, ...nearby];
+      final reportDriven = all.where(_reportDriven).toList(growable: false);
+      final anchor = reportDriven.isEmpty ? cluster : reportDriven.first;
+      final evidenceClusters = reportDriven.isEmpty ? all : reportDriven;
       merged.add(
         ArcRaidIntelCluster(
-          id: '${cluster.id}_merged',
-          mapId: cluster.mapId,
-          label: '${all.length} Blueprint opportunities',
-          point: cluster.point,
-          layer: cluster.layer,
-          poiId: cluster.poiId,
+          id: '${anchor.id}_merged',
+          mapId: anchor.mapId,
+          label: reportDriven.isEmpty
+              ? '${all.length} Blueprint opportunities'
+              : anchor.label,
+          point: anchor.point,
+          layer: anchor.layer,
+          poiId: anchor.poiId,
           blueprintIds: all
               .expand((item) => item.blueprintIds)
               .toSet()
@@ -962,17 +1110,19 @@ class ArcRaidIntelligenceEngine {
           confidence: all
               .map((item) => item.confidence)
               .reduce((a, b) => a.score >= b.score ? a : b),
-          reportCount: all.fold<int>(
+          reportCount: evidenceClusters.fold<int>(
             0,
             (total, item) => total + item.reportCount,
           ),
-          independentReporterCount: all.fold<int>(
+          independentReporterCount: evidenceClusters.fold<int>(
             0,
             (total, item) => total + item.independentReporterCount,
           ),
-          freshnessLabel: 'Seed reviewed',
-          commonSource: cluster.commonSource,
-          conditionCorrelation: cluster.conditionCorrelation,
+          freshnessLabel: reportDriven.isEmpty
+              ? 'Seed reviewed'
+              : anchor.freshnessLabel,
+          commonSource: anchor.commonSource,
+          conditionCorrelation: anchor.conditionCorrelation,
         ),
       );
     }

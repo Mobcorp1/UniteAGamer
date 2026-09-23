@@ -11,10 +11,50 @@ void main() {
     expect(fittedEngine.slotsForWeapon('Stitcher'), <String>[
       'Muzzle Mod',
       'Underbarrel Mod',
-      'Magazine Mod',
+      'Light Magazine Mod',
       'Stock Mod',
     ]);
   });
+
+  test('legacy Stitcher generic magazine slot still validates', () {
+    const legacy = ArcFittedWeaponConfiguration(
+      weaponId: 'stitcher',
+      weaponName: 'Stitcher',
+      attachmentsBySlot: <String, String>{
+        'Muzzle Mod': ArcFittedWeaponConfiguration.anyCompatibleAttachment,
+        'Underbarrel Mod': ArcFittedWeaponConfiguration.anyCompatibleAttachment,
+        'Magazine Mod': ArcFittedWeaponConfiguration.anyCompatibleAttachment,
+        'Stock Mod': ArcFittedWeaponConfiguration.anyCompatibleAttachment,
+      },
+    );
+
+    expect(fittedEngine.validate(legacy), isEmpty);
+  });
+
+  test(
+    'legacy Stitcher magazine requirement matches current light magazine',
+    () {
+      const requested = ArcFittedWeaponConfiguration(
+        weaponId: 'stitcher',
+        weaponName: 'Stitcher',
+        attachmentsBySlot: <String, String>{
+          'Magazine Mod': ArcFittedWeaponConfiguration.anyCompatibleAttachment,
+        },
+      );
+      const offered = ArcFittedWeaponConfiguration(
+        weaponId: 'stitcher',
+        weaponName: 'Stitcher',
+        attachmentsBySlot: <String, String>{
+          'Light Magazine Mod': 'Extended Light Mag I',
+        },
+      );
+
+      expect(
+        fittedEngine.matchesRequirement(requested: requested, offered: offered),
+        isTrue,
+      );
+    },
+  );
 
   test('Anvil fitted weapon exposes two canonical slots', () {
     expect(fittedEngine.slotsForWeapon('Anvil'), <String>[

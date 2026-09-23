@@ -41,7 +41,11 @@ class ArcFittedWeaponTradeEngine {
 
     final canonicalSlots = weapon.slots;
     for (final slot in canonicalSlots) {
-      final requirement = configuration.attachmentsBySlot[slot];
+      final requirement = _configurationValueForCanonicalSlot(
+        configuration: configuration,
+        weapon: weapon,
+        canonicalSlot: slot,
+      );
       if (requirement == null || requirement.trim().isEmpty) {
         errors.add('Choose a requirement for $slot.');
         continue;
@@ -67,7 +71,7 @@ class ArcFittedWeaponTradeEngine {
     }
 
     final unknownSlots = configuration.attachmentsBySlot.keys.where(
-      (slot) => !canonicalSlots.contains(slot),
+      (slot) => _canonicalSlotForConfigurationKey(weapon, slot) == null,
     );
     for (final slot in unknownSlots) {
       errors.add('$slot is not a valid slot for ${weapon.name}.');
@@ -83,14 +87,26 @@ class ArcFittedWeaponTradeEngine {
         offered.weaponName.trim().toLowerCase()) {
       return false;
     }
+    final weapon = weaponForName(requested.weaponName);
+    if (weapon == null) return false;
+
     for (final entry in requested.attachmentsBySlot.entries) {
-      final offeredAttachment = offered.attachmentsBySlot[entry.key];
+      final canonicalSlot = _canonicalSlotForConfigurationKey(
+        weapon,
+        entry.key,
+      );
+      if (canonicalSlot == null) return false;
+      final offeredAttachment = _configurationValueForCanonicalSlot(
+        configuration: offered,
+        weapon: weapon,
+        canonicalSlot: canonicalSlot,
+      );
       if (entry.value == ArcFittedWeaponConfiguration.anyCompatibleAttachment) {
         if (offeredAttachment == null ||
             offeredAttachment.isEmpty ||
             !ArcLoadoutCompatibilityRegistry.isAttachmentCompatible(
               weaponName: requested.weaponName,
-              slotLabel: entry.key,
+              slotLabel: canonicalSlot,
               attachmentName: offeredAttachment,
             )) {
           return false;
@@ -100,6 +116,51 @@ class ArcFittedWeaponTradeEngine {
       }
     }
     return true;
+  }
+
+  String? _canonicalSlotForConfigurationKey(
+    ArcLoadoutWeaponSpec weapon,
+    String slotKey,
+  ) {
+    final normalized = ArcLoadoutCompatibilityRegistry.normaliseSlotLabel(
+      slotKey,
+    );
+    for (final slot in weapon.slots) {
+      if (ArcLoadoutCompatibilityRegistry.normaliseSlotLabel(slot) ==
+          normalized) {
+        return slot;
+      }
+    }
+
+    if (normalized != 'magazine') return null;
+    final magazineSlots = weapon.slots
+        .where((slot) {
+          final slotType = ArcLoadoutCompatibilityRegistry.slotTypeForLabel(
+            slot,
+          );
+          return slotType == ArcAttachmentSlotType.lightMagazine ||
+              slotType == ArcAttachmentSlotType.mediumMagazine ||
+              slotType == ArcAttachmentSlotType.shotgunMagazine;
+        })
+        .toList(growable: false);
+    return magazineSlots.length == 1 ? magazineSlots.single : null;
+  }
+
+  String? _configurationValueForCanonicalSlot({
+    required ArcFittedWeaponConfiguration configuration,
+    required ArcLoadoutWeaponSpec weapon,
+    required String canonicalSlot,
+  }) {
+    final direct = configuration.attachmentsBySlot[canonicalSlot];
+    if (direct != null) return direct;
+
+    for (final entry in configuration.attachmentsBySlot.entries) {
+      if (_canonicalSlotForConfigurationKey(weapon, entry.key) ==
+          canonicalSlot) {
+        return entry.value;
+      }
+    }
+    return null;
   }
 
   String summary(ArcFittedWeaponConfiguration configuration) {

@@ -190,7 +190,12 @@ class ArcLoadoutSeedData {
       name: 'Stitcher',
       category: 'SMG',
       role: 'Close-range ARC and raider pressure',
-      slots: ['Muzzle Mod', 'Underbarrel Mod', 'Magazine Mod', 'Stock Mod'],
+      slots: [
+        'Muzzle Mod',
+        'Underbarrel Mod',
+        'Light Magazine Mod',
+        'Stock Mod',
+      ],
       craftable: true,
       gunsmithLevel: 2,
     ),

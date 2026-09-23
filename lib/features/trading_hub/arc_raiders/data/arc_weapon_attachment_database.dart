@@ -39,6 +39,8 @@ class ArcWeaponAttachmentDatabase {
         'Tempest',
         'Arpeggio',
         'Bettina',
+        'Stitcher',
+        'Anvil',
       ],
       assetPath: 'assets/arc_raiders/blueprints/compensator-i.webp',
     ),
@@ -59,7 +61,7 @@ class ArcWeaponAttachmentDatabase {
           value: -15,
         ),
       ],
-      compatibleWeapons: ['Arpeggio', 'Ferro'],
+      compatibleWeapons: ['Arpeggio', 'Ferro', 'Stitcher', 'Anvil'],
       assetPath: 'assets/arc_raiders/blueprints/muzzle-brake-i.webp',
     ),
     _craftable(
@@ -89,7 +91,14 @@ class ArcWeaponAttachmentDatabase {
           value: -20,
         ),
       ],
-      compatibleWeapons: ['Vulcano', 'Osprey', 'Ferro', 'Venator', 'Il Toro'],
+      compatibleWeapons: [
+        'Vulcano',
+        'Osprey',
+        'Ferro',
+        'Venator',
+        'Il Toro',
+        'Stitcher',
+      ],
       assetPath: 'assets/arc_raiders/scrappy_resources/angled_grip_i.webp',
     ),
     _craftable(
@@ -104,7 +113,14 @@ class ArcWeaponAttachmentDatabase {
           value: -20,
         ),
       ],
-      compatibleWeapons: ['Vulcano', 'Ferro', 'Bobcat', 'Il Toro', 'Tempest'],
+      compatibleWeapons: [
+        'Vulcano',
+        'Ferro',
+        'Bobcat',
+        'Il Toro',
+        'Tempest',
+        'Stitcher',
+      ],
       assetPath: 'assets/arc_raiders/blueprints/vertical-grip-i.webp',
     ),
     _craftable(
@@ -120,7 +136,7 @@ class ArcWeaponAttachmentDatabase {
           unit: 'rounds',
         ),
       ],
-      compatibleWeapons: ['Bobcat'],
+      compatibleWeapons: ['Bobcat', 'Stitcher'],
       assetPath: 'assets/arc_raiders/blueprints/extended-light-mag-i.webp',
     ),
     _craftable(
@@ -187,6 +203,7 @@ class ArcWeaponAttachmentDatabase {
         'Torrente',
         'Arpeggio',
         'Rattler',
+        'Stitcher',
       ],
       assetPath: 'assets/arc_raiders/blueprints/stable-stock-i.webp',
     ),
@@ -211,6 +228,7 @@ class ArcWeaponAttachmentDatabase {
         'Anvil',
         'Osprey',
         'Ferro',
+        'Stitcher',
       ],
       assetPath: 'assets/arc_raiders/blueprints/compensator-ii.webp',
     ),
@@ -231,7 +249,14 @@ class ArcWeaponAttachmentDatabase {
           value: -20,
         ),
       ],
-      compatibleWeapons: ['Arpeggio', 'Ferro', 'Tempest', 'Anvil', 'Osprey'],
+      compatibleWeapons: [
+        'Arpeggio',
+        'Ferro',
+        'Tempest',
+        'Anvil',
+        'Osprey',
+        'Stitcher',
+      ],
       assetPath: 'assets/arc_raiders/blueprints/muzzle-brake-ii.webp',
     ),
     _craftable(
@@ -264,6 +289,7 @@ class ArcWeaponAttachmentDatabase {
         'Anvil',
         'Burletta',
         'Renegade',
+        'Stitcher',
       ],
       assetPath: 'assets/arc_raiders/blueprints/silencer-i.webp',
     ),
@@ -279,7 +305,7 @@ class ArcWeaponAttachmentDatabase {
           value: -30,
         ),
       ],
-      compatibleWeapons: ['Vulcano', 'Tempest', 'Osprey', 'Bobcat'],
+      compatibleWeapons: ['Vulcano', 'Tempest', 'Osprey', 'Bobcat', 'Stitcher'],
       assetPath: 'assets/arc_raiders/blueprints/angled-grip-ii.webp',
     ),
     _craftable(
@@ -317,7 +343,7 @@ class ArcWeaponAttachmentDatabase {
           unit: 'rounds',
         ),
       ],
-      compatibleWeapons: ['Burletta', 'Bobcat'],
+      compatibleWeapons: ['Burletta', 'Bobcat', 'Stitcher'],
       assetPath: 'assets/arc_raiders/blueprints/extended-light-mag-ii.webp',
     ),
     _craftable(
@@ -376,7 +402,7 @@ class ArcWeaponAttachmentDatabase {
           value: -60,
         ),
       ],
-      compatibleWeapons: ['Renegade', 'Vulcano', 'Torrente'],
+      compatibleWeapons: ['Renegade', 'Vulcano', 'Torrente', 'Stitcher'],
       assetPath: 'assets/arc_raiders/blueprints/stable-stock-ii.webp',
     ),
     _craftable(
@@ -403,6 +429,7 @@ class ArcWeaponAttachmentDatabase {
         'Anvil',
         'Burletta',
         'Osprey',
+        'Stitcher',
       ],
       assetPath: 'assets/arc_raiders/blueprints/compensator-iii.webp',
     ),
@@ -438,6 +465,7 @@ class ArcWeaponAttachmentDatabase {
         'Tempest',
         'Osprey',
         'Renegade',
+        'Stitcher',
       ],
       assetPath: 'assets/arc_raiders/blueprints/muzzle-brake-iii.webp',
     ),
@@ -477,6 +505,7 @@ class ArcWeaponAttachmentDatabase {
         'Anvil',
         'Burletta',
         'Renegade',
+        'Stitcher',
       ],
       assetPath: 'assets/arc_raiders/blueprints/silencer-ii.webp',
     ),
@@ -501,6 +530,8 @@ class ArcWeaponAttachmentDatabase {
         'Tempest',
         'Arpeggio',
         'Renegade',
+        'Stitcher',
+        'Anvil',
       ],
       assetPath: 'assets/arc_raiders/blueprints/silencer-iii.webp',
     ),
@@ -514,15 +545,64 @@ class ArcWeaponAttachmentDatabase {
       assetPath: 'assets/arc_raiders/blueprints/shotgun-silencer.webp',
     ),
     _craftable(
-      name: 'Extended Barrel',
-      slotType: ArcAttachmentSlotType.barrel,
-      benchLevel: 3,
-      requirements: [_req(6, 'Metal Parts'), _req(1, 'Steel Spring')],
+      name: 'Extended Barrel I',
+      slotType: ArcAttachmentSlotType.muzzle,
+      benchLevel: 1,
+      requirements: [_req(6, 'Metal Parts'), _req(3, 'Wires')],
       effects: [
         _effect(
-          '25% increased bullet velocity',
+          '10% increased bullet velocity',
           stat: 'bulletVelocity',
-          value: 25,
+          value: 10,
+        ),
+        _effect(
+          '5% increased distance until damage falloff',
+          stat: 'damageFalloffDistance',
+          value: 5,
+        ),
+      ],
+      compatibleWeapons: ['Anvil'],
+      assetPath: 'assets/arc_raiders/blueprints/extended-barrel.webp',
+      notes:
+          'Current muzzle mod. Temporary artwork fallback uses the legacy Extended Barrel asset until current tier-I art is supplied.',
+    ),
+    _craftable(
+      name: 'Extended Barrel II',
+      slotType: ArcAttachmentSlotType.muzzle,
+      benchLevel: 2,
+      requirements: [_req(3, 'Mechanical Components'), _req(6, 'Wires')],
+      effects: [
+        _effect(
+          '20% increased bullet velocity',
+          stat: 'bulletVelocity',
+          value: 20,
+        ),
+        _effect(
+          '10% increased distance until damage falloff',
+          stat: 'damageFalloffDistance',
+          value: 10,
+        ),
+      ],
+      compatibleWeapons: ['Anvil'],
+      assetPath: 'assets/arc_raiders/blueprints/extended-barrel-ii.webp',
+      notes:
+          'Current muzzle mod. Extended Barrel II Blueprint required to craft.',
+    ),
+    _craftable(
+      name: 'Extended Barrel III',
+      slotType: ArcAttachmentSlotType.muzzle,
+      benchLevel: 3,
+      requirements: [_req(2, 'Mod Components'), _req(8, 'Wires')],
+      effects: [
+        _effect(
+          '30% increased bullet velocity',
+          stat: 'bulletVelocity',
+          value: 30,
+        ),
+        _effect(
+          '15% increased distance until damage falloff',
+          stat: 'damageFalloffDistance',
+          value: 15,
         ),
         _effect(
           '15% increased vertical recoil',
@@ -542,7 +622,7 @@ class ArcWeaponAttachmentDatabase {
       ],
       assetPath: 'assets/arc_raiders/blueprints/extended-barrel.webp',
       notes:
-          'Authoritative compatibility provided, but current weapon slot matrix has no barrel slot.',
+          'Renamed from the legacy Extended Barrel in patch 1.29. Temporary artwork fallback uses the existing legacy asset until current tier-III art is supplied.',
     ),
     _craftable(
       name: 'Angled Grip III',
@@ -562,7 +642,14 @@ class ArcWeaponAttachmentDatabase {
           isPenalty: true,
         ),
       ],
-      compatibleWeapons: ['Vulcano', 'Osprey', 'Ferro', 'Venator', 'Il Toro'],
+      compatibleWeapons: [
+        'Vulcano',
+        'Osprey',
+        'Ferro',
+        'Venator',
+        'Il Toro',
+        'Stitcher',
+      ],
       assetPath: 'assets/arc_raiders/blueprints/angled-grip-iii.webp',
     ),
     _craftable(
@@ -583,7 +670,7 @@ class ArcWeaponAttachmentDatabase {
           isPenalty: true,
         ),
       ],
-      compatibleWeapons: ['Arpeggio', 'Il Toro', 'Vulcano'],
+      compatibleWeapons: ['Arpeggio', 'Il Toro', 'Vulcano', 'Stitcher'],
       assetPath: 'assets/arc_raiders/blueprints/vertical-grip-iii.webp',
     ),
     _craftable(
@@ -609,7 +696,7 @@ class ArcWeaponAttachmentDatabase {
           isPenalty: true,
         ),
       ],
-      compatibleWeapons: ['Tempest', 'Vulcano', 'Osprey'],
+      compatibleWeapons: ['Tempest', 'Vulcano', 'Osprey', 'Stitcher'],
       assetPath: 'assets/arc_raiders/blueprints/horizontal-grip.webp',
     ),
     _craftable(
@@ -625,7 +712,7 @@ class ArcWeaponAttachmentDatabase {
           unit: 'rounds',
         ),
       ],
-      compatibleWeapons: ['Burletta', 'Bobcat'],
+      compatibleWeapons: ['Burletta', 'Bobcat', 'Stitcher'],
       assetPath: 'assets/arc_raiders/blueprints/extended-light-mag-iii.webp',
     ),
     _craftable(
@@ -703,6 +790,7 @@ class ArcWeaponAttachmentDatabase {
         'Il Toro',
         'Ferro',
         'Renegade',
+        'Stitcher',
       ],
       assetPath: 'assets/arc_raiders/blueprints/stable-stock-iii.webp',
     ),
@@ -823,9 +911,9 @@ class ArcWeaponAttachmentDatabase {
           unit: 'projectiles',
         ),
         _effect(
-          '60% reduced projectile damage',
+          '70% reduced projectile damage',
           stat: 'projectileDamage',
-          value: -60,
+          value: -70,
           isPenalty: true,
         ),
       ],
@@ -849,7 +937,11 @@ class ArcWeaponAttachmentDatabase {
   }
 
   static ArcLoadoutAttachmentSpec? attachmentForName(String name) {
-    return _byName[_normalise(name)];
+    final normalized = _normalise(name);
+    if (normalized == 'extended barrel') {
+      return _byName['extended barrel iii'];
+    }
+    return _byName[normalized];
   }
 
   static List<ArcAttachmentSlotMatrixConflict> slotMatrixConflicts(
@@ -886,6 +978,9 @@ class ArcWeaponAttachmentDatabase {
     ArcLoadoutAttachmentSpec attachment,
   ) {
     switch (attachment.name) {
+      case 'Extended Barrel I':
+      case 'Extended Barrel III':
+        return 'assets/arc_raiders/blueprints/extended-barrel.webp';
       case 'Anvil Splitter':
         return 'assets/arc_raiders/blueprints/anvil-splitter.webp';
       case 'Kinetic Converter':
