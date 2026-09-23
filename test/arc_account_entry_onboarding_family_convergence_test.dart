@@ -43,8 +43,9 @@ void main() {
     expect(auth, contains('AppEntryGate.routeName'));
     expect(
       onboarding,
-      contains('Widget _completionDestination(String system) {'),
+      contains('const ArcProfileSetupScreen(firstRunFlow: true)'),
     );
+    expect(onboarding, isNot(contains('_completionDestination')));
     expect(agreement, contains('Navigator.of(context).pop(true)'));
     expect(profile, contains('await _repository.saveProfile(profile);'));
     expect(profile, contains('Navigator.of(context).pop(true)'));

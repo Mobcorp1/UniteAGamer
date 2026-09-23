@@ -61,12 +61,13 @@ void main() {
       contains("data['arcMandatoryOnboardingComplete'] == true"),
     );
     expect(appEntry, contains("data['onboardingComplete'] == true"));
-    expect(authLanding, contains('const AuthScreen(initialIsLogin: false)'));
+    expect(authLanding, contains('const ArcMandatoryOnboardingScreen()'));
     expect(onboarding, contains('markAuthenticatedWithStoredPreference'));
     expect(
       onboarding,
-      contains('Widget _completionDestination(String system) {'),
+      contains('const ArcProfileSetupScreen(firstRunFlow: true)'),
     );
+    expect(onboarding, isNot(contains('_completionDestination')));
     expect(onboarding, isNot(contains(': ArcCommandCentreScreen.routeName')));
     expect(web, contains('interactive-widget=resizes-content'));
     expect(web, isNot(contains('flt-glass-pane,')));

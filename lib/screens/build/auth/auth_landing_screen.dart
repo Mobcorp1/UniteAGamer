@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:uag_arc_raiders_hub/build/auth/auth_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_mandatory_onboarding_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
@@ -121,9 +122,7 @@ class _AuthLandingScreenState extends State<AuthLandingScreen>
 
   void _openCreateAccount() {
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => const AuthScreen(initialIsLogin: false),
-      ),
+      MaterialPageRoute(builder: (_) => const ArcMandatoryOnboardingScreen()),
     );
   }
 

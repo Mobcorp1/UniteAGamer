@@ -18,13 +18,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_on
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_user_personalisation_profile.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_trader_profile_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_user_personalisation_repository.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_match_rider_screen.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raid_intelligence_screen.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raiders_hub_screen.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_profile_setup_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_account_journey_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_game_platform_selector.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
@@ -191,19 +185,6 @@ class _ArcMandatoryOnboardingScreenState
       _acceptedTermsOfService &&
       _acceptedDataSecurity &&
       _acceptedAgeConfirmation;
-
-  Widget _completionDestination(String system) {
-    return switch (system) {
-      'favouriteLoadout' => const FavouriteLoadoutScreen(),
-      'blueprintTracker' => const BlueprintGridScreen(),
-      'blueprintIntelligence' => const ArcRaidIntelligenceScreen(),
-      'questTracker' => const ScrappyGridScreen.quest(),
-      'raidIntelligence' => const ArcRaidIntelligenceScreen(),
-      'trading' => const TraderHubScreen(),
-      'matchRider' => const ArcMatchRiderScreen(),
-      _ => const ArcRaidersHubScreen(),
-    };
-  }
 
   Future<void> _next() async {
     FocusScope.of(context).unfocus();
@@ -598,7 +579,7 @@ class _ArcMandatoryOnboardingScreenState
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute<void>(
-          builder: (_) => _completionDestination(recommendedFirstSystem),
+          builder: (_) => const ArcProfileSetupScreen(firstRunFlow: true),
         ),
         (_) => false,
       );
@@ -736,13 +717,15 @@ class _ArcMandatoryOnboardingScreenState
                             blueprintSetup: _blueprintSetupChoice,
                             onProgressStageChanged: (value) =>
                                 setState(() => _progressStage = value),
-                            onBlueprintOwnershipChanged: (value) => setState(() {
-                              _blueprintOwnership = value;
-                              if (value == ArcBlueprintOwnershipState.none) {
-                                _blueprintSetupChoice =
-                                    _BlueprintSetupChoice.later;
-                              }
-                            }),
+                            onBlueprintOwnershipChanged: (value) => setState(
+                              () {
+                                _blueprintOwnership = value;
+                                if (value == ArcBlueprintOwnershipState.none) {
+                                  _blueprintSetupChoice =
+                                      _BlueprintSetupChoice.later;
+                                }
+                              },
+                            ),
                             onQuestProgressChanged: (value) =>
                                 setState(() => _questProgress = value),
                             onBlueprintSetupChanged: (choice) =>
@@ -1660,9 +1643,8 @@ class _ProgressionStep extends StatelessWidget {
                 title: 'New to ARC',
                 badge: 'FIRST RAIDER',
                 selected: progressStage == ArcRaiderProgressStage.newRaider,
-                onTap: () => onProgressStageChanged(
-                  ArcRaiderProgressStage.newRaider,
-                ),
+                onTap: () =>
+                    onProgressStageChanged(ArcRaiderProgressStage.newRaider),
               ),
               _ChoiceTile(
                 icon: Icons.restart_alt_rounded,
@@ -1694,8 +1676,7 @@ class _ProgressionStep extends StatelessWidget {
                 icon: Icons.filter_none_rounded,
                 title: 'No blueprints yet',
                 badge: 'START WITH LOADOUT',
-                selected:
-                    blueprintOwnership == ArcBlueprintOwnershipState.none,
+                selected: blueprintOwnership == ArcBlueprintOwnershipState.none,
                 onTap: () => onBlueprintOwnershipChanged(
                   ArcBlueprintOwnershipState.none,
                 ),
@@ -1704,8 +1685,7 @@ class _ProgressionStep extends StatelessWidget {
                 icon: Icons.grid_view_rounded,
                 title: 'Yes, I own some',
                 badge: 'SET UP TRACKER',
-                selected:
-                    blueprintOwnership == ArcBlueprintOwnershipState.some,
+                selected: blueprintOwnership == ArcBlueprintOwnershipState.some,
                 onTap: () => onBlueprintOwnershipChanged(
                   ArcBlueprintOwnershipState.some,
                 ),
@@ -1771,7 +1751,8 @@ class _ProgressionStep extends StatelessWidget {
               _ChoiceTile(
                 icon: Icons.flag_outlined,
                 title: 'Starting / reset quests',
-                selected: questProgress == ArcQuestProgressState.startingOrReset,
+                selected:
+                    questProgress == ArcQuestProgressState.startingOrReset,
                 onTap: () => onQuestProgressChanged(
                   ArcQuestProgressState.startingOrReset,
                 ),
@@ -1850,9 +1831,7 @@ class _ProgressionHint extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.neonPink.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppTheme.neonPink.withValues(alpha: 0.28),
-        ),
+        border: Border.all(color: AppTheme.neonPink.withValues(alpha: 0.28)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

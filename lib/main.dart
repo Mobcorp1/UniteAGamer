@@ -634,10 +634,18 @@ class _DirectOnboardingRouteGate extends StatelessWidget {
         }
 
         if (!snapshot.hasData) {
-          return const AuthScreen(initialIsLogin: false);
+          return ArcMandatoryOnboardingScreen.fromRouteSettings(settings);
         }
 
-        return ArcMandatoryOnboardingScreen.fromRouteSettings(settings);
+        final args = settings.arguments;
+        final adminPreview = args is Map && args['adminPreview'] == true;
+        if (adminPreview) {
+          return ArcMandatoryOnboardingScreen.fromRouteSettings(settings);
+        }
+
+        // Signed-in users always re-enter through the single production gate.
+        // That gate decides onboarding -> profile -> availability -> Hub.
+        return const AppEntryGate();
       },
     );
   }

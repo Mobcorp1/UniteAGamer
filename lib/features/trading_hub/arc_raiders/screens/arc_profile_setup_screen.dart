@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -22,7 +23,9 @@ import '../widgets/foundation/arc_ui_tokens.dart';
 class ArcProfileSetupScreen extends StatefulWidget {
   static const routeName = '/trading-hub/arc-raiders/profile/setup';
 
-  const ArcProfileSetupScreen({super.key});
+  const ArcProfileSetupScreen({super.key, this.firstRunFlow = false});
+
+  final bool firstRunFlow;
 
   @override
   State<ArcProfileSetupScreen> createState() => _ArcProfileSetupScreenState();
@@ -233,7 +236,41 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
     try {
       await _repository.saveProfile(profile);
       if (!mounted) return;
-      Navigator.of(context).pop(true);
+
+      if (!widget.firstRunFlow) {
+        Navigator.of(context).pop(true);
+        return;
+      }
+
+      await Navigator.of(
+        context,
+      ).pushNamed('/trading-hub/arc-raiders/profile/availability');
+      if (!mounted) return;
+
+      final completion = await _repository.refreshProfileCompletion();
+      if (!mounted) return;
+
+      if (!completion.complete) {
+        final missing = completion.missingFieldLabels.join(', ');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              missing.isEmpty
+                  ? 'Complete the required Raider profile fields first.'
+                  : 'Still required: $missing',
+            ),
+          ),
+        );
+        return;
+      }
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('hasCompletedProfileSetup', true);
+      if (!mounted) return;
+
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil('/app-entry-gate', (_) => false);
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -351,9 +388,13 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: const UagAppBar(
-        title: 'Set Up Raider Profile',
-        subtitle: 'Create the identity UAG uses across matching and community.',
+      appBar: UagAppBar(
+        title: widget.firstRunFlow
+            ? 'Complete Raider Profile'
+            : 'Set Up Raider Profile',
+        subtitle: widget.firstRunFlow
+            ? 'Profile & Reputation is required before entering the Hub.'
+            : 'Create the identity UAG uses across matching and community.',
         showLogout: false,
       ),
       body: ArcRaidersScreenShell(
@@ -396,7 +437,13 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
                       'UAG Name',
                       validator: (v) => _required(v, 'UAG Name'),
                     ),
-                    _field(_embarkIdController, 'Embark ID'),
+                    _field(
+                      _embarkIdController,
+                      'Embark ID',
+                      validator: widget.firstRunFlow
+                          ? (v) => _required(v, 'Embark ID')
+                          : null,
+                    ),
                     _field(
                       _regionController,
                       'Region',
@@ -592,7 +639,13 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
                   style: ArcUiTokens.textButtonStyle(primary: true),
                   onPressed: _isSaving ? null : _save,
                   icon: const Icon(Icons.save_rounded),
-                  label: Text(_isSaving ? 'Saving...' : 'Save Profile'),
+                  label: Text(
+                    _isSaving
+                        ? 'Saving...'
+                        : widget.firstRunFlow
+                        ? 'Save & Set Availability'
+                        : 'Save Profile',
+                  ),
                 ),
               ],
             ),

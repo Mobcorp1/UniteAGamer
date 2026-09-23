@@ -17,7 +17,14 @@ void main() {
         'lib/features/trading_hub/arc_raiders/screens/arc_raiders_hub_screen.dart',
       ).readAsStringSync();
 
-      expect(appEntryGate, contains('return const ArcRaidersHubScreen();'));
+      expect(
+        appEntryGate,
+        contains(
+          "export 'package:uag_arc_raiders_hub/screens/build/app_entry_gate.dart';",
+        ),
+      );
+      expect(appEntryGate, isNot(contains('class AppEntryGate')));
+      expect(legacyEntryGate, contains('class AppEntryGate'));
       expect(legacyEntryGate, contains('return const ArcRaidersHubScreen();'));
       expect(homeScreen, contains('ArcRaidersHubScreen.routeName'));
       expect(main, contains('case ArcRaidersHubScreen.routeName:'));

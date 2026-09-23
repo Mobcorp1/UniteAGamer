@@ -30,7 +30,7 @@ void main() {
   });
 
   test(
-    'onboarding persists progression context before entering first system',
+    'onboarding persists progression context before mandatory profile setup',
     () {
       final source = File(
         'lib/features/trading_hub/arc_raiders/screens/arc_mandatory_onboarding_screen.dart',
@@ -42,8 +42,9 @@ void main() {
       expect(source, contains('_personalisationRepository.markComplete'));
       expect(
         source,
-        contains('_completionDestination(recommendedFirstSystem)'),
+        contains('const ArcProfileSetupScreen(firstRunFlow: true)'),
       );
+      expect(source, isNot(contains('_completionDestination')));
     },
   );
 
