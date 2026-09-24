@@ -8,6 +8,7 @@ enum ArcProgressionWorkspace {
   bench,
   quest,
   crafting,
+  research,
   hunts,
 }
 
@@ -24,6 +25,8 @@ extension ArcProgressionWorkspaceDetails on ArcProgressionWorkspace {
         return 'Quests';
       case ArcProgressionWorkspace.crafting:
         return 'Crafting';
+      case ArcProgressionWorkspace.research:
+        return 'Research';
       case ArcProgressionWorkspace.hunts:
         return 'Hunt Targets';
     }
@@ -41,6 +44,8 @@ extension ArcProgressionWorkspaceDetails on ArcProgressionWorkspace {
         return Icons.assignment_rounded;
       case ArcProgressionWorkspace.crafting:
         return Icons.handyman_rounded;
+      case ArcProgressionWorkspace.research:
+        return Icons.science_rounded;
       case ArcProgressionWorkspace.hunts:
         return Icons.my_location_rounded;
     }
@@ -58,6 +63,8 @@ extension ArcProgressionWorkspaceDetails on ArcProgressionWorkspace {
         return '/trading-hub/arc-raiders/quests';
       case ArcProgressionWorkspace.crafting:
         return '/trading-hub/arc-raiders/crafting';
+      case ArcProgressionWorkspace.research:
+        return '/trading-hub/arc-raiders/research-workstation';
       case ArcProgressionWorkspace.hunts:
         return '/trading-hub/arc-raiders/raid-planner/hunt-targets';
     }

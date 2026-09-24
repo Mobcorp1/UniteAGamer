@@ -17,6 +17,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_beta_first_run.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_admin_workspace_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_feature_visibility_diagnostics_panel.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_network_liquidity_admin_panel.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/screens/build/admin_business_metrics_panel.dart';
@@ -311,7 +312,11 @@ class _AdminConsoleBody extends StatelessWidget {
                       subtitle:
                           'Monthly active users, revenue and session health from live user, monetisation and operations telemetry.',
                     ),
-                    children: [const AdminBusinessMetricsPanel()],
+                    children: [
+                      const AdminBusinessMetricsPanel(),
+                      const SizedBox(height: AppTheme.spaceL),
+                      const ArcNetworkLiquidityAdminPanel(),
+                    ],
                   ),
                   const SizedBox(height: AppTheme.spaceM),
                   _AdminExpandableSection(
@@ -771,6 +776,8 @@ class _ArcAdminControlPanel extends StatelessWidget {
               const SizedBox(height: AppTheme.spaceM),
               _rolloutSlider(config: config, configRef: configRef),
               const SizedBox(height: AppTheme.spaceM),
+              _blueprintExpansionControl(config: config, configRef: configRef),
+              const SizedBox(height: AppTheme.spaceM),
               _mapFlagList(config: config, configRef: configRef),
             ],
           ),
@@ -900,6 +907,70 @@ class _ArcAdminControlPanel extends StatelessWidget {
     );
   }
 
+  Widget _blueprintExpansionControl({
+    required ArcAdminControlConfig config,
+    required DocumentReference<Map<String, dynamic>> configRef,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppTheme.spaceM),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Blueprint expansion slots',
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                    isBold: true,
+                  ),
+                ),
+              ),
+              Text(
+                '${config.blueprintExpansionSlots}',
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 16,
+                  color: AppTheme.neonCyan,
+                  isBold: true,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 5),
+          Text(
+            'Adds reserved squares after the canonical Blueprint grid without changing the existing photo-scan seed.',
+            style: AppTheme.bodyTextStyle(
+              fontSize: 12,
+              color: AppTheme.tradingMutedText,
+            ),
+          ),
+          Slider.adaptive(
+            value: config.blueprintExpansionSlots.toDouble(),
+            min: 0,
+            max: 30,
+            divisions: 30,
+            label: '${config.blueprintExpansionSlots}',
+            activeColor: AppTheme.neonPink,
+            onChanged: (value) async {
+              await configRef.set({
+                'blueprintExpansionSlots': value.round(),
+                'updatedAt': FieldValue.serverTimestamp(),
+              }, SetOptions(merge: true));
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _mapFlagList({
     required ArcAdminControlConfig config,
     required DocumentReference<Map<String, dynamic>> configRef,
@@ -907,7 +978,15 @@ class _ArcAdminControlPanel extends StatelessWidget {
     final maps = config.mapFlags.keys.toList()..sort();
 
     if (maps.isEmpty) {
-      maps.addAll(const ['Blue Gate', 'Riven Tides']);
+      maps.addAll(const [
+        'Blue Gate',
+        'Buried City',
+        'Dam Battlegrounds',
+        'Riven Tides',
+        'Spaceport',
+        'Stella Montis',
+        'Pendola Pass',
+      ]);
     }
 
     return Column(

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_frozen_trail_preview_screen.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_asset_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_marker_stack_resolver.dart';
@@ -276,6 +277,15 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
           ),
         ),
         actions: [
+          IconButton(
+            tooltip: 'Frozen Trail preview',
+            icon: const Icon(Icons.ac_unit_rounded),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const ArcFrozenTrailPreviewScreen(),
+              ),
+            ),
+          ),
           IconButton(
             tooltip: 'Map tools',
             icon: const Icon(Icons.tune_rounded),

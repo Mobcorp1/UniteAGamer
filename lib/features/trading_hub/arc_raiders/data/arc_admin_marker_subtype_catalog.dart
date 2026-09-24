@@ -245,6 +245,24 @@ class ArcAdminMapMarkerSubtypeCatalog {
       groupLabel: 'ARC',
     ),
     ArcAdminMapMarkerSubtype(
+      id: 'bully',
+      label: 'Bully',
+      kind: ArcAdminMapMarkerKind.arcSpawn,
+      groupLabel: 'ARC',
+    ),
+    ArcAdminMapMarkerSubtype(
+      id: 'skulker',
+      label: 'Skulker',
+      kind: ArcAdminMapMarkerKind.arcSpawn,
+      groupLabel: 'ARC',
+    ),
+    ArcAdminMapMarkerSubtype(
+      id: 'hydra',
+      label: 'Hydra',
+      kind: ArcAdminMapMarkerKind.arcSpawn,
+      groupLabel: 'ARC',
+    ),
+    ArcAdminMapMarkerSubtype(
       id: 'queen',
       label: 'The Queen',
       kind: ArcAdminMapMarkerKind.arcSpawn,

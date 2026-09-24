@@ -90,6 +90,7 @@ flutter:
     - assets/arc_raiders/maps/buried_city/
     - assets/arc_raiders/maps/dam_battlegrounds/
     - assets/arc_raiders/maps/riven_tides/
+    - assets/arc_raiders/maps/pendola_pass/
     - assets/arc_raiders/maps/spaceport/
     - assets/arc_raiders/maps/stella_montis/
 

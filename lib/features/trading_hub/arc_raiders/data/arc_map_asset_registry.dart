@@ -36,6 +36,7 @@ class ArcMapAssetRegistry {
   static const String buriedCityMapId = 'buried_city';
   static const String damBattlegroundsMapId = 'dam_battlegrounds';
   static const String rivenTidesMapId = 'riven_tides';
+  static const String pendolaPassMapId = 'pendola_pass';
   static const String spaceportMapId = 'spaceport';
   static const String stellaMontisMapId = 'stella_montis';
 
@@ -253,6 +254,29 @@ class ArcMapAssetRegistry {
     ),
   };
 
+  static const Map<ArcRaidMapLayer, ArcRaidMapAsset> pendolaPassAssets = {
+    ArcRaidMapLayer.surface: ArcRaidMapAsset(
+      id: 'pendola_pass_surface_frozen_trail_v1',
+      mapId: pendolaPassMapId,
+      renderMode: ArcRaidMapRenderMode.calibratedGameMap,
+      layer: ArcRaidMapLayer.surface,
+      localAssetPath:
+          'assets/arc_raiders/maps/pendola_pass/pendola_pass_master.webp',
+      published: false,
+    ),
+  };
+
+  static const Map<ArcRaidMapLayer, ArcRaidMapCalibration>
+  pendolaPassCalibrations = {
+    ArcRaidMapLayer.surface: ArcRaidMapCalibration(
+      id: 'pendola_pass_surface_pending_v1',
+      mapId: pendolaPassMapId,
+      anchors: _identityAnchors,
+      residualError: 0,
+      published: false,
+    ),
+  };
+
   static const List<ArcRegisteredMapAsset> registeredMaps = [
     ArcRegisteredMapAsset(
       mapId: blueGateMapId,
@@ -296,6 +320,13 @@ class ArcMapAssetRegistry {
       layerCalibrations: rivenTidesCalibrations,
       statusLabel: 'Calibrated',
     ),
+    ArcRegisteredMapAsset(
+      mapId: pendolaPassMapId,
+      displayName: 'Pendola Pass',
+      layerAssets: pendolaPassAssets,
+      layerCalibrations: pendolaPassCalibrations,
+      statusLabel: 'Frozen Trail - image pending',
+    ),
   ];
 
   static const Map<String, String> _canonicalMapAliases = {
@@ -309,6 +340,8 @@ class ArcMapAssetRegistry {
     'dam_battlegrounds': damBattlegroundsMapId,
     'riven tides': rivenTidesMapId,
     'riven_tides': rivenTidesMapId,
+    'pendola pass': pendolaPassMapId,
+    'pendola_pass': pendolaPassMapId,
     'spaceport': spaceportMapId,
     'stella montis': stellaMontisMapId,
     'stella_montis': stellaMontisMapId,

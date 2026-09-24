@@ -4,6 +4,7 @@ import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_hunt_targets_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_crafting_planner_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_research_workstation_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_progression_workspace_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
@@ -218,6 +219,16 @@ const _trackerLinks = <_TrackerLinkDefinition>[
     routeName: ArcCraftingPlannerScreen.routeName,
     accessFlag: FeatureAccessFlag.benchTracker,
     heroAsset: 'assets/arc_raiders/operations/upgrade_gunsmith_card.webp',
+  ),
+  _TrackerLinkDefinition(
+    title: 'Research Workstation',
+    subtitle:
+        'Frozen Trail research bench, Outpost progression and Amplified Weapon readiness.',
+    icon: Icons.science_rounded,
+    accent: ArcUiTokens.secondaryAccent,
+    routeName: ArcResearchWorkstationScreen.routeName,
+    accessFlag: FeatureAccessFlag.benchTracker,
+    heroAsset: 'assets/arc_raiders/operations/research_workstation_card.webp',
   ),
   _TrackerLinkDefinition(
     title: 'Hunt Targets',

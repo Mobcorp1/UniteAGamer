@@ -8,6 +8,25 @@ class ArcBlueprintSeedData {
 
   static const String _base = 'assets/arc_raiders/blueprints/';
 
+  static List<ArcBlueprint> withExpansionSlots(int requestedCount) {
+    final count = requestedCount.clamp(0, 30).toInt();
+    return <ArcBlueprint>[
+      ...blueprints,
+      for (var index = 0; index < count; index++)
+        ArcBlueprint(
+          id: 'admin-expansion-blueprint-${index + 1}',
+          name: 'Future Blueprint ${index + 1}',
+          category: 'Expansion',
+          group: 'Admin Expansion',
+          sortOrder: 10000 + index,
+          rarity: ArcBlueprintRarity.common,
+          icon: Icons.add_box_outlined,
+          intelHint:
+              'Reserved admin expansion slot. Replace with confirmed Blueprint data when published.',
+        ),
+    ];
+  }
+
   static const List<ArcBlueprint> blueprints = [
     ArcBlueprint(
       id: 'extended-shotgun-mag-iii',

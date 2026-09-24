@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_blueprint_photo_capture_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_season_reset_screen.dart';
@@ -15,6 +17,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bl
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_smart_build_hunt_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_control_config.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_filter.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
@@ -2564,214 +2567,244 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final allBlueprints = [...ArcBlueprintSeedData.blueprints]
-      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    Stream<DocumentSnapshot<Map<String, dynamic>>>? adminConfigStream;
+    if (Firebase.apps.isNotEmpty) {
+      adminConfigStream = FirebaseFirestore.instance
+          .collection('config')
+          .doc('arc_admin_controls')
+          .snapshots();
+    }
 
-    return Scaffold(
-      extendBody: false,
-      extendBodyBehindAppBar: false,
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        toolbarHeight: 48,
-        titleSpacing: 0,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        shadowColor: Colors.transparent,
-        title: _buildBlueprintHeaderTitle(context),
-        actions: [
-          PopupMenuButton<String>(
-            tooltip: 'Blueprint menu',
-            icon: const Icon(Icons.menu_rounded, color: AppTheme.neonPink),
-            color: AppTheme.cardBackgroundDeep,
-            onSelected: (value) {
-              switch (value) {
-                case 'feedback':
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const FeedbackScreen()),
-                  );
-                  return;
-                case 'reset':
-                  _confirmResetGrid();
-                  return;
-                case 'search':
-                  setState(() => _toolsOpen = true);
-                  return;
-                case 'filters':
-                  setState(() => _toolsOpen = true);
-                  return;
-                case 'select':
-                  setState(() => _selectionMode = true);
-                  setState(() => _toolsOpen = true);
-                  return;
-              }
-            },
-            itemBuilder: (context) => const [
-              PopupMenuItem(value: 'search', child: Text('Search')),
-              PopupMenuItem(value: 'filters', child: Text('Filters')),
-              PopupMenuItem(value: 'select', child: Text('Multi Select')),
-              PopupMenuDivider(),
-              PopupMenuItem(value: 'feedback', child: Text('Feedback')),
-              PopupMenuItem(value: 'reset', child: Text('Reset Ownership')),
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: adminConfigStream,
+      builder: (context, configSnapshot) {
+        final expansionSlots = ArcAdminControlConfig.fromDocument(
+          configSnapshot.data?.data(),
+        ).blueprintExpansionSlots;
+        final allBlueprints = ArcBlueprintSeedData.withExpansionSlots(
+          expansionSlots,
+        )..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+
+        return Scaffold(
+          extendBody: false,
+          extendBodyBehindAppBar: false,
+          backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            toolbarHeight: 48,
+            titleSpacing: 0,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            surfaceTintColor: Colors.transparent,
+            shadowColor: Colors.transparent,
+            title: _buildBlueprintHeaderTitle(context),
+            actions: [
+              PopupMenuButton<String>(
+                tooltip: 'Blueprint menu',
+                icon: const Icon(Icons.menu_rounded, color: AppTheme.neonPink),
+                color: AppTheme.cardBackgroundDeep,
+                onSelected: (value) {
+                  switch (value) {
+                    case 'feedback':
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const FeedbackScreen(),
+                        ),
+                      );
+                      return;
+                    case 'reset':
+                      _confirmResetGrid();
+                      return;
+                    case 'search':
+                      setState(() => _toolsOpen = true);
+                      return;
+                    case 'filters':
+                      setState(() => _toolsOpen = true);
+                      return;
+                    case 'select':
+                      setState(() => _selectionMode = true);
+                      setState(() => _toolsOpen = true);
+                      return;
+                  }
+                },
+                itemBuilder: (context) => const [
+                  PopupMenuItem(value: 'search', child: Text('Search')),
+                  PopupMenuItem(value: 'filters', child: Text('Filters')),
+                  PopupMenuItem(value: 'select', child: Text('Multi Select')),
+                  PopupMenuDivider(),
+                  PopupMenuItem(value: 'feedback', child: Text('Feedback')),
+                  PopupMenuItem(value: 'reset', child: Text('Reset Ownership')),
+                ],
+              ),
+              const SizedBox(width: 8),
             ],
           ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      bottomNavigationBar: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          widget.bannerSlot ?? const ArcBlueprintBannerSlot(),
-          const ArcBlueprintWorkspaceDock(
-            current: ArcBlueprintWorkspace.tracker,
+          bottomNavigationBar: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              widget.bannerSlot ?? const ArcBlueprintBannerSlot(),
+              const ArcBlueprintWorkspaceDock(
+                current: ArcBlueprintWorkspace.tracker,
+              ),
+              const ArcCompanionBottomDock(activeLabel: 'Track'),
+            ],
           ),
-          const ArcCompanionBottomDock(activeLabel: 'Track'),
-        ],
-      ),
-      body: ArcRaidersScreenShell(
-        showAdBanner: false,
-        child: SafeArea(
-          child: StreamBuilder<ArcBlueprintStateSnapshot>(
-            stream: _stateStream,
-            builder: (context, snapshot) {
-              final incoming = snapshot.data;
-              if (incoming?.status ==
-                      ArcBlueprintStateHydrationStatus.signedOut ||
-                  (incoming?.userId != null &&
-                      _lastHydration?.userId != incoming?.userId)) {
-                _lastHydration = null;
-              }
-              if (incoming?.hasConfirmedLoad == true) _lastHydration = incoming;
-              final hydration = incoming?.hasUsableState == true
-                  ? incoming
-                  : _lastHydration ?? incoming;
-              final states =
-                  hydration?.states ?? const <String, ArcBlueprintState>{};
-              if (snapshot.hasError ||
-                  incoming?.status == ArcBlueprintStateHydrationStatus.error) {
-                if (states.isEmpty) {
-                  return Center(
-                    child: ArcRaidersStatePanel(
-                      title: 'Blueprints unavailable',
-                      message:
-                          'Ownership could not be loaded. Your collection has not been cleared.',
-                      compact: true,
-                      action: TextButton(
-                        onPressed: () => setState(
-                          () => _stateStream = _watchBlueprintStateSnapshot(),
+          body: ArcRaidersScreenShell(
+            showAdBanner: false,
+            child: SafeArea(
+              child: StreamBuilder<ArcBlueprintStateSnapshot>(
+                stream: _stateStream,
+                builder: (context, snapshot) {
+                  final incoming = snapshot.data;
+                  if (incoming?.status ==
+                          ArcBlueprintStateHydrationStatus.signedOut ||
+                      (incoming?.userId != null &&
+                          _lastHydration?.userId != incoming?.userId)) {
+                    _lastHydration = null;
+                  }
+                  if (incoming?.hasConfirmedLoad == true) {
+                    _lastHydration = incoming;
+                  }
+                  final hydration = incoming?.hasUsableState == true
+                      ? incoming
+                      : _lastHydration ?? incoming;
+                  final states =
+                      hydration?.states ?? const <String, ArcBlueprintState>{};
+                  if (snapshot.hasError ||
+                      incoming?.status ==
+                          ArcBlueprintStateHydrationStatus.error) {
+                    if (states.isEmpty) {
+                      return Center(
+                        child: ArcRaidersStatePanel(
+                          title: 'Blueprints unavailable',
+                          message:
+                              'Ownership could not be loaded. Your collection has not been cleared.',
+                          compact: true,
+                          action: TextButton(
+                            onPressed: () => setState(
+                              () =>
+                                  _stateStream = _watchBlueprintStateSnapshot(),
+                            ),
+                            child: const Text('Retry'),
+                          ),
                         ),
-                        child: const Text('Retry'),
-                      ),
-                    ),
-                  );
-                }
-              }
-              if (hydration == null ||
-                  (hydration.isLoading && states.isEmpty)) {
-                return _buildOwnershipSynchronizingState();
-              }
-              final counts = _buildCounts(allBlueprints, states);
+                      );
+                    }
+                  }
+                  if (hydration == null ||
+                      (hydration.isLoading && states.isEmpty)) {
+                    return _buildOwnershipSynchronizingState();
+                  }
+                  final counts = _buildCounts(allBlueprints, states);
 
-              return StreamBuilder<ArcSavedLoadout?>(
-                stream: _loadoutStream,
-                builder: (context, loadoutSnapshot) {
-                  final loadout = loadoutSnapshot.data;
-                  final plan = ArcGeneratedLoadoutPlan.fromMap(
-                    loadout?.smartBuildData,
-                  );
-                  final smartBuildHunt = ArcSmartBuildHuntEngine.build(
-                    plan: plan,
-                    blueprintStates: states,
-                  );
-                  final filtered = _applyFilter(
-                    allBlueprints,
-                    states,
-                    smartBuildHunt: smartBuildHunt,
-                  );
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Stack(
-                      children: [
-                        Column(
+                  return StreamBuilder<ArcSavedLoadout?>(
+                    stream: _loadoutStream,
+                    builder: (context, loadoutSnapshot) {
+                      final loadout = loadoutSnapshot.data;
+                      final plan = ArcGeneratedLoadoutPlan.fromMap(
+                        loadout?.smartBuildData,
+                      );
+                      final smartBuildHunt = ArcSmartBuildHuntEngine.build(
+                        plan: plan,
+                        blueprintStates: states,
+                      );
+                      final filtered = _applyFilter(
+                        allBlueprints,
+                        states,
+                        smartBuildHunt: smartBuildHunt,
+                      );
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Stack(
                           children: [
-                            SizedBox(
-                              height: 36,
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      _selectionMode
-                                          ? '${_selectedBlueprintIds.length} selected'
-                                          : '${counts[ArcBlueprintFilter.owned]} / ${allBlueprints.length} owned',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  if (snapshot.hasError ||
-                                      incoming?.status ==
-                                          ArcBlueprintStateHydrationStatus
-                                              .error)
-                                    TextButton(
-                                      onPressed: () => setState(
-                                        () => _stateStream =
-                                            _watchBlueprintStateSnapshot(),
+                            Column(
+                              children: [
+                                SizedBox(
+                                  height: 36,
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          _selectionMode
+                                              ? '${_selectedBlueprintIds.length} selected'
+                                              : '${counts[ArcBlueprintFilter.owned]} / ${allBlueprints.length} owned',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
                                       ),
-                                      child: const Text('Retry sync'),
-                                    ),
-                                  if (_selectionMode)
-                                    IconButton(
-                                      tooltip: 'Mark selected owned',
-                                      onPressed: _selectedBlueprintIds.isEmpty
-                                          ? null
-                                          : () => _applyBulkOwned(states),
-                                      icon: const Icon(Icons.check, size: 18),
-                                    ),
-                                  if (_selectionMode)
-                                    IconButton(
-                                      tooltip: 'Exit selection',
-                                      onPressed: _clearSelection,
-                                      icon: const Icon(Icons.close, size: 18),
-                                    ),
-                                  IconButton(
-                                    tooltip: 'Blueprint tools',
-                                    onPressed: () => setState(
-                                      () => _toolsOpen = !_toolsOpen,
-                                    ),
-                                    icon: const Icon(Icons.tune, size: 20),
+                                      if (snapshot.hasError ||
+                                          incoming?.status ==
+                                              ArcBlueprintStateHydrationStatus
+                                                  .error)
+                                        TextButton(
+                                          onPressed: () => setState(
+                                            () => _stateStream =
+                                                _watchBlueprintStateSnapshot(),
+                                          ),
+                                          child: const Text('Retry sync'),
+                                        ),
+                                      if (_selectionMode)
+                                        IconButton(
+                                          tooltip: 'Mark selected owned',
+                                          onPressed:
+                                              _selectedBlueprintIds.isEmpty
+                                              ? null
+                                              : () => _applyBulkOwned(states),
+                                          icon: const Icon(
+                                            Icons.check,
+                                            size: 18,
+                                          ),
+                                        ),
+                                      if (_selectionMode)
+                                        IconButton(
+                                          tooltip: 'Exit selection',
+                                          onPressed: _clearSelection,
+                                          icon: const Icon(
+                                            Icons.close,
+                                            size: 18,
+                                          ),
+                                        ),
+                                      IconButton(
+                                        tooltip: 'Blueprint tools',
+                                        onPressed: () => setState(
+                                          () => _toolsOpen = !_toolsOpen,
+                                        ),
+                                        icon: const Icon(Icons.tune, size: 20),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
+                                ),
+                                Expanded(
+                                  child: _buildOverviewGrid(
+                                    context,
+                                    filtered,
+                                    states,
+                                    loadout,
+                                  ),
+                                ),
+                              ],
                             ),
-                            Expanded(
-                              child: _buildOverviewGrid(
-                                context,
-                                filtered,
-                                states,
-                                loadout,
+                            if (_toolsOpen)
+                              Positioned.fill(
+                                child: _buildBottomControls(
+                                  allBlueprints,
+                                  filtered,
+                                  states,
+                                  counts,
+                                  hunt: smartBuildHunt,
+                                ),
                               ),
-                            ),
                           ],
                         ),
-                        if (_toolsOpen)
-                          Positioned.fill(
-                            child: _buildBottomControls(
-                              allBlueprints,
-                              filtered,
-                              states,
-                              counts,
-                              hunt: smartBuildHunt,
-                            ),
-                          ),
-                      ],
-                    ),
+                      );
+                    },
                   );
                 },
-              );
-            },
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

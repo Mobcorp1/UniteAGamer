@@ -34,6 +34,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_match_rider_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_progress_trackers_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_crafting_planner_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_research_workstation_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_profile_edit_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_profile_setup_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raid_intelligence_screen.dart';
@@ -252,6 +253,12 @@ class UAGTradersHubApp extends StatefulWidget {
       case ArcCraftingPlannerScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const ArcCraftingPlannerScreen(),
+          settings: settings,
+        );
+
+      case ArcResearchWorkstationScreen.routeName:
+        return MaterialPageRoute(
+          builder: (_) => const ArcResearchWorkstationScreen(),
           settings: settings,
         );
 

@@ -6,6 +6,7 @@ class ArcAdminControlConfig {
     this.isMaintenanceMode = false,
     this.isReadOnlyMode = false,
     this.isBetaOnlyMode = false,
+    this.blueprintExpansionSlots = 0,
   });
 
   final Map<String, bool> featureFlags;
@@ -14,6 +15,7 @@ class ArcAdminControlConfig {
   final bool isMaintenanceMode;
   final bool isReadOnlyMode;
   final bool isBetaOnlyMode;
+  final int blueprintExpansionSlots;
 
   factory ArcAdminControlConfig.defaults() {
     return const ArcAdminControlConfig(
@@ -25,6 +27,7 @@ class ArcAdminControlConfig {
       },
       mapFlags: {'Blue Gate': true, 'Riven Tides': true},
       rolloutPercent: 100,
+      blueprintExpansionSlots: 0,
     );
   }
 
@@ -60,6 +63,9 @@ class ArcAdminControlConfig {
       isMaintenanceMode: _parseBool(data['maintenanceMode']) ?? false,
       isReadOnlyMode: _parseBool(data['readOnlyMode']) ?? false,
       isBetaOnlyMode: _parseBool(data['betaOnlyMode']) ?? false,
+      blueprintExpansionSlots: (_parseInt(data['blueprintExpansionSlots']) ?? 0)
+          .clamp(0, 30)
+          .toInt(),
     );
   }
 
@@ -95,6 +101,7 @@ class ArcAdminControlConfig {
     bool? isMaintenanceMode,
     bool? isReadOnlyMode,
     bool? isBetaOnlyMode,
+    int? blueprintExpansionSlots,
   }) {
     return ArcAdminControlConfig(
       featureFlags: featureFlags ?? this.featureFlags,
@@ -103,6 +110,8 @@ class ArcAdminControlConfig {
       isMaintenanceMode: isMaintenanceMode ?? this.isMaintenanceMode,
       isReadOnlyMode: isReadOnlyMode ?? this.isReadOnlyMode,
       isBetaOnlyMode: isBetaOnlyMode ?? this.isBetaOnlyMode,
+      blueprintExpansionSlots:
+          blueprintExpansionSlots ?? this.blueprintExpansionSlots,
     );
   }
 
@@ -114,6 +123,7 @@ class ArcAdminControlConfig {
       'maintenanceMode': isMaintenanceMode,
       'readOnlyMode': isReadOnlyMode,
       'betaOnlyMode': isBetaOnlyMode,
+      'blueprintExpansionSlots': blueprintExpansionSlots,
     };
   }
 
