@@ -190,6 +190,34 @@ void main() {
       expect(competing.score, lessThanOrEqualTo(neutral.score));
     });
 
+    test('same quest is cooperative and never a competition penalty', () {
+      final neutral = engine.score(
+        me: _neutralProfile('me'),
+        other: _neutralProfile('other'),
+      );
+      final aligned = engine.score(
+        me: _neutralProfile('me'),
+        other: _neutralProfile('other'),
+        meSignals: const ArcMatchObjectiveSignals(
+          questIds: <String>['quest-alpha'],
+          recommendedMapIds: <String>['Spaceport'],
+          recommendedConditionIds: <String>['Hidden Bunker'],
+        ),
+        otherSignals: const ArcMatchObjectiveSignals(
+          questIds: <String>['quest-alpha'],
+          recommendedMapIds: <String>['Spaceport'],
+          recommendedConditionIds: <String>['Hidden Bunker'],
+        ),
+      );
+
+      expect(aligned.breakdown.competitionPenalty, 0);
+      expect(aligned.breakdown.progression, greaterThan(0));
+      expect(aligned.breakdown.mapAndEventFit, greaterThan(0));
+      expect(aligned.score, greaterThan(neutral.score));
+      expect(aligned.reasons, contains('Quest alignment'));
+      expect(aligned.reasons, contains('Same recommended raid map'));
+    });
+
     test(
       'public result hides private reasons, breakdowns and blueprint data',
       () {

@@ -1,5 +1,9 @@
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_intel_seed.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_recommendation_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_progression_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raider_goal_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/data/arc_raider_goal_bridge.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/data/raid_planner_blueprint_rules.dart';
@@ -134,6 +138,33 @@ class RaidPlannerEngine {
       return slot.lane == RaidPlannerEventSchedule.laneMajor &&
           slot.eventName != 'Normal';
     });
+  }
+
+  static ArcRaidRecommendationSet buildGoalRecommendations({
+    required List<RaidBlueprintTarget> effectiveTargets,
+    ArcQuestProgressionSnapshot questSnapshot =
+        ArcQuestProgressionSnapshot.empty,
+    Map<String, ArcQuestRouteHint> questRouteHints =
+        const <String, ArcQuestRouteHint>{},
+    DateTime? nowUtc,
+    int horizonDays = 2,
+  }) {
+    final goals = <ArcRaiderGoal>[
+      ...ArcRaiderGoalBridge.blueprintGoals(effectiveTargets),
+      ...ArcRaiderGoalBridge.questGoals(
+        questSnapshot,
+        routeHints: questRouteHints,
+      ),
+    ];
+    final candidates = ArcRaiderGoalBridge.scheduleCandidates(
+      nowUtc: nowUtc,
+      horizonDays: horizonDays,
+    );
+    return const ArcRaidRecommendationEngine().build(
+      goals: goals,
+      candidates: candidates,
+      nowUtc: nowUtc,
+    );
   }
 
   static bool _sameEvent(String a, String b) {

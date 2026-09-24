@@ -26,6 +26,9 @@ class ArcMatchRiderProfile {
     this.benchGoalIds = const <String>[],
     this.favouriteLoadoutNeedIds = const <String>[],
     this.raidPlannerTargetIds = const <String>[],
+    this.matchQuestIds = const <String>[],
+    this.matchRecommendedMapIds = const <String>[],
+    this.matchRecommendedConditionIds = const <String>[],
     this.tradePreferences = const <String>[],
     this.availabilityDayKeys = const <String>[],
     this.timezone = '',
@@ -66,6 +69,9 @@ class ArcMatchRiderProfile {
   final List<String> benchGoalIds;
   final List<String> favouriteLoadoutNeedIds;
   final List<String> raidPlannerTargetIds;
+  final List<String> matchQuestIds;
+  final List<String> matchRecommendedMapIds;
+  final List<String> matchRecommendedConditionIds;
   final List<String> tradePreferences;
   final List<String> availabilityDayKeys;
   final String timezone;
@@ -110,6 +116,9 @@ class ArcMatchRiderProfile {
     List<String>? benchGoalIds,
     List<String>? favouriteLoadoutNeedIds,
     List<String>? raidPlannerTargetIds,
+    List<String>? matchQuestIds,
+    List<String>? matchRecommendedMapIds,
+    List<String>? matchRecommendedConditionIds,
     List<String>? tradePreferences,
     List<String>? availabilityDayKeys,
     String? timezone,
@@ -151,6 +160,11 @@ class ArcMatchRiderProfile {
       favouriteLoadoutNeedIds:
           favouriteLoadoutNeedIds ?? this.favouriteLoadoutNeedIds,
       raidPlannerTargetIds: raidPlannerTargetIds ?? this.raidPlannerTargetIds,
+      matchQuestIds: matchQuestIds ?? this.matchQuestIds,
+      matchRecommendedMapIds:
+          matchRecommendedMapIds ?? this.matchRecommendedMapIds,
+      matchRecommendedConditionIds:
+          matchRecommendedConditionIds ?? this.matchRecommendedConditionIds,
       tradePreferences: tradePreferences ?? this.tradePreferences,
       availabilityDayKeys: availabilityDayKeys ?? this.availabilityDayKeys,
       timezone: timezone ?? this.timezone,
@@ -196,6 +210,9 @@ class ArcMatchRiderProfile {
       'benchGoalIds': benchGoalIds,
       'favouriteLoadoutNeedIds': favouriteLoadoutNeedIds,
       'raidPlannerTargetIds': raidPlannerTargetIds,
+      'matchQuestIds': matchQuestIds,
+      'matchRecommendedMapIds': matchRecommendedMapIds,
+      'matchRecommendedConditionIds': matchRecommendedConditionIds,
       'tradePreferences': tradePreferences,
       'availabilityDayKeys': availabilityDayKeys,
       'timezone': timezone,
@@ -233,6 +250,15 @@ class ArcMatchRiderProfile {
       'currentPriority': ArcPlayerSessionCatalog.normalizePriority(
         currentPriority,
       ),
+      'matchQuestIds': _matchProjection(<String>[
+        ...matchQuestIds,
+        ...questFocusIds,
+        ...questChainIds,
+      ]),
+      'matchRecommendedMapIds': _matchProjection(matchRecommendedMapIds),
+      'matchRecommendedConditionIds': _matchProjection(
+        matchRecommendedConditionIds,
+      ),
       'availabilityDayKeys': availabilityDayKeys,
       'timezone': timezone,
       'comms': comms,
@@ -268,6 +294,19 @@ class ArcMatchRiderProfile {
     'duplicateBlueprintIds',
     'dupesOwned',
   ];
+
+  static List<String> _matchProjection(Iterable<String> values) {
+    final seen = <String>{};
+    final output = <String>[];
+    for (final value in values) {
+      final trimmed = value.trim();
+      if (trimmed.isEmpty) continue;
+      final key = trimmed.toLowerCase();
+      if (!seen.add(key)) continue;
+      output.add(trimmed);
+    }
+    return output;
+  }
 
   factory ArcMatchRiderProfile.empty(String uid) {
     return ArcMatchRiderProfile(
@@ -371,6 +410,9 @@ class ArcMatchRiderProfile {
       benchGoalIds: readList('benchGoalIds'),
       favouriteLoadoutNeedIds: readList('favouriteLoadoutNeedIds'),
       raidPlannerTargetIds: readList('raidPlannerTargetIds'),
+      matchQuestIds: readList('matchQuestIds'),
+      matchRecommendedMapIds: readList('matchRecommendedMapIds'),
+      matchRecommendedConditionIds: readList('matchRecommendedConditionIds'),
       tradePreferences: readList('tradePreferences'),
       availabilityDayKeys: readList('availabilityDayKeys'),
       timezone: (map['timezone'] as String? ?? '').trim(),

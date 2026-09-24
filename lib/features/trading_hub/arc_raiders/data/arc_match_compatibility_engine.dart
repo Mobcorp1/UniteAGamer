@@ -326,7 +326,12 @@ class ArcMatchCompatibilityEngine {
       normalizedMeSignals,
       normalizedOtherSignals,
     );
-    final mapAndEventFitRaw = _mapAndEventRawScore(me, other);
+    final mapAndEventFitRaw = _mapAndEventRawScore(
+      me,
+      other,
+      normalizedMeSignals,
+      normalizedOtherSignals,
+    );
     final blueprintComplementarity = tier == ArcMatchIntelligenceTier.advanced
         ? _blueprintComplementarityScore(
             normalizedMeSignals,
@@ -456,6 +461,23 @@ class ArcMatchCompatibilityEngine {
 
     addShared('Shared archetypes', me.archetypes, other.archetypes);
     addShared('Shared goals', me.goals, other.goals);
+    if (_sharedNormalized(meSignals.questIds, otherSignals.questIds) > 0) {
+      reasons.add('Quest alignment');
+    }
+    if (_sharedNormalized(
+          meSignals.recommendedMapIds,
+          otherSignals.recommendedMapIds,
+        ) >
+        0) {
+      reasons.add('Same recommended raid map');
+    }
+    if (_sharedNormalized(
+          meSignals.recommendedConditionIds,
+          otherSignals.recommendedConditionIds,
+        ) >
+        0) {
+      reasons.add('Same recommended raid condition');
+    }
     if (me.sessionIntent == other.sessionIntent &&
         me.sessionIntent != 'Flexible') {
       reasons.add('Same session intent: ${me.sessionIntent}');
@@ -486,9 +508,6 @@ class ArcMatchCompatibilityEngine {
     }
     if (_canHelp(otherSignals, meSignals).isNotEmpty) {
       reasons.add('Can help your blueprint targets');
-    }
-    if (_sharedNormalized(meSignals.questIds, otherSignals.questIds) > 0) {
-      reasons.add('Quest alignment');
     }
     if (_sharedNormalized(meSignals.trialIds, otherSignals.trialIds) > 0) {
       reasons.add('Trials alignment');
@@ -703,7 +722,7 @@ class ArcMatchCompatibilityEngine {
     ArcMatchObjectiveSignals other,
   ) {
     var score = 0;
-    score += _cap(_sharedNormalized(me.questIds, other.questIds), 0, 2) * 20;
+    score += _cap(_sharedNormalized(me.questIds, other.questIds), 0, 3) * 24;
     score +=
         _cap(_sharedNormalized(me.questChains, other.questChains), 0, 2) * 14;
     score += _cap(_sharedNormalized(me.trialIds, other.trialIds), 0, 2) * 18;
@@ -744,11 +763,33 @@ class ArcMatchCompatibilityEngine {
   int _mapAndEventRawScore(
     ArcMatchRiderProfile me,
     ArcMatchRiderProfile other,
+    ArcMatchObjectiveSignals meSignals,
+    ArcMatchObjectiveSignals otherSignals,
   ) {
     var score =
-        _cap(_sharedCount(me.preferredMaps, other.preferredMaps), 0, 3) * 22;
+        _cap(_sharedCount(me.preferredMaps, other.preferredMaps), 0, 3) * 18;
     score +=
-        _cap(_sharedCount(me.preferredModes, other.preferredModes), 0, 3) * 18;
+        _cap(_sharedCount(me.preferredModes, other.preferredModes), 0, 3) * 14;
+    score +=
+        _cap(
+          _sharedNormalized(
+            meSignals.recommendedMapIds,
+            otherSignals.recommendedMapIds,
+          ),
+          0,
+          2,
+        ) *
+        26;
+    score +=
+        _cap(
+          _sharedNormalized(
+            meSignals.recommendedConditionIds,
+            otherSignals.recommendedConditionIds,
+          ),
+          0,
+          2,
+        ) *
+        22;
     return _cap(score, 0, 100);
   }
 
@@ -774,6 +815,9 @@ class ArcMatchCompatibilityEngine {
     return _cap(score, 0, config.blueprintComplementarityCap);
   }
 
+  // Quest objectives and quest-specific pickups are deliberately excluded
+  // here. Raiders on the same quest are cooperative match candidates; this
+  // penalty is reserved for genuinely scarce shared Blueprint targets.
   int _competitionPenalty(
     ArcMatchObjectiveSignals me,
     ArcMatchObjectiveSignals other,
@@ -887,6 +931,15 @@ class ArcMatchCompatibilityEngine {
         (_progressionRawScore(meSignals, otherSignals) > 0 ||
             _blueprintComplementarityScore(meSignals, otherSignals) > 0)) {
       tags.add('Progression fit');
+    }
+    if (tier == ArcMatchIntelligenceTier.advanced &&
+        (_sharedNormalized(meSignals.questIds, otherSignals.questIds) > 0 ||
+            _sharedNormalized(
+                  meSignals.recommendedMapIds,
+                  otherSignals.recommendedMapIds,
+                ) >
+                0)) {
+      tags.add('Quest-aligned run');
     }
     return tags.take(4).toList(growable: false);
   }

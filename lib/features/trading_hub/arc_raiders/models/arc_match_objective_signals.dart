@@ -10,6 +10,8 @@ class ArcMatchObjectiveSignals {
     this.benchGoalIds = const <String>[],
     this.favouriteLoadoutNeedIds = const <String>[],
     this.raidPlannerTargetIds = const <String>[],
+    this.recommendedMapIds = const <String>[],
+    this.recommendedConditionIds = const <String>[],
     this.tradePreferences = const <String>[],
     this.availabilityDayKeys = const <String>[],
     this.timezone = '',
@@ -38,6 +40,8 @@ class ArcMatchObjectiveSignals {
   final List<String> benchGoalIds;
   final List<String> favouriteLoadoutNeedIds;
   final List<String> raidPlannerTargetIds;
+  final List<String> recommendedMapIds;
+  final List<String> recommendedConditionIds;
   final List<String> tradePreferences;
   final List<String> availabilityDayKeys;
   final String timezone;
@@ -68,6 +72,8 @@ class ArcMatchObjectiveSignals {
     List<String>? benchGoalIds,
     List<String>? favouriteLoadoutNeedIds,
     List<String>? raidPlannerTargetIds,
+    List<String>? recommendedMapIds,
+    List<String>? recommendedConditionIds,
     List<String>? tradePreferences,
     List<String>? availabilityDayKeys,
     String? timezone,
@@ -98,6 +104,9 @@ class ArcMatchObjectiveSignals {
       favouriteLoadoutNeedIds:
           favouriteLoadoutNeedIds ?? this.favouriteLoadoutNeedIds,
       raidPlannerTargetIds: raidPlannerTargetIds ?? this.raidPlannerTargetIds,
+      recommendedMapIds: recommendedMapIds ?? this.recommendedMapIds,
+      recommendedConditionIds:
+          recommendedConditionIds ?? this.recommendedConditionIds,
       tradePreferences: tradePreferences ?? this.tradePreferences,
       availabilityDayKeys: availabilityDayKeys ?? this.availabilityDayKeys,
       timezone: timezone ?? this.timezone,
