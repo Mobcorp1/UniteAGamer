@@ -62,7 +62,7 @@ void main() {
         'ArcBlueprintWorkspaceDock(current: ArcBlueprintWorkspace.loadout)',
       ),
     );
-    expect(source, contains('_buildPortraitRotationPrompt(blueprintStates)'));
+    expect(source, contains('_buildPortraitInGameBoard(blueprintStates)'));
     expect(source, contains('_buildLoadoutBoard(blueprintStates)'));
   });
 

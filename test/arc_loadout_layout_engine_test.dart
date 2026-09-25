@@ -3,6 +3,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_lo
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_layout_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
 
 void main() {
@@ -238,6 +239,63 @@ void main() {
 
       expect(reloaded.quickUse, migration.quickUse);
       expect(reloaded.augment, migration.augment);
+    });
+  });
+
+  group('wanted Blueprint targets', () {
+    test(
+      'uses priority rank as the single source of truth and caps at ten',
+      () {
+        final states = <String, ArcBlueprintState>{
+          'extended-shotgun-mag-iii': ArcBlueprintState(
+            blueprintId: 'extended-shotgun-mag-iii',
+            owned: false,
+            dupesOwned: 0,
+            priorityRank: 2,
+            updatedAt: null,
+          ),
+          'angled-grip-iii': ArcBlueprintState(
+            blueprintId: 'angled-grip-iii',
+            owned: false,
+            dupesOwned: 0,
+            priorityRank: 1,
+            updatedAt: null,
+          ),
+          'pulse-mine': ArcBlueprintState(
+            blueprintId: 'pulse-mine',
+            owned: true,
+            dupesOwned: 0,
+            priorityRank: 3,
+            updatedAt: null,
+          ),
+        };
+
+        final targets = ArcLoadoutLayoutEngine.wantedBlueprintTargets(states);
+
+        expect(ArcLoadoutLayoutEngine.wantedBlueprintSlotCount, 10);
+        expect(targets.map((blueprint) => blueprint.name), [
+          'Angled Grip III',
+          'Extended Shotgun Mag III',
+        ]);
+        expect(
+          targets.map((blueprint) => blueprint.name),
+          isNot(contains('Pulse Mine')),
+        );
+      },
+    );
+
+    test('unprioritised Blueprints do not fill wanted target slots', () {
+      final states = <String, ArcBlueprintState>{
+        'angled-grip-iii': ArcBlueprintState(
+          blueprintId: 'angled-grip-iii',
+          owned: false,
+          dupesOwned: 0,
+          priorityRank: 0,
+          updatedAt: null,
+        ),
+      };
+
+      expect(ArcLoadoutLayoutEngine.wantedBlueprintTargets(states), isEmpty);
     });
   });
 }

@@ -1,6 +1,8 @@
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_compatibility_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
 
 class ArcQuickUseMigrationResult {
@@ -18,6 +20,32 @@ class ArcLoadoutLayoutEngine {
 
   static const String emptySlot = 'Empty Slot';
   static const int quickUseSlotCount = 6;
+  static const int wantedBlueprintSlotCount = 10;
+
+  static List<ArcBlueprint> wantedBlueprintTargets(
+    Map<String, ArcBlueprintState> states, {
+    int limit = wantedBlueprintSlotCount,
+  }) {
+    final safeLimit = limit < 0 ? 0 : limit;
+    final targets = ArcBlueprintSeedData.blueprints.where((blueprint) {
+      final state = states[blueprint.id];
+      return state != null && state.priorityRank > 0 && !state.owned;
+    }).toList();
+
+    targets.sort((left, right) {
+      final leftState = states[left.id]!;
+      final rightState = states[right.id]!;
+      final rankCompare = leftState.priorityRank.compareTo(
+        rightState.priorityRank,
+      );
+      if (rankCompare != 0) return rankCompare;
+      final orderCompare = left.sortOrder.compareTo(right.sortOrder);
+      if (orderCompare != 0) return orderCompare;
+      return left.name.compareTo(right.name);
+    });
+
+    return List<ArcBlueprint>.unmodifiable(targets.take(safeLimit));
+  }
 
   static String normalise(String value) => value.trim().toLowerCase();
 

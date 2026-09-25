@@ -1427,12 +1427,27 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                           constraints.maxWidth < 900;
 
                       if (portrait) {
-                        return ArcRaidersPageList(
-                          maxWidth: 520,
-                          bottomPadding: 150,
-                          children: [
-                            _buildPortraitRotationPrompt(blueprintStates),
-                          ],
+                        return SingleChildScrollView(
+                          padding: const EdgeInsets.fromLTRB(6, 4, 6, 150),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              if ((hydration?.isLoading ?? false) &&
+                                  blueprintStates.isEmpty) ...[
+                                _buildBlueprintStateNotice(),
+                                const SizedBox(height: 6),
+                              ],
+                              _buildCompactLoadoutHeader(blueprintStates),
+                              const SizedBox(height: 6),
+                              _buildPortraitInGameBoard(blueprintStates),
+                              const SizedBox(height: 6),
+                              _buildMobileQuickUseTray(blueprintStates),
+                              const SizedBox(height: 6),
+                              _buildLevelFourMaterialPlan(),
+                              const SizedBox(height: 6),
+                              _buildMissingBlueprints(blueprintStates),
+                            ],
+                          ),
                         );
                       }
 
@@ -1450,6 +1465,8 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                               _buildCompactLoadoutHeader(blueprintStates),
                               const SizedBox(height: 6),
                               _buildCompactMobileBoard(blueprintStates),
+                              const SizedBox(height: 6),
+                              _buildMobileQuickUseTray(blueprintStates),
                               const SizedBox(height: 6),
                               _buildLevelFourMaterialPlan(),
                               const SizedBox(height: 6),
@@ -1553,44 +1570,49 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
 
   Widget _buildCompactMobileBoard(Map<String, ArcBlueprintState> states) {
     return Container(
+      key: const Key('favourite-loadout-landscape-board'),
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.30),
         borderRadius: BorderRadius.circular(ArcUiTokens.radiusL),
         border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.28)),
       ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final sideBySide = constraints.maxWidth >= 720;
-          final weapons = Column(
-            children: [
-              _buildCompactWeaponRow(true, states),
-              const SizedBox(height: 6),
-              _buildCompactWeaponRow(false, states),
-            ],
-          );
-          final utility = Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildCompactShield(states),
-              const SizedBox(height: 6),
-              _buildCompactQuickSlots(states),
-            ],
-          );
-          if (!sideBySide) {
-            return Column(
-              children: [weapons, const SizedBox(height: 6), utility],
-            );
-          }
-          return Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(flex: 7, child: weapons),
+              SizedBox(
+                width: 116,
+                child: Column(
+                  children: [
+                    _buildCompactAugment(states),
+                    const SizedBox(height: 6),
+                    _buildCompactShield(states),
+                  ],
+                ),
+              ),
               const SizedBox(width: 8),
-              Expanded(flex: 4, child: utility),
+              Expanded(
+                child: Column(
+                  children: [
+                    _buildCompactWeaponRow(true, states),
+                    const SizedBox(height: 6),
+                    _buildCompactWeaponRow(false, states),
+                  ],
+                ),
+              ),
             ],
-          );
-        },
+          ),
+          const SizedBox(height: 8),
+          _buildWantedBlueprintGrid(
+            states,
+            crossAxisCount: 5,
+            childAspectRatio: 1.72,
+            gridKey: const Key('favourite-loadout-wanted-landscape'),
+          ),
+        ],
       ),
     );
   }
@@ -1608,125 +1630,184 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       states: states,
     );
 
-    return Container(
-      padding: const EdgeInsets.all(6),
-      decoration: BoxDecoration(
-        color: accent.withValues(alpha: 0.055),
-        borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
-        border: Border.all(color: accent.withValues(alpha: 0.18)),
-      ),
-      child: Row(
-        children: [
-          InkWell(
-            onTap: () => _pickWeapon(primary: primary, states: states),
-            child: _itemImage(
-              imageAsset: _assetForLoadoutItem(
-                weapon.name,
-                _weaponAssetKind(primary),
-              ),
-              accent: accent,
-              owned: owned,
-              icon: owned ? Icons.inventory_2_rounded : Icons.lock_rounded,
-              size: 54,
-            ),
-          ),
-          const SizedBox(width: 8),
-          SizedBox(
-            width: 118,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  primary ? 'PRIMARY' : 'SECONDARY',
-                  style: ArcUiTokens.label(color: accent).copyWith(fontSize: 8),
-                ),
-                Text(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final narrow = constraints.maxWidth < 320;
+        final imageSize = narrow ? 52.0 : 64.0;
+        final attachmentSize = narrow ? 40.0 : 46.0;
+
+        final lead = Row(
+          children: [
+            InkWell(
+              onTap: () => _pickWeapon(primary: primary, states: states),
+              child: _itemImage(
+                imageAsset: _assetForLoadoutItem(
                   weapon.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTheme.tradingHeading(
-                    fontSize: 15,
-                    color: owned ? Colors.white : Colors.white38,
-                  ),
+                  _weaponAssetKind(primary),
                 ),
-                Text(
-                  weapon.blueprintBased && !owned
-                      ? 'MISSING BLUEPRINT'
-                      : _weaponSubtitle(weapon),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: owned ? Colors.white54 : AppTheme.neonPink,
-                    fontSize: 8.5,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
+                accent: accent,
+                owned: owned,
+                icon: owned ? Icons.inventory_2_rounded : Icons.lock_rounded,
+                size: imageSize,
+              ),
             ),
-          ),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Wrap(
-              spacing: 5,
-              runSpacing: 5,
-              children: List.generate(weapon.slots.length, (index) {
-                final slotLabel = weapon.slots[index];
-                final label =
-                    index < attachments.length &&
-                        attachments[index] != 'Empty Slot'
-                    ? attachments[index]
-                    : slotLabel;
-                final attachment = _attachmentSpecForName(label);
-                final assigned = label != slotLabel && label != 'Empty Slot';
-                final attachmentOwned =
-                    !assigned ||
-                    _isOwnedOrNotBlueprint(
-                      itemName: label,
-                      blueprintBased: _blueprintForName(label) != null,
-                      states: states,
-                    );
-                return Tooltip(
-                  message: assigned
-                      ? '$slotLabel: $label'
-                      : '$slotLabel: Empty',
-                  child: InkWell(
-                    onTap: () =>
-                        _pickAttachment(primary: primary, index: index),
-                    child: Container(
-                      width: 48,
-                      height: 48,
-                      padding: const EdgeInsets.all(3),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.22),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: accent.withValues(
-                            alpha: assigned ? 0.38 : 0.16,
-                          ),
-                        ),
-                      ),
-                      child: _itemImage(
-                        imageAsset: _assetForLoadoutItem(
-                          label,
-                          ArcLoadoutAssetKind.attachment,
-                          explicitAssetPath: attachment?.imageAssetPath,
-                        ),
-                        accent: accent,
-                        owned: attachmentOwned,
-                        icon: assigned
-                            ? Icons.construction_rounded
-                            : Icons.add_rounded,
-                        size: 42,
-                      ),
+            const SizedBox(width: 7),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    primary ? 'WEAPON 1' : 'WEAPON 2',
+                    style: ArcUiTokens.label(
+                      color: accent,
+                    ).copyWith(fontSize: 8),
+                  ),
+                  Text(
+                    weapon.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTheme.tradingHeading(
+                      fontSize: narrow ? 13 : 16,
+                      color: owned ? Colors.white : Colors.white38,
                     ),
                   ),
-                );
-              }),
+                  Text(
+                    weapon.blueprintBased && !owned
+                        ? 'MISSING BLUEPRINT'
+                        : _weaponSubtitle(weapon),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: owned ? Colors.white54 : AppTheme.neonPink,
+                      fontSize: 8.5,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
             ),
+          ],
+        );
+
+        final attachmentStrip = Wrap(
+          spacing: 5,
+          runSpacing: 5,
+          children: List.generate(weapon.slots.length, (index) {
+            final slotLabel = weapon.slots[index];
+            final label =
+                index < attachments.length && attachments[index] != 'Empty Slot'
+                ? attachments[index]
+                : slotLabel;
+            final attachment = _attachmentSpecForName(label);
+            final assigned = label != slotLabel && label != 'Empty Slot';
+            final attachmentOwned =
+                !assigned ||
+                _isOwnedOrNotBlueprint(
+                  itemName: label,
+                  blueprintBased: _blueprintForName(label) != null,
+                  states: states,
+                );
+            return Tooltip(
+              message: assigned ? '$slotLabel: $label' : '$slotLabel: Empty',
+              child: InkWell(
+                onTap: () => _pickAttachment(primary: primary, index: index),
+                child: Container(
+                  width: attachmentSize,
+                  height: attachmentSize,
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.22),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: accent.withValues(alpha: assigned ? 0.40 : 0.18),
+                    ),
+                  ),
+                  child: _itemImage(
+                    imageAsset: _assetForLoadoutItem(
+                      label,
+                      ArcLoadoutAssetKind.attachment,
+                      explicitAssetPath: attachment?.imageAssetPath,
+                    ),
+                    accent: accent,
+                    owned: attachmentOwned,
+                    icon: assigned
+                        ? Icons.construction_rounded
+                        : Icons.add_rounded,
+                    size: attachmentSize - 4,
+                  ),
+                ),
+              ),
+            );
+          }),
+        );
+
+        return Container(
+          key: Key(
+            primary
+                ? 'favourite-loadout-weapon-1'
+                : 'favourite-loadout-weapon-2',
           ),
-        ],
-      ),
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: accent.withValues(alpha: 0.055),
+            borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
+            border: Border.all(color: accent.withValues(alpha: 0.22)),
+          ),
+          child: narrow
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    lead,
+                    if (weapon.slots.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      attachmentStrip,
+                    ],
+                  ],
+                )
+              : Row(
+                  children: [
+                    Expanded(flex: 5, child: lead),
+                    if (weapon.slots.isNotEmpty) ...[
+                      const SizedBox(width: 8),
+                      Expanded(flex: 6, child: attachmentStrip),
+                    ],
+                  ],
+                ),
+        );
+      },
+    );
+  }
+
+  int _augmentQuickSlotIndex() {
+    for (var index = 0; index < _quickSlots.length; index++) {
+      final option = ArcLoadoutLayoutEngine.quickUseOptionForName(
+        _quickSlots[index],
+      );
+      if (option?.type == ArcLoadoutSlotType.augment) return index;
+    }
+    return 0;
+  }
+
+  Widget _buildCompactAugment(Map<String, ArcBlueprintState> states) {
+    final augmentName = _augment.trim().isEmpty ? 'Select Augment' : _augment;
+    final option = _optionForName(_augment);
+    final owned = _augment.trim().isEmpty
+        ? true
+        : _isOwnedOrNotBlueprint(
+            itemName: _augment,
+            blueprintBased: option?.blueprintBased ?? false,
+            states: states,
+          );
+    return _buildCompactAuxiliarySlot(
+      key: const Key('favourite-loadout-augment'),
+      slotLabel: 'AUGMENT',
+      itemName: augmentName,
+      imageAsset: _assetForLoadoutItem(_augment, ArcLoadoutAssetKind.augment),
+      accent: AppTheme.neonPink,
+      owned: owned,
+      icon: Icons.health_and_safety_rounded,
+      onTap: () => _pickQuickSlot(_augmentQuickSlotIndex()),
     );
   }
 
@@ -1737,40 +1818,65 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       blueprintBased: shieldOption?.blueprintBased ?? false,
       states: states,
     );
-    return InkWell(
+    return _buildCompactAuxiliarySlot(
+      key: const Key('favourite-loadout-shield'),
+      slotLabel: 'SHIELD',
+      itemName: _shield,
+      imageAsset: _assetForLoadoutItem(_shield, ArcLoadoutAssetKind.equipment),
+      accent: Colors.lightGreenAccent,
+      owned: owned,
+      icon: Icons.shield_outlined,
       onTap: _pickShield,
+    );
+  }
+
+  Widget _buildCompactAuxiliarySlot({
+    required Key key,
+    required String slotLabel,
+    required String itemName,
+    required String? imageAsset,
+    required Color accent,
+    required bool owned,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      key: key,
+      borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
+      onTap: onTap,
       child: Container(
-        height: 58,
+        constraints: const BoxConstraints(minHeight: 88),
         padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
-          color: Colors.lightGreenAccent.withValues(alpha: 0.045),
+          color: accent.withValues(alpha: 0.055),
           borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
-          border: Border.all(
-            color: Colors.lightGreenAccent.withValues(alpha: 0.20),
-          ),
+          border: Border.all(color: accent.withValues(alpha: 0.24)),
         ),
-        child: Row(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _itemImage(
-              imageAsset: _assetForLoadoutItem(
-                _shield,
-                ArcLoadoutAssetKind.equipment,
-              ),
-              accent: Colors.lightGreenAccent,
+              imageAsset: imageAsset,
+              accent: accent,
               owned: owned,
-              icon: Icons.shield_outlined,
-              size: 44,
+              icon: icon,
+              size: 48,
             ),
-            const SizedBox(width: 7),
-            Expanded(
-              child: Text(
-                _shield,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppTheme.tradingHeading(
-                  fontSize: 13,
-                  color: Colors.lightGreenAccent,
-                ),
+            const SizedBox(height: 4),
+            Text(
+              slotLabel,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: ArcUiTokens.label(color: accent).copyWith(fontSize: 8),
+            ),
+            Text(
+              itemName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: AppTheme.buttonTextStyle(
+                color: owned ? Colors.white : Colors.white38,
+                fontSize: 10,
               ),
             ),
           ],
@@ -1928,90 +2034,212 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     );
   }
 
-  Widget _buildPortraitRotationPrompt(Map<String, ArcBlueprintState> states) {
-    final missing = _missingBlueprintItems(states).length;
-    final filledQuickSlots =
-        ArcLoadoutLayoutEngine.quickUseSlotCount -
-        _quickSlots
-            .where((slot) => slot == 'Empty Slot' || slot.trim().isEmpty)
-            .length;
-
-    return _arcPanel(
-      accent: AppTheme.neonCyan,
-      electric: true,
-      padding: const EdgeInsets.fromLTRB(18, 20, 18, 18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+  Widget _buildPortraitInGameBoard(Map<String, ArcBlueprintState> states) {
+    return Container(
+      key: const Key('favourite-loadout-portrait-board'),
+      padding: const EdgeInsets.all(7),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.30),
+        borderRadius: BorderRadius.circular(ArcUiTokens.radiusL),
+        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.28)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 58,
-                height: 58,
-                decoration: ArcUiTokens.surfaceDecoration(
-                  role: ArcSurfaceRole.interactive,
-                  accent: AppTheme.neonCyan,
-                  selected: true,
-                  glow: true,
-                ),
-                child: const Icon(
-                  Icons.screen_rotation_rounded,
-                  color: AppTheme.neonCyan,
-                  size: 32,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
+          Expanded(
+            flex: 3,
+            child: Column(
+              children: [
+                Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'FAVOURITE LOADOUT',
-                      style: AppTheme.tradingHeading(
-                        fontSize: 24,
-                        color: AppTheme.neonCyan,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _buildName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTheme.bodyTextStyle(
-                        fontSize: 13,
-                        color: Colors.white70,
-                        isBold: true,
-                      ),
-                    ),
+                    Expanded(child: _buildCompactAugment(states)),
+                    const SizedBox(width: 6),
+                    Expanded(child: _buildCompactShield(states)),
                   ],
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          Text(
-            'Rotate your device to build and manage your Raider loadout.',
-            style: AppTheme.bodyTextStyle(
-              fontSize: 15,
-              color: Colors.white,
-              isBold: true,
+                const SizedBox(height: 6),
+                _buildCompactWeaponRow(true, states),
+                const SizedBox(height: 6),
+                _buildCompactWeaponRow(false, states),
+              ],
             ),
           ),
-          const SizedBox(height: 14),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _pill('Primary: $_primaryWeapon', AppTheme.neonCyan),
-              _pill('Secondary: $_secondaryWeapon', AppTheme.neonPink),
-              _pill('Quick Use: $filledQuickSlots/6', Colors.amberAccent),
-              _pill(
-                missing == 0 ? 'Blueprints ready' : '$missing missing',
-                missing == 0 ? Colors.lightGreenAccent : AppTheme.neonPink,
-              ),
-            ],
+          const SizedBox(width: 7),
+          Expanded(
+            flex: 2,
+            child: _buildWantedBlueprintGrid(
+              states,
+              crossAxisCount: 2,
+              childAspectRatio: 0.82,
+              gridKey: const Key('favourite-loadout-wanted-portrait'),
+            ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildMobileQuickUseTray(Map<String, ArcBlueprintState> states) {
+    return _arcPanel(
+      accent: Colors.amberAccent,
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: EdgeInsets.zero,
+          childrenPadding: const EdgeInsets.only(bottom: 6),
+          visualDensity: VisualDensity.compact,
+          minTileHeight: 38,
+          title: Text(
+            'QUICK USE',
+            style: AppTheme.tradingHeading(
+              fontSize: 13,
+              color: Colors.amberAccent,
+            ),
+          ),
+          subtitle: const Text(
+            '6 supporting slots - kept outside the main equipment board',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: Colors.white54, fontSize: 9),
+          ),
+          children: [_buildCompactQuickSlots(states)],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWantedBlueprintGrid(
+    Map<String, ArcBlueprintState> states, {
+    required int crossAxisCount,
+    required double childAspectRatio,
+    required Key gridKey,
+  }) {
+    final targets = ArcLoadoutLayoutEngine.wantedBlueprintTargets(states);
+    return Column(
+      key: gridKey,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'WANTED BLUEPRINTS',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTheme.tradingHeading(
+                  fontSize: 12,
+                  color: AppTheme.neonCyan,
+                ),
+              ),
+            ),
+            Text(
+              '${targets.length}/10',
+              style: ArcUiTokens.label(color: AppTheme.neonPink),
+            ),
+          ],
+        ),
+        const SizedBox(height: 5),
+        GridView.builder(
+          itemCount: ArcLoadoutLayoutEngine.wantedBlueprintSlotCount,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            mainAxisSpacing: 5,
+            crossAxisSpacing: 5,
+            childAspectRatio: childAspectRatio,
+          ),
+          itemBuilder: (context, index) {
+            final blueprint = index < targets.length ? targets[index] : null;
+            return _wantedBlueprintTile(
+              index: index,
+              blueprint: blueprint,
+              states: states,
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _wantedBlueprintTile({
+    required int index,
+    required ArcBlueprint? blueprint,
+    required Map<String, ArcBlueprintState> states,
+  }) {
+    final accent = blueprint == null
+        ? Colors.white38
+        : index < 3
+        ? AppTheme.neonPink
+        : AppTheme.neonCyan;
+    final unlockPlan = blueprint == null
+        ? null
+        : ArcBlueprintUnlockEngine.planForBlueprint(blueprint.name);
+    final state = blueprint == null
+        ? null
+        : states[blueprint.id] ?? ArcBlueprintState.empty(blueprint.id);
+
+    return InkWell(
+      key: Key('wanted-blueprint-slot-${index + 1}'),
+      borderRadius: BorderRadius.circular(10),
+      onTap: () =>
+          Navigator.of(context).pushNamed(BlueprintGridScreen.routeName),
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.24),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: accent.withValues(alpha: 0.32)),
+        ),
+        child: blueprint == null
+            ? Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.add_rounded, color: Colors.white30, size: 22),
+                  const SizedBox(height: 3),
+                  Text(
+                    'SET TARGET',
+                    textAlign: TextAlign.center,
+                    style: ArcUiTokens.label(
+                      color: Colors.white38,
+                    ).copyWith(fontSize: 7.5),
+                  ),
+                ],
+              )
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    height: 34,
+                    child: _itemImage(
+                      imageAsset: blueprint.imageAssetPath,
+                      accent: accent,
+                      owned: state?.owned ?? false,
+                      icon: blueprint.icon,
+                      size: 34,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    blueprint.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: AppTheme.buttonTextStyle(
+                      color: Colors.white,
+                      fontSize: 8.5,
+                    ),
+                  ),
+                  if (unlockPlan != null)
+                    Icon(
+                      Icons.account_tree_rounded,
+                      color: Colors.lightGreenAccent,
+                      size: 11,
+                    ),
+                ],
+              ),
       ),
     );
   }

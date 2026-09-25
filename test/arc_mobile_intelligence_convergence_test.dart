@@ -69,7 +69,10 @@ void main() {
         'lib/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart',
       );
       expect(loadout, contains('_buildCompactMobileBoard'));
+      expect(loadout, contains('_buildPortraitInGameBoard'));
       expect(loadout, contains('_buildCompactWeaponRow'));
+      expect(loadout, contains('_buildWantedBlueprintGrid'));
+      expect(loadout, contains('wantedBlueprintSlotCount'));
       expect(loadout, contains("'LEVEL IV BUILD COST'"));
       expect(loadout, contains('ArcItemIntelligenceEngine.planForItem'));
       expect(loadout, contains("label: 'Quest Unlock Path'"));
