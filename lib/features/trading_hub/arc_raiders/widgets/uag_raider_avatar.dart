@@ -77,6 +77,9 @@ class UagRaiderAvatar extends StatelessWidget {
       );
     }
 
+    final pixelRatio = MediaQuery.devicePixelRatioOf(context);
+    final cacheWidth = (size * pixelRatio).ceil().clamp(32, 512).toInt();
+
     final avatar = Container(
       width: size,
       height: size,
@@ -91,13 +94,29 @@ class UagRaiderAvatar extends StatelessWidget {
         ],
       ),
       clipBehavior: Clip.antiAlias,
-      child: Image.asset(
-        option.assetPath,
-        width: size,
-        height: size,
-        fit: BoxFit.cover,
-        filterQuality: FilterQuality.high,
-        errorBuilder: (_, _, _) => fallback(),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          fallback(),
+          Image.asset(
+            option.assetPath,
+            width: size,
+            height: size,
+            fit: BoxFit.cover,
+            cacheWidth: cacheWidth,
+            filterQuality: FilterQuality.medium,
+            gaplessPlayback: true,
+            frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+              if (wasSynchronouslyLoaded) return child;
+              return AnimatedOpacity(
+                opacity: frame == null ? 0 : 1,
+                duration: const Duration(milliseconds: 90),
+                child: child,
+              );
+            },
+            errorBuilder: (_, _, _) => const SizedBox.shrink(),
+          ),
+        ],
       ),
     );
 

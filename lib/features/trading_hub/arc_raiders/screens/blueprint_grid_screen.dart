@@ -14,6 +14,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bl
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_grid_view_preferences.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_intel_seed.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_loadout_bridge.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_unlock_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_smart_build_hunt_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
@@ -33,6 +34,10 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/blu
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raid_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_blueprint_watches_screen.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/ads/uag_ad_placement_policy.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/ads/uag_ad_service.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_ad_banner_card.dart';
@@ -195,6 +200,9 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
             content: Text('Blueprint ownership imported successfully.'),
           ),
         );
+      await UagAdService.instance.showNaturalBreakInterstitial(
+        UagAdPlacementPolicy.blueprintImportCompleted,
+      );
     }
   }
 
@@ -1493,6 +1501,9 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     final conditions = intel.bestConditions.isEmpty
         ? 'Any raid condition.'
         : intel.bestConditions.join(', ');
+    final unlockPlan = ArcBlueprintUnlockEngine.planForBlueprint(
+      blueprint.name,
+    );
 
     await showModalBottomSheet<void>(
       context: context,
@@ -1614,6 +1625,13 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                         value: intel.specialSource!,
                         color: Colors.lightGreenAccent,
                       ),
+                    if (unlockPlan != null)
+                      _buildIntelLine(
+                        icon: Icons.account_tree_rounded,
+                        label: 'Guaranteed Quest Unlock',
+                        value: unlockPlan.shortSummary,
+                        color: Colors.lightGreenAccent,
+                      ),
                     _buildIntelLine(
                       icon: Icons.insights_rounded,
                       label: 'Confidence',
@@ -1644,6 +1662,22 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                             );
                           },
                         ),
+                        if (unlockPlan != null && !state.owned)
+                          _buildBlueprintActionButton(
+                            label: 'Quest Path',
+                            icon: Icons.account_tree_rounded,
+                            color: Colors.lightGreenAccent,
+                            onTap: () {
+                              Navigator.of(sheetContext).pop();
+                              Navigator.of(context).pushNamed(
+                                ScrappyGridScreen.questRouteName,
+                                arguments: <String, Object?>{
+                                  'questFocusId': unlockPlan.quest.id,
+                                  'sourceBlueprintName': blueprint.name,
+                                },
+                              );
+                            },
+                          ),
                         _buildBlueprintActionButton(
                           label: state.owned ? 'Add Intel' : 'Mark Owned',
                           icon: state.owned
@@ -2567,6 +2601,14 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final compactMobileLandscape =
+        !kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.android ||
+            defaultTargetPlatform == TargetPlatform.iOS) &&
+        media.orientation == Orientation.landscape &&
+        media.size.height <= 720;
+
     Stream<DocumentSnapshot<Map<String, dynamic>>>? adminConfigStream;
     if (Firebase.apps.isNotEmpty) {
       adminConfigStream = FirebaseFirestore.instance
@@ -2590,7 +2632,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
           extendBodyBehindAppBar: false,
           backgroundColor: Colors.transparent,
           appBar: AppBar(
-            toolbarHeight: 48,
+            toolbarHeight: compactMobileLandscape ? 40 : 48,
             titleSpacing: 0,
             backgroundColor: Colors.transparent,
             elevation: 0,
@@ -2625,12 +2667,31 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                       setState(() => _selectionMode = true);
                       setState(() => _toolsOpen = true);
                       return;
+                    case 'loadout':
+                      Navigator.of(
+                        context,
+                      ).pushNamed(FavouriteLoadoutScreen.routeName);
+                      return;
+                    case 'watches':
+                      Navigator.of(
+                        context,
+                      ).pushNamed(TradingBlueprintWatchesScreen.routeName);
+                      return;
                   }
                 },
                 itemBuilder: (context) => const [
                   PopupMenuItem(value: 'search', child: Text('Search')),
                   PopupMenuItem(value: 'filters', child: Text('Filters')),
                   PopupMenuItem(value: 'select', child: Text('Multi Select')),
+                  PopupMenuDivider(),
+                  PopupMenuItem(
+                    value: 'loadout',
+                    child: Text('Favourite Loadout'),
+                  ),
+                  PopupMenuItem(
+                    value: 'watches',
+                    child: Text('Blueprint Watches'),
+                  ),
                   PopupMenuDivider(),
                   PopupMenuItem(value: 'feedback', child: Text('Feedback')),
                   PopupMenuItem(value: 'reset', child: Text('Reset Ownership')),
@@ -2642,7 +2703,8 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
           bottomNavigationBar: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              widget.bannerSlot ?? const ArcBlueprintBannerSlot(),
+              if (!compactMobileLandscape)
+                widget.bannerSlot ?? const ArcBlueprintBannerSlot(),
               const ArcBlueprintWorkspaceDock(
                 current: ArcBlueprintWorkspace.tracker,
               ),
@@ -2714,13 +2776,15 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                         smartBuildHunt: smartBuildHunt,
                       );
                       return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: compactMobileLandscape ? 4 : 8,
+                        ),
                         child: Stack(
                           children: [
                             Column(
                               children: [
                                 SizedBox(
-                                  height: 36,
+                                  height: compactMobileLandscape ? 30 : 36,
                                   child: Row(
                                     children: [
                                       Expanded(

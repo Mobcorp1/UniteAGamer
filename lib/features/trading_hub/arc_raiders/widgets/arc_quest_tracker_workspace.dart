@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_quest_catalogue.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_quest_reward_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_quest_position_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_recommendation_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_progression_models.dart';
@@ -16,12 +17,14 @@ class ArcQuestTrackerWorkspace extends StatefulWidget {
     required this.onJustStarting,
     required this.onTrackedChanged,
     required this.onCompleteQuest,
+    this.initialQuestId,
   });
 
   final ArcQuestProgressionSnapshot snapshot;
   final Future<void> Function() onJustStarting;
   final ArcQuestTrackedChanged onTrackedChanged;
   final ArcQuestComplete onCompleteQuest;
+  final String? initialQuestId;
 
   @override
   State<ArcQuestTrackerWorkspace> createState() =>
@@ -37,6 +40,19 @@ class _ArcQuestTrackerWorkspaceState extends State<ArcQuestTrackerWorkspace> {
   bool _showFullTree = false;
   bool _busy = false;
   String _query = '';
+
+  @override
+  void initState() {
+    super.initState();
+    final focus = widget.initialQuestId == null
+        ? null
+        : ArcQuestCatalogue.byId[widget.initialQuestId!];
+    if (focus != null) {
+      _showFinder = true;
+      _query = focus.displayName;
+      _searchController.text = focus.displayName;
+    }
+  }
 
   @override
   void dispose() {
@@ -492,6 +508,9 @@ class _ArcQuestTrackerWorkspaceState extends State<ArcQuestTrackerWorkspace> {
   }) {
     final entry = _entries[node.id];
     final objectives = entry?.objectives ?? const <ArcProgressionObjective>[];
+    final blueprintRewards = ArcBlueprintQuestRewardCatalog.forQuest(
+      node.displayName,
+    );
 
     return Container(
       margin: const EdgeInsets.only(bottom: 7),
@@ -527,6 +546,41 @@ class _ArcQuestTrackerWorkspaceState extends State<ArcQuestTrackerWorkspace> {
                         fontSize: 11,
                       ),
                     ),
+                    if (blueprintRewards.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Wrap(
+                        spacing: 5,
+                        runSpacing: 4,
+                        children: [
+                          for (final reward in blueprintRewards)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.greenAccent.withValues(
+                                  alpha: 0.08,
+                                ),
+                                borderRadius: BorderRadius.circular(999),
+                                border: Border.all(
+                                  color: Colors.greenAccent.withValues(
+                                    alpha: 0.34,
+                                  ),
+                                ),
+                              ),
+                              child: Text(
+                                'GUARANTEED BLUEPRINT • ${reward.blueprintName}',
+                                style: const TextStyle(
+                                  color: Colors.greenAccent,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),

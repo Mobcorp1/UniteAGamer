@@ -34,9 +34,26 @@ class UagAdPlacementPolicy {
   static bool permitsBanner(String? route) => bannerRoutes.contains(route);
 
   // A navigation observer cannot distinguish browsing from an unfinished task.
-  // Full-screen inventory needs an explicit, reviewed completion placement.
+  // Automatic navigation interruption therefore remains disabled.
   static bool permitsInterstitial(String? route) => false;
   static bool permitsAppOpen(String? route) => false;
+
+  static const String blueprintImportCompleted = 'blueprint_import_completed';
+  static const String favouriteLoadoutSaved = 'favourite_loadout_saved';
+
+  static const Map<String, String> naturalBreakInterstitialRoutes =
+      <String, String>{
+        blueprintImportCompleted: '/trading-hub/arc-raiders/blueprints',
+        favouriteLoadoutSaved: '/favourite-loadout',
+      };
+
+  static bool hasNaturalBreakPlacementForRoute(String? route) =>
+      naturalBreakInterstitialRoutes.values.contains(route);
+
+  static bool permitsNaturalBreakInterstitial(
+    String placementId,
+    String? route,
+  ) => naturalBreakInterstitialRoutes[placementId] == route;
 
   static String? bannerPlacementId(String? route) =>
       permitsBanner(route) ? 'arc${route!.replaceAll('/', '_')}_banner' : null;

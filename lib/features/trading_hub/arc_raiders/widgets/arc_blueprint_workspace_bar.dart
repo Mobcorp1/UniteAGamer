@@ -100,6 +100,9 @@ class ArcBlueprintWorkspaceDock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final compactLandscape =
+        media.orientation == Orientation.landscape && media.size.height <= 720;
     final content = Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 520),
@@ -116,7 +119,7 @@ class ArcBlueprintWorkspaceDock extends StatelessWidget {
             ),
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 2),
+            padding: EdgeInsets.symmetric(vertical: compactLandscape ? 0 : 2),
             child: ArcBlueprintWorkspaceBar(
               current: current,
               padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -147,6 +150,9 @@ class _BlueprintWorkspaceButton extends StatelessWidget {
     final accent = selected
         ? ArcUiTokens.primaryAccent
         : ArcUiTokens.textSecondary;
+    final media = MediaQuery.of(context);
+    final compactLandscape =
+        media.orientation == Orientation.landscape && media.size.height <= 720;
 
     return Semantics(
       button: true,
@@ -158,7 +164,10 @@ class _BlueprintWorkspaceButton extends StatelessWidget {
         child: AnimatedContainer(
           duration: AppTheme.fastAnimation,
           curve: Curves.easeOutCubic,
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+          padding: EdgeInsets.symmetric(
+            horizontal: compactLandscape ? 8 : 10,
+            vertical: compactLandscape ? 3 : 7,
+          ),
           decoration: ArcUiTokens.chipDecoration(
             color: accent,
             selected: selected,
@@ -166,11 +175,17 @@ class _BlueprintWorkspaceButton extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(workspace.icon, size: 15, color: accent),
-              const SizedBox(width: 6),
+              Icon(
+                workspace.icon,
+                size: compactLandscape ? 13 : 15,
+                color: accent,
+              ),
+              SizedBox(width: compactLandscape ? 4 : 6),
               Text(
                 workspace.label.toUpperCase(),
-                style: ArcUiTokens.label(color: accent),
+                style: ArcUiTokens.label(
+                  color: accent,
+                ).copyWith(fontSize: compactLandscape ? 8 : null),
               ),
             ],
           ),

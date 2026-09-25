@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_loadout_bridge.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_unlock_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_item_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_asset_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_compatibility_registry.dart';
@@ -14,6 +16,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_item_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_smart_build_mission_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_saved_loadout_repository.dart';
@@ -21,6 +24,9 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raid_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_smart_build_trade_draft_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/ads/uag_ad_placement_policy.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/ads/uag_ad_service.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_blueprint_workspace_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
@@ -345,6 +351,9 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Favourite loadout saved.')));
+      await UagAdService.instance.showNaturalBreakInterstitial(
+        UagAdPlacementPolicy.favouriteLoadoutSaved,
+      );
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1370,6 +1379,14 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final compactMobileLandscape =
+        !kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.android ||
+            defaultTargetPlatform == TargetPlatform.iOS) &&
+        media.orientation == Orientation.landscape &&
+        media.size.height <= 720;
+
     return Scaffold(
       extendBody: true,
       backgroundColor: Colors.transparent,
@@ -1382,7 +1399,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       ),
       body: ArcRaidersScreenShell(
         useSafeArea: false,
-        showAdBanner: true,
+        showAdBanner: !compactMobileLandscape,
         child: SafeArea(
           child: StreamBuilder<ArcSavedLoadout?>(
             stream: _savedLoadoutRepository.watchFavouriteLoadout(),
@@ -1419,6 +1436,29 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                         );
                       }
 
+                      if (compactMobileLandscape) {
+                        return SingleChildScrollView(
+                          padding: const EdgeInsets.fromLTRB(6, 4, 6, 72),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              if ((hydration?.isLoading ?? false) &&
+                                  blueprintStates.isEmpty) ...[
+                                _buildBlueprintStateNotice(),
+                                const SizedBox(height: 6),
+                              ],
+                              _buildCompactLoadoutHeader(blueprintStates),
+                              const SizedBox(height: 6),
+                              _buildCompactMobileBoard(blueprintStates),
+                              const SizedBox(height: 6),
+                              _buildLevelFourMaterialPlan(),
+                              const SizedBox(height: 6),
+                              _buildMissingBlueprints(blueprintStates),
+                            ],
+                          ),
+                        );
+                      }
+
                       return ArcRaidersPageList(
                         maxWidth: 1280,
                         bottomPadding: 150,
@@ -1441,6 +1481,448 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
               );
             },
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCompactLoadoutHeader(Map<String, ArcBlueprintState> states) {
+    final missing = _missingBlueprintItems(states).length;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.panel,
+        accent: AppTheme.neonCyan,
+        radius: ArcUiTokens.radiusM,
+        borderOpacity: 0.24,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'FAVOURITE LOADOUT',
+                  style: AppTheme.tradingHeading(
+                    fontSize: 18,
+                    color: AppTheme.neonCyan,
+                  ),
+                ),
+                Text(
+                  _buildName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: Colors.white60, fontSize: 10),
+                ),
+              ],
+            ),
+          ),
+          _planningPill(
+            missing == 0 ? 'BP READY' : '$missing BP MISSING',
+            missing == 0 ? Colors.lightGreenAccent : AppTheme.neonPink,
+          ),
+          const SizedBox(width: 5),
+          IconButton(
+            tooltip: 'Blueprint Tracker',
+            visualDensity: VisualDensity.compact,
+            onPressed: () =>
+                Navigator.of(context).pushNamed(BlueprintGridScreen.routeName),
+            icon: const Icon(Icons.grid_view_rounded, color: AppTheme.neonCyan),
+          ),
+          IconButton(
+            tooltip: 'Smart Build',
+            visualDensity: VisualDensity.compact,
+            onPressed: () => _showSmartBuildGenerator(states),
+            icon: const Icon(
+              Icons.auto_awesome_rounded,
+              color: Colors.amberAccent,
+            ),
+          ),
+          IconButton(
+            tooltip: 'Save Favourite Loadout',
+            visualDensity: VisualDensity.compact,
+            onPressed: _saveLoadout,
+            icon: const Icon(Icons.save_rounded, color: AppTheme.neonPink),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompactMobileBoard(Map<String, ArcBlueprintState> states) {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.30),
+        borderRadius: BorderRadius.circular(ArcUiTokens.radiusL),
+        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.28)),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final sideBySide = constraints.maxWidth >= 720;
+          final weapons = Column(
+            children: [
+              _buildCompactWeaponRow(true, states),
+              const SizedBox(height: 6),
+              _buildCompactWeaponRow(false, states),
+            ],
+          );
+          final utility = Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildCompactShield(states),
+              const SizedBox(height: 6),
+              _buildCompactQuickSlots(states),
+            ],
+          );
+          if (!sideBySide) {
+            return Column(
+              children: [weapons, const SizedBox(height: 6), utility],
+            );
+          }
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(flex: 7, child: weapons),
+              const SizedBox(width: 8),
+              Expanded(flex: 4, child: utility),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildCompactWeaponRow(
+    bool primary,
+    Map<String, ArcBlueprintState> states,
+  ) {
+    final weapon = _weaponSpec(primary ? _primaryWeapon : _secondaryWeapon);
+    final attachments = primary ? _primaryAttachments : _secondaryAttachments;
+    final accent = primary ? AppTheme.neonCyan : AppTheme.neonPink;
+    final owned = _isOwnedOrNotBlueprint(
+      itemName: weapon.name,
+      blueprintBased: weapon.blueprintBased,
+      states: states,
+    );
+
+    return Container(
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.055),
+        borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
+        border: Border.all(color: accent.withValues(alpha: 0.18)),
+      ),
+      child: Row(
+        children: [
+          InkWell(
+            onTap: () => _pickWeapon(primary: primary, states: states),
+            child: _itemImage(
+              imageAsset: _assetForLoadoutItem(
+                weapon.name,
+                _weaponAssetKind(primary),
+              ),
+              accent: accent,
+              owned: owned,
+              icon: owned ? Icons.inventory_2_rounded : Icons.lock_rounded,
+              size: 54,
+            ),
+          ),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 118,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  primary ? 'PRIMARY' : 'SECONDARY',
+                  style: ArcUiTokens.label(color: accent).copyWith(fontSize: 8),
+                ),
+                Text(
+                  weapon.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTheme.tradingHeading(
+                    fontSize: 15,
+                    color: owned ? Colors.white : Colors.white38,
+                  ),
+                ),
+                Text(
+                  weapon.blueprintBased && !owned
+                      ? 'MISSING BLUEPRINT'
+                      : _weaponSubtitle(weapon),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: owned ? Colors.white54 : AppTheme.neonPink,
+                    fontSize: 8.5,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Wrap(
+              spacing: 5,
+              runSpacing: 5,
+              children: List.generate(weapon.slots.length, (index) {
+                final slotLabel = weapon.slots[index];
+                final label =
+                    index < attachments.length &&
+                        attachments[index] != 'Empty Slot'
+                    ? attachments[index]
+                    : slotLabel;
+                final attachment = _attachmentSpecForName(label);
+                final assigned = label != slotLabel && label != 'Empty Slot';
+                final attachmentOwned =
+                    !assigned ||
+                    _isOwnedOrNotBlueprint(
+                      itemName: label,
+                      blueprintBased: _blueprintForName(label) != null,
+                      states: states,
+                    );
+                return Tooltip(
+                  message: assigned
+                      ? '$slotLabel: $label'
+                      : '$slotLabel: Empty',
+                  child: InkWell(
+                    onTap: () =>
+                        _pickAttachment(primary: primary, index: index),
+                    child: Container(
+                      width: 48,
+                      height: 48,
+                      padding: const EdgeInsets.all(3),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.22),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: accent.withValues(
+                            alpha: assigned ? 0.38 : 0.16,
+                          ),
+                        ),
+                      ),
+                      child: _itemImage(
+                        imageAsset: _assetForLoadoutItem(
+                          label,
+                          ArcLoadoutAssetKind.attachment,
+                          explicitAssetPath: attachment?.imageAssetPath,
+                        ),
+                        accent: accent,
+                        owned: attachmentOwned,
+                        icon: assigned
+                            ? Icons.construction_rounded
+                            : Icons.add_rounded,
+                        size: 42,
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompactShield(Map<String, ArcBlueprintState> states) {
+    final shieldOption = _optionForName(_shield);
+    final owned = _isOwnedOrNotBlueprint(
+      itemName: _shield,
+      blueprintBased: shieldOption?.blueprintBased ?? false,
+      states: states,
+    );
+    return InkWell(
+      onTap: _pickShield,
+      child: Container(
+        height: 58,
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: Colors.lightGreenAccent.withValues(alpha: 0.045),
+          borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
+          border: Border.all(
+            color: Colors.lightGreenAccent.withValues(alpha: 0.20),
+          ),
+        ),
+        child: Row(
+          children: [
+            _itemImage(
+              imageAsset: _assetForLoadoutItem(
+                _shield,
+                ArcLoadoutAssetKind.equipment,
+              ),
+              accent: Colors.lightGreenAccent,
+              owned: owned,
+              icon: Icons.shield_outlined,
+              size: 44,
+            ),
+            const SizedBox(width: 7),
+            Expanded(
+              child: Text(
+                _shield,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTheme.tradingHeading(
+                  fontSize: 13,
+                  color: Colors.lightGreenAccent,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCompactQuickSlots(Map<String, ArcBlueprintState> states) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return GridView.builder(
+          itemCount: ArcLoadoutLayoutEngine.quickUseSlotCount,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            mainAxisSpacing: 5,
+            crossAxisSpacing: 5,
+            childAspectRatio: 1.75,
+          ),
+          itemBuilder: (context, index) {
+            final item = index < _quickSlots.length
+                ? _quickSlots[index]
+                : ArcLoadoutLayoutEngine.emptySlot;
+            final option = ArcLoadoutLayoutEngine.quickUseOptionForName(item);
+            final owned =
+                item == ArcLoadoutLayoutEngine.emptySlot ||
+                _isOwnedOrNotBlueprint(
+                  itemName: item,
+                  blueprintBased: option?.blueprintBased ?? false,
+                  states: states,
+                );
+            return _quickUseCard(
+              index: index + 1,
+              label: item,
+              subtitle: option?.type.label ?? 'Open slot',
+              imageAsset: _assetForLoadoutItem(
+                item,
+                option == null
+                    ? ArcLoadoutAssetKind.equipment
+                    : _assetKindForOption(option),
+              ),
+              icon: _quickUseIcon(option),
+              owned: owned,
+              onTap: () => _pickQuickSlot(index),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildLevelFourMaterialPlan() {
+    final primaryPlan = ArcItemIntelligenceEngine.planForItem(_primaryWeapon);
+    final secondaryPlan = ArcItemIntelligenceEngine.planForItem(
+      _secondaryWeapon,
+    );
+    final plans = <ArcCraftingPlan>[primaryPlan, secondaryPlan];
+    final raw = <String, int>{};
+    final craft = <String, int>{};
+
+    for (final plan in plans) {
+      for (final entry in plan.rawMaterials.entries) {
+        raw.update(
+          entry.key,
+          (value) => value + entry.value,
+          ifAbsent: () => entry.value,
+        );
+      }
+      for (final step in plan.craftSteps) {
+        craft.update(
+          step.itemId,
+          (value) => value + step.quantity,
+          ifAbsent: () => step.quantity,
+        );
+      }
+    }
+
+    final rawEntries = raw.entries.toList()
+      ..sort(
+        (a, b) => ArcItemIntelligenceEngine.itemName(
+          a.key,
+        ).compareTo(ArcItemIntelligenceEngine.itemName(b.key)),
+      );
+    final craftEntries = craft.entries.toList()
+      ..sort(
+        (a, b) => ArcItemIntelligenceEngine.itemName(
+          a.key,
+        ).compareTo(ArcItemIntelligenceEngine.itemName(b.key)),
+      );
+
+    return _arcPanel(
+      accent: Colors.amberAccent,
+      padding: const EdgeInsets.all(9),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: EdgeInsets.zero,
+          childrenPadding: EdgeInsets.zero,
+          visualDensity: VisualDensity.compact,
+          minTileHeight: 40,
+          title: Text(
+            'LEVEL IV BUILD COST',
+            style: AppTheme.tradingHeading(
+              fontSize: 14,
+              color: Colors.amberAccent,
+            ),
+          ),
+          subtitle: Text(
+            '${primaryPlan.targetName} + ${secondaryPlan.targetName} • '
+            'combined from-scratch base materials',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(color: Colors.white60, fontSize: 9.5),
+          ),
+          children: [
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                for (final entry in rawEntries)
+                  _planningPill(
+                    '${ArcItemIntelligenceEngine.itemName(entry.key)} x${entry.value}',
+                    Colors.amberAccent,
+                  ),
+              ],
+            ),
+            if (craftEntries.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'CRAFT / UPGRADE CHAIN',
+                  style: ArcUiTokens.label(color: AppTheme.neonCyan),
+                ),
+              ),
+              const SizedBox(height: 5),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  for (final entry in craftEntries)
+                    _planningPill(
+                      '${ArcItemIntelligenceEngine.itemName(entry.key)} x${entry.value}',
+                      AppTheme.neonCyan,
+                    ),
+                ],
+              ),
+            ],
+          ],
         ),
       ),
     );
@@ -2148,23 +2630,53 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
               color: Colors.lightGreenAccent,
             )
           else
-            ...missing.map(
-              (item) => Padding(
+            ...missing.map((item) {
+              final unlockPlan = ArcBlueprintUnlockEngine.planForBlueprint(
+                item,
+              );
+              return Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: _statusLine(
-                  icon: Icons.lock_rounded,
+                  icon: unlockPlan == null
+                      ? Icons.lock_rounded
+                      : Icons.account_tree_rounded,
                   label: item,
-                  value:
-                      'Missing blueprint. Add to Hunt Targets or find trade.',
-                  color: AppTheme.neonPink,
+                  value: unlockPlan == null
+                      ? 'Missing blueprint. Hunt, trade, Trial or source intel required.'
+                      : 'Guaranteed quest reward: ${unlockPlan.shortSummary}',
+                  color: unlockPlan == null
+                      ? AppTheme.neonPink
+                      : Colors.lightGreenAccent,
                 ),
-              ),
-            ),
+              );
+            }),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
+              if (missing
+                  .map(ArcBlueprintUnlockEngine.planForBlueprint)
+                  .whereType<ArcBlueprintUnlockPlan>()
+                  .isNotEmpty)
+                _smallAction(
+                  label: 'Quest Unlock Path',
+                  icon: Icons.account_tree_rounded,
+                  color: Colors.lightGreenAccent,
+                  onTap: () {
+                    final plan = missing
+                        .map(ArcBlueprintUnlockEngine.planForBlueprint)
+                        .whereType<ArcBlueprintUnlockPlan>()
+                        .first;
+                    Navigator.of(context).pushNamed(
+                      ScrappyGridScreen.questRouteName,
+                      arguments: <String, Object?>{
+                        'questFocusId': plan.quest.id,
+                        'sourceBlueprintName': plan.reward.blueprintName,
+                      },
+                    );
+                  },
+                ),
               _smallAction(
                 label: 'Blueprint Grid',
                 icon: Icons.grid_view_rounded,

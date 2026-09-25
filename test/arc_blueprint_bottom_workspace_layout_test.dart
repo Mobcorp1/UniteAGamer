@@ -26,14 +26,18 @@ void main() {
     );
     expect(
       loadout,
-      contains(
-        'ArcBlueprintWorkspaceDock(current: ArcBlueprintWorkspace.loadout)',
+      matches(
+        RegExp(
+          r'ArcBlueprintWorkspaceDock\(\s*current:\s*ArcBlueprintWorkspace\.loadout,?\s*\)',
+        ),
       ),
     );
     expect(
       watches,
-      contains(
-        'ArcBlueprintWorkspaceDock(current: ArcBlueprintWorkspace.watches)',
+      matches(
+        RegExp(
+          r'ArcBlueprintWorkspaceDock\(\s*current:\s*ArcBlueprintWorkspace\.watches,?\s*\)',
+        ),
       ),
     );
   });

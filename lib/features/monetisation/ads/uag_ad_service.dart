@@ -160,12 +160,14 @@ class UagAdService extends ChangeNotifier with WidgetsBindingObserver {
 
   void onRouteChanged(String? routeName) {
     _currentRoute = routeName;
+    _preloadEligibleFullScreenAds();
     notifyListeners();
   }
 
   void recordMeaningfulNavigation(String? routeName) {
     _currentRoute = routeName;
     if (!_canUseInterstitials || _routeBlocksAds(routeName)) {
+      _preloadEligibleFullScreenAds();
       notifyListeners();
       return;
     }
@@ -173,17 +175,28 @@ class UagAdService extends ChangeNotifier with WidgetsBindingObserver {
     if (_eligibleTransitions >= _settings.interstitialEveryTransitions) {
       unawaited(_showInterstitialIfReady());
     }
+    _preloadEligibleFullScreenAds();
     notifyListeners();
   }
 
-  bool get _canUseInterstitials =>
+  bool get _baseInterstitialEligibility =>
       _initialised &&
       _consentAllowsRequests &&
       _signedIn &&
       _settings.adsEnabled &&
       _settings.interstitialEnabled &&
-      _policy.showInterstitialAds &&
+      _policy.showInterstitialAds;
+
+  bool get _canUseInterstitials =>
+      _baseInterstitialEligibility &&
       UagAdPlacementPolicy.permitsInterstitial(_currentRoute);
+
+  bool get _canLoadNaturalBreakInterstitial =>
+      _baseInterstitialEligibility &&
+      UagAdPlacementPolicy.hasNaturalBreakPlacementForRoute(_currentRoute);
+
+  bool get _canLoadInterstitial =>
+      _canUseInterstitials || _canLoadNaturalBreakInterstitial;
 
   bool get _canUseAppOpen =>
       _initialised &&
@@ -197,13 +210,13 @@ class UagAdService extends ChangeNotifier with WidgetsBindingObserver {
 
   void _preloadEligibleFullScreenAds() {
     if (_canUseAppOpen) _loadAppOpen();
-    if (_canUseInterstitials) _loadInterstitial();
+    if (_canLoadInterstitial) _loadInterstitial();
   }
 
   void _loadInterstitial() {
     if (_interstitialAd != null ||
         _interstitialLoading ||
-        !_canUseInterstitials) {
+        !_canLoadInterstitial) {
       return;
     }
     _interstitialLoading = true;
@@ -229,6 +242,44 @@ class UagAdService extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> _showInterstitialIfReady() async {
     if (!_canUseInterstitials || _fullScreenShowing) return;
     if (_routeBlocksAds(_currentRoute)) return;
+    final last = _lastInterstitialShownAt;
+    if (last != null &&
+        DateTime.now().difference(last).inSeconds <
+            _settings.interstitialCooldownSeconds) {
+      return;
+    }
+    final ad = _interstitialAd;
+    if (ad == null) {
+      _loadInterstitial();
+      return;
+    }
+    _interstitialAd = null;
+    _fullScreenShowing = true;
+    ad.fullScreenContentCallback = FullScreenContentCallback<InterstitialAd>(
+      onAdDismissedFullScreenContent: (shownAd) {
+        shownAd.dispose();
+        _fullScreenShowing = false;
+        _lastInterstitialShownAt = DateTime.now();
+        _eligibleTransitions = 0;
+        _loadInterstitial();
+      },
+      onAdFailedToShowFullScreenContent: (shownAd, _) {
+        shownAd.dispose();
+        _fullScreenShowing = false;
+        _loadInterstitial();
+      },
+    );
+    ad.show();
+  }
+
+  Future<void> showNaturalBreakInterstitial(String placementId) async {
+    if (!_baseInterstitialEligibility || _fullScreenShowing) return;
+    if (!UagAdPlacementPolicy.permitsNaturalBreakInterstitial(
+      placementId,
+      _currentRoute,
+    )) {
+      return;
+    }
     final last = _lastInterstitialShownAt;
     if (last != null &&
         DateTime.now().difference(last).inSeconds <
@@ -356,7 +407,7 @@ class UagAdService extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void _disposeAdsThatAreNoLongerEligible() {
-    if (!_canUseInterstitials) {
+    if (!_canLoadInterstitial) {
       _interstitialAd?.dispose();
       _interstitialAd = null;
     }

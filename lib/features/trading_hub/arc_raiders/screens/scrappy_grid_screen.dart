@@ -1506,8 +1506,14 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
           seasonId: records.seasonId,
           trackedQuestIds: records.trackedQuestIds,
         );
+        String? initialQuestId;
+        final routeArgs = ModalRoute.of(context)?.settings.arguments;
+        if (routeArgs is Map && routeArgs['questFocusId'] is String) {
+          initialQuestId = routeArgs['questFocusId'] as String;
+        }
         return ArcQuestTrackerWorkspace(
           snapshot: questSnapshot,
+          initialQuestId: initialQuestId,
           onJustStarting: _progressionRepository.startQuestTracking,
           onTrackedChanged: _progressionRepository.setCurrentQuestIds,
           onCompleteQuest: (questId) => _progressionRepository
