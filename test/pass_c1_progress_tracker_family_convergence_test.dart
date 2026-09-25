@@ -50,17 +50,24 @@ void main() {
   });
 
   test(
-    'C1 Quest board stacks on narrow layouts and uses columns when wide',
+    'C1 Quest workspace stacks on narrow layouts and uses a row when wide',
     () {
-      final text = source(
+      final screenText = source(
         'lib/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart',
       );
+      final workspaceText = source(
+        'lib/features/trading_hub/arc_raiders/widgets/'
+        'arc_quest_tracker_workspace.dart',
+      );
 
-      expect(text, contains('final useColumns = width >= 720;'));
-      expect(text, contains('if (!useColumns)'));
-      expect(text, contains("title: 'Needed'"));
-      expect(text, contains("title: 'In Progress'"));
-      expect(text, contains("title: 'Complete'"));
+      expect(screenText, contains('_buildQuestIntelligenceWorkspace(states)'));
+      expect(workspaceText, contains('LayoutBuilder('));
+      expect(workspaceText, contains('if (constraints.maxWidth >= 760)'));
+      expect(workspaceText, contains('return Row('));
+      expect(workspaceText, contains('return Column('));
+      expect(workspaceText, contains("title: 'TRACKING'"));
+      expect(workspaceText, contains("title: 'AVAILABLE NOW'"));
+      expect(workspaceText, contains("title: 'COMING NEXT'"));
     },
   );
 

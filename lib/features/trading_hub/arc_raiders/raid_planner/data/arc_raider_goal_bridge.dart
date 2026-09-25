@@ -1,6 +1,7 @@
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_intel_seed.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_conditions.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_quest_catalogue.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_progression_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raider_goal_models.dart';
@@ -92,8 +93,14 @@ class ArcRaiderGoalBridge {
           entry.locked) {
         continue;
       }
+      if (snapshot.trackedQuestIds.isNotEmpty &&
+          !snapshot.trackedQuestIds.contains(entry.questId)) {
+        continue;
+      }
 
       final route = routeHints[entry.questId];
+      final catalogueNode = ArcQuestCatalogue.byId[entry.questId];
+      final catalogueMaps = catalogueNode?.mapNames ?? const <String>[];
       output.add(
         ArcRaiderGoal(
           id: 'quest:${entry.questId}',
@@ -104,15 +111,20 @@ class ArcRaiderGoalBridge {
           // without a matchmaking competition penalty.
           cooperation: ArcRaiderGoalCooperation.cooperative,
           priority: entry.readyToComplete ? 5 : 4,
-          mapNames: route?.mapNames ?? const <String>[],
+          mapNames: route?.mapNames ?? catalogueMaps,
           conditionNames: route?.conditionNames ?? const <String>[],
           poiIds: route?.poiIds ?? const <String>[],
           conditionFit: route?.conditionFit ?? ArcRaiderGoalConditionFit.none,
           routeConfidence:
-              route?.confidence ?? ArcRaiderGoalRouteConfidence.unrouted,
-          reason: route == null
-              ? 'Active quest is tracked, but route data is not verified yet.'
-              : 'Verified quest route can be combined with other active goals.',
+              route?.confidence ??
+              (catalogueMaps.isNotEmpty
+                  ? ArcRaiderGoalRouteConfidence.strong
+                  : ArcRaiderGoalRouteConfidence.unrouted),
+          reason: route != null
+              ? 'Verified quest route can be combined with other active goals.'
+              : catalogueMaps.isNotEmpty
+              ? 'Current quest map is catalogued; exact POIs are not invented.'
+              : 'Active quest is tracked, but route data is not verified yet.',
         ),
       );
     }

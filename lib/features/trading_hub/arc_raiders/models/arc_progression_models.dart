@@ -211,6 +211,7 @@ class ArcQuestProgressionSnapshot {
     required this.completedQuestIds,
     required this.archivedQuestIds,
     required this.trackingKnown,
+    this.trackedQuestIds = const <String>{},
   });
 
   static const empty = ArcQuestProgressionSnapshot(
@@ -226,8 +227,16 @@ class ArcQuestProgressionSnapshot {
   final Set<String> completedQuestIds;
   final Set<String> archivedQuestIds;
   final bool trackingKnown;
+  final Set<String> trackedQuestIds;
 
   ArcQuestProgressionEntry? get activeQuest {
+    for (final entry in entries) {
+      if (trackedQuestIds.contains(entry.questId) &&
+          (entry.status == ArcProgressionStatus.ready ||
+              entry.status == ArcProgressionStatus.active)) {
+        return entry;
+      }
+    }
     for (final entry in entries) {
       if (entry.status == ArcProgressionStatus.ready ||
           entry.status == ArcProgressionStatus.active) {
@@ -524,6 +533,7 @@ class ArcProgressionRecords {
     required this.scrappyState,
     required this.benchRecords,
     this.seasonId = 'season-1',
+    this.trackedQuestIds = const <String>{},
   });
 
   static const empty = ArcProgressionRecords(
@@ -536,6 +546,7 @@ class ArcProgressionRecords {
   final ArcScrappyProgressionState scrappyState;
   final Map<String, ArcBenchProgressionRecord> benchRecords;
   final String seasonId;
+  final Set<String> trackedQuestIds;
 }
 
 @immutable

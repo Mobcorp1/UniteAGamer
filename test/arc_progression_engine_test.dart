@@ -7,31 +7,21 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 void main() {
   const engine = ArcProgressionEngine();
 
-  group('ArcProgressionEngine quest chain', () {
-    test('starts with first quest and advances after completion', () {
+  group('ArcProgressionEngine quest graph', () {
+    test('starts at the root and advances after manual in-game completion', () {
       final firstQuest = engine.questDefinitions.first;
       final initial = engine.buildQuestSnapshot(scrappyStates: const {});
 
+      expect(firstQuest.questId, 'quest-chain-shani-picking-up-the-pieces');
       expect(initial.activeQuest?.questId, firstQuest.questId);
-
-      final completedStates = {
-        for (final objective in firstQuest.objectives)
-          objective.id: ArcScrappyState(
-            itemId: objective.id,
-            collectedCount: objective.requiredCount,
-          ),
-      };
-      final ready = engine.buildQuestSnapshot(scrappyStates: completedStates);
-
-      expect(ready.activeQuest?.readyToComplete, isTrue);
-      expect(ready.activeQuest?.questId, firstQuest.questId);
+      expect(initial.activeQuest?.locked, isFalse);
 
       final record = engine.completeQuestRecord(
-        snapshot: ready,
+        snapshot: initial,
         questId: firstQuest.questId,
       );
       final advanced = engine.buildQuestSnapshot(
-        scrappyStates: completedStates,
+        scrappyStates: const {},
         records: {firstQuest.questId: record},
       );
 

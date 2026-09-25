@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_progression_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_quest_catalogue.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_quest_position_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_progression_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_season_reset_models.dart';
@@ -35,6 +37,9 @@ class ArcProgressionRepository {
   CollectionReference<Map<String, dynamic>> _questProgressRef(String uid) =>
       _userRef(uid).collection('arc_quest_progress');
 
+  DocumentReference<Map<String, dynamic>> _questStateRef(String uid) =>
+      _userRef(uid).collection('arc_quest_state').doc('current');
+
   DocumentReference<Map<String, dynamic>> _scrappyProgressRef(String uid) =>
       _userRef(uid).collection('arc_scrappy_progress').doc('current');
 
@@ -48,6 +53,8 @@ class ArcProgressionRepository {
     final controller = StreamController<ArcProgressionRecords>();
     StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? questSubscription;
     StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
+    questStateSubscription;
+    StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
     scrappySubscription;
     StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? benchSubscription;
     StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
@@ -55,6 +62,7 @@ class ArcProgressionRepository {
     var disposed = false;
     var seasonId = ArcSeasonResetPolicy.defaultCurrentSeasonId;
     var questRecords = <String, ArcQuestProgressionRecord>{};
+    var trackedQuestIds = <String>{};
     var scrappyState = ArcScrappyProgressionState.empty;
     var benchRecords = <String, ArcBenchProgressionRecord>{};
 
@@ -66,6 +74,7 @@ class ArcProgressionRepository {
           scrappyState: scrappyState.copyWith(seasonId: seasonId),
           benchRecords: benchRecords,
           seasonId: seasonId,
+          trackedQuestIds: trackedQuestIds,
         ),
       );
     }
@@ -93,6 +102,16 @@ class ArcProgressionRepository {
         emit();
       }, onError: addError);
 
+      questStateSubscription = _questStateRef(uid).snapshots().listen((
+        snapshot,
+      ) {
+        final questStateData = snapshot.data();
+        trackedQuestIds = _stringSet(
+          questStateData == null ? null : questStateData['trackedQuestIds'],
+        );
+        emit();
+      }, onError: addError);
+
       scrappySubscription = _scrappyProgressRef(uid).snapshots().listen((
         snapshot,
       ) {
@@ -117,6 +136,7 @@ class ArcProgressionRepository {
     controller.onCancel = () async {
       disposed = true;
       await questSubscription?.cancel();
+      await questStateSubscription?.cancel();
       await scrappySubscription?.cancel();
       await benchSubscription?.cancel();
       await seasonSubscription?.cancel();
@@ -131,6 +151,8 @@ class ArcProgressionRepository {
     final season = await _seasonRef(uid).get();
     final seasonId = _seasonIdFrom(season.data());
     final questSnapshot = await _questProgressRef(uid).get();
+    final questStateSnapshot = await _questStateRef(uid).get();
+    final questStateData = questStateSnapshot.data();
     final scrappySnapshot = await _scrappyProgressRef(uid).get();
     final benchSnapshot = await _benchProgressRef(uid).get();
 
@@ -146,6 +168,9 @@ class ArcProgressionRepository {
       scrappyState: ArcScrappyProgressionState.fromMap(
         scrappySnapshot.exists ? _normalizeMap(scrappySnapshot.data()) : null,
       ).copyWith(seasonId: seasonId),
+      trackedQuestIds: _stringSet(
+        questStateData == null ? null : questStateData['trackedQuestIds'],
+      ),
       benchRecords: {
         for (final doc in benchSnapshot.docs)
           doc.id: ArcBenchProgressionRecord.fromMap(
@@ -167,15 +192,13 @@ class ArcProgressionRepository {
       scrappyStates: scrappyStates,
       records: records.questRecords,
       seasonId: records.seasonId,
+      trackedQuestIds: records.trackedQuestIds,
     );
     final entry = snapshot.entries.firstWhere(
       (entry) => entry.questId == questId,
       orElse: () => throw StateError('Unknown quest progression id: $questId'),
     );
     if (entry.completed) return false;
-    if (!entry.readyToComplete) {
-      throw StateError('${entry.questLabel} is not ready to complete.');
-    }
 
     final record = _engine.completeQuestRecord(
       snapshot: snapshot,
@@ -185,8 +208,70 @@ class ArcProgressionRepository {
       ...record.toMap(),
       'updatedAt': DateTime.now().toUtc().toIso8601String(),
     }, SetOptions(merge: true));
+    await _questStateRef(uid).set({
+      'trackedQuestIds': FieldValue.arrayRemove(<String>[questId]),
+      'updatedAt': DateTime.now().toUtc().toIso8601String(),
+    }, SetOptions(merge: true));
     await _operations.recordQuestCompleted(questId: questId);
     return true;
+  }
+
+  Future<void> startQuestTracking() async {
+    await setCurrentQuestIds(<String>{ArcQuestCatalogue.rootQuestId});
+  }
+
+  Future<void> setCurrentQuestIds(Set<String> questIds) async {
+    final uid = _uid;
+    if (uid == null) return;
+
+    final validSelected = questIds
+        .where(ArcQuestCatalogue.byId.containsKey)
+        .toSet();
+    final records = await loadProgressionRecords();
+    validSelected.removeAll(
+      records.questRecords.entries
+          .where((entry) => entry.value.completed)
+          .map((entry) => entry.key),
+    );
+
+    final inferred = const ArcQuestPositionEngine().inferCompletedAncestors(
+      validSelected,
+    );
+    inferred.removeAll(
+      records.questRecords.entries
+          .where((entry) => entry.value.completed)
+          .map((entry) => entry.key),
+    );
+
+    final now = DateTime.now().toUtc();
+    final batch = _firestore.batch();
+    for (final questId in inferred) {
+      final record = ArcQuestProgressionRecord(
+        questId: questId,
+        seasonId: records.seasonId,
+        status: ArcProgressionStatus.completed,
+        updatedAt: now,
+      );
+      batch.set(
+        _questProgressRef(uid).doc(questId),
+        record.toMap(),
+        SetOptions(merge: true),
+      );
+    }
+
+    final orderedSelected = validSelected.toList(growable: false)
+      ..sort((left, right) {
+        final leftOrder = ArcQuestCatalogue.byId[left]?.canonicalOrder ?? 9999;
+        final rightOrder =
+            ArcQuestCatalogue.byId[right]?.canonicalOrder ?? 9999;
+        return leftOrder.compareTo(rightOrder);
+      });
+    batch.set(_questStateRef(uid), <String, dynamic>{
+      'catalogueVersion': ArcQuestCatalogue.version,
+      'trackedQuestIds': orderedSelected,
+      'updatedAt': now.toIso8601String(),
+    }, SetOptions(merge: true));
+    await batch.commit();
   }
 
   Future<bool> confirmScrappyUpgrade({
@@ -255,6 +340,14 @@ class ArcProgressionRepository {
     final value = data?['currentSeasonId'];
     if (value is String && value.trim().isNotEmpty) return value.trim();
     return ArcSeasonResetPolicy.defaultCurrentSeasonId;
+  }
+
+  Set<String> _stringSet(Object? value) {
+    if (value is! Iterable) return <String>{};
+    return value
+        .map((item) => item.toString().trim())
+        .where((item) => item.isNotEmpty)
+        .toSet();
   }
 
   Map<String, dynamic> _normalizeMap(Map<String, dynamic>? source) {

@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bench_upgrade_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_quest_catalogue.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_quest_requirement_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_scrappy_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_command_centre_models.dart';
@@ -21,6 +22,7 @@ class ArcProgressionEngine {
         scrappyStates: scrappyStates,
         records: records.questRecords,
         seasonId: records.seasonId,
+        trackedQuestIds: records.trackedQuestIds,
       ),
       scrappy: buildScrappySnapshot(
         scrappyStates: scrappyStates,
@@ -36,58 +38,46 @@ class ArcProgressionEngine {
   }
 
   List<ArcQuestProgressionDefinition> get questDefinitions {
+    final objectivesByQuest = <String, List<ArcProgressionObjective>>{};
+
     final grouped = <String, List<ArcScrappyItem>>{};
     for (final item
         in ArcQuestRequirementSeedData.items.whereType<ArcScrappyItem>()) {
-      grouped.putIfAbsent('${item.category}|||${item.group}', () => []);
-      grouped['${item.category}|||${item.group}']!.add(item);
+      final key = ArcQuestCatalogue.normalizedKey(item.category, item.group);
+      grouped.putIfAbsent(key, () => <ArcScrappyItem>[]).add(item);
     }
 
-    final definitions = <ArcQuestProgressionDefinition>[];
     for (final entry in grouped.entries) {
       final items = entry.value
         ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-      final first = items.first;
-      definitions.add(
-        ArcQuestProgressionDefinition(
-          questId: questIdFor(first.category, first.group),
-          trader: first.category,
-          questName: first.group,
-          order: first.sortOrder,
-          prerequisiteQuestIds: const <String>[],
-          objectives: [
-            for (final item in items)
-              ArcProgressionObjective(
-                id: item.id,
-                label: item.name,
-                requiredCount: item.neededCount,
-                currentCount: 0,
-                sourceHint: item.locationHint,
-              ),
-          ],
-        ),
-      );
+      objectivesByQuest[entry.key] = <ArcProgressionObjective>[
+        for (final item in items)
+          ArcProgressionObjective(
+            id: item.id,
+            label: item.name,
+            requiredCount: item.neededCount,
+            currentCount: 0,
+            sourceHint: item.locationHint,
+          ),
+      ];
     }
 
-    definitions.sort((a, b) => a.order.compareTo(b.order));
-    final chained = <ArcQuestProgressionDefinition>[];
-    for (var i = 0; i < definitions.length; i++) {
-      final previous = i == 0 ? null : definitions[i - 1];
-      final definition = definitions[i];
-      chained.add(
+    return <ArcQuestProgressionDefinition>[
+      for (final node in ArcQuestCatalogue.nodes)
         ArcQuestProgressionDefinition(
-          questId: definition.questId,
-          trader: definition.trader,
-          questName: definition.questName,
-          order: definition.order,
-          prerequisiteQuestIds: previous == null
-              ? const <String>[]
-              : <String>[previous.questId],
-          objectives: definition.objectives,
+          questId: node.id,
+          trader: node.trader,
+          questName: node.displayName,
+          order: node.canonicalOrder,
+          prerequisiteQuestIds: node.prerequisiteQuestIds,
+          objectives:
+              objectivesByQuest[ArcQuestCatalogue.normalizedKey(
+                node.trader,
+                node.displayName,
+              )] ??
+              const <ArcProgressionObjective>[],
         ),
-      );
-    }
-    return chained;
+    ];
   }
 
   List<ArcScrappyProgressionDefinition> get scrappyDefinitions {
@@ -171,6 +161,7 @@ class ArcProgressionEngine {
     Map<String, ArcQuestProgressionRecord> records =
         const <String, ArcQuestProgressionRecord>{},
     String seasonId = ArcSeasonResetPolicy.defaultCurrentSeasonId,
+    Set<String> trackedQuestIds = const <String>{},
   }) {
     final definitions = questDefinitions;
     final completedQuestIds = records.values
@@ -203,7 +194,7 @@ class ArcProgressionEngine {
           ? ArcProgressionStatus.completed
           : record?.status == ArcProgressionStatus.archived
           ? ArcProgressionStatus.archived
-          : !prereqsComplete
+          : !prereqsComplete && !trackedQuestIds.contains(definition.questId)
           ? ArcProgressionStatus.locked
           : allObjectivesReady
           ? ArcProgressionStatus.ready
@@ -223,7 +214,8 @@ class ArcProgressionEngine {
       entries: entries,
       completedQuestIds: completedQuestIds,
       archivedQuestIds: archivedQuestIds,
-      trackingKnown: trackingKnown,
+      trackingKnown: trackingKnown || trackedQuestIds.isNotEmpty,
+      trackedQuestIds: Set<String>.unmodifiable(trackedQuestIds),
     );
   }
 
