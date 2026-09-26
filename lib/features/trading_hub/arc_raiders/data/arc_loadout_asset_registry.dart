@@ -70,7 +70,6 @@ class ArcLoadoutAssetRegistry {
   static const Map<String, String> _equipmentAssets = {
     'lure grenade': 'assets/arc_raiders/blueprints/lure-grenade.webp',
     'pulse mine': 'assets/arc_raiders/blueprints/pulse-mine.webp',
-    'shield level 2': 'assets/arc_raiders/blueprints/barricade-kit.webp',
     'snap hook': 'assets/arc_raiders/blueprints/snap-hook.webp',
     'trigger nade': 'assets/arc_raiders/blueprints/trigger-nade.webp',
     'triggernade': 'assets/arc_raiders/blueprints/trigger-nade.webp',
@@ -98,6 +97,15 @@ class ArcLoadoutAssetRegistry {
   }) {
     final key = _normalise(itemName);
     if (key.isEmpty || key == 'empty slot') return null;
+
+    if (kind == ArcLoadoutAssetKind.equipment &&
+        const <String>{
+          'light shield',
+          'medium shield',
+          'heavy shield',
+        }.contains(key)) {
+      return null;
+    }
 
     final explicit = _cleanPath(explicitAssetPath);
     if (explicit != null) return explicit;

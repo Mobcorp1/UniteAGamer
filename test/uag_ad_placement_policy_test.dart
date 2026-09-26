@@ -42,6 +42,14 @@ void main() {
       expect(UagAdPlacementPolicy.bannerPlacementId(route), isNull);
     }
   });
+  test('Favourite Loadout permanently permits the banner lane', () {
+    expect(UagAdPlacementPolicy.permitsBanner('/favourite-loadout'), isTrue);
+    expect(
+      UagAdPlacementPolicy.bannerPlacementId('/favourite-loadout'),
+      isNotNull,
+    );
+  });
+
   test(
     'passive banner routes preserve tier policy and never auto interrupt',
     () {

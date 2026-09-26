@@ -19,6 +19,7 @@ class UagAdPlacementPolicy {
     '/trading-hub/arc-raiders/my-hub',
     '/trading-hub/arc-raiders/command-centre',
     '/trading-hub/arc-raiders/blueprints',
+    '/favourite-loadout',
     '/trading-hub/arc-raiders/scrappy',
     '/trading-hub/arc-raiders/bench',
     '/trading-hub/arc-raiders/quests',

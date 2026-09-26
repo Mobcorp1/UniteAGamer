@@ -5,42 +5,50 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   String read(String path) => File(path).readAsStringSync();
 
-  test('Blueprint family navigation is bottom anchored', () {
-    final tracker = read(
-      'lib/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart',
-    );
-    final loadout = read(
-      'lib/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart',
-    );
-    final watches = read(
-      'lib/features/trading_hub/arc_raiders/screens/trading_blueprint_watches_screen.dart',
-    );
+  test(
+    'Blueprint family keeps one app dock and Loadout uses top workspace switching',
+    () {
+      final tracker = read(
+        'lib/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart',
+      );
+      final loadout = read(
+        'lib/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart',
+      );
+      final watches = read(
+        'lib/features/trading_hub/arc_raiders/screens/trading_blueprint_watches_screen.dart',
+      );
 
-    expect(
-      tracker,
-      matches(
-        RegExp(
-          r'ArcBlueprintWorkspaceDock\(\s*current:\s*ArcBlueprintWorkspace.tracker,?\s*\)',
+      expect(
+        tracker,
+        matches(
+          RegExp(
+            r'ArcBlueprintWorkspaceDock\(\s*current:\s*ArcBlueprintWorkspace.tracker,?\s*\)',
+          ),
         ),
-      ),
-    );
-    expect(
-      loadout,
-      matches(
-        RegExp(
-          r'ArcBlueprintWorkspaceDock\(\s*current:\s*ArcBlueprintWorkspace\.loadout,?\s*\)',
+      );
+      expect(
+        watches,
+        matches(
+          RegExp(
+            r'ArcBlueprintWorkspaceDock\(\s*current:\s*ArcBlueprintWorkspace\.watches,?\s*\)',
+          ),
         ),
-      ),
-    );
-    expect(
-      watches,
-      matches(
-        RegExp(
-          r'ArcBlueprintWorkspaceDock\(\s*current:\s*ArcBlueprintWorkspace\.watches,?\s*\)',
+      );
+      expect(loadout, contains('ArcBlueprintWorkspaceBar('));
+      expect(
+        loadout,
+        contains("bottomNavigationBar: const ArcCompanionBottomDock("),
+      );
+      expect(
+        loadout,
+        isNot(
+          contains(
+            'ArcBlueprintWorkspaceDock(current: ArcBlueprintWorkspace.loadout)',
+          ),
         ),
-      ),
-    );
-  });
+      );
+    },
+  );
 
   test('landscape Blueprint overview is height-first and pannable', () {
     final source = read(

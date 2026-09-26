@@ -10,6 +10,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_lo
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_integration_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_layout_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_repair_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_smart_build_mission_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
@@ -78,7 +79,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
   String _buildName = 'Favourite Raider Build';
   ArcPlayerPlayStyle _playStyle = ArcPlayerPlayStyle.balanced;
   String _augment = 'Survivor';
-  String _shield = 'Shield Level 2';
+  String _shield = 'Medium Shield';
   String _primaryWeapon = 'Anvil';
   String _secondaryWeapon = 'Stitcher';
   final List<String> _primaryAttachments = <String>['Empty Slot', 'Empty Slot'];
@@ -304,7 +305,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       _buildName = loadout.name;
       _playStyle = loadout.playStyle;
       _augment = loadout.augment;
-      _shield = loadout.shield ?? _shield;
+      _shield = ArcLoadoutRepairCatalog.migrateLegacyShield(loadout.shield);
       _primaryWeapon = loadout.primaryWeapon;
       _secondaryWeapon = loadout.secondaryWeapon;
       _primaryAttachments
@@ -449,7 +450,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         _buildName = 'New Favourite Build';
         _playStyle = ArcPlayerPlayStyle.balanced;
         _augment = 'Survivor';
-        _shield = 'Shield Level 2';
+        _shield = 'Medium Shield';
         _primaryWeapon = 'Anvil';
         _secondaryWeapon = 'Stitcher';
         _primaryAttachments
@@ -487,7 +488,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           _ => ArcPlayerPlayStyle.balanced,
         };
         _augment = selected.augment;
-        _shield = selected.shield ?? 'Shield Level 2';
+        _shield = selected.shield ?? 'Medium Shield';
         _primaryWeapon = selected.primaryWeapon;
         _secondaryWeapon = selected.secondaryWeapon;
         _primaryAttachments
@@ -1063,34 +1064,12 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
 
   Future<void> _pickShield() async {
     final options = ArcLoadoutSeedData.equipment
-        .where((option) => option.name.toLowerCase().contains('shield'))
+        .where((option) => option.name.toLowerCase().endsWith('shield'))
         .toList(growable: false);
-    final fallback = options.isEmpty
-        ? const <ArcLoadoutOption>[
-            ArcLoadoutOption(
-              name: 'Shield Level 1',
-              type: ArcLoadoutSlotType.equipment,
-              description: 'Starter shield target.',
-              craftable: true,
-            ),
-            ArcLoadoutOption(
-              name: 'Shield Level 2',
-              type: ArcLoadoutSlotType.equipment,
-              description: 'Balanced shield target.',
-              craftable: true,
-            ),
-            ArcLoadoutOption(
-              name: 'Shield Level 3',
-              type: ArcLoadoutSlotType.equipment,
-              description: 'High protection shield target.',
-              craftable: true,
-            ),
-          ]
-        : options;
 
     final selected = await _showPicker<ArcLoadoutOption>(
       title: 'Select Shield',
-      items: fallback,
+      items: options,
       labelBuilder: (option) => option.name,
       subtitleBuilder: (option) => option.description,
       leadingBuilder: (option) => _itemImage(
@@ -1098,11 +1077,13 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           option.name,
           ArcLoadoutAssetKind.equipment,
         ),
-        accent: Colors.amberAccent,
+        accent: Colors.lightGreenAccent,
         owned: true,
         icon: Icons.shield_rounded,
       ),
       selectedBuilder: (option) => option.name == _shield,
+      footerText:
+          'Shield artwork stays icon-only until genuine Light, Medium and Heavy Shield assets are supplied.',
     );
     if (selected == null) return;
     setState(() => _shield = selected.name);
@@ -1390,16 +1371,10 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     return Scaffold(
       extendBody: true,
       backgroundColor: Colors.transparent,
-      bottomNavigationBar: const Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ArcBlueprintWorkspaceDock(current: ArcBlueprintWorkspace.loadout),
-          ArcCompanionBottomDock(activeLabel: 'Loadout'),
-        ],
-      ),
+      bottomNavigationBar: const ArcCompanionBottomDock(activeLabel: 'Loadout'),
       body: ArcRaidersScreenShell(
         useSafeArea: false,
-        showAdBanner: !compactMobileLandscape,
+        showAdBanner: true,
         child: SafeArea(
           child: StreamBuilder<ArcSavedLoadout?>(
             stream: _savedLoadoutRepository.watchFavouriteLoadout(),
@@ -1439,11 +1414,18 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                               ],
                               _buildCompactLoadoutHeader(blueprintStates),
                               const SizedBox(height: 6),
+                              const ArcBlueprintWorkspaceBar(
+                                current: ArcBlueprintWorkspace.loadout,
+                                padding: EdgeInsets.zero,
+                              ),
+                              const SizedBox(height: 6),
                               _buildPortraitInGameBoard(blueprintStates),
                               const SizedBox(height: 6),
                               _buildMobileQuickUseTray(blueprintStates),
                               const SizedBox(height: 6),
                               _buildLevelFourMaterialPlan(),
+                              const SizedBox(height: 6),
+                              _buildEquipmentMaintenancePlan(),
                               const SizedBox(height: 6),
                               _buildMissingBlueprints(blueprintStates),
                             ],
@@ -1464,11 +1446,18 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                               ],
                               _buildCompactLoadoutHeader(blueprintStates),
                               const SizedBox(height: 6),
+                              const ArcBlueprintWorkspaceBar(
+                                current: ArcBlueprintWorkspace.loadout,
+                                padding: EdgeInsets.zero,
+                              ),
+                              const SizedBox(height: 6),
                               _buildCompactMobileBoard(blueprintStates),
                               const SizedBox(height: 6),
                               _buildMobileQuickUseTray(blueprintStates),
                               const SizedBox(height: 6),
                               _buildLevelFourMaterialPlan(),
+                              const SizedBox(height: 6),
+                              _buildEquipmentMaintenancePlan(),
                               const SizedBox(height: 6),
                               _buildMissingBlueprints(blueprintStates),
                             ],
@@ -1486,8 +1475,15 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                             const SizedBox(height: 10),
                           ],
                           _buildHero(blueprintStates),
+                          const SizedBox(height: 8),
+                          const ArcBlueprintWorkspaceBar(
+                            current: ArcBlueprintWorkspace.loadout,
+                            padding: EdgeInsets.zero,
+                          ),
                           const SizedBox(height: 10),
                           _buildLoadoutBoard(blueprintStates),
+                          const SizedBox(height: 10),
+                          _buildEquipmentMaintenancePlan(),
                           const SizedBox(height: 10),
                           _buildIntelligenceStrip(blueprintStates),
                         ],
@@ -1845,7 +1841,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
       onTap: onTap,
       child: Container(
-        constraints: const BoxConstraints(minHeight: 88),
+        height: 88,
         padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
           color: accent.withValues(alpha: 0.055),
@@ -2841,97 +2837,292 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     );
   }
 
+  Widget _buildEquipmentMaintenancePlan() {
+    final shield = ArcLoadoutRepairCatalog.shieldFor(_shield);
+    final primaryRepair = ArcLoadoutRepairCatalog.repairForWeapon(
+      _primaryWeapon,
+      tier: 4,
+    );
+    final secondaryRepair = ArcLoadoutRepairCatalog.repairForWeapon(
+      _secondaryWeapon,
+      tier: 4,
+    );
+
+    return _arcPanel(
+      accent: Colors.lightGreenAccent,
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: EdgeInsets.zero,
+          childrenPadding: const EdgeInsets.only(bottom: 7),
+          visualDensity: VisualDensity.compact,
+          minTileHeight: 40,
+          title: Text(
+            'CRAFT + REPAIR INTELLIGENCE',
+            style: AppTheme.tradingHeading(
+              fontSize: 14,
+              color: Colors.lightGreenAccent,
+            ),
+          ),
+          subtitle: Text(
+            '$_shield + Level IV weapon maintenance',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(color: Colors.white60, fontSize: 9.5),
+          ),
+          children: [
+            const SizedBox(height: 7),
+            if (shield != null) _buildShieldMaintenance(shield),
+            if (shield != null) const SizedBox(height: 9),
+            _buildWeaponRepairMaintenance(_primaryWeapon, primaryRepair),
+            const SizedBox(height: 9),
+            _buildWeaponRepairMaintenance(_secondaryWeapon, secondaryRepair),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShieldMaintenance(ArcShieldIntelligence shield) {
+    final craftPlan = ArcItemIntelligenceEngine.planForItem(shield.name);
+    final repairPlan = ArcItemIntelligenceEngine.planForRequirements(
+      targetName: '${shield.name} repair',
+      requirements: shield.repairRecipe,
+    );
+    final movement = shield.movementPenaltyPercent == 0
+        ? 'no movement penalty'
+        : '${shield.movementPenaltyPercent}% movement penalty';
+
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.lightGreenAccent.withValues(alpha: 0.045),
+        borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
+        border: Border.all(
+          color: Colors.lightGreenAccent.withValues(alpha: 0.18),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            shield.name.toUpperCase(),
+            style: ArcUiTokens.label(color: Colors.lightGreenAccent),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            '${shield.charge} charge - ${shield.damageReductionPercent}% damage reduction - $movement',
+            style: const TextStyle(color: Colors.white70, fontSize: 10),
+          ),
+          const SizedBox(height: 7),
+          _maintenanceLabel('CRAFT', Colors.lightGreenAccent),
+          const SizedBox(height: 4),
+          _materialPills(shield.craftRecipe, Colors.lightGreenAccent),
+          const SizedBox(height: 6),
+          _maintenanceLabel('CRAFT FROM SCRATCH', AppTheme.neonCyan),
+          const SizedBox(height: 4),
+          _materialPills(craftPlan.rawMaterials, AppTheme.neonCyan),
+          const SizedBox(height: 7),
+          _maintenanceLabel(
+            'REPAIR +${shield.repairDurability}',
+            Colors.amberAccent,
+          ),
+          const SizedBox(height: 4),
+          _materialPills(shield.repairRecipe, Colors.amberAccent),
+          const SizedBox(height: 6),
+          _maintenanceLabel('REPAIR FROM SCRATCH', AppTheme.neonPink),
+          const SizedBox(height: 4),
+          _materialPills(repairPlan.rawMaterials, AppTheme.neonPink),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWeaponRepairMaintenance(
+    String weaponName,
+    ArcVerifiedRepairRecipe? repair,
+  ) {
+    if (repair == null) {
+      return _statusLine(
+        icon: Icons.fact_check_outlined,
+        label: '$weaponName IV Repair',
+        value:
+            'Repair recipe not yet verified. No material cost is being guessed.',
+        color: Colors.amberAccent,
+      );
+    }
+
+    final rollup = ArcItemIntelligenceEngine.planForRequirements(
+      targetName: '$weaponName IV repair',
+      requirements: repair.materials,
+    );
+
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.20),
+        borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
+        border: Border.all(color: Colors.amberAccent.withValues(alpha: 0.18)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '$weaponName IV REPAIR +${repair.durabilityRestored}',
+            style: ArcUiTokens.label(color: Colors.amberAccent),
+          ),
+          const SizedBox(height: 5),
+          _materialPills(repair.materials, Colors.amberAccent),
+          const SizedBox(height: 6),
+          _maintenanceLabel('FROM SCRATCH', AppTheme.neonCyan),
+          const SizedBox(height: 4),
+          _materialPills(rollup.rawMaterials, AppTheme.neonCyan),
+        ],
+      ),
+    );
+  }
+
+  Widget _materialPills(Map<String, int> materials, Color color) {
+    if (materials.isEmpty) {
+      return Text(
+        'No material recipe available.',
+        style: TextStyle(color: color.withValues(alpha: 0.72), fontSize: 10),
+      );
+    }
+    return Wrap(
+      spacing: 5,
+      runSpacing: 5,
+      children: [
+        for (final entry in materials.entries)
+          _planningPill(
+            '${ArcItemIntelligenceEngine.itemName(entry.key)} x${entry.value}',
+            color,
+          ),
+      ],
+    );
+  }
+
+  Widget _maintenanceLabel(String label, Color color) {
+    return Text(
+      label,
+      style: ArcUiTokens.label(color: color).copyWith(fontSize: 8.5),
+    );
+  }
+
   Widget _buildMissingBlueprints(Map<String, ArcBlueprintState> states) {
     final missing = _missingBlueprintItems(states);
     return _arcPanel(
       accent: AppTheme.neonPink,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _sectionHeader('MISSING BLUEPRINTS', AppTheme.neonPink),
-          const SizedBox(height: 10),
-          if (missing.isEmpty)
-            _statusLine(
-              icon: Icons.check_circle_rounded,
-              label: 'Loadout ready',
-              value: 'No blueprint-gated loadout items are currently missing.',
-              color: Colors.lightGreenAccent,
-            )
-          else
-            ...missing.map((item) {
-              final unlockPlan = ArcBlueprintUnlockEngine.planForBlueprint(
-                item,
-              );
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: _statusLine(
-                  icon: unlockPlan == null
-                      ? Icons.lock_rounded
-                      : Icons.account_tree_rounded,
-                  label: item,
-                  value: unlockPlan == null
-                      ? 'Missing blueprint. Hunt, trade, Trial or source intel required.'
-                      : 'Guaranteed quest reward: ${unlockPlan.shortSummary}',
-                  color: unlockPlan == null
-                      ? AppTheme.neonPink
-                      : Colors.lightGreenAccent,
-                ),
-              );
-            }),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              if (missing
-                  .map(ArcBlueprintUnlockEngine.planForBlueprint)
-                  .whereType<ArcBlueprintUnlockPlan>()
-                  .isNotEmpty)
-                _smallAction(
-                  label: 'Quest Unlock Path',
-                  icon: Icons.account_tree_rounded,
-                  color: Colors.lightGreenAccent,
-                  onTap: () {
-                    final plan = missing
-                        .map(ArcBlueprintUnlockEngine.planForBlueprint)
-                        .whereType<ArcBlueprintUnlockPlan>()
-                        .first;
-                    Navigator.of(context).pushNamed(
-                      ScrappyGridScreen.questRouteName,
-                      arguments: <String, Object?>{
-                        'questFocusId': plan.quest.id,
-                        'sourceBlueprintName': plan.reward.blueprintName,
-                      },
-                    );
-                  },
-                ),
-              _smallAction(
-                label: 'Blueprint Grid',
-                icon: Icons.grid_view_rounded,
-                color: AppTheme.neonCyan,
-                onTap: () => Navigator.of(
-                  context,
-                ).pushNamed(BlueprintGridScreen.routeName),
-              ),
-              _smallAction(
-                label: 'Community Intel',
-                icon: Icons.radar_rounded,
-                color: AppTheme.neonPink,
-                onTap: () => Navigator.of(
-                  context,
-                ).pushNamed(ArcMarketIntelligenceScreen.routeName),
-              ),
-              _smallAction(
-                label: 'Find Components',
-                icon: Icons.route_rounded,
-                color: Colors.amberAccent,
-                onTap: () => Navigator.of(
-                  context,
-                ).pushNamed(ArcRaidIntelligenceScreen.routeName),
-              ),
-            ],
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: EdgeInsets.zero,
+          childrenPadding: const EdgeInsets.only(bottom: 6),
+          visualDensity: VisualDensity.compact,
+          minTileHeight: 40,
+          title: Text(
+            'MISSING BLUEPRINTS',
+            style: AppTheme.tradingHeading(
+              fontSize: 14,
+              color: AppTheme.neonPink,
+            ),
           ),
-        ],
+          subtitle: Text(
+            missing.isEmpty
+                ? 'Loadout Blueprint requirements are ready'
+                : '${missing.length} loadout Blueprint target${missing.length == 1 ? '' : 's'} missing',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(color: Colors.white60, fontSize: 9.5),
+          ),
+          children: [
+            const SizedBox(height: 6),
+            if (missing.isEmpty)
+              _statusLine(
+                icon: Icons.check_circle_rounded,
+                label: 'Loadout ready',
+                value:
+                    'No blueprint-gated loadout items are currently missing.',
+                color: Colors.lightGreenAccent,
+              )
+            else
+              ...missing.map((item) {
+                final unlockPlan = ArcBlueprintUnlockEngine.planForBlueprint(
+                  item,
+                );
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: _statusLine(
+                    icon: unlockPlan == null
+                        ? Icons.lock_rounded
+                        : Icons.account_tree_rounded,
+                    label: item,
+                    value: unlockPlan == null
+                        ? 'Missing blueprint. Hunt, trade, Trial or source intel required.'
+                        : 'Guaranteed quest reward: ${unlockPlan.shortSummary}',
+                    color: unlockPlan == null
+                        ? AppTheme.neonPink
+                        : Colors.lightGreenAccent,
+                  ),
+                );
+              }),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                if (missing
+                    .map(ArcBlueprintUnlockEngine.planForBlueprint)
+                    .whereType<ArcBlueprintUnlockPlan>()
+                    .isNotEmpty)
+                  _smallAction(
+                    label: 'Quest Unlock Path',
+                    icon: Icons.account_tree_rounded,
+                    color: Colors.lightGreenAccent,
+                    onTap: () {
+                      final plan = missing
+                          .map(ArcBlueprintUnlockEngine.planForBlueprint)
+                          .whereType<ArcBlueprintUnlockPlan>()
+                          .first;
+                      Navigator.of(context).pushNamed(
+                        ScrappyGridScreen.questRouteName,
+                        arguments: <String, Object?>{
+                          'questFocusId': plan.quest.id,
+                          'sourceBlueprintName': plan.reward.blueprintName,
+                        },
+                      );
+                    },
+                  ),
+                _smallAction(
+                  label: 'Blueprint Grid',
+                  icon: Icons.grid_view_rounded,
+                  color: AppTheme.neonCyan,
+                  onTap: () => Navigator.of(
+                    context,
+                  ).pushNamed(BlueprintGridScreen.routeName),
+                ),
+                _smallAction(
+                  label: 'Community Intel',
+                  icon: Icons.radar_rounded,
+                  color: AppTheme.neonPink,
+                  onTap: () => Navigator.of(
+                    context,
+                  ).pushNamed(ArcMarketIntelligenceScreen.routeName),
+                ),
+                _smallAction(
+                  label: 'Find Components',
+                  icon: Icons.route_rounded,
+                  color: Colors.amberAccent,
+                  onTap: () => Navigator.of(
+                    context,
+                  ).pushNamed(ArcRaidIntelligenceScreen.routeName),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -3122,7 +3313,6 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
 
   String _weaponSubtitle(ArcLoadoutWeaponSpec weapon) {
     final parts = <String>[weapon.category];
-    if (weapon.blueprintBased) parts.add('Blueprint required');
     if (weapon.craftable) {
       parts.add(
         weapon.gunsmithLevel == null

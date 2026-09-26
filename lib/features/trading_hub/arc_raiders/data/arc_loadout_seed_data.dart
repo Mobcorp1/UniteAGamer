@@ -264,9 +264,21 @@ class ArcLoadoutSeedData {
 
   static const List<ArcLoadoutOption> equipment = [
     ArcLoadoutOption(
-      name: 'Shield Level 2',
+      name: 'Light Shield',
       type: ArcLoadoutSlotType.equipment,
-      description: 'Core balanced protection target.',
+      description: '40 charge, 40% damage reduction, no movement penalty.',
+      craftable: true,
+    ),
+    ArcLoadoutOption(
+      name: 'Medium Shield',
+      type: ArcLoadoutSlotType.equipment,
+      description: '70 charge, 42.5% damage reduction, 5% movement penalty.',
+      craftable: true,
+    ),
+    ArcLoadoutOption(
+      name: 'Heavy Shield',
+      type: ArcLoadoutSlotType.equipment,
+      description: '80 charge, 52.5% damage reduction, 15% movement penalty.',
       craftable: true,
     ),
     ArcLoadoutOption(
@@ -320,11 +332,12 @@ class ArcLoadoutSeedData {
       name: 'Balanced Raider / ARC',
       category: ArcLoadoutCategory.balanced,
       description:
-          'Survivor augment, level 2 shield, Anvil-style burst and Stitcher-style pressure.',
+          'Survivor augment, Medium Shield, Anvil-style burst and Stitcher-style pressure.',
       augment: 'Survivor',
       primaryWeapon: 'Anvil',
       secondaryWeapon: 'Stitcher',
-      equipment: ['Shield Level 2', 'Snap Hook'],
+      shield: 'Medium Shield',
+      equipment: ['Snap Hook'],
       consumables: ['Vita Shot', 'Lure Grenade'],
     ),
     ArcSavedLoadoutSeed(
@@ -335,6 +348,7 @@ class ArcLoadoutSeedData {
       augment: 'Combat Augment',
       primaryWeapon: 'Tempest',
       secondaryWeapon: 'Anvil',
+      shield: 'Medium Shield',
       equipment: ['Pulse Mine', 'Snap Hook'],
       consumables: ['Vita Shot', 'Triggernade'],
     ),
@@ -346,7 +360,8 @@ class ArcLoadoutSeedData {
       augment: 'Safekeeper',
       primaryWeapon: 'Rattler',
       secondaryWeapon: 'Stitcher',
-      equipment: ['Shield Level 2', 'Wolfpack'],
+      shield: 'Medium Shield',
+      equipment: ['Wolfpack'],
       consumables: ['Vita Spray', 'Lure Grenade'],
     ),
     ArcSavedLoadoutSeed(
@@ -356,7 +371,8 @@ class ArcLoadoutSeedData {
       augment: 'Survivor',
       primaryWeapon: 'Ferro',
       secondaryWeapon: 'Venator',
-      equipment: ['Shield Level 2', 'Snap Hook'],
+      shield: 'Medium Shield',
+      equipment: ['Snap Hook'],
       consumables: ['Vita Shot', 'Triggernade'],
     ),
   ];

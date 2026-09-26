@@ -391,13 +391,28 @@ class ArcSavedLoadout {
       return const <String>[];
     }
 
+    String parseShield(dynamic value) {
+      final raw = (value ?? 'Medium Shield').toString().trim();
+      switch (raw.toLowerCase()) {
+        case '':
+        case 'shield level 2':
+          return 'Medium Shield';
+        case 'shield level 1':
+          return 'Light Shield';
+        case 'shield level 3':
+          return 'Heavy Shield';
+        default:
+          return raw;
+      }
+    }
+
     return ArcSavedLoadout(
       id: id,
       name: (data['name'] ?? 'Saved Loadout').toString(),
       category: parseCategory(data['category']?.toString()),
       playStyle: parsePlayStyle(data['playStyle']?.toString()),
       augment: (data['augment'] ?? 'Survivor').toString(),
-      shield: (data['shield'] ?? 'Shield Level 2').toString(),
+      shield: parseShield(data['shield']),
       primaryWeapon: (data['primaryWeapon'] ?? 'Anvil').toString(),
       primaryAttachments: parseList(data['primaryAttachments']),
       secondaryWeapon: (data['secondaryWeapon'] ?? 'Stitcher').toString(),

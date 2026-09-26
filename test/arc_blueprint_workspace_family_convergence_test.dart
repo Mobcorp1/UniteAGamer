@@ -56,12 +56,7 @@ void main() {
       'lib/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart',
     );
 
-    expect(
-      source,
-      contains(
-        'ArcBlueprintWorkspaceDock(current: ArcBlueprintWorkspace.loadout)',
-      ),
-    );
+    expect(source, contains('ArcBlueprintWorkspaceBar('));
     expect(source, contains('_buildPortraitInGameBoard(blueprintStates)'));
     expect(source, contains('_buildLoadoutBoard(blueprintStates)'));
   });

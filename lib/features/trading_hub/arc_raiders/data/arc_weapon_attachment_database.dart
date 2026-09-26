@@ -409,7 +409,7 @@ class ArcWeaponAttachmentDatabase {
       name: 'Compensator III',
       slotType: ArcAttachmentSlotType.muzzle,
       benchLevel: 3,
-      requirements: [_req(1, 'Mod Components'), _req(6, 'Wires')],
+      requirements: [_req(2, 'Mod Components'), _req(8, 'Wires')],
       effects: [
         _effect(
           '50% reduced per-shot dispersion',
@@ -509,11 +509,9 @@ class ArcWeaponAttachmentDatabase {
       ],
       assetPath: 'assets/arc_raiders/blueprints/silencer-ii.webp',
     ),
-    _craftable(
+    _findOnly(
       name: 'Silencer III',
       slotType: ArcAttachmentSlotType.muzzle,
-      benchLevel: 3,
-      requirements: [_req(3, 'Mod Components'), _req(15, 'Wires')],
       effects: [
         _effect('60% reduced noise', stat: 'noise', value: -60),
         _effect(
@@ -628,7 +626,7 @@ class ArcWeaponAttachmentDatabase {
       name: 'Angled Grip III',
       slotType: ArcAttachmentSlotType.underbarrel,
       benchLevel: 3,
-      requirements: [_req(1, 'Mod Components'), _req(6, 'Duct Tape')],
+      requirements: [_req(2, 'Mod Components'), _req(5, 'Duct Tape')],
       effects: [
         _effect(
           '40% reduced horizontal recoil',
@@ -703,7 +701,7 @@ class ArcWeaponAttachmentDatabase {
       name: 'Extended Light Mag III',
       slotType: ArcAttachmentSlotType.lightMagazine,
       benchLevel: 3,
-      requirements: [_req(1, 'Mod Components'), _req(6, 'Steel Spring')],
+      requirements: [_req(2, 'Mod Components'), _req(5, 'Steel Spring')],
       effects: [
         _effect(
           '+15 magazine size',
@@ -758,7 +756,7 @@ class ArcWeaponAttachmentDatabase {
       name: 'Stable Stock III',
       slotType: ArcAttachmentSlotType.stock,
       benchLevel: 3,
-      requirements: [_req(1, 'Mod Components'), _req(6, 'Duct Tape')],
+      requirements: [_req(2, 'Mod Components'), _req(5, 'Duct Tape')],
       effects: [
         _effect(
           '50% reduced recoil recovery time',
@@ -822,22 +820,22 @@ class ArcWeaponAttachmentDatabase {
       name: 'Padded Stock',
       slotType: ArcAttachmentSlotType.stock,
       benchLevel: 3,
-      requirements: [_req(1, 'Mod Components'), _req(6, 'Duct Tape')],
+      requirements: [_req(2, 'Mod Components'), _req(5, 'Duct Tape')],
       effects: [
         _effect(
-          '30% reduced horizontal recoil',
+          '15% reduced horizontal recoil',
           stat: 'horizontalRecoil',
-          value: -30,
+          value: -15,
         ),
         _effect(
-          '30% reduced vertical recoil',
+          '15% reduced vertical recoil',
           stat: 'verticalRecoil',
-          value: -30,
+          value: -15,
         ),
         _effect(
-          '30% reduced per-shot dispersion',
+          '20% reduced per-shot dispersion',
           stat: 'perShotDispersion',
-          value: -30,
+          value: -20,
         ),
         _effect(
           '20% increased equip time',

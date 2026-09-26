@@ -38,6 +38,7 @@ void main() {
           .toList(growable: false);
 
       expect(findOnly.map((attachment) => attachment.name), [
+        'Silencer III',
         'Kinetic Converter',
         'Anvil Splitter',
       ]);
@@ -58,7 +59,7 @@ void main() {
           .where((attachment) => attachment.craftable)
           .toList(growable: false);
 
-      expect(craftable, hasLength(37));
+      expect(craftable, hasLength(36));
       for (final attachment in craftable) {
         expect(
           attachment.craftingRequirements,

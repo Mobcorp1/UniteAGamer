@@ -238,6 +238,89 @@ class ArcItemIntelligenceEngine {
     );
   }
 
+  static ArcCraftingPlan planForRequirements({
+    required String targetName,
+    required Map<String, int> requirements,
+    Map<String, int> ownedItems = const <String, int>{},
+  }) {
+    final immediate = <String, int>{};
+    for (final entry in requirements.entries) {
+      if (entry.value <= 0) continue;
+      final resolved = resolve(entry.key);
+      final itemId = resolved?.id ?? normalise(entry.key).replaceAll(' ', '_');
+      immediate[itemId] = (immediate[itemId] ?? 0) + entry.value;
+    }
+
+    final raw = <String, int>{};
+    final steps = <String, int>{};
+    final unresolved = <String>[];
+    final owned = <String, int>{};
+    for (final entry in ownedItems.entries) {
+      if (entry.value <= 0) continue;
+      final resolved = resolve(entry.key);
+      owned[resolved?.id ?? entry.key] = entry.value;
+    }
+
+    void expand(String itemId, int count, Set<String> stack) {
+      if (count <= 0) return;
+      final available = owned[itemId] ?? 0;
+      if (available > 0) {
+        final used = available < count ? available : count;
+        owned[itemId] = available - used;
+        count -= used;
+        if (count <= 0) return;
+      }
+
+      final item = _byId[itemId];
+      if (item == null) {
+        raw[itemId] = (raw[itemId] ?? 0) + count;
+        unresolved.add(itemId);
+        return;
+      }
+      if (item.recipe.isEmpty) {
+        raw[itemId] = (raw[itemId] ?? 0) + count;
+        return;
+      }
+      if (stack.contains(itemId)) {
+        raw[itemId] = (raw[itemId] ?? 0) + count;
+        unresolved.add(itemId);
+        return;
+      }
+
+      steps[itemId] = (steps[itemId] ?? 0) + count;
+      final nextStack = <String>{...stack, itemId};
+      for (final ingredient in item.recipe.entries) {
+        expand(ingredient.key, ingredient.value * count, nextStack);
+      }
+    }
+
+    for (final entry in immediate.entries) {
+      expand(entry.key, entry.value, <String>{});
+    }
+
+    final orderedRaw = Map<String, int>.fromEntries(
+      raw.entries.toList()
+        ..sort((a, b) => itemName(a.key).compareTo(itemName(b.key))),
+    );
+    final orderedSteps =
+        steps.entries
+            .map(
+              (entry) => ArcCraftStep(itemId: entry.key, quantity: entry.value),
+            )
+            .toList(growable: false)
+          ..sort((a, b) => itemName(a.itemId).compareTo(itemName(b.itemId)));
+
+    return ArcCraftingPlan(
+      targetId: 'custom_${normalise(targetName).replaceAll(' ', '_')}',
+      targetName: targetName,
+      targetQuantity: 1,
+      immediateRecipe: Map<String, int>.unmodifiable(immediate),
+      rawMaterials: Map<String, int>.unmodifiable(orderedRaw),
+      craftSteps: List<ArcCraftStep>.unmodifiable(orderedSteps),
+      unresolvedTargets: List<String>.unmodifiable(unresolved.toSet()),
+    );
+  }
+
   static ArcLoadoutCraftingPlan planForFavouriteLoadout(
     ArcSavedLoadout loadout, {
     Map<String, int> ownedItems = const <String, int>{},

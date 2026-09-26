@@ -25,6 +25,9 @@ void main() {
     expect(source, contains("'favourite-loadout-weapon-1'"));
     expect(source, contains("'favourite-loadout-weapon-2'"));
     expect(source, isNot(contains('_buildPortraitRotationPrompt')));
+    expect(source, contains('ArcBlueprintWorkspaceBar('));
+    expect(source, contains('showAdBanner: true'));
+    expect(source, contains('_buildEquipmentMaintenancePlan'));
   });
 
   test('Favourite Loadout preserves intelligence and support workflows', () {
