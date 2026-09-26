@@ -35,9 +35,10 @@ void main() {
         ),
       );
       expect(loadout, contains('ArcBlueprintWorkspaceBar('));
+      expect(loadout, contains('UagAdAwareBottomDock('));
       expect(
         loadout,
-        contains("bottomNavigationBar: const ArcCompanionBottomDock("),
+        contains("ArcCompanionBottomDock(activeLabel: 'Loadout')"),
       );
       expect(
         loadout,

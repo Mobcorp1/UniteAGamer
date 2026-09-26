@@ -28,6 +28,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blu
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/ads/uag_ad_placement_policy.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/ads/uag_ad_service.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/ads/uag_tactical_banner_ad.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_blueprint_workspace_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
@@ -1369,12 +1370,17 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         media.size.height <= 720;
 
     return Scaffold(
-      extendBody: true,
+      extendBody: false,
       backgroundColor: Colors.transparent,
-      bottomNavigationBar: const ArcCompanionBottomDock(activeLabel: 'Loadout'),
+      bottomNavigationBar: const UagAdAwareBottomDock(
+        key: Key('favourite-loadout-ad-nav-stack'),
+        showAds: true,
+        reserveAdSpace: false,
+        child: ArcCompanionBottomDock(activeLabel: 'Loadout'),
+      ),
       body: ArcRaidersScreenShell(
         useSafeArea: false,
-        showAdBanner: true,
+        showAdBanner: false,
         child: SafeArea(
           child: StreamBuilder<ArcSavedLoadout?>(
             stream: _savedLoadoutRepository.watchFavouriteLoadout(),
@@ -1403,7 +1409,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
 
                       if (portrait) {
                         return SingleChildScrollView(
-                          padding: const EdgeInsets.fromLTRB(6, 4, 6, 150),
+                          padding: const EdgeInsets.fromLTRB(6, 4, 6, 18),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
@@ -1435,7 +1441,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
 
                       if (compactMobileLandscape) {
                         return SingleChildScrollView(
-                          padding: const EdgeInsets.fromLTRB(6, 4, 6, 72),
+                          padding: const EdgeInsets.fromLTRB(6, 4, 6, 12),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
@@ -1467,7 +1473,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
 
                       return ArcRaidersPageList(
                         maxWidth: 1280,
-                        bottomPadding: 150,
+                        bottomPadding: 24,
                         children: [
                           if ((hydration?.isLoading ?? false) &&
                               blueprintStates.isEmpty) ...[
@@ -1533,7 +1539,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
             ),
           ),
           _planningPill(
-            missing == 0 ? 'BP READY' : '$missing BP MISSING',
+            missing == 0 ? 'LOADOUT BP READY' : 'LOADOUT $missing BP',
             missing == 0 ? Colors.lightGreenAccent : AppTheme.neonPink,
           ),
           const SizedBox(width: 5),
@@ -1605,7 +1611,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           _buildWantedBlueprintGrid(
             states,
             crossAxisCount: 5,
-            childAspectRatio: 1.72,
+            childAspectRatio: 4.00,
             gridKey: const Key('favourite-loadout-wanted-landscape'),
           ),
         ],
@@ -1628,9 +1634,13 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
+        final media = MediaQuery.of(context);
+        final compactLandscape =
+            media.orientation == Orientation.landscape &&
+            media.size.height <= 720;
         final narrow = constraints.maxWidth < 320;
-        final imageSize = narrow ? 52.0 : 64.0;
-        final attachmentSize = narrow ? 40.0 : 46.0;
+        final imageSize = compactLandscape ? 52.0 : (narrow ? 52.0 : 64.0);
+        final attachmentSize = compactLandscape ? 38.0 : (narrow ? 40.0 : 46.0);
 
         final lead = Row(
           children: [
@@ -1744,7 +1754,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                 ? 'favourite-loadout-weapon-1'
                 : 'favourite-loadout-weapon-2',
           ),
-          padding: const EdgeInsets.all(6),
+          padding: EdgeInsets.all(compactLandscape ? 5 : 6),
           decoration: BoxDecoration(
             color: accent.withValues(alpha: 0.055),
             borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
@@ -1836,13 +1846,19 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     required IconData icon,
     required VoidCallback onTap,
   }) {
+    final media = MediaQuery.of(context);
+    final compactLandscape =
+        media.orientation == Orientation.landscape && media.size.height <= 720;
+    final slotHeight = compactLandscape ? 72.0 : 94.0;
+    final imageSize = compactLandscape ? 32.0 : 46.0;
+
     return InkWell(
       key: key,
       borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
       onTap: onTap,
       child: Container(
-        height: 88,
-        padding: const EdgeInsets.all(6),
+        height: slotHeight,
+        padding: EdgeInsets.all(compactLandscape ? 4 : 6),
         decoration: BoxDecoration(
           color: accent.withValues(alpha: 0.055),
           borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
@@ -1856,14 +1872,16 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
               accent: accent,
               owned: owned,
               icon: icon,
-              size: 48,
+              size: imageSize,
             ),
-            const SizedBox(height: 4),
+            SizedBox(height: compactLandscape ? 2 : 3),
             Text(
               slotLabel,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: ArcUiTokens.label(color: accent).copyWith(fontSize: 8),
+              style: ArcUiTokens.label(
+                color: accent,
+              ).copyWith(fontSize: compactLandscape ? 7 : 8),
             ),
             Text(
               itemName,
@@ -1872,7 +1890,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
               textAlign: TextAlign.center,
               style: AppTheme.buttonTextStyle(
                 color: owned ? Colors.white : Colors.white38,
-                fontSize: 10,
+                fontSize: compactLandscape ? 8 : 9,
               ),
             ),
           ],
@@ -2067,7 +2085,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
             child: _buildWantedBlueprintGrid(
               states,
               crossAxisCount: 2,
-              childAspectRatio: 0.82,
+              childAspectRatio: 1.70,
               gridKey: const Key('favourite-loadout-wanted-portrait'),
             ),
           ),
@@ -2117,24 +2135,20 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       key: gridKey,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                'WANTED BLUEPRINTS',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppTheme.tradingHeading(
-                  fontSize: 12,
-                  color: AppTheme.neonCyan,
-                ),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'WANTED BLUEPRINTS ${targets.length}/10',
+              maxLines: 1,
+              style: AppTheme.tradingHeading(
+                fontSize: 11,
+                color: AppTheme.neonCyan,
               ),
             ),
-            Text(
-              '${targets.length}/10',
-              style: ArcUiTokens.label(color: AppTheme.neonPink),
-            ),
-          ],
+          ),
         ),
         const SizedBox(height: 5),
         GridView.builder(
@@ -2193,14 +2207,14 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
             ? Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.add_rounded, color: Colors.white30, size: 22),
-                  const SizedBox(height: 3),
+                  Icon(Icons.add_rounded, color: Colors.white30, size: 20),
+                  const SizedBox(height: 2),
                   Text(
                     'SET TARGET',
                     textAlign: TextAlign.center,
                     style: ArcUiTokens.label(
                       color: Colors.white38,
-                    ).copyWith(fontSize: 7.5),
+                    ).copyWith(fontSize: 7.2),
                   ),
                 ],
               )
@@ -2208,16 +2222,16 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   SizedBox(
-                    height: 34,
+                    height: 28,
                     child: _itemImage(
                       imageAsset: blueprint.imageAssetPath,
                       accent: accent,
                       owned: state?.owned ?? false,
                       icon: blueprint.icon,
-                      size: 34,
+                      size: 28,
                     ),
                   ),
-                  const SizedBox(height: 3),
+                  const SizedBox(height: 2),
                   Text(
                     blueprint.name,
                     maxLines: 2,
@@ -2225,14 +2239,14 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                     textAlign: TextAlign.center,
                     style: AppTheme.buttonTextStyle(
                       color: Colors.white,
-                      fontSize: 8.5,
+                      fontSize: 8.0,
                     ),
                   ),
                   if (unlockPlan != null)
                     Icon(
                       Icons.account_tree_rounded,
                       color: Colors.lightGreenAccent,
-                      size: 11,
+                      size: 10,
                     ),
                 ],
               ),

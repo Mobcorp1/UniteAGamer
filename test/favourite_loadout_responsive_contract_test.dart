@@ -26,7 +26,8 @@ void main() {
     expect(source, contains("'favourite-loadout-weapon-2'"));
     expect(source, isNot(contains('_buildPortraitRotationPrompt')));
     expect(source, contains('ArcBlueprintWorkspaceBar('));
-    expect(source, contains('showAdBanner: true'));
+    expect(source, contains('UagAdAwareBottomDock('));
+    expect(source, contains('showAdBanner: false'));
     expect(source, contains('_buildEquipmentMaintenancePlan'));
   });
 

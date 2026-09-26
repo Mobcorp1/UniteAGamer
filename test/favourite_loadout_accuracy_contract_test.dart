@@ -10,9 +10,10 @@ void main() {
       final loadout = source(
         'lib/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart',
       );
+      expect(loadout, contains('UagAdAwareBottomDock('));
       expect(
         loadout,
-        contains("bottomNavigationBar: const ArcCompanionBottomDock("),
+        contains("ArcCompanionBottomDock(activeLabel: 'Loadout')"),
       );
       expect(
         loadout,
@@ -23,7 +24,7 @@ void main() {
         ),
       );
       expect(loadout, contains('ArcBlueprintWorkspaceBar('));
-      expect(loadout, contains('showAdBanner: true'));
+      expect(loadout, contains('showAdBanner: false'));
     },
   );
 
