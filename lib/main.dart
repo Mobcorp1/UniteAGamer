@@ -263,11 +263,17 @@ class UAGTradersHubApp extends StatefulWidget {
         );
 
       case BlueprintGridScreen.routeName:
+        final args = settings.arguments is BlueprintGridTargetPickArgs
+            ? settings.arguments! as BlueprintGridTargetPickArgs
+            : null;
         return MaterialPageRoute(
-          builder: (_) => const FeatureAccessRouteGate(
+          builder: (_) => FeatureAccessRouteGate(
             flag: FeatureAccessFlag.blueprintTracker,
             title: 'Blueprint Tracker',
-            child: BlueprintGridScreen(),
+            child: BlueprintGridScreen(
+              favouriteLoadoutTargetSlotIndex: args?.slotIndex,
+              showFirstRunTutorial: args == null,
+            ),
           ),
           settings: settings,
         );

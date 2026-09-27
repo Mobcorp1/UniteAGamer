@@ -14,6 +14,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bl
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_grid_view_preferences.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_intel_seed.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_loadout_bridge.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_layout_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_unlock_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_smart_build_hunt_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
@@ -46,6 +47,12 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/fou
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 import 'package:uag_arc_raiders_hub/widgets/uag_dialogs.dart';
 
+class BlueprintGridTargetPickArgs {
+  const BlueprintGridTargetPickArgs({required this.slotIndex});
+
+  final int slotIndex;
+}
+
 class BlueprintGridScreen extends StatefulWidget {
   static const routeName = '/trading-hub/arc-raiders/blueprints';
 
@@ -57,6 +64,7 @@ class BlueprintGridScreen extends StatefulWidget {
     this.saveViewMode,
     this.showFirstRunTutorial = true,
     this.bannerSlot,
+    this.favouriteLoadoutTargetSlotIndex,
   });
 
   final Stream<ArcBlueprintStateSnapshot> Function()?
@@ -66,6 +74,7 @@ class BlueprintGridScreen extends StatefulWidget {
   final Future<void> Function(ArcBlueprintGridViewMode mode)? saveViewMode;
   final bool showFirstRunTutorial;
   final Widget? bannerSlot;
+  final int? favouriteLoadoutTargetSlotIndex;
 
   @override
   State<BlueprintGridScreen> createState() => _BlueprintGridScreenState();
@@ -111,6 +120,10 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
   final Set<String> _selectedBlueprintIds = <String>{};
   String _searchQuery = '';
   bool _smartBuildHuntMode = false;
+  String? _targetPickSavingBlueprintId;
+
+  bool get _isFavouriteLoadoutTargetPickMode =>
+      widget.favouriteLoadoutTargetSlotIndex != null;
 
   static const int _gridColumns = 10;
   static const double _landscapeSpacing = 6;
@@ -138,8 +151,14 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     super.initState();
     _stateStream = _watchBlueprintStateSnapshot();
     _loadoutStream = _watchFavouriteLoadout();
+    if (_isFavouriteLoadoutTargetPickMode) {
+      _selectedFilter = ArcBlueprintFilter.missing;
+      _showOverviewHint = false;
+    }
     _loadViewMode();
-    if (!widget.showFirstRunTutorial) return;
+    if (!widget.showFirstRunTutorial || _isFavouriteLoadoutTargetPickMode) {
+      return;
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ArcBetaFirstRun.showOnce(
         context: context,
@@ -222,6 +241,15 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
           }
           final state =
               states[blueprint.id] ?? ArcBlueprintState.empty(blueprint.id);
+
+          if (_isFavouriteLoadoutTargetPickMode) {
+            final canonical = ArcBlueprintSeedData.blueprints.any(
+              (candidate) => candidate.id == blueprint.id,
+            );
+            if (!canonical || state.owned || state.priorityRank > 0) {
+              return false;
+            }
+          }
 
           final matchesFilter = switch (_selectedFilter) {
             ArcBlueprintFilter.all => true,
@@ -1327,6 +1355,52 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     );
   }
 
+  Future<void> _selectFavouriteLoadoutWantedBlueprint(
+    ArcBlueprint blueprint,
+    ArcBlueprintState state,
+    Map<String, ArcBlueprintState> states,
+  ) async {
+    final slotIndex = widget.favouriteLoadoutTargetSlotIndex;
+    if (slotIndex == null ||
+        slotIndex < 0 ||
+        slotIndex >= ArcLoadoutLayoutEngine.wantedBlueprintSlotCount) {
+      return;
+    }
+    if (state.owned ||
+        state.priorityRank > 0 ||
+        _targetPickSavingBlueprintId != null) {
+      return;
+    }
+
+    final targetRank = slotIndex + 1;
+    final updates = <ArcBlueprintState>[];
+
+    for (final current in states.values) {
+      if (current.blueprintId != blueprint.id &&
+          current.priorityRank == targetRank) {
+        updates.add(current.copyWith(priorityRank: 0));
+      }
+    }
+    updates.add(state.copyWith(priorityRank: targetRank));
+
+    setState(() => _targetPickSavingBlueprintId = blueprint.id);
+    try {
+      await _blueprintRepository.saveBlueprintStates(updates);
+      if (!mounted) return;
+      Navigator.of(context).pop(blueprint.id);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _targetPickSavingBlueprintId = null);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Could not add ${blueprint.name} to Wanted Blueprints.',
+          ),
+        ),
+      );
+    }
+  }
+
   Future<void> _openBlueprintLoadoutActions(
     ArcBlueprint blueprint,
     ArcBlueprintState state,
@@ -2050,7 +2124,9 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     return Row(
       children: [
         Text(
-          'Blueprint Tracker',
+          _isFavouriteLoadoutTargetPickMode
+              ? 'PICK WANTED ${widget.favouriteLoadoutTargetSlotIndex! + 1}/10'
+              : 'Blueprint Tracker',
           style: ArcUiTokens.pageTitle(
             fontSize: width < 430 ? 17 : 19,
             color: ArcUiTokens.primaryAccent,
@@ -2140,7 +2216,9 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
 
             return GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onDoubleTap: () => _openBlueprintPreview(blueprint, state),
+              onDoubleTap: _isFavouriteLoadoutTargetPickMode
+                  ? null
+                  : () => _openBlueprintPreview(blueprint, state),
               child: BlueprintTile(
                 blueprint: blueprint,
                 state: state,
@@ -2153,6 +2231,14 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                     ? null
                     : _buildLoadoutAction(blueprint, loadout, compact: true),
                 onTap: () async {
+                  if (_isFavouriteLoadoutTargetPickMode) {
+                    await _selectFavouriteLoadoutWantedBlueprint(
+                      blueprint,
+                      state,
+                      states,
+                    );
+                    return;
+                  }
                   if (_selectionMode) {
                     _toggleSelection(blueprint.id);
                     return;
@@ -2221,8 +2307,9 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                           ArcBlueprintState.empty(blueprint.id);
                       return GestureDetector(
                         behavior: HitTestBehavior.opaque,
-                        onDoubleTap: () =>
-                            _openBlueprintPreview(blueprint, state),
+                        onDoubleTap: _isFavouriteLoadoutTargetPickMode
+                            ? null
+                            : () => _openBlueprintPreview(blueprint, state),
                         child: BlueprintTile(
                           blueprint: blueprint,
                           state: state,
@@ -2247,6 +2334,14 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                                   compact: false,
                                 ),
                           onTap: () async {
+                            if (_isFavouriteLoadoutTargetPickMode) {
+                              await _selectFavouriteLoadoutWantedBlueprint(
+                                blueprint,
+                                state,
+                                states,
+                              );
+                              return;
+                            }
                             if (_selectionMode) {
                               _toggleSelection(blueprint.id);
                               return;
@@ -2789,7 +2884,12 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                                     children: [
                                       Expanded(
                                         child: Text(
-                                          _selectionMode
+                                          _isFavouriteLoadoutTargetPickMode
+                                              ? _targetPickSavingBlueprintId ==
+                                                        null
+                                                    ? 'Tap a missing Blueprint to add it and return'
+                                                    : 'Adding Blueprint target...'
+                                              : _selectionMode
                                               ? '${_selectedBlueprintIds.length} selected'
                                               : '${counts[ArcBlueprintFilter.owned]} / ${allBlueprints.length} owned',
                                           maxLines: 1,

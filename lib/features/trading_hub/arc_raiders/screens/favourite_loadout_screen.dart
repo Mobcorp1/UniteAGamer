@@ -1138,14 +1138,28 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         );
       },
       selectedBuilder: (option) => option.name == _quickSlots[index],
+      prepareSelection: (option) async {
+        if (!mounted) return;
+        setState(() {
+          _quickSlots[index] = option.name;
+          _normaliseQuickSlots();
+        });
+        final assetPath = _assetForLoadoutItem(
+          option.name,
+          _assetKindForOption(option),
+        );
+        if (assetPath != null) {
+          try {
+            await precacheImage(AssetImage(assetPath), context);
+          } catch (_) {
+            // The normal image fallback remains available if an asset fails.
+          }
+        }
+      },
       footerText:
           'Six fixed Quick Use slots accept gadgets, utility, healing, throwables and one augment. Weapons, attachments and shield stay out of this picker.',
     );
     if (selected == null) return;
-    setState(() {
-      _quickSlots[index] = selected.name;
-      _normaliseQuickSlots();
-    });
   }
 
   IconData _quickUseIcon(ArcLoadoutOption? option) {
@@ -1236,6 +1250,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     required String Function(T item) subtitleBuilder,
     Widget Function(T item)? leadingBuilder,
     bool Function(T item)? selectedBuilder,
+    Future<void> Function(T item)? prepareSelection,
     String? footerText,
   }) {
     return showModalBottomSheet<T>(
@@ -1345,7 +1360,13 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                                 ? ArcUiTokens.success
                                 : ArcUiTokens.primaryAccent,
                           ),
-                          onTap: () => Navigator.of(sheetContext).pop(item),
+                          onTap: () async {
+                            if (prepareSelection != null) {
+                              await prepareSelection(item);
+                            }
+                            if (!sheetContext.mounted) return;
+                            Navigator.of(sheetContext).pop(item);
+                          },
                         );
                       },
                     ),
@@ -2372,8 +2393,10 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     return InkWell(
       key: Key('wanted-blueprint-slot-${index + 1}'),
       borderRadius: BorderRadius.circular(10),
-      onTap: () =>
-          Navigator.of(context).pushNamed(BlueprintGridScreen.routeName),
+      onTap: () => Navigator.of(context).pushNamed(
+        BlueprintGridScreen.routeName,
+        arguments: BlueprintGridTargetPickArgs(slotIndex: index),
+      ),
       child: LayoutBuilder(
         builder: (context, constraints) {
           final compact = constraints.maxHeight < 82;
