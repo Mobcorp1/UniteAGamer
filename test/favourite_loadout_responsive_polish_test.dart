@@ -17,21 +17,35 @@ void main() {
     expect(source, contains('showAdBanner: false'));
   });
 
-  test('portrait and landscape equipment cards use responsive heights', () {
-    expect(source, contains('compactLandscape ? 72.0 : 94.0'));
-    expect(source, contains('compactLandscape ? 32.0 : 46.0'));
-    expect(source, contains('compactLandscape ? 52.0'));
-    expect(source, contains('compactLandscape ? 38.0'));
-  });
+  test(
+    'portrait and landscape equipment cards use balanced responsive heights',
+    () {
+      expect(
+        source,
+        contains('final slotHeight = compactLandscape ? 82.0 : 100.0'),
+      );
+      expect(
+        source,
+        contains('final imageFrameSize = compactLandscape ? 38.0 : 46.0'),
+      );
+      expect(source, contains("final itemVisualSize = slotLabel == 'AUGMENT'"));
+      expect(source, contains('compactLandscape ? 52.0'));
+      expect(source, contains('compactLandscape ? 38.0'));
+    },
+  );
 
-  test('Wanted Blueprint grids are compact without changing their counts', () {
-    expect(source, contains('crossAxisCount: 2'));
-    expect(source, contains('childAspectRatio: 1.70'));
-    expect(source, contains('crossAxisCount: 5'));
-    expect(source, contains('childAspectRatio: 4.00'));
-    expect(source, contains(r"'WANTED BLUEPRINTS ${targets.length}/10'"));
-    expect(source, contains('size: 28'));
-  });
+  test(
+    'Wanted Blueprint grids stay readable without changing their counts',
+    () {
+      expect(source, contains('crossAxisCount: 2'));
+      expect(source, contains('childAspectRatio: 1.25'));
+      expect(source, contains('crossAxisCount: 5'));
+      expect(source, contains('childAspectRatio: 3.00'));
+      expect(source, contains(r"'WANTED BLUEPRINTS ${targets.length}/10'"));
+      expect(source, contains('final compact = constraints.maxHeight < 82'));
+      expect(source, contains('final imageSize = compact ? 20.0 : 30.0'));
+    },
+  );
 
   test(
     'mobile scroll padding no longer compensates for overlaid bottom chrome',

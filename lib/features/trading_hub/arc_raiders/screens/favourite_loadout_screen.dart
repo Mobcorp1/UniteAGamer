@@ -1420,20 +1420,9 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                               ],
                               _buildCompactLoadoutHeader(blueprintStates),
                               const SizedBox(height: 6),
-                              const ArcBlueprintWorkspaceBar(
-                                current: ArcBlueprintWorkspace.loadout,
-                                padding: EdgeInsets.zero,
-                              ),
-                              const SizedBox(height: 6),
                               _buildPortraitInGameBoard(blueprintStates),
                               const SizedBox(height: 6),
-                              _buildMobileQuickUseTray(blueprintStates),
-                              const SizedBox(height: 6),
-                              _buildLevelFourMaterialPlan(),
-                              const SizedBox(height: 6),
-                              _buildEquipmentMaintenancePlan(),
-                              const SizedBox(height: 6),
-                              _buildMissingBlueprints(blueprintStates),
+                              _buildLoadoutIntelRail(blueprintStates),
                             ],
                           ),
                         );
@@ -1452,20 +1441,9 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                               ],
                               _buildCompactLoadoutHeader(blueprintStates),
                               const SizedBox(height: 6),
-                              const ArcBlueprintWorkspaceBar(
-                                current: ArcBlueprintWorkspace.loadout,
-                                padding: EdgeInsets.zero,
-                              ),
-                              const SizedBox(height: 6),
                               _buildCompactMobileBoard(blueprintStates),
                               const SizedBox(height: 6),
-                              _buildMobileQuickUseTray(blueprintStates),
-                              const SizedBox(height: 6),
-                              _buildLevelFourMaterialPlan(),
-                              const SizedBox(height: 6),
-                              _buildEquipmentMaintenancePlan(),
-                              const SizedBox(height: 6),
-                              _buildMissingBlueprints(blueprintStates),
+                              _buildLoadoutIntelRail(blueprintStates),
                             ],
                           ),
                         );
@@ -1515,55 +1493,67 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         radius: ArcUiTokens.radiusM,
         borderOpacity: 0.24,
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'FAVOURITE LOADOUT',
-                  style: AppTheme.tradingHeading(
-                    fontSize: 18,
-                    color: AppTheme.neonCyan,
-                  ),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'FAVOURITE LOADOUT',
+                      style: AppTheme.tradingHeading(
+                        fontSize: 18,
+                        color: AppTheme.neonCyan,
+                      ),
+                    ),
+                    Text(
+                      _buildName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white60,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
                 ),
-                Text(
-                  _buildName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: Colors.white60, fontSize: 10),
+              ),
+              _planningPill(
+                missing == 0 ? 'LOADOUT BP READY' : 'LOADOUT $missing BP',
+                missing == 0 ? Colors.lightGreenAccent : AppTheme.neonPink,
+              ),
+              const SizedBox(width: 4),
+              IconButton(
+                tooltip: 'Smart Build',
+                visualDensity: VisualDensity.compact,
+                onPressed: () => _showSmartBuildGenerator(states),
+                icon: const Icon(
+                  Icons.auto_awesome_rounded,
+                  color: Colors.amberAccent,
                 ),
-              ],
+              ),
+              IconButton(
+                tooltip: 'Save Favourite Loadout',
+                visualDensity: VisualDensity.compact,
+                onPressed: _saveLoadout,
+                icon: const Icon(Icons.save_rounded, color: AppTheme.neonPink),
+              ),
+            ],
+          ),
+          const SizedBox(height: 5),
+          Center(
+            child: SizedBox(
+              width: 330,
+              child: const ArcBlueprintWorkspaceBar(
+                current: ArcBlueprintWorkspace.loadout,
+                padding: EdgeInsets.zero,
+              ),
             ),
-          ),
-          _planningPill(
-            missing == 0 ? 'LOADOUT BP READY' : 'LOADOUT $missing BP',
-            missing == 0 ? Colors.lightGreenAccent : AppTheme.neonPink,
-          ),
-          const SizedBox(width: 5),
-          IconButton(
-            tooltip: 'Blueprint Tracker',
-            visualDensity: VisualDensity.compact,
-            onPressed: () =>
-                Navigator.of(context).pushNamed(BlueprintGridScreen.routeName),
-            icon: const Icon(Icons.grid_view_rounded, color: AppTheme.neonCyan),
-          ),
-          IconButton(
-            tooltip: 'Smart Build',
-            visualDensity: VisualDensity.compact,
-            onPressed: () => _showSmartBuildGenerator(states),
-            icon: const Icon(
-              Icons.auto_awesome_rounded,
-              color: Colors.amberAccent,
-            ),
-          ),
-          IconButton(
-            tooltip: 'Save Favourite Loadout',
-            visualDensity: VisualDensity.compact,
-            onPressed: _saveLoadout,
-            icon: const Icon(Icons.save_rounded, color: AppTheme.neonPink),
           ),
         ],
       ),
@@ -1611,7 +1601,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           _buildWantedBlueprintGrid(
             states,
             crossAxisCount: 5,
-            childAspectRatio: 4.00,
+            childAspectRatio: 3.00,
             gridKey: const Key('favourite-loadout-wanted-landscape'),
           ),
         ],
@@ -1849,8 +1839,11 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     final media = MediaQuery.of(context);
     final compactLandscape =
         media.orientation == Orientation.landscape && media.size.height <= 720;
-    final slotHeight = compactLandscape ? 72.0 : 94.0;
-    final imageSize = compactLandscape ? 32.0 : 46.0;
+    final slotHeight = compactLandscape ? 82.0 : 100.0;
+    final imageFrameSize = compactLandscape ? 38.0 : 46.0;
+    final itemVisualSize = slotLabel == 'AUGMENT'
+        ? imageFrameSize
+        : imageFrameSize * 0.88;
 
     return InkWell(
       key: key,
@@ -1858,7 +1851,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       onTap: onTap,
       child: Container(
         height: slotHeight,
-        padding: EdgeInsets.all(compactLandscape ? 4 : 6),
+        padding: const EdgeInsets.all(5),
         decoration: BoxDecoration(
           color: accent.withValues(alpha: 0.055),
           borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
@@ -1867,22 +1860,30 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _itemImage(
-              imageAsset: imageAsset,
-              accent: accent,
-              owned: owned,
-              icon: icon,
-              size: imageSize,
+            SizedBox(
+              width: imageFrameSize,
+              height: imageFrameSize,
+              child: Center(
+                child: _itemImage(
+                  imageAsset: imageAsset,
+                  accent: accent,
+                  owned: owned,
+                  icon: icon,
+                  size: itemVisualSize,
+                ),
+              ),
             ),
-            SizedBox(height: compactLandscape ? 2 : 3),
+            const SizedBox(height: 3),
             Text(
               slotLabel,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
               style: ArcUiTokens.label(
                 color: accent,
-              ).copyWith(fontSize: compactLandscape ? 7 : 8),
+              ).copyWith(fontSize: compactLandscape ? 7.5 : 8),
             ),
+            const SizedBox(height: 1),
             Text(
               itemName,
               maxLines: 1,
@@ -1890,7 +1891,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
               textAlign: TextAlign.center,
               style: AppTheme.buttonTextStyle(
                 color: owned ? Colors.white : Colors.white38,
-                fontSize: compactLandscape ? 8 : 9,
+                fontSize: compactLandscape ? 8.5 : 9.5,
               ),
             ),
           ],
@@ -2085,7 +2086,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
             child: _buildWantedBlueprintGrid(
               states,
               crossAxisCount: 2,
-              childAspectRatio: 1.70,
+              childAspectRatio: 1.25,
               gridKey: const Key('favourite-loadout-wanted-portrait'),
             ),
           ),
@@ -2094,33 +2095,172 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     );
   }
 
-  Widget _buildMobileQuickUseTray(Map<String, ArcBlueprintState> states) {
-    return _arcPanel(
-      accent: Colors.amberAccent,
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          tilePadding: EdgeInsets.zero,
-          childrenPadding: const EdgeInsets.only(bottom: 6),
-          visualDensity: VisualDensity.compact,
-          minTileHeight: 38,
-          title: Text(
-            'QUICK USE',
-            style: AppTheme.tradingHeading(
-              fontSize: 13,
-              color: Colors.amberAccent,
+  Widget _buildLoadoutIntelRail(Map<String, ArcBlueprintState> states) {
+    final missing = _missingBlueprintItems(states);
+
+    return SizedBox(
+      height: 94,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        child: Row(
+          children: [
+            _buildIntelRailCard(
+              accent: Colors.amberAccent,
+              title: 'QUICK USE',
+              subtitle: '6 supporting slots',
+              icon: Icons.widgets_outlined,
+              onTap: () => _showLoadoutIntelSheet(
+                title: 'Quick Use',
+                child: _buildCompactQuickSlots(states),
+              ),
             ),
-          ),
-          subtitle: const Text(
-            '6 supporting slots - kept outside the main equipment board',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: Colors.white54, fontSize: 9),
-          ),
-          children: [_buildCompactQuickSlots(states)],
+            const SizedBox(width: 8),
+            _buildIntelRailCard(
+              accent: Colors.amberAccent,
+              title: 'LEVEL IV BUILD COST',
+              subtitle: '$_primaryWeapon IV + $_secondaryWeapon IV',
+              icon: Icons.precision_manufacturing_outlined,
+              onTap: () => _showLoadoutIntelSheet(
+                title: 'Level IV Build Cost',
+                child: _buildLevelFourMaterialPlan(),
+              ),
+            ),
+            const SizedBox(width: 8),
+            _buildIntelRailCard(
+              accent: Colors.lightGreenAccent,
+              title: 'CRAFT + REPAIR',
+              subtitle: '$_shield + Level IV upkeep',
+              icon: Icons.build_circle_outlined,
+              onTap: () => _showLoadoutIntelSheet(
+                title: 'Craft + Repair Intelligence',
+                child: _buildEquipmentMaintenancePlan(),
+              ),
+            ),
+            const SizedBox(width: 8),
+            _buildIntelRailCard(
+              accent: AppTheme.neonPink,
+              title: 'MISSING BLUEPRINTS',
+              subtitle: missing.isEmpty
+                  ? 'Loadout requirements ready'
+                  : '${missing.length} target${missing.length == 1 ? '' : 's'} missing',
+              icon: Icons.account_tree_rounded,
+              onTap: () => _showLoadoutIntelSheet(
+                title: 'Missing Blueprints',
+                child: _buildMissingBlueprints(states),
+              ),
+            ),
+          ],
         ),
       ),
+    );
+  }
+
+  Widget _buildIntelRailCard({
+    required Color accent,
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return SizedBox(
+      width: 190,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(ArcUiTokens.radiusL),
+        onTap: onTap,
+        child: _arcPanel(
+          accent: accent,
+          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
+          child: Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
+                  border: Border.all(color: accent.withValues(alpha: 0.24)),
+                ),
+                child: Icon(icon, color: accent, size: 18),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTheme.tradingHeading(
+                        fontSize: 11,
+                        color: accent,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      subtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white60,
+                        fontSize: 9,
+                        height: 1.15,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 2),
+              Icon(Icons.chevron_right_rounded, color: accent, size: 18),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showLoadoutIntelSheet({required String title, required Widget child}) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: ArcUiTokens.surfaceOverlay,
+      builder: (sheetContext) {
+        return FractionallySizedBox(
+          heightFactor: 0.78,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title.toUpperCase(),
+                        style: AppTheme.tradingHeading(
+                          fontSize: 15,
+                          color: AppTheme.neonCyan,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Close',
+                      onPressed: () => Navigator.of(sheetContext).pop(),
+                      icon: const Icon(Icons.close_rounded),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Expanded(child: SingleChildScrollView(child: child)),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -2150,15 +2290,15 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
             ),
           ),
         ),
-        const SizedBox(height: 5),
+        const SizedBox(height: 6),
         GridView.builder(
           itemCount: ArcLoadoutLayoutEngine.wantedBlueprintSlotCount,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
-            mainAxisSpacing: 5,
-            crossAxisSpacing: 5,
+            mainAxisSpacing: 6,
+            crossAxisSpacing: 6,
             childAspectRatio: childAspectRatio,
           ),
           itemBuilder: (context, index) {
@@ -2196,60 +2336,78 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       borderRadius: BorderRadius.circular(10),
       onTap: () =>
           Navigator.of(context).pushNamed(BlueprintGridScreen.routeName),
-      child: Container(
-        padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.24),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: accent.withValues(alpha: 0.32)),
-        ),
-        child: blueprint == null
-            ? Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.add_rounded, color: Colors.white30, size: 20),
-                  const SizedBox(height: 2),
-                  Text(
-                    'SET TARGET',
-                    textAlign: TextAlign.center,
-                    style: ArcUiTokens.label(
-                      color: Colors.white38,
-                    ).copyWith(fontSize: 7.2),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxHeight < 82;
+          final imageSize = compact ? 20.0 : 30.0;
+          final addIconSize = compact ? 18.0 : 22.0;
+          final titleSize = compact ? 7.6 : 8.8;
+          final helperIconSize = compact ? 8.0 : 10.0;
+
+          return Container(
+            padding: EdgeInsets.all(compact ? 3 : 5),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.24),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: accent.withValues(alpha: 0.32)),
+            ),
+            child: blueprint == null
+                ? Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.add_rounded,
+                        color: Colors.white30,
+                        size: addIconSize,
+                      ),
+                      SizedBox(height: compact ? 1 : 3),
+                      Text(
+                        'SET TARGET',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: ArcUiTokens.label(
+                          color: Colors.white38,
+                        ).copyWith(fontSize: compact ? 6.5 : 7.3),
+                      ),
+                    ],
+                  )
+                : Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        height: imageSize,
+                        child: _itemImage(
+                          imageAsset: blueprint.imageAssetPath,
+                          accent: accent,
+                          owned: state?.owned ?? false,
+                          icon: blueprint.icon,
+                          size: imageSize,
+                        ),
+                      ),
+                      SizedBox(height: compact ? 1 : 3),
+                      Flexible(
+                        child: Text(
+                          blueprint.name,
+                          maxLines: compact ? 1 : 2,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: AppTheme.buttonTextStyle(
+                            color: Colors.white,
+                            fontSize: titleSize,
+                          ),
+                        ),
+                      ),
+                      if (unlockPlan != null)
+                        Icon(
+                          Icons.account_tree_rounded,
+                          color: Colors.lightGreenAccent,
+                          size: helperIconSize,
+                        ),
+                    ],
                   ),
-                ],
-              )
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    height: 28,
-                    child: _itemImage(
-                      imageAsset: blueprint.imageAssetPath,
-                      accent: accent,
-                      owned: state?.owned ?? false,
-                      icon: blueprint.icon,
-                      size: 28,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    blueprint.name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: AppTheme.buttonTextStyle(
-                      color: Colors.white,
-                      fontSize: 8.0,
-                    ),
-                  ),
-                  if (unlockPlan != null)
-                    Icon(
-                      Icons.account_tree_rounded,
-                      color: Colors.lightGreenAccent,
-                      size: 10,
-                    ),
-                ],
-              ),
+          );
+        },
       ),
     );
   }
