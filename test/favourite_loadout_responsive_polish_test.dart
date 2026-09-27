@@ -17,28 +17,25 @@ void main() {
     expect(source, contains('showAdBanner: false'));
   });
 
-  test(
-    'portrait and landscape equipment cards use balanced responsive heights',
-    () {
-      expect(
-        source,
-        contains('final slotHeight = compactLandscape ? 82.0 : 100.0'),
-      );
-      expect(
-        source,
-        contains('final imageFrameSize = compactLandscape ? 38.0 : 46.0'),
-      );
-      expect(source, contains("final itemVisualSize = slotLabel == 'AUGMENT'"));
-      expect(source, contains('compactLandscape ? 52.0'));
-      expect(source, contains('compactLandscape ? 38.0'));
-    },
-  );
+  test('portrait and landscape equipment cards use aligned geometry', () {
+    expect(
+      source,
+      contains('final slotHeight = compactLandscape ? 100.0 : 100.0'),
+    );
+    expect(
+      source,
+      contains('final imageFrameSize = compactLandscape ? 42.0 : 54.0'),
+    );
+    expect(source, contains("final itemVisualSize = slotLabel == 'AUGMENT'"));
+    expect(source, contains('minHeight: compactLandscape ? 100.0 : 0'));
+    expect(source, contains('width: double.infinity'));
+  });
 
   test(
     'Wanted Blueprint grids stay readable without changing their counts',
     () {
       expect(source, contains('crossAxisCount: 2'));
-      expect(source, contains('childAspectRatio: 1.25'));
+      expect(source, contains('childAspectRatio: 1.05'));
       expect(source, contains('crossAxisCount: 5'));
       expect(source, contains('childAspectRatio: 3.00'));
       expect(source, contains(r"'WANTED BLUEPRINTS ${targets.length}/10'"));

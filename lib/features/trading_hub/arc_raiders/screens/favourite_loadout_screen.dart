@@ -1422,7 +1422,10 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                               const SizedBox(height: 6),
                               _buildPortraitInGameBoard(blueprintStates),
                               const SizedBox(height: 6),
-                              _buildLoadoutIntelRail(blueprintStates),
+                              _buildLoadoutIntelGrid(
+                                blueprintStates,
+                                compactLandscape: false,
+                              ),
                             ],
                           ),
                         );
@@ -1442,8 +1445,6 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                               _buildCompactLoadoutHeader(blueprintStates),
                               const SizedBox(height: 6),
                               _buildCompactMobileBoard(blueprintStates),
-                              const SizedBox(height: 6),
-                              _buildLoadoutIntelRail(blueprintStates),
                             ],
                           ),
                         );
@@ -1573,10 +1574,11 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
+            key: const Key('favourite-loadout-landscape-top-grid'),
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(
-                width: 116,
+                width: 126,
                 child: Column(
                   children: [
                     _buildCompactAugment(states),
@@ -1587,6 +1589,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
               ),
               const SizedBox(width: 8),
               Expanded(
+                flex: 7,
                 child: Column(
                   children: [
                     _buildCompactWeaponRow(true, states),
@@ -1594,6 +1597,11 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                     _buildCompactWeaponRow(false, states),
                   ],
                 ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                flex: 5,
+                child: _buildLoadoutIntelGrid(states, compactLandscape: true),
               ),
             ],
           ),
@@ -1744,7 +1752,8 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                 ? 'favourite-loadout-weapon-1'
                 : 'favourite-loadout-weapon-2',
           ),
-          padding: EdgeInsets.all(compactLandscape ? 5 : 6),
+          constraints: BoxConstraints(minHeight: compactLandscape ? 100.0 : 0),
+          padding: EdgeInsets.all(compactLandscape ? 6 : 6),
           decoration: BoxDecoration(
             color: accent.withValues(alpha: 0.055),
             borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
@@ -1839,62 +1848,66 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     final media = MediaQuery.of(context);
     final compactLandscape =
         media.orientation == Orientation.landscape && media.size.height <= 720;
-    final slotHeight = compactLandscape ? 82.0 : 100.0;
-    final imageFrameSize = compactLandscape ? 38.0 : 46.0;
+    final slotHeight = compactLandscape ? 100.0 : 100.0;
+    final imageFrameSize = compactLandscape ? 42.0 : 54.0;
     final itemVisualSize = slotLabel == 'AUGMENT'
         ? imageFrameSize
         : imageFrameSize * 0.88;
 
-    return InkWell(
-      key: key,
-      borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
-      onTap: onTap,
-      child: Container(
-        height: slotHeight,
-        padding: const EdgeInsets.all(5),
-        decoration: BoxDecoration(
-          color: accent.withValues(alpha: 0.055),
-          borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
-          border: Border.all(color: accent.withValues(alpha: 0.24)),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
-              width: imageFrameSize,
-              height: imageFrameSize,
-              child: Center(
-                child: _itemImage(
-                  imageAsset: imageAsset,
-                  accent: accent,
-                  owned: owned,
-                  icon: icon,
-                  size: itemVisualSize,
+    return SizedBox(
+      width: double.infinity,
+      child: InkWell(
+        key: key,
+        borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
+        onTap: onTap,
+        child: Container(
+          width: double.infinity,
+          height: slotHeight,
+          padding: const EdgeInsets.all(5),
+          decoration: BoxDecoration(
+            color: accent.withValues(alpha: 0.055),
+            borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
+            border: Border.all(color: accent.withValues(alpha: 0.24)),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: imageFrameSize,
+                height: imageFrameSize,
+                child: Center(
+                  child: _itemImage(
+                    imageAsset: imageAsset,
+                    accent: accent,
+                    owned: owned,
+                    icon: icon,
+                    size: itemVisualSize,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              slotLabel,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: ArcUiTokens.label(
-                color: accent,
-              ).copyWith(fontSize: compactLandscape ? 7.5 : 8),
-            ),
-            const SizedBox(height: 1),
-            Text(
-              itemName,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: AppTheme.buttonTextStyle(
-                color: owned ? Colors.white : Colors.white38,
-                fontSize: compactLandscape ? 8.5 : 9.5,
+              const SizedBox(height: 3),
+              Text(
+                slotLabel,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: ArcUiTokens.label(
+                  color: accent,
+                ).copyWith(fontSize: compactLandscape ? 7.5 : 8),
               ),
-            ),
-          ],
+              const SizedBox(height: 1),
+              Text(
+                itemName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: AppTheme.buttonTextStyle(
+                  color: owned ? Colors.white : Colors.white38,
+                  fontSize: compactLandscape ? 8.5 : 9.5,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -2062,7 +2075,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            flex: 3,
+            flex: 5,
             child: Column(
               children: [
                 Row(
@@ -2082,11 +2095,11 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           ),
           const SizedBox(width: 7),
           Expanded(
-            flex: 2,
+            flex: 3,
             child: _buildWantedBlueprintGrid(
               states,
               crossAxisCount: 2,
-              childAspectRatio: 1.25,
+              childAspectRatio: 1.05,
               gridKey: const Key('favourite-loadout-wanted-portrait'),
             ),
           ),
@@ -2095,17 +2108,37 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     );
   }
 
-  Widget _buildLoadoutIntelRail(Map<String, ArcBlueprintState> states) {
+  Widget _buildLoadoutIntelGrid(
+    Map<String, ArcBlueprintState> states, {
+    required bool compactLandscape,
+  }) {
     final missing = _missingBlueprintItems(states);
+    final cardHeight = compactLandscape ? 100.0 : 126.0;
 
-    return SizedBox(
-      height: 94,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        child: Row(
+    Widget buildCard({
+      required Color accent,
+      required String title,
+      required String subtitle,
+      required IconData icon,
+      required VoidCallback onTap,
+    }) {
+      return Expanded(
+        child: _buildIntelGridCard(
+          accent: accent,
+          title: title,
+          subtitle: subtitle,
+          icon: icon,
+          height: cardHeight,
+          onTap: onTap,
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        Row(
           children: [
-            _buildIntelRailCard(
+            buildCard(
               accent: Colors.amberAccent,
               title: 'QUICK USE',
               subtitle: '6 supporting slots',
@@ -2116,7 +2149,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
               ),
             ),
             const SizedBox(width: 8),
-            _buildIntelRailCard(
+            buildCard(
               accent: Colors.amberAccent,
               title: 'LEVEL IV BUILD COST',
               subtitle: '$_primaryWeapon IV + $_secondaryWeapon IV',
@@ -2126,8 +2159,12 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                 child: _buildLevelFourMaterialPlan(),
               ),
             ),
-            const SizedBox(width: 8),
-            _buildIntelRailCard(
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            buildCard(
               accent: Colors.lightGreenAccent,
               title: 'CRAFT + REPAIR',
               subtitle: '$_shield + Level IV upkeep',
@@ -2138,7 +2175,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
               ),
             ),
             const SizedBox(width: 8),
-            _buildIntelRailCard(
+            buildCard(
               accent: AppTheme.neonPink,
               title: 'MISSING BLUEPRINTS',
               subtitle: missing.isEmpty
@@ -2152,19 +2189,20 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
             ),
           ],
         ),
-      ),
+      ],
     );
   }
 
-  Widget _buildIntelRailCard({
+  Widget _buildIntelGridCard({
     required Color accent,
     required String title,
     required String subtitle,
     required IconData icon,
+    required double height,
     required VoidCallback onTap,
   }) {
     return SizedBox(
-      width: 190,
+      height: height,
       child: InkWell(
         borderRadius: BorderRadius.circular(ArcUiTokens.radiusL),
         onTap: onTap,
@@ -2174,15 +2212,15 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           child: Row(
             children: [
               Container(
-                width: 34,
-                height: 34,
+                width: 38,
+                height: 38,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: accent.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
                   border: Border.all(color: accent.withValues(alpha: 0.24)),
                 ),
-                child: Icon(icon, color: accent, size: 18),
+                child: Icon(icon, color: accent, size: 19),
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -2199,7 +2237,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                         color: accent,
                       ),
                     ),
-                    const SizedBox(height: 3),
+                    const SizedBox(height: 4),
                     Text(
                       subtitle,
                       maxLines: 2,

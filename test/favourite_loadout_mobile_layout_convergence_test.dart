@@ -18,36 +18,45 @@ void main() {
     expect(header, contains('Save Favourite Loadout'));
   });
 
-  test('wanted Blueprint proportions are readable in both orientations', () {
-    expect(source, contains('childAspectRatio: 1.25'));
+  test('portrait Wanted Blueprints are narrower and taller', () {
+    expect(source, contains('flex: 5'));
+    expect(source, contains('flex: 3'));
+    expect(source, contains('childAspectRatio: 1.05'));
+    expect(source, contains('crossAxisCount: 2'));
+    expect(source, contains('crossAxisCount: 5'));
     expect(source, contains('childAspectRatio: 3.00'));
-    expect(source, isNot(contains('childAspectRatio: 1.70')));
-    expect(source, isNot(contains('childAspectRatio: 4.00')));
-    expect(source, contains('final compact = constraints.maxHeight < 82'));
   });
 
-  test('augment and shield use one balanced auxiliary geometry', () {
+  test('augment and shield use identical full-width outer geometry', () {
+    expect(source, contains('width: double.infinity'));
     expect(
       source,
-      contains('final slotHeight = compactLandscape ? 82.0 : 100.0'),
+      contains('final slotHeight = compactLandscape ? 100.0 : 100.0'),
     );
     expect(source, contains("final itemVisualSize = slotLabel == 'AUGMENT'"));
     expect(source, contains('? imageFrameSize'));
     expect(source, contains(': imageFrameSize * 0.88'));
   });
 
-  test('mobile intelligence is a compact horizontal rail', () {
-    expect(source, contains('Widget _buildLoadoutIntelRail('));
-    expect(source, contains('scrollDirection: Axis.horizontal'));
+  test('portrait and landscape use visible 2 by 2 intelligence grids', () {
+    expect(source, contains('Widget _buildLoadoutIntelGrid('));
+    expect(source, contains('compactLandscape: false'));
+    expect(source, contains('compactLandscape: true'));
     expect(source, contains("'QUICK USE'"));
     expect(source, contains("'LEVEL IV BUILD COST'"));
     expect(source, contains("'CRAFT + REPAIR'"));
     expect(source, contains("'MISSING BLUEPRINTS'"));
-    expect(source, contains('showModalBottomSheet<void>('));
+    expect(source, isNot(contains('Widget _buildLoadoutIntelRail(')));
   });
 
-  test('mobile page no longer stacks four large detail panels', () {
-    expect(source, contains('_buildLoadoutIntelRail(blueprintStates)'));
-    expect(source, isNot(contains('Widget _buildMobileQuickUseTray(')));
-  });
+  test(
+    'landscape top board is auxiliary weapons intelligence three-column',
+    () {
+      expect(source, contains("Key('favourite-loadout-landscape-top-grid')"));
+      expect(source, contains('width: 126'));
+      expect(source, contains('flex: 7'));
+      expect(source, contains('flex: 5'));
+      expect(source, contains('minHeight: compactLandscape ? 100.0 : 0'));
+    },
+  );
 }

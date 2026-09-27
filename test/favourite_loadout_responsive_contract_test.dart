@@ -39,7 +39,7 @@ void main() {
     expect(source, contains('_startNewBuild'));
     expect(source, contains('New Build'));
     expect(source, contains('ArcLoadoutLayoutEngine.quickUseSlotCount'));
-    expect(source, contains('_buildLoadoutIntelRail'));
+    expect(source, contains('_buildLoadoutIntelGrid'));
     expect(source, contains("'LEVEL IV BUILD COST'"));
     expect(source, contains('ArcItemIntelligenceEngine.planForItem'));
     expect(source, contains("label: 'Quest Unlock Path'"));
