@@ -1,3 +1,4 @@
+import 'uag_commercial_economy.dart';
 import 'uag_subscription_tier.dart';
 
 class UagPlanLimits {
@@ -30,8 +31,12 @@ class UagPlanLimits {
   });
 
   final UagSubscriptionTier tier;
+
+  // Legacy field names are retained to avoid breaking older consumers.
+  // Trade and Match Raider counters now reset monthly in UagEntitlementService.
   final int? weeklyTrades;
   final int? weeklyMatchmakingSearches;
+
   final int? weeklyIntelHints;
   final int? weeklyAdvancedVoiceCommands;
   final int? weeklyPremiumIntelUnlocks;
@@ -54,6 +59,9 @@ class UagPlanLimits {
   final int referralCommissionPercent;
   final int monthlyReferralBonusActionCap;
   final int payoutThresholdPence;
+
+  int? get monthlyTrades => weeklyTrades;
+  int? get monthlyMatchmakingSearches => weeklyMatchmakingSearches;
 
   bool get unlimitedTrades => weeklyTrades == null;
   bool get unlimitedMatchmaking => weeklyMatchmakingSearches == null;
@@ -84,8 +92,9 @@ class UagPlanLimits {
 
   static const free = UagPlanLimits(
     tier: UagSubscriptionTier.free,
-    weeklyTrades: 10,
-    weeklyMatchmakingSearches: 10,
+    weeklyTrades: UagCommercialEconomy.freeMonthlyTrades,
+    weeklyMatchmakingSearches:
+        UagCommercialEconomy.freeMonthlyMatchRaiderActions,
     weeklyIntelHints: 8,
     weeklyAdvancedVoiceCommands: 25,
     weeklyPremiumIntelUnlocks: 2,
@@ -104,16 +113,18 @@ class UagPlanLimits {
     hasAdvancedVoicePersonalities: false,
     hasSmartAlerts: false,
     hasUnlimitedSessions: false,
-    referralDiscountPercent: 10,
+    referralDiscountPercent:
+        UagCommercialEconomy.referralFirstPurchaseDiscountPercent,
     referralCommissionPercent: 0,
     monthlyReferralBonusActionCap: 8,
-    payoutThresholdPence: 2500,
+    payoutThresholdPence: UagCommercialEconomy.payoutThresholdPence,
   );
 
   static const essential = UagPlanLimits(
     tier: UagSubscriptionTier.essential,
-    weeklyTrades: 50,
-    weeklyMatchmakingSearches: 50,
+    weeklyTrades: UagCommercialEconomy.essentialMonthlyTrades,
+    weeklyMatchmakingSearches:
+        UagCommercialEconomy.essentialMonthlyMatchRaiderActions,
     weeklyIntelHints: 40,
     weeklyAdvancedVoiceCommands: null,
     weeklyPremiumIntelUnlocks: 12,
@@ -132,10 +143,11 @@ class UagPlanLimits {
     hasAdvancedVoicePersonalities: true,
     hasSmartAlerts: true,
     hasUnlimitedSessions: false,
-    referralDiscountPercent: 10,
+    referralDiscountPercent:
+        UagCommercialEconomy.referralFirstPurchaseDiscountPercent,
     referralCommissionPercent: 0,
     monthlyReferralBonusActionCap: 25,
-    payoutThresholdPence: 2500,
+    payoutThresholdPence: UagCommercialEconomy.payoutThresholdPence,
   );
 
   static const premium = UagPlanLimits(
@@ -160,10 +172,11 @@ class UagPlanLimits {
     hasAdvancedVoicePersonalities: true,
     hasSmartAlerts: true,
     hasUnlimitedSessions: true,
-    referralDiscountPercent: 10,
+    referralDiscountPercent:
+        UagCommercialEconomy.referralFirstPurchaseDiscountPercent,
     referralCommissionPercent: 0,
     monthlyReferralBonusActionCap: 999,
-    payoutThresholdPence: 2500,
+    payoutThresholdPence: UagCommercialEconomy.payoutThresholdPence,
   );
 
   static UagPlanLimits forTier(UagSubscriptionTier tier) {
