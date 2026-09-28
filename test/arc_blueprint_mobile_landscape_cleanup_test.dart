@@ -28,21 +28,29 @@ void main() {
     },
   );
 
-  test(
-    'landscape canvas uses body height and centers the grid inside the viewport',
-    () {
-      final grid = read(
-        'lib/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart',
-      );
+  test('landscape canvas uses body height and top-centers the pannable grid', () {
+    final grid = read(
+      'lib/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart',
+    );
 
-      expect(grid, isNot(contains('reservedChromeHeight')));
-      expect(
-        grid,
-        contains('final bodyHeight = constraints.maxHeight.isFinite'),
-      );
-      expect(grid, contains('final canvasWidth = isLandscape'));
-      expect(grid, contains('final canvasHeight = isLandscape'));
-      expect(grid, contains('child: Center('));
-    },
-  );
+    expect(grid, isNot(contains('reservedChromeHeight')));
+    expect(grid, contains('final bodyHeight = constraints.maxHeight.isFinite'));
+    expect(
+      grid,
+      contains('final canvasWidth = math.max(viewportWidth, fittedWidth)'),
+    );
+    expect(
+      grid,
+      contains('final canvasHeight = math.max(viewportHeight, fittedHeight)'),
+    );
+    expect(
+      grid,
+      matches(
+        RegExp(
+          r'child: isLandscape\s*\? SizedBox\(\s*width: canvasWidth,\s*height: canvasHeight,\s*child: Align\(\s*alignment: Alignment.topCenter,',
+        ),
+      ),
+    );
+    expect(grid, contains('constrained: !isLandscape'));
+  });
 }
