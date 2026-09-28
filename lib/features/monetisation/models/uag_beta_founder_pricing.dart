@@ -30,7 +30,7 @@ enum UagBetaCommercialOffer {
     UagBetaCommercialOffer.premiumAnnual => 4999,
     UagBetaCommercialOffer.premiumDayPass => 149,
     UagBetaCommercialOffer.premiumWeekPass => 249,
-    UagBetaCommercialOffer.foundingRaiderAnnual => 2999,
+    UagBetaCommercialOffer.foundingRaiderAnnual => 4499,
   };
 
   String get priceLabel => '£${(pricePence / 100).toStringAsFixed(2)}';
