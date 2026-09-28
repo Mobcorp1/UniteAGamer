@@ -70,7 +70,7 @@ class UagRaiderMarkPolicy {
       redemptionsThisMonth < maxBonusRedemptionsPerMonth;
 
   static int walletAfterEarn(int walletBalance) =>
-      (walletBalance + marksPerCompletedAd).clamp(0, walletCap);
+      (walletBalance + marksPerCompletedAd).clamp(0, walletCap).toInt();
 
   static int walletAfterRedeem(int walletBalance) {
     if (walletBalance < marksPerBonusAction) return walletBalance;
