@@ -34,12 +34,6 @@ class _UagCommercialCampaignAdminPanelState
     super.dispose();
   }
 
-  String _normalise(String value) => value
-      .trim()
-      .toUpperCase()
-      .replaceAll(RegExp(r'[^A-Z0-9]'), '')
-      .substring(0, value.trim().isEmpty ? 0 : value.trim().length.clamp(0, 28));
-
   void _selectPreset(UagOwnerCampaignPreset? value) {
     if (value == null) return;
     setState(() {
