@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_beta_founder_pricing.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_commercial_economy.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_profile_social_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_wall_of_legends_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_wall_of_legends_repository.dart';
@@ -214,6 +215,24 @@ class _UagBetaFounderAdminPanelState extends State<UagBetaFounderAdminPanel> {
   Future<void> _setFoundingRaider(bool enabled) async {
     final target = _target;
     if (target == null || _busy) return;
+
+    if (enabled && !target.recognition.isFoundingRaider) {
+      final founderSnapshot = await _firestore
+          .collection('uag_commercial_recognition')
+          .where('foundingRaider', isEqualTo: true)
+          .get();
+      if (founderSnapshot.docs.length >=
+          UagCommercialEconomy.founderMembershipCap) {
+        if (!mounted) return;
+        setState(() {
+          _message =
+              'Founding Raider cohort is full (${UagCommercialEconomy.founderMembershipCap} memberships).';
+          _messageIsError = true;
+        });
+        return;
+      }
+    }
+
     await _writeRecognition(
       recognitionPatch: <String, dynamic>{
         'foundingRaider': enabled,
@@ -235,11 +254,10 @@ class _UagBetaFounderAdminPanelState extends State<UagBetaFounderAdminPanel> {
         if (enabled) 'founderGrantedAt': FieldValue.serverTimestamp(),
       },
       success: enabled
-          ? 'Founding Raider status granted. £29.99 annual rate is available unless previously forfeited.'
+          ? 'Founding Raider status granted. £44.99 annual Premium rate is available unless previously forfeited.'
           : 'Founding Raider commercial status removed.',
     );
   }
-
   Future<void> _setWallEligible(bool enabled) async {
     final target = _target;
     if (target == null || _busy) return;
@@ -273,7 +291,7 @@ class _UagBetaFounderAdminPanelState extends State<UagBetaFounderAdminPanel> {
         'monetisation': <String, dynamic>{'founderRateForfeited': false},
         'founderRateRestoredAt': FieldValue.serverTimestamp(),
       },
-      success: '£29.99 Founding Raider annual rate restored by admin.',
+      success: '£44.99 Founding Raider annual rate restored by admin.',
     );
   }
 
@@ -570,7 +588,7 @@ class _UagBetaFounderAdminPanelState extends State<UagBetaFounderAdminPanel> {
             onChanged: _busy ? null : _setFoundingRaider,
             title: const Text('Founding Raider'),
             subtitle: const Text(
-              'Unlocks £29.99/year Premium while the Founder subscription remains continuous.',
+              'Unlocks £44.99/year Premium (50% off launch annual) while the Founder subscription remains continuous. Limited to 100 Founder memberships.',
             ),
           ),
           SwitchListTile.adaptive(
