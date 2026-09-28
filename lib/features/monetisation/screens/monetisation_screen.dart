@@ -13,6 +13,7 @@ import '../screens/uag_creator_programme_screen.dart';
 import '../services/uag_checkout_service.dart';
 import '../services/uag_entitlement_service.dart';
 import '../widgets/uag_beta_founder_offer_panel.dart';
+import '../widgets/uag_commercial_offers_panel.dart';
 
 class MonetisationScreen extends StatefulWidget {
   static const routeName = '/monetisation';
@@ -27,12 +28,16 @@ class _MonetisationScreenState extends State<MonetisationScreen> {
   final UagEntitlementService _entitlementService = UagEntitlementService();
   final UagCheckoutService _checkoutService = UagCheckoutService();
   bool _checkoutBusy = false;
+  String _promotionCode = '';
 
   Future<void> _startCheckout(String planId) async {
     if (_checkoutBusy) return;
     setState(() => _checkoutBusy = true);
     try {
-      await _checkoutService.startCheckout(planId: planId);
+      await _checkoutService.startCheckout(
+        planId: planId,
+        referralCode: _promotionCode.isEmpty ? null : _promotionCode,
+      );
     } on UagCheckoutException catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -135,6 +140,10 @@ class _MonetisationScreenState extends State<MonetisationScreen> {
                 ),
                 const SizedBox(height: ArcUiTokens.gapM),
               ],
+              UagCommercialOffersPanel(
+                onPromotionCodeChanged: (code) => _promotionCode = code,
+              ),
+              const SizedBox(height: ArcUiTokens.gapM),
               _SectionHeading(
                 title: 'CHOOSE YOUR ACCESS',
                 subtitle:
@@ -218,7 +227,7 @@ class _CommercialHero extends StatelessWidget {
             '${activeTier.label.toUpperCase()} ACTIVE',
             ArcUiTokens.primaryAccent,
           ),
-          const _Tag('PREMIUM £9.99 / MONTH', ArcUiTokens.secondaryAccent),
+          const _Tag('PREMIUM £8.99 / MONTH', ArcUiTokens.secondaryAccent),
           const _Tag('REFER & EARN 5% → 15%', ArcUiTokens.secondaryAccent),
           const _Tag(
             'PREMIUM REFERRAL BOOST +2.5PP',
