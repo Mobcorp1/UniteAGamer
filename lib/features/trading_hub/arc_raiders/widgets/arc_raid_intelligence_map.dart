@@ -71,47 +71,52 @@ class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
                   panEnabled: true,
                   scaleEnabled: true,
                   trackpadScrollCausesScale: true,
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onDoubleTap: () => _doubleTapZoom(mapSize),
-                    onTapUp: onMapTapped == null
-                        ? null
-                        : (details) => onMapTapped!(
-                            _canonicalPoint(details.localPosition, mapSize),
-                          ),
-                    onLongPressStart: onIntelReportRequested == null
-                        ? null
-                        : (details) => onIntelReportRequested!(
-                            _canonicalPoint(details.localPosition, mapSize),
-                          ),
-                    onSecondaryTapUp: onIntelReportRequested == null
-                        ? null
-                        : (details) => onIntelReportRequested!(
-                            _canonicalPoint(details.localPosition, mapSize),
-                          ),
-                    child: SizedBox.fromSize(
-                      size: mapSize,
-                      child: Stack(
-                        children: [
-                          Positioned.fill(child: _mapBackground()),
-                          Positioned.fill(
-                            child: CustomPaint(
-                              painter: _ArcRaidSchematicPainter(
-                                state: state,
-                                selectedMarkerId: selectedMarkerId,
-                                showSchematicGuides: !state.map
-                                    .hasRenderableLayer(state.activeLayer),
+                  child: SizedBox.fromSize(
+                    size: viewportSize,
+                    child: Center(
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onDoubleTap: () => _doubleTapZoom(mapSize),
+                        onTapUp: onMapTapped == null
+                            ? null
+                            : (details) => onMapTapped!(
+                                _canonicalPoint(details.localPosition, mapSize),
                               ),
-                            ),
+                        onLongPressStart: onIntelReportRequested == null
+                            ? null
+                            : (details) => onIntelReportRequested!(
+                                _canonicalPoint(details.localPosition, mapSize),
+                              ),
+                        onSecondaryTapUp: onIntelReportRequested == null
+                            ? null
+                            : (details) => onIntelReportRequested!(
+                                _canonicalPoint(details.localPosition, mapSize),
+                              ),
+                        child: SizedBox.fromSize(
+                          size: mapSize,
+                          child: Stack(
+                            children: [
+                              Positioned.fill(child: _mapBackground()),
+                              Positioned.fill(
+                                child: CustomPaint(
+                                  painter: _ArcRaidSchematicPainter(
+                                    state: state,
+                                    selectedMarkerId: selectedMarkerId,
+                                    showSchematicGuides: !state.map
+                                        .hasRenderableLayer(state.activeLayer),
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                left: 12,
+                                top: 12,
+                                child: _modeBadge(state.map),
+                              ),
+                              for (final marker in _renderableMarkers)
+                                _markerButton(marker, mapSize),
+                            ],
                           ),
-                          Positioned(
-                            left: 12,
-                            top: 12,
-                            child: _modeBadge(state.map),
-                          ),
-                          for (final marker in _renderableMarkers)
-                            _markerButton(marker, mapSize),
-                        ],
+                        ),
                       ),
                     ),
                   ),

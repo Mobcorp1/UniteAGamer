@@ -267,16 +267,45 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final inlineWorkspace =
+        media.orientation == Orientation.landscape && media.size.width >= 1100;
+
     return Scaffold(
       drawer: const AppDrawer(),
       appBar: AppBar(
-        title: Text(
-          'RAID INTELLIGENCE',
-          style: ArcUiTokens.display(
-            fontSize: 20,
-            color: ArcUiTokens.secondaryAccent,
-          ),
-        ),
+        title: inlineWorkspace
+            ? Row(
+                children: [
+                  Text(
+                    'RAID INTELLIGENCE',
+                    style: ArcUiTokens.display(
+                      fontSize: 20,
+                      color: ArcUiTokens.secondaryAccent,
+                    ),
+                  ),
+                  const SizedBox(width: 18),
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerRight,
+                        child: _inlineWorkspaceNavigation(),
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            : Text(
+                'RAID INTELLIGENCE',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: ArcUiTokens.display(
+                  fontSize: 20,
+                  color: ArcUiTokens.secondaryAccent,
+                ),
+              ),
         actions: [
           IconButton(
             tooltip: 'Frozen Trail preview',
@@ -300,20 +329,62 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                 Navigator.of(context).pushNamed(BlueprintGridScreen.routeName),
             icon: const Icon(Icons.grid_view_rounded),
           ),
-          IconButton(
-            tooltip: 'Open Community Intel',
-            onPressed: () => Navigator.of(
-              context,
-            ).pushNamed(ArcMarketIntelligenceScreen.routeName),
-            icon: const Icon(Icons.radar_rounded),
-          ),
+          if (!inlineWorkspace)
+            IconButton(
+              tooltip: 'Open Community Intel',
+              onPressed: () => Navigator.of(
+                context,
+              ).pushNamed(ArcMarketIntelligenceScreen.routeName),
+              icon: const Icon(Icons.radar_rounded),
+            ),
         ],
       ),
-      body: ArcRaidersScreenShell(showAdBanner: false, child: _liveBody()),
+      body: ArcRaidersScreenShell(
+        showAdBanner: false,
+        child: _liveBody(showWorkspaceBar: !inlineWorkspace),
+      ),
     );
   }
 
-  Widget _liveBody() {
+  Widget _inlineWorkspaceNavigation() {
+    const workspaces = <ArcIntelligenceWorkspace>[
+      ArcIntelligenceWorkspace.community,
+      ArcIntelligenceWorkspace.explorer,
+      ArcIntelligenceWorkspace.planner,
+    ];
+    return Row(
+      key: const Key('raid-inline-workspaces'),
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (var index = 0; index < workspaces.length; index++) ...[
+          _inlineWorkspaceButton(workspaces[index]),
+          if (index != workspaces.length - 1) const SizedBox(width: 8),
+        ],
+      ],
+    );
+  }
+
+  Widget _inlineWorkspaceButton(ArcIntelligenceWorkspace workspace) {
+    return OutlinedButton.icon(
+      style: OutlinedButton.styleFrom(
+        visualDensity: VisualDensity.compact,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+        foregroundColor: ArcUiTokens.textSecondary,
+        side: BorderSide(
+          color: ArcUiTokens.textTertiary.withValues(alpha: 0.42),
+        ),
+        shape: const StadiumBorder(),
+      ),
+      onPressed: () => Navigator.of(context).pushNamed(workspace.routeName),
+      icon: Icon(workspace.icon, size: 15),
+      label: Text(
+        workspace.label.toUpperCase(),
+        style: ArcUiTokens.label(color: ArcUiTokens.textSecondary),
+      ),
+    );
+  }
+
+  Widget _liveBody({required bool showWorkspaceBar}) {
     return StreamBuilder<Map<String, ArcScrappyState>>(
       stream: _source(
         'scrappy-tracker',
@@ -435,10 +506,13 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                                 );
                                 return Column(
                                   children: [
-                                    const SizedBox(height: 8),
-                                    const ArcIntelligenceWorkspaceBar(
-                                      current: ArcIntelligenceWorkspace.raidMap,
-                                    ),
+                                    if (showWorkspaceBar) ...[
+                                      const SizedBox(height: 8),
+                                      const ArcIntelligenceWorkspaceBar(
+                                        current:
+                                            ArcIntelligenceWorkspace.raidMap,
+                                      ),
+                                    ],
                                     if (failed || loading)
                                       Row(
                                         children: [
@@ -588,12 +662,6 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                 child: _layerSelector(intelligence.map),
               ),
             ),
-          Positioned(
-            left: 18,
-            bottom: 18,
-            right: 18,
-            child: _routeStrip(intelligence),
-          ),
         ],
       ),
     );
@@ -717,33 +785,6 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
         style: IconButton.styleFrom(
           backgroundColor: ArcUiTokens.surfaceOverlay.withValues(alpha: 0.84),
           disabledForegroundColor: ArcUiTokens.textDisabled,
-        ),
-      ),
-    );
-  }
-
-  Widget _routeStrip(ArcRaidIntelligenceState intelligence) {
-    final route = intelligence.routePlan;
-    return IgnorePointer(
-      ignoring: false,
-      child: Container(
-        key: const Key('map-route-strip'),
-        padding: const EdgeInsets.all(10),
-        decoration: ArcUiTokens.surfaceDecoration(
-          role: ArcSurfaceRole.overlay,
-          accent: ArcUiTokens.secondaryAccent,
-          radius: ArcUiTokens.radiusM,
-          borderOpacity: 0.18,
-        ),
-        child: Text(
-          route == null
-              ? _objectiveOnlyStops.isEmpty
-                    ? intelligence.recommendation
-                    : 'Objective-only run: ${_objectiveOnlyStops.length} prioritized stops. Sync/select an extraction to complete the route.'
-              : '${route.summary} ${route.approximate ? 'Area-to-area route, approximate.' : ''}',
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
         ),
       ),
     );

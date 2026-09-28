@@ -16,6 +16,9 @@ void main() {
     expect(screen, contains('final sideBySide = desktop || compactLandscape;'));
     expect(screen, contains('Positioned.fill(child: map)'));
     expect(screen, contains('if (!_controlPanelCollapsed)'));
+    expect(screen, contains("Key('raid-inline-workspaces')"));
+    expect(screen, isNot(contains('Widget _routeStrip(')));
+    expect(screen, isNot(contains("Key('map-route-strip')")));
 
     expect(renderer, contains('height.clamp(1.0, 1100.0)'));
     expect(renderer, isNot(contains('height.clamp(360.0, 1100.0)')));

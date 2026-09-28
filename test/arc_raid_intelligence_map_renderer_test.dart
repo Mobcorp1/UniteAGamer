@@ -109,6 +109,11 @@ void main() {
       expect(imageSize.width, lessThan(1100));
       expect(imageSize.height, closeTo(280, 0.01));
 
+      final imageRect = tester.getRect(mapImage);
+      final viewerRect = tester.getRect(find.byType(InteractiveViewer));
+      expect(imageRect.center.dx, closeTo(viewerRect.center.dx, 0.5));
+      expect(imageRect.center.dy, closeTo(viewerRect.center.dy, 0.5));
+
       final viewer = tester.widget<InteractiveViewer>(
         find.byType(InteractiveViewer),
       );

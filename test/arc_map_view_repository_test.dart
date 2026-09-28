@@ -65,6 +65,21 @@ void main() {
     },
   );
 
+  test(
+    'ignores map transforms saved against the previous geometry version',
+    () async {
+      SharedPreferences.setMockInitialValues(<String, Object>{
+        'arc_raid_map_view_last_selection_v1':
+            '{"mapId":"blue_gate","layer":"surface"}',
+        'arc_raid_map_view_snapshot_v1:blue_gate:surface':
+            '{"mapId":"blue_gate","layer":"surface","matrixValues":[1,0,0,0,0,1,0,0,0,0,1,0,-180,-90,0,1],"updatedAt":"2026-09-28T18:00:00Z"}',
+      });
+
+      const repository = ArcMapViewRepository();
+      expect(await repository.loadLast(), isNull);
+    },
+  );
+
   test('rejects malformed persisted matrices', () async {
     const repository = ArcMapViewRepository();
     await repository.save(

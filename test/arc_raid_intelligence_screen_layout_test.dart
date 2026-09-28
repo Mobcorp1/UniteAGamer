@@ -48,14 +48,12 @@ void main() {
       final controls = tester.getRect(
         find.byKey(const Key('map-zoom-controls')),
       );
-      final route = tester.getRect(find.byKey(const Key('map-route-strip')));
-      expect(controls.overlaps(route), isFalse);
+      expect(find.byKey(const Key('map-route-strip')), findsNothing);
       if (find.byKey(const Key('map-layer-selector')).evaluate().isNotEmpty) {
         final layer = tester.getRect(
           find.byKey(const Key('map-layer-selector')),
         );
         expect(controls.overlaps(layer), isFalse);
-        expect(route.overlaps(layer), isFalse);
       }
       final renderer = tester.widget<ArcRaidIntelligenceMapRenderer>(
         find.byType(ArcRaidIntelligenceMapRenderer),
@@ -83,6 +81,30 @@ void main() {
       await tester.pump(const Duration(milliseconds: 500));
     });
   }
+  testWidgets(
+    'wide landscape moves intelligence family navigation into the app bar',
+    (tester) async {
+      tester.view.physicalSize = const Size(1360, 600);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(MaterialApp(home: screen()));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(find.byKey(const Key('raid-inline-workspaces')), findsOneWidget);
+      expect(find.text('COMMUNITY'), findsOneWidget);
+      expect(find.text('EXPLORER'), findsOneWidget);
+      expect(find.text('PLANNER'), findsOneWidget);
+      expect(find.byKey(const Key('map-route-strip')), findsNothing);
+      expect(tester.takeException(), isNull);
+
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(milliseconds: 500));
+    },
+  );
+
   testWidgets('map stream failure remains explicit with map usable and retry', (
     tester,
   ) async {

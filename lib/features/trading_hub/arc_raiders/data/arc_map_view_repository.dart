@@ -58,8 +58,8 @@ class ArcMapViewSnapshot {
 class ArcMapViewRepository {
   const ArcMapViewRepository();
 
-  static const String _lastSelectionKey = 'arc_raid_map_view_last_selection_v1';
-  static const String _snapshotPrefix = 'arc_raid_map_view_snapshot_v1';
+  static const String _lastSelectionKey = 'arc_raid_map_view_last_selection_v2';
+  static const String _snapshotPrefix = 'arc_raid_map_view_snapshot_v2';
 
   Future<ArcMapViewSnapshot?> loadLast() async {
     final preferences = await SharedPreferences.getInstance();
