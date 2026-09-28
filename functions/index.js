@@ -942,6 +942,11 @@ async function handleCheckoutCompleted(session) {
     return;
   }
 
+  if (plan.kind === 'gift') {
+    await issuePremiumGift({ uid, plan, session });
+    return;
+  }
+
   if (plan.kind === 'supporter') {
     await writeSupporterEntitlement({
       uid,
@@ -953,7 +958,13 @@ async function handleCheckoutCompleted(session) {
     return;
   }
 
-  await db.collection('users').doc(uid).set({
+  await recordOwnerCampaignRedemption({ uid, plan, session });
+
+  const userRef = db.collection('users').doc(uid);
+  const userSnap = await userRef.get();
+  const existing = userSnap.data() || {};
+  const existingMonetisation = existing.monetisation || {};
+  const paidPatch = {
     monetisation: {
       tier: plan.tier,
       subscriptionStatus: 'active',
@@ -965,11 +976,19 @@ async function handleCheckoutCompleted(session) {
       commercialOfferId: plan.offerId || null,
       founderRateActive: plan.offerAudience === 'founder',
       betaRateActive: plan.offerAudience === 'beta',
+      hasEverPaid: true,
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     },
     tier: plan.tier,
     subscriptionStatus: 'active',
-  }, { merge: true });
+    hasEverPaid: true,
+  };
+  if (!existingMonetisation.firstPaidAt && !existing.firstPaidAt) {
+    paidPatch.monetisation.firstPaidAt =
+      admin.firestore.FieldValue.serverTimestamp();
+    paidPatch.firstPaidAt = admin.firestore.FieldValue.serverTimestamp();
+  }
+  await userRef.set(paidPatch, { merge: true });
 }
 
 async function handleSubscriptionUpdated(subscription) {
