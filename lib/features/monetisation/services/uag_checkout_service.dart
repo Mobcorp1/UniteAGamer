@@ -15,6 +15,16 @@ class UagCheckoutException implements Exception {
   String toString() => message;
 }
 
+class UagGiftRedemptionResult {
+  const UagGiftRedemptionResult({
+    required this.alreadyRedeemed,
+    this.expiresAt,
+  });
+
+  final bool alreadyRedeemed;
+  final DateTime? expiresAt;
+}
+
 class UagCheckoutService {
   UagCheckoutService({FirebaseAuth? auth, http.Client? client})
     : _auth = auth ?? FirebaseAuth.instance,
@@ -32,19 +42,11 @@ class UagCheckoutService {
       throw const UagCheckoutException('Sign in before starting checkout.');
     }
 
-    final idToken = await user.getIdToken();
-    if (idToken == null || idToken.isEmpty) {
-      throw const UagCheckoutException(
-        'Your sign-in session could not be verified. Sign in again and retry.',
-      );
-    }
+    final idToken = await _verifiedIdToken(user);
 
     final response = await _client.post(
       _functionUri('createUagCheckoutSession'),
-      headers: <String, String>{
-        'Authorization': 'Bearer $idToken',
-        'Content-Type': 'application/json',
-      },
+      headers: _headers(idToken),
       body: jsonEncode(<String, dynamic>{
         'planId': planId,
         if (referralCode != null && referralCode.trim().isNotEmpty)
@@ -54,21 +56,12 @@ class UagCheckoutService {
       }),
     );
 
-    Map<String, dynamic> payload = const <String, dynamic>{};
-    try {
-      final decoded = jsonDecode(response.body);
-      if (decoded is Map) payload = Map<String, dynamic>.from(decoded);
-    } catch (_) {
-      payload = const <String, dynamic>{};
-    }
-
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw UagCheckoutException(
-        payload['error']?.toString().trim().isNotEmpty == true
-            ? payload['error'].toString()
-            : 'Checkout could not be started. Try again.',
-      );
-    }
+    final payload = _decodePayload(response);
+    _throwForFailure(
+      response,
+      payload,
+      fallback: 'Checkout could not be started. Try again.',
+    );
 
     final checkoutUrl = payload['checkoutUrl']?.toString().trim() ?? '';
     final uri = Uri.tryParse(checkoutUrl);
@@ -90,42 +83,54 @@ class UagCheckoutService {
     }
   }
 
+  Future<UagGiftRedemptionResult> redeemGift(String rawCode) async {
+    final code = rawCode.trim();
+    if (code.isEmpty) {
+      throw const UagCheckoutException('Enter a UAG gift code.');
+    }
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw const UagCheckoutException('Sign in before redeeming a gift.');
+    }
+    final idToken = await _verifiedIdToken(user);
+
+    final response = await _client.post(
+      _functionUri('redeemUagGift'),
+      headers: _headers(idToken),
+      body: jsonEncode(<String, dynamic>{'code': code}),
+    );
+    final payload = _decodePayload(response);
+    _throwForFailure(
+      response,
+      payload,
+      fallback: 'Gift could not be redeemed. Try again.',
+    );
+
+    return UagGiftRedemptionResult(
+      alreadyRedeemed: payload['alreadyRedeemed'] == true,
+      expiresAt: DateTime.tryParse(payload['expiresAt']?.toString() ?? ''),
+    );
+  }
+
   Future<void> openCustomerPortal() async {
     final user = _auth.currentUser;
     if (user == null) {
       throw const UagCheckoutException('Sign in before managing billing.');
     }
-    final idToken = await user.getIdToken();
-    if (idToken == null || idToken.isEmpty) {
-      throw const UagCheckoutException(
-        'Your sign-in session could not be verified. Sign in again and retry.',
-      );
-    }
+    final idToken = await _verifiedIdToken(user);
 
     final response = await _client.post(
       _functionUri('createUagCustomerPortalSession'),
-      headers: <String, String>{
-        'Authorization': 'Bearer $idToken',
-        'Content-Type': 'application/json',
-      },
+      headers: _headers(idToken),
       body: jsonEncode(<String, dynamic>{'returnUrl': _returnUri().toString()}),
     );
 
-    Map<String, dynamic> payload = const <String, dynamic>{};
-    try {
-      final decoded = jsonDecode(response.body);
-      if (decoded is Map) payload = Map<String, dynamic>.from(decoded);
-    } catch (_) {
-      payload = const <String, dynamic>{};
-    }
-
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw UagCheckoutException(
-        payload['error']?.toString().trim().isNotEmpty == true
-            ? payload['error'].toString()
-            : 'Subscription management could not be opened. Try again.',
-      );
-    }
+    final payload = _decodePayload(response);
+    _throwForFailure(
+      response,
+      payload,
+      fallback: 'Subscription management could not be opened. Try again.',
+    );
 
     final portalUrl = payload['portalUrl']?.toString().trim() ?? '';
     final uri = Uri.tryParse(portalUrl);
@@ -146,6 +151,39 @@ class UagCheckoutService {
         'Could not open subscription management.',
       );
     }
+  }
+
+  Future<String> _verifiedIdToken(User user) async {
+    final idToken = await user.getIdToken();
+    if (idToken == null || idToken.isEmpty) {
+      throw const UagCheckoutException(
+        'Your sign-in session could not be verified. Sign in again and retry.',
+      );
+    }
+    return idToken;
+  }
+
+  Map<String, String> _headers(String idToken) => <String, String>{
+    'Authorization': 'Bearer $idToken',
+    'Content-Type': 'application/json',
+  };
+
+  Map<String, dynamic> _decodePayload(http.Response response) {
+    try {
+      final decoded = jsonDecode(response.body);
+      if (decoded is Map) return Map<String, dynamic>.from(decoded);
+    } catch (_) {}
+    return const <String, dynamic>{};
+  }
+
+  void _throwForFailure(
+    http.Response response,
+    Map<String, dynamic> payload, {
+    required String fallback,
+  }) {
+    if (response.statusCode >= 200 && response.statusCode < 300) return;
+    final message = payload['error']?.toString().trim() ?? '';
+    throw UagCheckoutException(message.isNotEmpty ? message : fallback);
   }
 
   Uri _functionUri(String functionName) {
