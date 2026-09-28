@@ -1405,6 +1405,10 @@ async function handleInvoicePaid(invoice) {
   const referralOwnerUid = subscription.metadata?.referralOwnerUid || '';
   const referralCode = subscription.metadata?.referralCode || '';
   const referralSource = subscription.metadata?.referralSource || '';
+  const commissionMetadata = subscription.metadata?.commissionEligible;
+  const commissionEligible = commissionMetadata == null || commissionMetadata === ''
+    ? Boolean(referralOwnerUid)
+    : truthy(commissionMetadata);
   const eligibleNetAmountPence = eligibleNetSubscriptionRevenuePence(
     invoice,
     grossPence,
@@ -1435,12 +1439,14 @@ async function handleInvoicePaid(invoice) {
     }
   }
 
-  const creatorCommissionRatePercent = referralOwnerUid
+  const creatorCommissionRatePercent =
+    referralOwnerUid && commissionEligible
     ? referralSource === 'uag_community_referral'
       ? await authoritativeCommunityCommissionRate(referralOwnerUid)
       : await authoritativeCreatorCommissionRate(referralOwnerUid)
     : 0;
-  const referralCommissionPence = referralOwnerUid
+  const referralCommissionPence =
+    referralOwnerUid && commissionEligible
     ? Math.round(eligibleNetAmountPence * (creatorCommissionRatePercent / 100))
     : 0;
 
@@ -1470,6 +1476,7 @@ async function handleInvoicePaid(invoice) {
       referralOwnerUid: referralOwnerUid || null,
       referralCode: referralCode || null,
       referralSource: referralSource || null,
+      commissionEligible,
       stripeInvoiceId: invoice.id,
       stripeSubscriptionId: subscriptionId,
       stripePaymentIntentId: normalizeString(invoice.payment_intent) || null,
@@ -1654,12 +1661,13 @@ async function syncCommunityPaidReferralSubscription({
 
 function creatorBaseCommissionRate(points) {
   const value = Number(points || 0);
-  if (value >= 60) return 20;
-  if (value >= 40) return 17.5;
-  if (value >= 25) return 15;
-  if (value >= 15) return 12.5;
-  if (value >= 8) return 10;
-  if (value >= 1) return 7.5;
+  if (value >= 100) return 20;
+  if (value >= 60) return 17.5;
+  if (value >= 40) return 15;
+  if (value >= 25) return 12.5;
+  if (value >= 15) return 10;
+  if (value >= 8) return 7.5;
+  if (value >= 1) return 5;
   return 0;
 }
 
