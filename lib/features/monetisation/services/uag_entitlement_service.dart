@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/uag_ad_policy.dart';
+import '../models/uag_commercial_economy.dart';
 import '../models/uag_entitlement_test_mode.dart';
 import '../models/uag_plan_limits.dart';
 import '../models/uag_premium_pass_entitlement.dart';
@@ -164,11 +165,12 @@ class UagEntitlementService {
       );
     }
 
+    final periodKey = _periodKeyForAction(action);
     final usageDoc = await _firestore
         .collection('users')
         .doc(entitlement.uid)
         .collection('usage_counters')
-        .doc(_currentWeekKey())
+        .doc(periodKey)
         .get();
     final used = (usageDoc.data()?[action.usageKey] as num?)?.toInt() ?? 0;
     final allowed = used < limit;
@@ -180,7 +182,7 @@ class UagEntitlementService {
       tier: entitlement.effectiveTier,
       reason: allowed
           ? null
-          : '${action.label} limit reached for ${entitlement.effectiveTier.publicName}.',
+          : '${action.label} ${UagCommercialEconomy.allowancePeriodLabel(action)} limit reached for ${entitlement.effectiveTier.publicName}.',
     );
   }
 
@@ -200,11 +202,13 @@ class UagEntitlementService {
       );
     }
 
+    final periodKey = _periodKeyForAction(action);
+    final periodType = UagCommercialEconomy.allowancePeriodLabel(action);
     final docRef = _firestore
         .collection('users')
         .doc(currentUid)
         .collection('usage_counters')
-        .doc(_currentWeekKey());
+        .doc(periodKey);
 
     return _firestore.runTransaction((transaction) async {
       final snapshot = await transaction.get(docRef);
@@ -218,14 +222,14 @@ class UagEntitlementService {
           limit: limit,
           tier: entitlement.effectiveTier,
           reason:
-              '${action.label} limit reached for ${entitlement.effectiveTier.publicName}.',
+              '${action.label} $periodType limit reached for ${entitlement.effectiveTier.publicName}.',
         );
       }
 
       transaction.set(docRef, {
         'uid': currentUid,
-        'periodKey': _currentWeekKey(),
-        'periodType': 'weekly',
+        'periodKey': periodKey,
+        'periodType': periodType,
         action.usageKey: FieldValue.increment(1),
         'updatedAt': FieldValue.serverTimestamp(),
         'createdAt': snapshot.exists
@@ -304,6 +308,16 @@ class UagEntitlementService {
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
+  }
+
+  String _periodKeyForAction(UagBillableAction action) =>
+      UagCommercialEconomy.usesMonthlyAllowance(action)
+      ? _currentMonthKey()
+      : _currentWeekKey();
+
+  String _currentMonthKey() {
+    final now = DateTime.now().toUtc();
+    return '${now.year}-M${now.month.toString().padLeft(2, '0')}';
   }
 
   String _currentWeekKey() {
