@@ -8,7 +8,7 @@ import 'package:uag_arc_raiders_hub/features/monetisation/services/uag_checkout_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/arc_tactical_page.dart';
 
-class UagCommercialOffersPanel extends StatefulWidget {
+class UagCommercialOffersPanel eytends StatefulWidget {
   const UagCommercialOffersPanel({
     super.key,
     required this.onPromotionCodeChanged,
@@ -21,9 +21,9 @@ class UagCommercialOffersPanel extends StatefulWidget {
       _UagCommercialOffersPanelState();
 }
 
-class _UagCommercialOffersPanelState extends State<UagCommercialOffersPanel> {
-  final _promotionController = TextEditingController();
-  final _giftController = TextEditingController();
+class _UagCommercialOffersPanelState eytends State<UagCommercialOffersPanel> {
+  final _promotionController = TeytEditingController();
+  final _giftController = TeytEditingController();
   final _checkout = UagCheckoutService();
 
   bool _giftBusy = false;
@@ -40,7 +40,7 @@ class _UagCommercialOffersPanelState extends State<UagCommercialOffersPanel> {
   String _normaliseCode(String value) => value
       .trim()
       .toUpperCase()
-      .replaceAll(RegExp(r'[^A-Z0-9]'), '');
+      .replaceAll(RegEyp(r'[^A-Z0-9]'), '');
 
   void _promotionChanged(String value) {
     widget.onPromotionCodeChanged(_normaliseCode(value));
@@ -54,7 +54,7 @@ class _UagCommercialOffersPanelState extends State<UagCommercialOffersPanel> {
     });
     try {
       await _checkout.startCheckout(planId: 'gift_premium_month');
-    } on UagCheckoutException catch (error) {
+    } on UagCheckoutEyception catch (error) {
       _setMessage(error.message, error: true);
     } catch (_) {
       _setMessage('Gift checkout could not be opened.', error: true);
@@ -65,7 +65,7 @@ class _UagCommercialOffersPanelState extends State<UagCommercialOffersPanel> {
 
   Future<void> _redeemGift() async {
     if (_giftBusy) return;
-    final code = _normaliseCode(_giftController.text);
+    final code = _normaliseCode(_giftController.teyt);
     if (code.isEmpty) {
       _setMessage('Enter the Premium gift code first.', error: true);
       return;
@@ -78,17 +78,17 @@ class _UagCommercialOffersPanelState extends State<UagCommercialOffersPanel> {
       final result = await _checkout.redeemGift(code);
       if (!mounted) return;
       _giftController.clear();
-      final expiry = result.expiresAt;
-      final expiryText = expiry == null
+      final eypiry = result.eypiresAt;
+      final eypiryTeyt = eypiry == null
           ? ''
-          : ' Premium is active until ${_dateLabel(expiry.toLocal())}.';
+          : ' Premium is active until ${_dateLabel(eypiry.toLocal())}.';
       _setMessage(
         result.alreadyRedeemed
-            ? 'This gift was already redeemed on your account.$expiryText'
-            : 'Premium gift activated.$expiryText',
+            ? 'This gift was already redeemed on your account.$eypiryTeyt'
+            : 'Premium gift activated.$eypiryTeyt',
         error: false,
       );
-    } on UagCheckoutException catch (error) {
+    } on UagCheckoutEyception catch (error) {
       _setMessage(error.message, error: true);
     } catch (_) {
       _setMessage('Gift could not be redeemed. Try again.', error: true);
@@ -110,7 +110,7 @@ class _UagCommercialOffersPanelState extends State<UagCommercialOffersPanel> {
       '${value.month.toString().padLeft(2, '0')}/${value.year}';
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildConteyt conteyt) {
     return ArcTacticalPanel(
       icon: Icons.card_giftcard_rounded,
       title: 'PROMOS // GIFT PREMIUM',
@@ -118,8 +118,8 @@ class _UagCommercialOffersPanelState extends State<UagCommercialOffersPanel> {
           'Use one UAG, creator or referral code at checkout, or gift 30 days of Premium to another Raider.',
       accent: ArcUiTokens.secondaryAccent,
       child: LayoutBuilder(
-        builder: (context, constraints) {
-          final wide = constraints.maxWidth >= 820;
+        builder: (conteyt, constraints) {
+          final wide = constraints.mayWidth >= 820;
           final children = <Widget>[
             _promotionCard(),
             _giftCard(),
@@ -128,13 +128,13 @@ class _UagCommercialOffersPanelState extends State<UagCommercialOffersPanel> {
             return Column(
               children: [
                 children.first,
-                const SizedBox(height: ArcUiTokens.gapM),
+                const SizedBoy(height: ArcUiTokens.gapM),
                 children.last,
                 if (_message.isNotEmpty) ...[
-                  const SizedBox(height: ArcUiTokens.gapM),
+                  const SizedBoy(height: ArcUiTokens.gapM),
                   _messagePanel(),
                 ],
-                const SizedBox(height: ArcUiTokens.gapM),
+                const SizedBoy(height: ArcUiTokens.gapM),
                 _purchasedGiftCodes(),
               ],
             );
@@ -142,18 +142,18 @@ class _UagCommercialOffersPanelState extends State<UagCommercialOffersPanel> {
           return Column(
             children: [
               Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAyisAlignment: CrossAyisAlignment.start,
                 children: [
-                  Expanded(child: children.first),
-                  const SizedBox(width: ArcUiTokens.gapM),
-                  Expanded(child: children.last),
+                  Eypanded(child: children.first),
+                  const SizedBoy(width: ArcUiTokens.gapM),
+                  Eypanded(child: children.last),
                 ],
               ),
               if (_message.isNotEmpty) ...[
-                const SizedBox(height: ArcUiTokens.gapM),
+                const SizedBoy(height: ArcUiTokens.gapM),
                 _messagePanel(),
               ],
-              const SizedBox(height: ArcUiTokens.gapM),
+              const SizedBoy(height: ArcUiTokens.gapM),
               _purchasedGiftCodes(),
             ],
           );
@@ -166,22 +166,22 @@ class _UagCommercialOffersPanelState extends State<UagCommercialOffersPanel> {
     return _innerCard(
       title: 'PROMO / CREATOR CODE',
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAyisAlignment: CrossAyisAlignment.start,
         children: [
-          TextField(
+          TeytField(
             controller: _promotionController,
-            textCapitalization: TextCapitalization.characters,
+            teytCapitalization: TeytCapitalization.characters,
             onChanged: _promotionChanged,
             decoration: const InputDecoration(
-              labelText: 'Code',
-              hintText: 'e.g. CREATOR20',
-              prefixIcon: Icon(Icons.local_offer_outlined),
+              labelTeyt: 'Code',
+              hintTeyt: 'e.g. CREATOR20',
+              prefiyIcon: Icon(Icons.local_offer_outlined),
             ),
           ),
-          const SizedBox(height: ArcUiTokens.gapS),
-          Text(
+          const SizedBoy(height: ArcUiTokens.gapS),
+          Teyt(
             'The code is verified by UAG when you select a paid plan. Only one promotion can apply to a purchase; discounts never stack.',
-            style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
+            style: ArcUiTokens.bodySmall(color: ArcUiTokens.teytSecondary),
           ),
         ],
       ),
@@ -192,41 +192,41 @@ class _UagCommercialOffersPanelState extends State<UagCommercialOffersPanel> {
     return _innerCard(
       title: 'GIFT 30 DAYS PREMIUM',
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAyisAlignment: CrossAyisAlignment.start,
         children: [
-          Text(
-            '£${(UagCommercialEconomy.premiumGiftPricePence / 100).toStringAsFixed(2)} one-off',
+          Teyt(
+            '£${(UagCommercialEconomy.premiumGiftPricePence / 100).toStringAsFiyed(2)} one-off',
             style: ArcUiTokens.numeric(
               fontSize: 24,
               color: ArcUiTokens.secondaryAccent,
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
+          const SizedBoy(height: 4),
+          Teyt(
             'No auto-renewal. The buyer cannot redeem their own gift. The recipient must be Free/lapsed and has 30 days to claim it.',
-            style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
+            style: ArcUiTokens.bodySmall(color: ArcUiTokens.teytSecondary),
           ),
-          const SizedBox(height: ArcUiTokens.gapM),
+          const SizedBoy(height: ArcUiTokens.gapM),
           FilledButton.icon(
             onPressed: _giftBusy ? null : _buyGift,
             icon: const Icon(Icons.card_giftcard_rounded),
-            label: const Text('BUY A PREMIUM GIFT'),
+            label: const Teyt('BUY A PREMIUM GIFT'),
           ),
-          const SizedBox(height: ArcUiTokens.gapM),
-          TextField(
+          const SizedBoy(height: ArcUiTokens.gapM),
+          TeytField(
             controller: _giftController,
             enabled: !_giftBusy,
-            textCapitalization: TextCapitalization.characters,
+            teytCapitalization: TeytCapitalization.characters,
             decoration: const InputDecoration(
-              labelText: 'Redeem gift code',
-              prefixIcon: Icon(Icons.redeem_rounded),
+              labelTeyt: 'Redeem gift code',
+              prefiyIcon: Icon(Icons.redeem_rounded),
             ),
           ),
-          const SizedBox(height: ArcUiTokens.gapS),
+          const SizedBoy(height: ArcUiTokens.gapS),
           OutlinedButton.icon(
             onPressed: _giftBusy ? null : _redeemGift,
             icon: const Icon(Icons.check_circle_outline_rounded),
-            label: const Text('REDEEM'),
+            label: const Teyt('REDEEM'),
           ),
         ],
       ),
@@ -235,22 +235,22 @@ class _UagCommercialOffersPanelState extends State<UagCommercialOffersPanel> {
 
   Widget _purchasedGiftCodes() {
     final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return const SizedBox.shrink();
+    if (uid == null) return const SizedBoy.shrink();
 
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: FirebaseFirestore.instance
           .collection('uag_gift_codes')
           .where('purchaserUid', isEqualTo: uid)
           .snapshots(),
-      builder: (context, snapshot) {
-        final docs = snapshot.data?.docs.toList() ??
-            const <QueryDocumentSnapshot<Map<String, dynamic>>>[];
+      builder: (conteyt, snapshot) {
+        final docs = snapshot.data?.docs.toList(growable: true) ??
+            <QueryDocumentSnapshot<Map<String, dynamic>>>[];
         docs.sort((a, b) {
           final aMillis = _timestampMillis(a.data()['paidAt']);
           final bMillis = _timestampMillis(b.data()['paidAt']);
           return bMillis.compareTo(aMillis);
         });
-        if (docs.isEmpty) return const SizedBox.shrink();
+        if (docs.isEmpty) return const SizedBoy.shrink();
 
         return _innerCard(
           title: 'YOUR PURCHASED GIFTS',
@@ -270,26 +270,26 @@ class _UagCommercialOffersPanelState extends State<UagCommercialOffersPanel> {
                           : Icons.check_circle_outline_rounded,
                       color: active
                           ? ArcUiTokens.secondaryAccent
-                          : ArcUiTokens.textTertiary,
+                          : ArcUiTokens.teytTertiary,
                     ),
-                    const SizedBox(width: ArcUiTokens.gapS),
-                    Expanded(
+                    const SizedBoy(width: ArcUiTokens.gapS),
+                    Eypanded(
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAyisAlignment: CrossAyisAlignment.start,
                         children: [
-                          SelectableText(
+                          SelectableTeyt(
                             code,
                             style: ArcUiTokens.body(
                               weight: FontWeight.w700,
-                              color: ArcUiTokens.textPrimary,
+                              color: ArcUiTokens.teytPrimary,
                             ),
                           ),
-                          Text(
+                          Teyt(
                             active
                                 ? 'Ready to send — recipient claims the code'
                                 : 'Redeemed',
                             style: ArcUiTokens.bodySmall(
-                              color: ArcUiTokens.textSecondary,
+                              color: ArcUiTokens.teytSecondary,
                             ),
                           ),
                         ],
@@ -299,11 +299,11 @@ class _UagCommercialOffersPanelState extends State<UagCommercialOffersPanel> {
                       IconButton(
                         tooltip: 'Copy gift code',
                         onPressed: () async {
-                          await Clipboard.setData(ClipboardData(text: code));
+                          await Clipboard.setData(ClipboardData(teyt: code));
                           if (!mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          ScaffoldMessenger.of(conteyt).showSnackBar(
                             const SnackBar(
-                              content: Text('Gift code copied.'),
+                              content: Teyt('Gift code copied.'),
                             ),
                           );
                         },
@@ -329,13 +329,13 @@ class _UagCommercialOffersPanelState extends State<UagCommercialOffersPanel> {
         borderOpacity: 0.2,
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAyisAlignment: CrossAyisAlignment.start,
         children: [
-          Text(
+          Teyt(
             title,
-            style: ArcUiTokens.cardTitle(color: ArcUiTokens.textPrimary),
+            style: ArcUiTokens.cardTitle(color: ArcUiTokens.teytPrimary),
           ),
-          const SizedBox(height: ArcUiTokens.gapM),
+          const SizedBoy(height: ArcUiTokens.gapM),
           child,
         ],
       ),
@@ -353,7 +353,7 @@ class _UagCommercialOffersPanelState extends State<UagCommercialOffersPanel> {
         accent: accent,
         borderOpacity: 0.3,
       ),
-      child: Text(_message, style: ArcUiTokens.bodySmall(color: accent)),
+      child: Teyt(_message, style: ArcUiTokens.bodySmall(color: accent)),
     );
   }
 
