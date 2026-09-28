@@ -100,17 +100,17 @@ void main() {
       expect(mapImage, findsOneWidget);
 
       final imageSize = tester.getSize(mapImage);
+      final viewerRect = tester.getRect(find.byType(InteractiveViewer));
       expect(
         imageSize.aspectRatio,
         closeTo(2048 / 1740, 0.01),
         reason:
             'The game map must keep its native aspect ratio instead of stretching across a wide landscape viewport.',
       );
-      expect(imageSize.width, lessThan(1100));
-      expect(imageSize.height, closeTo(280, 0.01));
+      expect(imageSize.width, closeTo(viewerRect.width, 0.5));
+      expect(imageSize.height, greaterThan(viewerRect.height));
 
       final imageRect = tester.getRect(mapImage);
-      final viewerRect = tester.getRect(find.byType(InteractiveViewer));
       expect(imageRect.center.dx, closeTo(viewerRect.center.dx, 0.5));
       expect(imageRect.center.dy, closeTo(viewerRect.center.dy, 0.5));
 

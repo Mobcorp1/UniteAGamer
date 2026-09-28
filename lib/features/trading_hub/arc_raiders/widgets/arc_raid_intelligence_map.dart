@@ -73,7 +73,12 @@ class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
                   trackpadScrollCausesScale: true,
                   child: SizedBox.fromSize(
                     size: viewportSize,
-                    child: Center(
+                    child: OverflowBox(
+                      alignment: Alignment.center,
+                      minWidth: 0,
+                      minHeight: 0,
+                      maxWidth: double.infinity,
+                      maxHeight: double.infinity,
                       child: GestureDetector(
                         behavior: HitTestBehavior.opaque,
                         onDoubleTap: () => _doubleTapZoom(mapSize),
@@ -293,10 +298,11 @@ class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
     final aspectRatio = width != null && height != null && height > 0
         ? width / height
         : 1.25;
-    final viewportRatio = viewportSize.width / viewportSize.height;
-    if (viewportRatio > aspectRatio) {
-      return Size(viewportSize.height * aspectRatio, viewportSize.height);
-    }
+
+    // Width-first fit: the map always uses the available screen width while
+    // preserving the image's native aspect ratio. On short landscape screens
+    // the excess height is clipped by the viewport rather than distorting the
+    // image, and markers/routes remain on the exact same map-sized canvas.
     return Size(viewportSize.width, viewportSize.width / aspectRatio);
   }
 

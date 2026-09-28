@@ -268,8 +268,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   @override
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
-    final inlineWorkspace =
-        media.orientation == Orientation.landscape && media.size.width >= 1100;
+    final inlineWorkspace = media.orientation == Orientation.landscape;
 
     return Scaffold(
       drawer: const AppDrawer(),
@@ -348,6 +347,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
 
   Widget _inlineWorkspaceNavigation() {
     const workspaces = <ArcIntelligenceWorkspace>[
+      ArcIntelligenceWorkspace.raidMap,
       ArcIntelligenceWorkspace.community,
       ArcIntelligenceWorkspace.explorer,
       ArcIntelligenceWorkspace.planner,
@@ -365,21 +365,34 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   }
 
   Widget _inlineWorkspaceButton(ArcIntelligenceWorkspace workspace) {
+    final selected = workspace == ArcIntelligenceWorkspace.raidMap;
+    final accent = selected
+        ? ArcUiTokens.primaryAccent
+        : ArcUiTokens.textSecondary;
     return OutlinedButton.icon(
       style: OutlinedButton.styleFrom(
         visualDensity: VisualDensity.compact,
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-        foregroundColor: ArcUiTokens.textSecondary,
+        minimumSize: const Size(0, 34),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+        foregroundColor: accent,
+        backgroundColor: selected
+            ? ArcUiTokens.primaryAccent.withValues(alpha: 0.12)
+            : Colors.transparent,
         side: BorderSide(
-          color: ArcUiTokens.textTertiary.withValues(alpha: 0.42),
+          color: selected
+              ? ArcUiTokens.primaryAccent.withValues(alpha: 0.72)
+              : ArcUiTokens.textTertiary.withValues(alpha: 0.42),
         ),
         shape: const StadiumBorder(),
       ),
-      onPressed: () => Navigator.of(context).pushNamed(workspace.routeName),
-      icon: Icon(workspace.icon, size: 15),
+      onPressed: selected
+          ? null
+          : () => Navigator.of(context).pushNamed(workspace.routeName),
+      icon: Icon(workspace.icon, size: 14, color: accent),
       label: Text(
         workspace.label.toUpperCase(),
-        style: ArcUiTokens.label(color: ArcUiTokens.textSecondary),
+        style: ArcUiTokens.label(color: accent),
       ),
     );
   }

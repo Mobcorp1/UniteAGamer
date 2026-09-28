@@ -84,7 +84,7 @@ void main() {
   testWidgets(
     'wide landscape moves intelligence family navigation into the app bar',
     (tester) async {
-      tester.view.physicalSize = const Size(1360, 600);
+      tester.view.physicalSize = const Size(740, 360);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
@@ -94,6 +94,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
 
       expect(find.byKey(const Key('raid-inline-workspaces')), findsOneWidget);
+      expect(find.text('RAID MAP'), findsOneWidget);
       expect(find.text('COMMUNITY'), findsOneWidget);
       expect(find.text('EXPLORER'), findsOneWidget);
       expect(find.text('PLANNER'), findsOneWidget);

@@ -17,6 +17,8 @@ void main() {
     expect(screen, contains('Positioned.fill(child: map)'));
     expect(screen, contains('if (!_controlPanelCollapsed)'));
     expect(screen, contains("Key('raid-inline-workspaces')"));
+    expect(screen, contains('media.orientation == Orientation.landscape'));
+    expect(screen, isNot(contains('media.size.width >= 1100')));
     expect(screen, isNot(contains('Widget _routeStrip(')));
     expect(screen, isNot(contains("Key('map-route-strip')")));
 
