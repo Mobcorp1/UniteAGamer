@@ -762,6 +762,173 @@ exports.uagStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripeWebhookS
   }
 });
 
+function newGiftCode() {
+  return `UAGGIFT${crypto.randomBytes(8).toString('hex').toUpperCase()}`;
+}
+
+async function issuePremiumGift({ uid, plan, session }) {
+  if (session.payment_status !== 'paid') return null;
+
+  const checkoutRef = db.collection('monetisation_checkout_sessions').doc(session.id);
+  const monthRef = db
+    .collection('uag_gift_sender_months')
+    .doc(`${uid}_${commercialMonthKey()}`);
+  const candidateCode = newGiftCode();
+  const giftRef = db.collection('uag_gift_codes').doc(candidateCode);
+  const eventRef = db.collection('monetisation_events').doc(`gift_${session.id}`);
+
+  return db.runTransaction(async (transaction) => {
+    const checkoutSnap = await transaction.get(checkoutRef);
+    const existingCode = normalizeCommercialCode(checkoutSnap.data()?.giftCode);
+    if (existingCode) return existingCode;
+
+    const giftSnap = await transaction.get(giftRef);
+    if (giftSnap.exists) {
+      throw new Error('Gift code collision. Retry webhook delivery.');
+    }
+    const monthSnap = await transaction.get(monthRef);
+    const nowMillis = Date.now();
+    const paidAt = admin.firestore.Timestamp.fromMillis(nowMillis);
+    const claimExpiresAt = admin.firestore.Timestamp.fromMillis(
+      giftClaimExpiryMillis(nowMillis),
+    );
+
+    transaction.set(giftRef, {
+      code: candidateCode,
+      purchaserUid: uid,
+      status: 'active',
+      paidPence: plan.pricePence,
+      tier: 'premium',
+      durationDays: COMMERCIAL_ECONOMY.gifts.durationDays,
+      stripeCheckoutSessionId: session.id,
+      stripePaymentIntentId: normalizeString(session.payment_intent) || null,
+      paidAt,
+      createdAt: paidAt,
+      claimExpiresAt,
+      recipientUid: null,
+      redeemedAt: null,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: false });
+
+    transaction.set(monthRef, {
+      uid,
+      monthKey: commercialMonthKey(),
+      completedPurchases: admin.firestore.FieldValue.increment(1),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAt: monthSnap.exists
+        ? monthSnap.data()?.createdAt || admin.firestore.FieldValue.serverTimestamp()
+        : admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+
+    transaction.set(checkoutRef, {
+      status: 'paid',
+      giftCode: candidateCode,
+      giftIssuedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+
+    transaction.set(eventRef, {
+      id: eventRef.id,
+      type: 'premium_gift_paid',
+      uid,
+      planId: 'gift_premium_month',
+      tier: 'premium',
+      grossPence: plan.pricePence,
+      stripeFeePence: estimateStripeFeePence(plan.pricePence),
+      stripeCheckoutSessionId: session.id,
+      stripePaymentIntentId: normalizeString(session.payment_intent) || null,
+      giftCode: candidateCode,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: false });
+
+    return candidateCode;
+  });
+}
+
+async function recordOwnerCampaignRedemption({ uid, plan, session }) {
+  const source = normalizeString(session.metadata?.referralSource);
+  const code = normalizeCommercialCode(session.metadata?.referralCode);
+  if (source !== 'uag_owner_campaign' || !code || plan.kind !== 'core') {
+    return;
+  }
+
+  const campaignRef = db.collection('uag_discount_campaigns').doc(code);
+  const claimRef = db.collection('uag_promotion_claims').doc(`${code}_${uid}`);
+  const existingClaim = await claimRef.get();
+
+  if (!existingClaim.exists) {
+    await db.runTransaction(async (transaction) => {
+      const [campaignSnap, claimSnap] = await Promise.all([
+        transaction.get(campaignRef),
+        transaction.get(claimRef),
+      ]);
+      if (claimSnap.exists) return;
+
+      const campaign = campaignSnap.data() || {};
+      transaction.set(claimRef, {
+        id: claimRef.id,
+        code,
+        uid,
+        planId: session.metadata?.planId || '',
+        status: 'redeemed',
+        preset: session.metadata?.promotionPreset || '',
+        nextRenewalFree: truthy(session.metadata?.nextRenewalFree),
+        stripeCheckoutSessionId: session.id,
+        stripeSubscriptionId: session.subscription || null,
+        redeemedAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: false });
+
+      if (campaignSnap.exists) {
+        transaction.set(campaignRef, {
+          redemptions: admin.firestore.FieldValue.increment(1),
+          lastRedeemedAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+      }
+    });
+  }
+
+  if (!truthy(session.metadata?.nextRenewalFree) || !session.subscription) {
+    return;
+  }
+
+  const refreshedClaim = await claimRef.get();
+  const claimData = refreshedClaim.data() || {};
+  if (truthy(claimData.nextRenewalApplied)) return;
+
+  const stripe = stripeClient();
+  let couponId = normalizeString(claimData.nextRenewalCouponId);
+  if (!couponId) {
+    const coupon = await stripe.coupons.create({
+      percent_off: 100,
+      duration: 'once',
+      name: `UAG next renewal free ${code}`,
+      metadata: {
+        uid,
+        code,
+        planId: session.metadata?.planId || '',
+        campaign: 'christmas_next_renewal_free',
+      },
+    });
+    couponId = coupon.id;
+    await claimRef.set({
+      nextRenewalCouponId: couponId,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+  }
+
+  await stripe.subscriptions.update(session.subscription, {
+    discounts: [{ coupon: couponId }],
+  });
+  await claimRef.set({
+    nextRenewalApplied: true,
+    nextRenewalAppliedAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  }, { merge: true });
+}
+
 async function handleCheckoutCompleted(session) {
   const uid = session.metadata?.uid || session.client_reference_id;
   if (!uid) return;
