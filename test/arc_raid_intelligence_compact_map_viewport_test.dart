@@ -20,5 +20,6 @@ void main() {
     expect(renderer, contains('height.clamp(1.0, 1100.0)'));
     expect(renderer, isNot(contains('height.clamp(360.0, 1100.0)')));
     expect(renderer, contains('width.clamp(1.0, 1800.0)'));
+    expect(renderer, contains('constrained: false'));
   });
 }

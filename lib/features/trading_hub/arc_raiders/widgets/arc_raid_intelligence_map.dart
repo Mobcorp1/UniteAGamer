@@ -62,6 +62,7 @@ class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
                 onPointerSignal: _handlePointerSignal,
                 child: InteractiveViewer(
                   transformationController: controller,
+                  constrained: false,
                   minScale: 0.75,
                   maxScale: 5,
                   boundaryMargin: const EdgeInsets.all(260),

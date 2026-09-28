@@ -58,6 +58,7 @@ void main() {
       find.byType(InteractiveViewer),
     );
     expect(viewer.trackpadScrollCausesScale, isTrue);
+    expect(viewer.constrained, isFalse);
     expect(viewer.minScale, 0.75);
     expect(viewer.maxScale, 5);
     expect(
@@ -66,6 +67,55 @@ void main() {
     );
     expect(find.byTooltip(RegExp(r'.+')), findsWidgets);
   });
+
+  testWidgets(
+    'wide landscape keeps map image and marker canvas on the same aspect ratio',
+    (tester) async {
+      final controller = TransformationController();
+      addTearDown(controller.dispose);
+      final state = const ArcRaidIntelligenceEngine().build(mapId: 'blue_gate');
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 1100,
+              height: 280,
+              child: ArcRaidIntelligenceMapRenderer(
+                state: state,
+                controller: controller,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final mapImage = find.byWidgetPredicate(
+        (widget) =>
+            widget is Image &&
+            widget.image is AssetImage &&
+            (widget.image as AssetImage).assetName ==
+                'assets/arc_raiders/maps/blue_gate/bluegate_master.webp',
+      );
+      expect(mapImage, findsOneWidget);
+
+      final imageSize = tester.getSize(mapImage);
+      expect(
+        imageSize.aspectRatio,
+        closeTo(2048 / 1740, 0.01),
+        reason:
+            'The game map must keep its native aspect ratio instead of stretching across a wide landscape viewport.',
+      );
+      expect(imageSize.width, lessThan(1100));
+      expect(imageSize.height, closeTo(280, 0.01));
+
+      final viewer = tester.widget<InteractiveViewer>(
+        find.byType(InteractiveViewer),
+      );
+      expect(viewer.constrained, isFalse);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('shared marker filter panel exposes global quick layers', (
     tester,
