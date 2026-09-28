@@ -666,7 +666,8 @@ exports.createUagCheckoutSession = onRequest({ secrets: [stripeSecretKey] }, asy
       success_url: safeCheckoutReturnUrl(successUrl),
       cancel_url: safeCheckoutReturnUrl(cancelUrl),
       client_reference_id: uid,
-      payment_method_types: oneTimePurchase ? ['card'] : ['card', 'bacs_debit'],
+      payment_method_types:
+        oneTimePurchase || referral ? ['card'] : ['card', 'bacs_debit'],
       metadata,
     };
     if (discounts.length) checkoutParams.discounts = discounts;
@@ -1139,9 +1140,26 @@ async function handleCheckoutCompleted(session) {
     return;
   }
 
+  const userRef = db.collection('users').doc(uid);
+
+  if (session.payment_status !== 'paid') {
+    await userRef.set({
+      monetisation: {
+        tier: 'free',
+        subscriptionStatus: 'pending_payment',
+        billingPeriod: plan.billingPeriod,
+        stripeCustomerId: session.customer || null,
+        stripeSubscriptionId: session.subscription || null,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      },
+      tier: 'free',
+      subscriptionStatus: 'pending_payment',
+    }, { merge: true });
+    return;
+  }
+
   await recordOwnerCampaignRedemption({ uid, plan, session });
 
-  const userRef = db.collection('users').doc(uid);
   const userSnap = await userRef.get();
   const existing = userSnap.data() || {};
   const existingMonetisation = existing.monetisation || {};
