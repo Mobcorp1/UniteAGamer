@@ -1,3 +1,4 @@
+import 'uag_commercial_economy.dart';
 import 'uag_match_intelligence_copy.dart';
 import 'uag_plan_limits.dart';
 import 'uag_subscription_tier.dart';
@@ -58,7 +59,8 @@ class UagSubscriptionPlan {
         'Core UAG Raider voice item advice',
         'Intel contribution stays unlimited',
         'Trade participation with 2 active listings and 5 daily offers',
-        '10 weekly trade actions, 10 Match Raider searches and 8 Intel hints',
+        '5 Trade actions and 5 Match Raider searches each month',
+        'Earn Raider Marks from optional rewarded ads for capped bonus actions',
         '3 priority targets and 2 saved raid plans',
         'Passive ads plus optional rewarded boosts only',
       ],
@@ -75,14 +77,14 @@ class UagSubscriptionPlan {
       shortName: 'Essential',
       positioning:
           'The regular-player tier: higher limits, cleaner experience, smart alerts and stronger voice tools.',
-      monthlyPricePence: 799,
-      yearlyPricePence: 6999,
+      monthlyPricePence: UagCommercialEconomy.essentialMonthlyPricePence,
+      yearlyPricePence: UagCommercialEconomy.essentialAnnualPricePence,
       creatorOnboardingDiscountPercent: 0,
       limits: UagPlanLimits.essential,
       features: [
         UagMatchIntelligenceCopy.essentialDescription,
         '10 active trade listings and 25 daily offers',
-        '50 weekly trade actions and 50 Match Raider searches',
+        '30 Trade actions and 30 Match Raider searches each month',
         '40 weekly Intel hints and 12 premium Intel unlocks',
         'Unlimited advanced voice commands',
         'Smart item, trade and session alerts',
@@ -103,8 +105,8 @@ class UagSubscriptionPlan {
       shortName: 'Premium',
       positioning:
           'The power-user tier: unlimited systems, no ads, Trader Pro analytics and full automation.',
-      monthlyPricePence: 999,
-      yearlyPricePence: 8999,
+      monthlyPricePence: UagCommercialEconomy.premiumMonthlyPricePence,
+      yearlyPricePence: UagCommercialEconomy.premiumAnnualPricePence,
       creatorOnboardingDiscountPercent: 0,
       limits: UagPlanLimits.premium,
       features: [
