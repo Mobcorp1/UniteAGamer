@@ -519,15 +519,33 @@ exports.createUagCheckoutSession = onRequest({ secrets: [stripeSecretKey] }, asy
     const userData = userSnap.data() || {};
     const creatorAttribution = creatorAttributionSnap.data() || {};
     const communityAttribution = communityAttributionSnap.data() || {};
+
     if (userData.ageVerification?.verifiedOver18 !== true) {
       res.status(403).json({
-        error: '18+ verification is required before starting a paid subscription.',
+        error: '18+ verification is required before starting checkout.',
       });
       return;
     }
     assertPlanEligibility(plan, userData, recognitionData);
 
-    let customerId = userData?.monetisation?.stripeCustomerId || userData.stripeCustomerId;
+    if (plan.kind === 'gift') {
+      const senderMonthRef = db
+        .collection('uag_gift_sender_months')
+        .doc(`${uid}_${commercialMonthKey()}`);
+      const senderMonthSnap = await senderMonthRef.get();
+      const completedPurchases = Number(
+        senderMonthSnap.data()?.completedPurchases || 0,
+      );
+      if (completedPurchases >= COMMERCIAL_ECONOMY.gifts.senderMonthlyCap) {
+        res.status(429).json({
+          error: 'Monthly Premium gift limit reached.',
+        });
+        return;
+      }
+    }
+
+    let customerId =
+      userData?.monetisation?.stripeCustomerId || userData.stripeCustomerId;
     const stripe = stripeClient();
 
     if (!customerId) {
@@ -551,7 +569,7 @@ exports.createUagCheckoutSession = onRequest({ secrets: [stripeSecretKey] }, asy
       userData.referredByCode ||
       '',
     ).trim();
-    const referral = await resolveReferral(effectiveReferralCode);
+
     const discounts = [];
     let creatorBenefitApplied = false;
 
@@ -574,23 +592,30 @@ exports.createUagCheckoutSession = onRequest({ secrets: [stripeSecretKey] }, asy
       }
     }
 
+    const referral =
+      plan.kind === 'core' && !creatorBenefitApplied && !plan.offerId
+        ? await resolveReferral(effectiveReferralCode, {
+            uid,
+            planId,
+            userData,
+          })
+        : null;
+
     if (
-      plan.kind === 'core' &&
-      !plan.offerId &&
-      !creatorBenefitApplied &&
       referral &&
-      referral.ownerUid !== uid &&
       referral.subscriberDiscountPercent > 0
     ) {
       const coupon = await stripe.coupons.create({
         percent_off: referral.subscriberDiscountPercent,
-        duration: referral.subscriberDiscountDuration,
+        duration: 'once',
         name: referral.source === 'uag_community_referral'
           ? `UAG Refer a Raider ${referral.code}`
-          : `UAG Creator Campaign ${referral.code}`,
+          : referral.source === 'uag_owner_campaign'
+            ? `UAG Owner Campaign ${referral.code}`
+            : `UAG Creator Campaign ${referral.code}`,
         metadata: {
           referralCode: referral.code,
-          ownerUid: referral.ownerUid,
+          ownerUid: referral.ownerUid || '',
           planId,
           source: referral.source,
         },
@@ -609,23 +634,28 @@ exports.createUagCheckoutSession = onRequest({ secrets: [stripeSecretKey] }, asy
       passType: plan.passType || '',
       pricePence: String(plan.pricePence),
       referralCode: referral?.code || '',
-      referralOwnerUid: referral && referral.ownerUid !== uid ? referral.ownerUid : '',
+      referralOwnerUid:
+        referral && referral.ownerUid !== uid ? referral.ownerUid : '',
       referralSource: referral?.source || '',
+      commissionEligible: referral?.commissionEligible === true ? 'true' : 'false',
+      nextRenewalFree: referral?.nextRenewalFree === true ? 'true' : 'false',
+      promotionPreset: referral?.promotionPreset || '',
       creatorBenefitApplied: creatorBenefitApplied ? 'true' : 'false',
     };
 
+    const oneTimePurchase = plan.kind === 'pass' || plan.kind === 'gift';
     const checkoutParams = {
       customer: customerId,
-      mode: plan.kind === 'pass' ? 'payment' : 'subscription',
+      mode: oneTimePurchase ? 'payment' : 'subscription',
       line_items: [checkoutLineItem(plan, planId, priceId)],
       success_url: safeCheckoutReturnUrl(successUrl),
       cancel_url: safeCheckoutReturnUrl(cancelUrl),
       client_reference_id: uid,
-      payment_method_types: plan.kind === 'pass' ? ['card'] : ['card', 'bacs_debit'],
+      payment_method_types: oneTimePurchase ? ['card'] : ['card', 'bacs_debit'],
       metadata,
     };
     if (discounts.length) checkoutParams.discounts = discounts;
-    if (plan.kind !== 'pass') {
+    if (!oneTimePurchase) {
       checkoutParams.subscription_data = { metadata };
     }
 
@@ -643,8 +673,12 @@ exports.createUagCheckoutSession = onRequest({ secrets: [stripeSecretKey] }, asy
       passType: plan.passType || null,
       pricePence: plan.pricePence,
       referralCode: referral?.code || null,
-      referralOwnerUid: referral && referral.ownerUid !== uid ? referral.ownerUid : null,
+      referralOwnerUid:
+        referral && referral.ownerUid !== uid ? referral.ownerUid : null,
       referralSource: referral?.source || null,
+      commissionEligible: referral?.commissionEligible === true,
+      nextRenewalFree: referral?.nextRenewalFree === true,
+      promotionPreset: referral?.promotionPreset || null,
       creatorBenefitApplied,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       status: session.status || 'created',
