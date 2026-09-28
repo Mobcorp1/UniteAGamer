@@ -8,6 +8,7 @@ import 'package:uag_arc_raiders_hub/features/monetisation/services/uag_entitleme
 import 'package:uag_arc_raiders_hub/features/monetisation/repositories/uag_monetisation_repository.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_impact_pots_panel.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_creator_admin_panel.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_creator_campaign_discount_admin_panel.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_commercial_campaign_admin_panel.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_creator_reward_admin_panel.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_creator_entitlement_bridge_admin_panel.dart';
@@ -160,6 +161,8 @@ class AdminMonetisationDashboard extends StatelessWidget {
         const _EntitlementTestModeCard(),
         const SizedBox(height: AppTheme.spaceL),
         const UagCommercialCampaignAdminPanel(),
+        const SizedBox(height: AppTheme.spaceL),
+        const UagCreatorCampaignDiscountAdminPanel(),
         const SizedBox(height: AppTheme.spaceL),
         const UagCreatorAdminPanel(),
         const SizedBox(height: AppTheme.spaceL),
