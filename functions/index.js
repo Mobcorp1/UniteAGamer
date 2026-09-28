@@ -723,6 +723,172 @@ exports.createUagCustomerPortalSession = onRequest({ secrets: [stripeSecretKey] 
   }
 });
 
+exports.redeemUagGift = onRequest(async (req, res) => {
+  try {
+    if (setCheckoutCors(req, res)) return;
+    if (req.method !== 'POST') {
+      res.status(405).send('Method not allowed');
+      return;
+    }
+
+    const authHeader = req.headers.authorization || '';
+    const idToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+    if (!idToken) {
+      res.status(401).json({ error: 'Sign in before redeeming a gift.' });
+      return;
+    }
+    const decoded = await admin.auth().verifyIdToken(idToken);
+    const uid = decoded.uid;
+    const code = normalizeCommercialCode(req.body?.code);
+    if (!code) {
+      res.status(400).json({ error: 'Enter a valid UAG gift code.' });
+      return;
+    }
+
+    const giftRef = db.collection('uag_gift_codes').doc(code);
+    const userRef = db.collection('users').doc(uid);
+    const historyRef = db.collection('uag_gift_recipient_history').doc(uid);
+    const eventRef = db.collection('monetisation_events').doc(`gift_redeemed_${code}`);
+
+    const result = await db.runTransaction(async (transaction) => {
+      const giftSnap = await transaction.get(giftRef);
+      if (!giftSnap.exists) {
+        const error = new Error('Gift code was not found.');
+        error.statusCode = 404;
+        throw error;
+      }
+      const gift = giftSnap.data() || {};
+      if (normalizeString(gift.status) === 'redeemed') {
+        if (normalizeString(gift.recipientUid) === uid) {
+          return {
+            alreadyRedeemed: true,
+            expiresAtMillis: commercialTimestampMillis(gift.entitlementExpiresAt),
+          };
+        }
+        const error = new Error('This gift has already been redeemed.');
+        error.statusCode = 409;
+        throw error;
+      }
+      if (normalizeString(gift.status) !== 'active') {
+        const error = new Error('This gift is not active.');
+        error.statusCode = 409;
+        throw error;
+      }
+
+      const nowMillis = Date.now();
+      const claimExpiry = commercialTimestampMillis(gift.claimExpiresAt);
+      if (!claimExpiry || claimExpiry <= nowMillis) {
+        const error = new Error('This gift code has expired.');
+        error.statusCode = 410;
+        throw error;
+      }
+
+      const [userSnap, historySnap] = await Promise.all([
+        transaction.get(userRef),
+        transaction.get(historyRef),
+      ]);
+      const userData = userSnap.data() || {};
+      const purchaserUid = normalizeString(gift.purchaserUid);
+      const core = activeCoreSubscription(userData);
+      const pass = currentPremiumPass(userData);
+      const passActive = commercialTimestampMillis(pass.expiresAt) > nowMillis;
+      const temporaryPremiumActive = activeTemporaryPremium(userData, nowMillis);
+      const lastRedeemedAtMillis = commercialTimestampMillis(
+        historySnap.data()?.lastRedeemedAt,
+      );
+
+      if (!giftRecipientEligible({
+        purchaserUid,
+        recipientUid: uid,
+        recipientHasActivePaidAccess:
+          core.active || passActive || temporaryPremiumActive,
+        lastRedeemedAtMillis,
+        nowMillis,
+      })) {
+        const error = new Error(
+          purchaserUid === uid
+            ? 'You cannot redeem a Premium gift that you bought yourself.'
+            : core.active || passActive || temporaryPremiumActive
+              ? 'Premium or paid access is already active on this account.'
+              : 'This account has already redeemed a discounted Premium gift in the last 12 months.',
+        );
+        error.statusCode = 409;
+        throw error;
+      }
+
+      const startedAt = admin.firestore.Timestamp.fromMillis(nowMillis);
+      const expiresAtMillis = giftEntitlementExpiryMillis(nowMillis);
+      const expiresAt = admin.firestore.Timestamp.fromMillis(expiresAtMillis);
+      const grantId = `gift_${code}`;
+
+      transaction.set(userRef, {
+        creatorRewardEntitlements: {
+          [grantId]: {
+            tier: 'premium',
+            startedAt,
+            expiresAt,
+            sourceCode: code,
+            sourceClaimPath: `uag_gift_codes/${code}`,
+            creatorUid: '',
+            rewardType: 'gift_premium_month',
+            purchaserUid,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          },
+        },
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+
+      transaction.set(giftRef, {
+        status: 'redeemed',
+        recipientUid: uid,
+        redeemedAt: startedAt,
+        entitlementExpiresAt: expiresAt,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+
+      transaction.set(historyRef, {
+        uid,
+        lastRedeemedAt: startedAt,
+        lastGiftCode: code,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdAt: historySnap.exists
+          ? historySnap.data()?.createdAt || startedAt
+          : startedAt,
+      }, { merge: true });
+
+      transaction.set(eventRef, {
+        id: eventRef.id,
+        type: 'premium_gift_redeemed',
+        uid,
+        purchaserUid,
+        giftCode: code,
+        tier: 'premium',
+        durationDays: COMMERCIAL_ECONOMY.gifts.durationDays,
+        entitlementExpiresAt: expiresAt,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: false });
+
+      return { alreadyRedeemed: false, expiresAtMillis };
+    });
+
+    res.status(200).json({
+      ok: true,
+      alreadyRedeemed: result.alreadyRedeemed,
+      expiresAt: result.expiresAtMillis
+        ? new Date(result.expiresAtMillis).toISOString()
+        : null,
+    });
+  } catch (error) {
+    console.error('UAG gift redemption failed', error);
+    const statusCode = Number(error?.statusCode || 500);
+    res.status(statusCode >= 400 && statusCode < 600 ? statusCode : 500).json({
+      error: statusCode >= 500
+        ? 'Gift redemption is unavailable right now. Please try again.'
+        : (error.message || 'Gift could not be redeemed.'),
+    });
+  }
+});
+
 exports.uagStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripeWebhookSecret] }, async (req, res) => {
   const stripe = stripeClient();
   let event;
