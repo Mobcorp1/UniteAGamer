@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'uag_commercial_economy.dart';
 import 'uag_match_intelligence_copy.dart';
 
 enum UagPlanTier { free, essential, premium }
@@ -104,8 +105,8 @@ class UagPlans {
     tier: UagPlanTier.free,
     monthlyPricePence: 0,
     yearlyPricePence: 0,
-    weeklyTrades: 10,
-    weeklyMatchSearches: 10,
+    weeklyTrades: UagCommercialEconomy.freeMonthlyTrades,
+    weeklyMatchSearches: UagCommercialEconomy.freeMonthlyMatchRaiderActions,
     weeklyIntelHints: 8,
     prioritySlots: 3,
     creatorDiscountPercent: 0,
@@ -118,8 +119,8 @@ class UagPlans {
       'Core UAG Raider voice item advice',
       'Unlimited Intel contribution',
       '2 active listings and 5 daily offers',
-      '10 weekly trade actions',
-      '10 weekly Match Raider searches',
+      '5 Trade actions each month',
+      '5 Match Raider searches each month',
       '8 weekly Intel hints and 3 priority targets',
       'No forced ads during voice assistant or active sessions',
     ],
@@ -127,10 +128,10 @@ class UagPlans {
 
   static const essential = UagPlanDefinition(
     tier: UagPlanTier.essential,
-    monthlyPricePence: 799,
-    yearlyPricePence: 6999,
-    weeklyTrades: 50,
-    weeklyMatchSearches: 50,
+    monthlyPricePence: UagCommercialEconomy.essentialMonthlyPricePence,
+    yearlyPricePence: UagCommercialEconomy.essentialAnnualPricePence,
+    weeklyTrades: UagCommercialEconomy.essentialMonthlyTrades,
+    weeklyMatchSearches: UagCommercialEconomy.essentialMonthlyMatchRaiderActions,
     weeklyIntelHints: 40,
     prioritySlots: 10,
     creatorDiscountPercent: 0,
@@ -140,7 +141,7 @@ class UagPlans {
     benefits: [
       UagMatchIntelligenceCopy.essentialDescription,
       '10 active trade listings and 25 daily offers',
-      '50 weekly trade actions and 50 Match Raider searches',
+      '30 Trade actions and 30 Match Raider searches each month',
       '40 weekly Intel hints and 12 premium Intel unlocks',
       'Unlimited advanced voice commands',
       'Smart trade, item and session alerts',
@@ -152,8 +153,8 @@ class UagPlans {
 
   static const premium = UagPlanDefinition(
     tier: UagPlanTier.premium,
-    monthlyPricePence: 999,
-    yearlyPricePence: 8999,
+    monthlyPricePence: UagCommercialEconomy.premiumMonthlyPricePence,
+    yearlyPricePence: UagCommercialEconomy.premiumAnnualPricePence,
     weeklyTrades: -1,
     weeklyMatchSearches: -1,
     weeklyIntelHints: -1,
