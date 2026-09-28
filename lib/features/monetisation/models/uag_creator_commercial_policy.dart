@@ -50,7 +50,7 @@ class UagCreatorCommercialPolicy {
 
   static const double essentialPoints = 1;
   static const double premiumPoints = 1.5;
-  static const int creatorPremiumPricePence = 799;
+  static const int creatorPremiumPricePence = 699;
   static const int commissionValidationDays = 30;
   static const int tierGraceDays = 30;
 
