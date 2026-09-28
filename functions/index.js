@@ -4,6 +4,19 @@ const { onRequest } = require('firebase-functions/v2/https');
 const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { defineSecret } = require('firebase-functions/params');
 const Stripe = require('stripe');
+const crypto = require('crypto');
+const {
+  COMMERCIAL_ECONOMY,
+  normalizeCode: normalizeCommercialCode,
+  creatorAcquisitionDiscountPercent,
+  creatorCommissionEligible,
+  ownerCampaignPolicy,
+  monthKey: commercialMonthKey,
+  giftClaimExpiryMillis,
+  giftEntitlementExpiryMillis,
+  giftRecipientEligible,
+  timestampMillis: commercialTimestampMillis,
+} = require('./uag_commercial_economy');
 
 admin.initializeApp();
 
@@ -17,8 +30,9 @@ const PLAN_CONFIG = {
     kind: 'core',
     tier: 'essential',
     billingPeriod: 'monthly',
-    pricePence: 799,
-    stripePriceEnv: 'STRIPE_PRICE_ESSENTIAL_MONTHLY',
+    pricePence: COMMERCIAL_ECONOMY.prices.essentialMonthlyPence,
+    inlinePrice: true,
+    checkoutLabel: 'UAG Essential Monthly',
     creatorDiscountPercent: 0,
     creatorCommissionPercent: 0,
     charityProfitPercent: 0,
@@ -28,7 +42,7 @@ const PLAN_CONFIG = {
     kind: 'core',
     tier: 'essential',
     billingPeriod: 'yearly',
-    pricePence: 6999,
+    pricePence: COMMERCIAL_ECONOMY.prices.essentialAnnualPence,
     inlinePrice: true,
     checkoutLabel: 'UAG Essential Annual',
     creatorDiscountPercent: 0,
@@ -40,8 +54,9 @@ const PLAN_CONFIG = {
     kind: 'core',
     tier: 'premium',
     billingPeriod: 'monthly',
-    pricePence: 999,
-    stripePriceEnv: 'STRIPE_PRICE_PREMIUM_MONTHLY',
+    pricePence: COMMERCIAL_ECONOMY.prices.premiumMonthlyPence,
+    inlinePrice: true,
+    checkoutLabel: 'UAG Premium Monthly',
     creatorDiscountPercent: 0,
     creatorCommissionPercent: 0,
     charityProfitPercent: 0,
@@ -51,7 +66,7 @@ const PLAN_CONFIG = {
     kind: 'core',
     tier: 'premium',
     billingPeriod: 'yearly',
-    pricePence: 8999,
+    pricePence: COMMERCIAL_ECONOMY.prices.premiumAnnualPence,
     inlinePrice: true,
     checkoutLabel: 'UAG Premium Annual',
     creatorDiscountPercent: 0,
@@ -91,7 +106,7 @@ const PLAN_CONFIG = {
     kind: 'core',
     tier: 'premium',
     billingPeriod: 'yearly',
-    pricePence: 2999,
+    pricePence: COMMERCIAL_ECONOMY.prices.founderPremiumAnnualPence,
     inlinePrice: true,
     offerAudience: 'founder',
     offerId: 'founding_raider_lifetime_rate',
@@ -160,6 +175,19 @@ const PLAN_CONFIG = {
     creatorCommissionPercent: 0,
     charityProfitPercent: 0,
     impactPotId: 'premium_passes',
+  },
+  gift_premium_month: {
+    kind: 'gift',
+    tier: 'premium',
+    billingPeriod: 'gift_30_day',
+    pricePence: COMMERCIAL_ECONOMY.prices.premiumGiftMonthPence,
+    inlinePrice: true,
+    giftDurationDays: COMMERCIAL_ECONOMY.gifts.durationDays,
+    checkoutLabel: 'UAG Gift a Month of Premium',
+    creatorDiscountPercent: 0,
+    creatorCommissionPercent: 0,
+    charityProfitPercent: 0,
+    impactPotId: 'premium_gifts',
   },
   founding_supporter_monthly: {
     kind: 'supporter',
@@ -319,7 +347,7 @@ function checkoutLineItem(plan, planId, configuredPriceId) {
       },
     },
   };
-  if (plan.kind === 'core') {
+  if (plan.kind === 'core' || plan.kind === 'supporter') {
     priceData.recurring = {
       interval: plan.billingPeriod === 'yearly' ? 'year' : 'month',
     };
