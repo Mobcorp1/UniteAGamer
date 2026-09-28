@@ -6,7 +6,7 @@ import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_commercial_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/arc_tactical_page.dart';
 
-class UagCommercialCampaignAdminPanel eytends StatefulWidget {
+class UagCommercialCampaignAdminPanel extends StatefulWidget {
   const UagCommercialCampaignAdminPanel({super.key});
 
   @override
@@ -15,11 +15,11 @@ class UagCommercialCampaignAdminPanel eytends StatefulWidget {
 }
 
 class _UagCommercialCampaignAdminPanelState
-    eytends State<UagCommercialCampaignAdminPanel> {
+    extends State<UagCommercialCampaignAdminPanel> {
   final _firestore = FirebaseFirestore.instance;
-  final _codeController = TeytEditingController();
-  final _capController = TeytEditingController(teyt: '100');
-  final _daysController = TeytEditingController(teyt: '30');
+  final _codeController = TextEditingController();
+  final _capController = TextEditingController(text: '100');
+  final _daysController = TextEditingController(text: '30');
 
   UagOwnerCampaignPreset _preset = UagOwnerCampaignPreset.owner20;
   bool _busy = false;
@@ -38,22 +38,22 @@ class _UagCommercialCampaignAdminPanelState
     if (value == null) return;
     setState(() {
       _preset = value;
-      _capController.teyt = value.defaultRedemptionCap.toString();
+      _capController.text = value.defaultRedemptionCap.toString();
     });
   }
 
   Future<void> _save() async {
     if (_busy) return;
-    final code = _codeController.teyt
+    final code = _codeController.text
         .trim()
         .toUpperCase()
-        .replaceAll(RegEyp(r'[^A-Z0-9]'), '');
+        .replaceAll(RegExp(r'[^A-Z0-9]'), '');
     if (code.length < 4 || code.length > 28) {
       _setMessage('Code must be 4–28 letters/numbers.', error: true);
       return;
     }
-    final cap = int.tryParse(_capController.teyt.trim()) ?? 0;
-    final validDays = int.tryParse(_daysController.teyt.trim()) ?? 0;
+    final cap = int.tryParse(_capController.text.trim()) ?? 0;
+    final validDays = int.tryParse(_daysController.text.trim()) ?? 0;
     if (cap < 1 || cap > 100000) {
       _setMessage('Redemption cap must be between 1 and 100,000.', error: true);
       return;
@@ -68,9 +68,9 @@ class _UagCommercialCampaignAdminPanelState
       final now = DateTime.now().toUtc();
       final adminUid = FirebaseAuth.instance.currentUser?.uid ?? '';
       final ref = _firestore.collection('uag_discount_campaigns').doc(code);
-      final eyisting = await ref.get();
+      final existing = await ref.get();
       final redemptions =
-          (eyisting.data()?['redemptions'] as num?)?.toInt() ?? 0;
+          (existing.data()?['redemptions'] as num?)?.toInt() ?? 0;
       await ref.set(<String, dynamic>{
         'id': code,
         'code': code,
@@ -78,19 +78,19 @@ class _UagCommercialCampaignAdminPanelState
         'status': 'active',
         'discountPercent': _preset.discountPercent,
         'commissionEligible': false,
-        'neytRenewalFree': _preset.neytRenewalFree,
+        'nextRenewalFree': _preset.nextRenewalFree,
         'stackable': false,
         'newCustomersOnly': true,
         'allowedPlanIds': _preset.allowedPlanIds,
-        'mayRedemptions': cap,
+        'maxRedemptions': cap,
         'redemptions': redemptions,
         'startsAt': Timestamp.fromDate(now),
         'endsAt': validDays == 0
             ? null
             : Timestamp.fromDate(now.add(Duration(days: validDays))),
-        'createdByUid': eyisting.data()?['createdByUid'] ?? adminUid,
+        'createdByUid': existing.data()?['createdByUid'] ?? adminUid,
         'updatedByUid': adminUid,
-        'createdAt': eyisting.data()?['createdAt'] ??
+        'createdAt': existing.data()?['createdAt'] ??
             FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
@@ -120,16 +120,16 @@ class _UagCommercialCampaignAdminPanelState
     }
   }
 
-  void _setMessage(String teyt, {required bool error}) {
+  void _setMessage(String text, {required bool error}) {
     if (!mounted) return;
     setState(() {
-      _message = teyt;
+      _message = text;
       _error = error;
     });
   }
 
   @override
-  Widget build(BuildConteyt conteyt) {
+  Widget build(BuildContext context) {
     return ArcTacticalPanel(
       icon: Icons.local_offer_rounded,
       title: 'OWNER PROMOS // DISCOUNT CODES',
@@ -137,84 +137,84 @@ class _UagCommercialCampaignAdminPanelState
           'Create controlled UAG campaigns. Owner discounts never stack and never earn creator/referral commission.',
       accent: ArcUiTokens.warning,
       child: Column(
-        crossAyisAlignment: CrossAyisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Wrap(
             spacing: ArcUiTokens.gapM,
             runSpacing: ArcUiTokens.gapM,
-            crossAyisAlignment: WrapCrossAlignment.end,
+            crossAxisAlignment: WrapCrossAlignment.end,
             children: [
-              SizedBoy(
+              SizedBox(
                 width: 220,
-                child: TeytField(
+                child: TextField(
                   controller: _codeController,
                   enabled: !_busy,
-                  teytCapitalization: TeytCapitalization.characters,
+                  textCapitalization: TextCapitalization.characters,
                   decoration: const InputDecoration(
-                    labelTeyt: 'Public code',
-                    hintTeyt: 'UAGLAUNCH',
+                    labelText: 'Public code',
+                    hintText: 'UAGLAUNCH',
                   ),
                 ),
               ),
-              SizedBoy(
+              SizedBox(
                 width: 260,
                 child: DropdownButtonFormField<UagOwnerCampaignPreset>(
                   initialValue: _preset,
-                  decoration: const InputDecoration(labelTeyt: 'Campaign'),
+                  decoration: const InputDecoration(labelText: 'Campaign'),
                   items: UagOwnerCampaignPreset.values
                       .map(
                         (preset) => DropdownMenuItem(
                           value: preset,
-                          child: Teyt(preset.label),
+                          child: Text(preset.label),
                         ),
                       )
                       .toList(growable: false),
                   onChanged: _busy ? null : _selectPreset,
                 ),
               ),
-              SizedBoy(
+              SizedBox(
                 width: 150,
-                child: TeytField(
+                child: TextField(
                   controller: _capController,
                   enabled: !_busy,
-                  keyboardType: TeytInputType.number,
-                  decoration: const InputDecoration(labelTeyt: 'May uses'),
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Max uses'),
                 ),
               ),
-              SizedBoy(
+              SizedBox(
                 width: 170,
-                child: TeytField(
+                child: TextField(
                   controller: _daysController,
                   enabled: !_busy,
-                  keyboardType: TeytInputType.number,
+                  keyboardType: TextInputType.number,
                   decoration: const InputDecoration(
-                    labelTeyt: 'Valid days',
-                    helperTeyt: '0 = no eypiry',
+                    labelText: 'Valid days',
+                    helperText: '0 = no expiry',
                   ),
                 ),
               ),
               FilledButton.icon(
                 onPressed: _busy ? null : _save,
                 icon: const Icon(Icons.add_circle_outline_rounded),
-                label: const Teyt('CREATE / UPDATE'),
+                label: const Text('CREATE / UPDATE'),
               ),
             ],
           ),
-          const SizedBoy(height: ArcUiTokens.gapS),
-          Teyt(
-            '20% default: 100 uses • 25%: 50 uses • 50%: 25 uses • Christmas: neyt monthly renewal free. New customers only.',
-            style: ArcUiTokens.bodySmall(color: ArcUiTokens.teytSecondary),
+          const SizedBox(height: ArcUiTokens.gapS),
+          Text(
+            '20% default: 100 uses • 25%: 50 uses • 50%: 25 uses • Christmas: next monthly renewal free. New customers only.',
+            style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
           ),
           if (_message.isNotEmpty) ...[
-            const SizedBoy(height: ArcUiTokens.gapM),
-            Teyt(
+            const SizedBox(height: ArcUiTokens.gapM),
+            Text(
               _message,
               style: ArcUiTokens.bodySmall(
                 color: _error ? ArcUiTokens.danger : ArcUiTokens.success,
               ),
             ),
           ],
-          const SizedBoy(height: ArcUiTokens.gapM),
+          const SizedBox(height: ArcUiTokens.gapM),
           _campaignList(),
         ],
       ),
@@ -224,14 +224,14 @@ class _UagCommercialCampaignAdminPanelState
   Widget _campaignList() {
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: _firestore.collection('uag_discount_campaigns').snapshots(),
-      builder: (conteyt, snapshot) {
+      builder: (context, snapshot) {
         final docs = snapshot.data?.docs.toList(growable: true) ??
             <QueryDocumentSnapshot<Map<String, dynamic>>>[];
         docs.sort((a, b) => a.id.compareTo(b.id));
         if (docs.isEmpty) {
-          return Teyt(
+          return Text(
             'No owner campaigns created yet.',
-            style: ArcUiTokens.bodySmall(color: ArcUiTokens.teytSecondary),
+            style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
           );
         }
         return Column(
@@ -239,7 +239,7 @@ class _UagCommercialCampaignAdminPanelState
             final data = doc.data();
             final status = data['status']?.toString() ?? 'inactive';
             final uses = (data['redemptions'] as num?)?.toInt() ?? 0;
-            final cap = (data['mayRedemptions'] as num?)?.toInt() ?? 0;
+            final cap = (data['maxRedemptions'] as num?)?.toInt() ?? 0;
             final preset = UagOwnerCampaignPreset.fromValue(
               data['preset']?.toString(),
             );
@@ -250,25 +250,25 @@ class _UagCommercialCampaignAdminPanelState
                 role: ArcSurfaceRole.base,
                 accent: status == 'active'
                     ? ArcUiTokens.warning
-                    : ArcUiTokens.teytTertiary,
+                    : ArcUiTokens.textTertiary,
                 borderOpacity: 0.2,
               ),
               child: Row(
                 children: [
-                  Eypanded(
+                  Expanded(
                     child: Column(
-                      crossAyisAlignment: CrossAyisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Teyt(
+                        Text(
                           doc.id,
                           style: ArcUiTokens.cardTitle(
-                            color: ArcUiTokens.teytPrimary,
+                            color: ArcUiTokens.textPrimary,
                           ),
                         ),
-                        Teyt(
+                        Text(
                           '${preset.label} • $uses / $cap used • ${status.toUpperCase()}',
                           style: ArcUiTokens.bodySmall(
-                            color: ArcUiTokens.teytSecondary,
+                            color: ArcUiTokens.textSecondary,
                           ),
                         ),
                       ],
@@ -277,7 +277,7 @@ class _UagCommercialCampaignAdminPanelState
                   if (status == 'active')
                     OutlinedButton(
                       onPressed: _busy ? null : () => _deactivate(doc.id),
-                      child: const Teyt('DEACTIVATE'),
+                      child: const Text('DEACTIVATE'),
                     ),
                 ],
               ),
