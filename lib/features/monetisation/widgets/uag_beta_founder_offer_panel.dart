@@ -43,7 +43,7 @@ class UagBetaFounderOfferPanel extends StatelessWidget {
                 ),
                 const SizedBox(height: ArcUiTokens.gapS),
                 Text(
-                  'Full Premium. No ads. The £29.99 annual rate remains fixed while this Founder subscription stays continuously active. If it is cancelled and later restarted, the Founder price is forfeited; your Founding Raider status and legacy recognition remain.',
+                  'Full Premium. No ads. The Founding Raider launch rate is £44.99/year (50% off the £89.99 Premium annual price) while this Founder subscription stays continuously active. If it is cancelled and later restarted, the Founder rate is forfeited; your Founding Raider status and legacy recognition remain.',
                   style: ArcUiTokens.bodySmall(
                     color: ArcUiTokens.textSecondary,
                   ),
