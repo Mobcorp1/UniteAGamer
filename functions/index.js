@@ -562,8 +562,9 @@ exports.createUagCheckoutSession = onRequest({ secrets: [stripeSecretKey] }, asy
       }, { merge: true });
     }
 
+    const explicitReferralCode = normalizeCommercialCode(referralCode);
     const effectiveReferralCode = String(
-      referralCode ||
+      explicitReferralCode ||
       creatorAttribution.code ||
       communityAttribution.code ||
       userData.referredByCode ||
@@ -600,6 +601,20 @@ exports.createUagCheckoutSession = onRequest({ secrets: [stripeSecretKey] }, asy
             userData,
           })
         : null;
+
+    if (
+      explicitReferralCode &&
+      plan.kind === 'core' &&
+      !creatorBenefitApplied &&
+      !plan.offerId &&
+      !referral
+    ) {
+      const error = new Error(
+        'That promo, creator or referral code is not valid for this purchase.',
+      );
+      error.statusCode = 400;
+      throw error;
+    }
 
     if (
       referral &&
