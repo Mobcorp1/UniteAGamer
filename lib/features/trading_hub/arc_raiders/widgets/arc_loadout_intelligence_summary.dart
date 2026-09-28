@@ -105,7 +105,7 @@ class ArcLoadoutIntelligenceSummary extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'This is the live-ready bridge between the loadout builder and your tracker systems. The next data pass can swap these readiness rows from calculated build flags to Firestore-backed ownership and trade results.',
+            'Review the requirements for this loadout. Confirm you own the equipment before your raid.',
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.68),
               fontSize: 12,

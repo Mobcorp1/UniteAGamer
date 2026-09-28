@@ -142,13 +142,13 @@ class _UagNotificationPreferencesPanelState
                         : 'Not Registered',
                   ),
                   if (status?.hasWebVapidKey == false)
-                    _statusPill('Web Push Key', 'Missing'),
+                    _statusPill('Browser notifications', 'Unavailable'),
                 ],
               ),
               if (status?.hasWebVapidKey == false) ...[
                 const SizedBox(height: AppTheme.spaceS),
                 Text(
-                  'Chrome push needs --dart-define=UAG_WEB_PUSH_VAPID_KEY=YOUR_PUBLIC_KEY before this browser can register.',
+                  'Browser notifications are temporarily unavailable. You can still check notifications in the app.',
                   style: ArcUiTokens.bodySmall(color: ArcUiTokens.warning),
                 ),
               ],

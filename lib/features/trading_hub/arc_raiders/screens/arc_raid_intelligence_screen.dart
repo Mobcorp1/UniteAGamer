@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import '../widgets/arc_raid_location_picker.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_frozen_trail_preview_screen.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_asset_registry.dart';
@@ -444,8 +445,8 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                                           Expanded(
                                             child: Text(
                                               failed
-                                                  ? 'Some intel sources unavailable. Showing saved data and seeded guidance.'
-                                                  : 'Loading intel sources...',
+                                                  ? 'Some intel is unavailable. Showing saved information and route guidance.'
+                                                  : 'Loading raid intel...',
                                               maxLines: 2,
                                             ),
                                           ),
@@ -950,6 +951,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
         children: [
           DropdownButtonFormField<String>(
             initialValue: _mapId,
+            isExpanded: true,
             dropdownColor: ArcUiTokens.surfaceOverlay,
             style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
             iconEnabledColor: ArcUiTokens.primaryAccent,
@@ -1039,68 +1041,33 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     );
   }
 
+  List<ArcRaidRouteStop> _extractionOptions(ArcRaidMap map) => _usesHatch
+      ? map.hatches.map(_engine.stopFromHatch).toList()
+      : map.extractions.map(_engine.stopFromExtraction).toList();
+
   Widget _spawnExtractionPickers(ArcRaidMap map) {
     return Column(
       children: [
-        DropdownButtonFormField<String>(
-          initialValue: map.spawnRegions.any((spawn) => spawn.id == _spawn?.id)
-              ? _spawn!.id
-              : null,
-          dropdownColor: ArcUiTokens.surfaceOverlay,
-          style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
-          iconEnabledColor: ArcUiTokens.primaryAccent,
-          decoration: ArcUiTokens.inputDecoration(
-            labelText: 'Spawn Region or tap map',
-          ),
-          items: [
-            for (final spawn in map.spawnRegions)
-              DropdownMenuItem(value: spawn.id, child: Text(spawn.name)),
+        ArcRaidLocationPicker(
+          label: 'Spawn Region or tap map',
+          options: [
+            ...map.spawnRegions.map(_engine.stopFromSpawn),
+            if (_spawn?.id == 'freeform_spawn') _spawn!,
           ],
-          onChanged: (value) {
-            final spawn = map.spawnRegions.firstWhere(
-              (item) => item.id == value,
-            );
-            setState(() => _spawn = _engine.stopFromSpawn(spawn));
-            _jumpTo(spawn.center);
+          selected: _spawn,
+          onChanged: (spawn) {
+            setState(() => _spawn = spawn);
+            _jumpTo(spawn.point);
           },
         ),
         const SizedBox(height: 10),
-        DropdownButtonFormField<String>(
-          initialValue: _extraction?.id,
-          dropdownColor: ArcUiTokens.surfaceOverlay,
-          style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
-          iconEnabledColor: ArcUiTokens.primaryAccent,
-          decoration: ArcUiTokens.inputDecoration(
-            labelText: _usesHatch ? 'Raider Hatch' : 'Standard Extraction',
-          ),
-          items: [
-            if (_usesHatch)
-              for (final hatch in map.hatches)
-                DropdownMenuItem(value: hatch.id, child: Text(hatch.name))
-            else
-              for (final extraction in map.extractions)
-                DropdownMenuItem(
-                  value: extraction.id,
-                  child: Text(extraction.name),
-                ),
-          ],
-          onChanged: (value) {
-            if (value == null) return;
-            setState(() {
-              if (_usesHatch) {
-                final hatch = map.hatches.firstWhere(
-                  (item) => item.id == value,
-                );
-                _extraction = _engine.stopFromHatch(hatch);
-                _jumpTo(hatch.point);
-              } else {
-                final extraction = map.extractions.firstWhere(
-                  (item) => item.id == value,
-                );
-                _extraction = _engine.stopFromExtraction(extraction);
-                _jumpTo(extraction.point);
-              }
-            });
+        ArcRaidLocationPicker(
+          label: _usesHatch ? 'Raider Hatch' : 'Standard Extraction',
+          options: _extractionOptions(map),
+          selected: _extraction,
+          onChanged: (extraction) {
+            setState(() => _extraction = extraction);
+            _jumpTo(extraction.point);
           },
         ),
       ],
@@ -1639,6 +1606,26 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   Future<void> _generateRoute(ArcRaidIntelligenceState intelligence) async {
     final spawn = _spawn;
     var extraction = _extraction;
+    if (extraction != null) {
+      final current = _extractionOptions(
+        intelligence.map,
+      ).where((option) => option.id == extraction!.id);
+      if (current.isEmpty) {
+        _showSnack(
+          'Saved extraction is unavailable. Choose another extraction.',
+        );
+        return;
+      }
+      extraction = current.first;
+    }
+    if (spawn != null &&
+        spawn.id != 'freeform_spawn' &&
+        !intelligence.map.spawnRegions.any((option) => option.id == spawn.id)) {
+      _showSnack(
+        'Saved spawn is unavailable. Choose a spawn region or tap the map.',
+      );
+      return;
+    }
     if (spawn == null) {
       _showSnack('Choose a spawn region or tap the map first.');
       return;

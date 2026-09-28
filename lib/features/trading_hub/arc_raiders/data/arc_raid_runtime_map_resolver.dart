@@ -14,9 +14,25 @@ class ArcRaidRuntimeMapResolver {
     required ArcRaidMap seedMap,
     List<ArcAdminMapMarker> adminMarkers = const <ArcAdminMapMarker>[],
   }) {
-    final mapMarkers = adminMarkers
-        .where((marker) => marker.mapId == seedMap.id && marker.isPublished)
-        .toList(growable: false);
+    final candidates =
+        adminMarkers
+            .where((marker) => marker.mapId == seedMap.id && marker.isPublished)
+            .toList()
+          ..sort((a, b) {
+            final updated =
+                (b.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0))
+                    .compareTo(
+                      a.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0),
+                    );
+            return updated != 0 ? updated : a.id.compareTo(b.id);
+          });
+    // Prefer the newest published record for an identity. Do not merge markers
+    // by display name: separate locations can legitimately share a name.
+    final byId = <String, ArcAdminMapMarker>{};
+    for (final marker in candidates) {
+      byId.putIfAbsent(marker.id, () => marker);
+    }
+    final mapMarkers = byId.values.toList(growable: false);
     if (mapMarkers.isEmpty) return seedMap;
 
     final pois = [
@@ -85,8 +101,10 @@ class ArcRaidRuntimeMapResolver {
   ) {
     final result = <ArcRaidExtraction>[];
     final consumedMarkerIds = <String>{};
+    final resolvedIds = <String>{};
 
     for (final extraction in map.extractions) {
+      if (!resolvedIds.add(extraction.id)) continue;
       final marker = _bestMarkerForIdentity(
         markers,
         kind: ArcAdminMapMarkerKind.extraction,
@@ -114,7 +132,8 @@ class ArcRaidRuntimeMapResolver {
 
     for (final marker in markers) {
       if (marker.kind != ArcAdminMapMarkerKind.extraction ||
-          consumedMarkerIds.contains(marker.id)) {
+          consumedMarkerIds.contains(marker.id) ||
+          !resolvedIds.add(_runtimeId(marker, 'extraction'))) {
         continue;
       }
       result.add(
@@ -124,7 +143,7 @@ class ArcRaidRuntimeMapResolver {
           name: marker.name,
           point: marker.point,
           notes: marker.description.trim().isEmpty
-              ? 'Published admin extraction.'
+              ? 'Extraction location.'
               : marker.description.trim(),
         ),
       );
@@ -139,8 +158,10 @@ class ArcRaidRuntimeMapResolver {
   ) {
     final result = <ArcRaiderHatch>[];
     final consumedMarkerIds = <String>{};
+    final resolvedIds = <String>{};
 
     for (final hatch in map.hatches) {
+      if (!resolvedIds.add(hatch.id)) continue;
       final marker = _bestMarkerForIdentity(
         markers,
         kind: ArcAdminMapMarkerKind.raiderHatch,
@@ -165,7 +186,8 @@ class ArcRaidRuntimeMapResolver {
 
     for (final marker in markers) {
       if (marker.kind != ArcAdminMapMarkerKind.raiderHatch ||
-          consumedMarkerIds.contains(marker.id)) {
+          consumedMarkerIds.contains(marker.id) ||
+          !resolvedIds.add(_runtimeId(marker, 'hatch'))) {
         continue;
       }
       result.add(

@@ -87,7 +87,7 @@ class RaidPlannerEngine {
   ) {
     final hint = ArcBlueprintIntelLibrary.resolve(blueprint);
     final containerText = hint.likelyContainers.isEmpty
-        ? 'seeded containers'
+        ? 'likely containers'
         : hint.likelyContainers.take(3).join(', ');
     final mapText = ArcBlueprintIntelLibrary.isAllMaps(hint.likelyMaps)
         ? 'eligible maps'
@@ -98,7 +98,7 @@ class RaidPlannerEngine {
       blueprintName: blueprint.name,
       eventName: eventName,
       reason:
-          'Seeded baseline: run $mapText, prioritise $eventName, and focus $containerText until community intel creates a stronger route.',
+          'Suggested route: run $mapText, prioritise $eventName, and focus $containerText until community intel creates a stronger route.',
     );
   }
 

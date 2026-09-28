@@ -477,8 +477,8 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
     final seededTimingLabel =
         rule?.eventName ??
         (seededConditions.isEmpty
-            ? 'Seeded route enabled'
-            : '${seededConditions.first} seeded route enabled');
+            ? 'Route guidance available'
+            : '${seededConditions.first} route guidance available');
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(10),
@@ -852,7 +852,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
                   ),
                   const SizedBox(width: 10),
                   IconButton(
-                    tooltip: 'Refresh official regional schedule',
+                    tooltip: 'Refresh regional schedule',
                     onPressed: _refreshRegionalConditions,
                     icon: const Icon(Icons.refresh_rounded),
                   ),
@@ -872,7 +872,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
               if (!data.isOfficialLive) ...[
                 const SizedBox(height: 4),
                 Text(
-                  'Showing the last captured official schedule.',
+                  'Schedule update unavailable. Saved times may be out of date.',
                   style: AppTheme.bodyTextStyle(
                     fontSize: 11,
                     color: AppTheme.tradingMutedText,
@@ -1366,7 +1366,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
               const SizedBox(height: 10),
               if (!intel.hasReports) ...[
                 Text(
-                  'Seed route active until reports land.',
+                  'Route guidance available. Recent finds are not yet confirmed.',
                   style: AppTheme.bodyTextStyle(
                     fontSize: 11,
                     color: AppTheme.tradingMutedText,
@@ -1374,13 +1374,16 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
                 ),
                 if (seededHint != null) ...[
                   const SizedBox(height: 10),
-                  _intelLine('Seed map', seededHint.likelyMaps.join(', ')),
                   _intelLine(
-                    'Seed containers',
+                    'Suggested maps',
+                    seededHint.likelyMaps.join(', '),
+                  ),
+                  _intelLine(
+                    'Suggested containers',
                     seededHint.likelyContainers.join(', '),
                   ),
                   _intelLine(
-                    'Seed condition/event',
+                    'Suggested condition/event',
                     seededHint.bestConditions.join(', '),
                   ),
                 ],
@@ -1411,14 +1414,14 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
 
   Widget _communityIntelCard(List<RaidBlueprintTarget> activeTargets) {
     return CollapsibleSectionCard(
-      title: 'Seeded + Community Intel Signals',
+      title: 'Route Guidance and Recent Reports',
       titleColor: AppTheme.neonCyan,
       initiallyExpanded: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Active targets use seeded routes first, then stronger community reports.',
+            'Active targets combine route guidance with recent reports. Locations are not guaranteed.',
             style: AppTheme.bodyTextStyle(
               fontSize: 12,
               color: AppTheme.tradingMutedText,
@@ -1656,7 +1659,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
       utcNow: utcNow,
     );
     final regional = <Widget>[
-      const Text('Regional official conditions - separate source'),
+      const Text('Regional map conditions'),
       _regionalBlueprintPlannerCard(
         states: states,
         availability: availability,
@@ -2057,7 +2060,7 @@ class _BlueprintSearchSheetState extends State<_BlueprintSearchSheet> {
                       ),
                       subtitle: Text(
                         rule == null
-                            ? 'Seeded blueprint route available.'
+                            ? 'Blueprint route guidance available.'
                             : '${rule.eventName} - exact Raid Timeline windows available.',
                         style: AppTheme.bodyTextStyle(
                           fontSize: 12,

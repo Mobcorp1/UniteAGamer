@@ -68,6 +68,8 @@ void main() {
         adminVerified: false,
         sourceName: 'Permitted source',
         sourceRecordId: 'cache-1',
+        description:
+            'Weapon cache location. Source basis: Permitted source. Coordinate status: calibrated UAG map layer.',
       );
 
       final intelligence = engine.build(
@@ -84,8 +86,15 @@ void main() {
         intelligence.visibleMarkers
             .firstWhere((marker) => marker.label == 'Imported Cache')
             .tags,
-        contains('Permitted source'),
+        isNot(contains('Permitted source')),
       );
+      expect(
+        intelligence.visibleMarkers
+            .firstWhere((marker) => marker.label == 'Imported Cache')
+            .detail,
+        'Weapon cache location.',
+      );
+      expect(imported.sourceName, 'Permitted source');
     });
 
     test('maps UAG admin marker palette types into live map categories', () {
@@ -287,7 +296,7 @@ void main() {
       );
       final marker = matches.first;
 
-      expect(marker.tags, contains('UAG POI Catalogue'));
+      expect(marker.tags, isNot(contains('UAG POI Catalogue')));
       expect(marker.tags.any((tag) => tag.contains('evidence')), isTrue);
       expect(marker.detail, contains('Town Hall'));
     });

@@ -115,8 +115,7 @@ class SmartTradeAssistEngine {
           requestedResourceIds: const [],
           duplicateQuantityAvailable: duplicateQuantityAvailable,
           priorityRank: 99,
-          reason:
-              'Fallback opportunity for duplicate blueprint against another missing blueprint.',
+          reason: 'Trade a duplicate Blueprint for one you are missing.',
         ),
       );
     }
@@ -151,8 +150,7 @@ class SmartTradeAssistEngine {
         requestedResourceIds: requestedResources,
         duplicateQuantityAvailable: duplicateQuantityAvailable,
         priorityRank: 199,
-        reason:
-            'Fallback opportunity for useful resource bundle based on tracker needs.',
+        reason: 'Trade for a resource bundle you need.',
       ),
     ];
   }

@@ -81,7 +81,7 @@ class ArcFrozenTrailPreviewScreen extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           const Text(
-            ArcFrozenTrailPreviewData.sourceLabel,
+            'Preview details may change before release.',
             style: TextStyle(color: Colors.white38, fontSize: 12),
           ),
         ],

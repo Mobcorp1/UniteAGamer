@@ -138,8 +138,8 @@ class ArcRegionalMapConditionsSnapshot {
   bool get isOfficialLive => source == ArcMapConditionsSource.officialLive;
 
   String get sourceLabel => isOfficialLive
-      ? 'Official ARC Raiders regional schedule'
-      : 'Official captured schedule fallback';
+      ? 'Regional schedule'
+      : 'Saved schedule — update unavailable';
 }
 
 class ArcRegionalMapConditionsParser {

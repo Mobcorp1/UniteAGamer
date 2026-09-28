@@ -5,12 +5,13 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_po
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_known_extraction_catalog.dart';
+
 class ArcRaidIntelligenceSeedData {
   const ArcRaidIntelligenceSeedData._();
 
   static const String providerId = 'uag_local_seed_provider';
   static const String attribution =
-      'UAG local seed data and Community Intel. Schematic positions are approximate.';
+      'Map guidance. Schematic positions are approximate.';
 
   static const Map<String, String> canonicalMapIds = {
     ArcPoiDataStore.buriedCity: 'buried_city',

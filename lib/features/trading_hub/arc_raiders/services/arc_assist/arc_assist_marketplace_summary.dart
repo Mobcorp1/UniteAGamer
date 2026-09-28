@@ -33,7 +33,7 @@ class ArcAssistMarketplaceSummary {
     }
 
     if (missingBlueprintFallbacks > 0) {
-      parts.add('$missingBlueprintFallbacks missing blueprint fallbacks');
+      parts.add('$missingBlueprintFallbacks missing Blueprint trades');
     }
 
     if (resourceFallbacks > 0) {

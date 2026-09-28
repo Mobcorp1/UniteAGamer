@@ -16,7 +16,7 @@ extension ArcBlueprintSightingTrendX on ArcBlueprintSightingTrend {
       case ArcBlueprintSightingTrend.cooling:
         return 'Cooling';
       case ArcBlueprintSightingTrend.seeded:
-        return 'Seeded Intel';
+        return 'General guidance';
     }
   }
 }
@@ -45,7 +45,9 @@ class ArcBlueprintSightingSummary {
 
   String recencyLabel(DateTime now) {
     final latest = latestSightingAt;
-    if (latest == null) return reportDriven ? 'No timestamp' : 'Seeded Intel';
+    if (latest == null) {
+      return reportDriven ? 'No timestamp' : 'General guidance';
+    }
 
     final age = now.difference(latest);
     if (age.isNegative || age.inMinutes < 60) return 'Seen this hour';

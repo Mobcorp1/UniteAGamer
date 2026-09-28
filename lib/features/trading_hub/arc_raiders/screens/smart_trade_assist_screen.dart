@@ -651,7 +651,7 @@ class _SummaryCard extends StatelessWidget {
         runSpacing: AppTheme.spaceS,
         children: [
           _MetricPill(label: 'Listing drafts', value: listingDrafts),
-          _MetricPill(label: 'Missing fallback', value: missingFallbacks),
+          _MetricPill(label: 'Missing Blueprints', value: missingFallbacks),
           _MetricPill(label: 'Resource bundles', value: resourceFallbacks),
         ],
       ),
@@ -823,7 +823,7 @@ class _OpportunityCard extends StatelessWidget {
       case SmartTradeOpportunityTier.directTopFiveMatch:
         return 'Direct Top 5 Match';
       case SmartTradeOpportunityTier.missingBlueprintMatch:
-        return 'Missing Blueprint Fallback';
+        return 'Missing Blueprint trade';
       case SmartTradeOpportunityTier.valueCounterOffer:
         return 'Value Counter Offer';
       case SmartTradeOpportunityTier.usefulResourceBundle:

@@ -48,16 +48,15 @@ class ArcBlueprintFallbackData {
       maps: ['Riven Tides'],
       events: ['Day Raid', 'Beachcombing'],
       sources: ['Riven Tides general loot', 'Beachcombing routes'],
-      confidenceLabel: 'Patch-seeded',
-      notes:
-          'Official Riven Tides item. Use Riven Tides fallback until user intel replaces this.',
+      confidenceLabel: 'General guidance',
+      notes: 'Riven Tides item. Exact drop locations remain unconfirmed.',
     ),
     'Tactical Mk. 3 (Smoke)': ArcBlueprintResearchedFallback(
       blueprintName: 'Tactical Mk. 3 (Smoke)',
       maps: ['Riven Tides'],
       events: ['Day Raid', 'Night Raid', 'Beachcombing'],
       sources: ['Riven Tides tactical/support loot routes'],
-      confidenceLabel: 'Patch-seeded',
+      confidenceLabel: 'General guidance',
       notes:
           'Official Riven Tides augment. Treat as Riven Tides-first until user reports confirm broader pools.',
     ),

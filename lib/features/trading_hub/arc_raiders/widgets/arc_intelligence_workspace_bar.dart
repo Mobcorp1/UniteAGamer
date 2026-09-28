@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/data/arc_regional_map_conditions.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
@@ -155,6 +156,8 @@ class ArcRegionalConditionDigest {
     DateTime? localNowUtc,
   }) {
     final now = localNowUtc ?? DateTime.now().toUtc();
+    // Captured schedules are historical. Never restart their old clock on load.
+    if (!snapshot.isOfficialLive) return now;
     final elapsed = now.difference(snapshot.loadedAtUtc);
     if (elapsed.isNegative) return snapshot.serverNowUtc;
     return snapshot.serverNowUtc.add(elapsed);
@@ -223,11 +226,15 @@ class ArcLiveMapConditionsStrip extends StatefulWidget {
     this.mapDisplayName,
     this.initialRegion = ArcServerRegion.europe,
     this.compact = false,
+    this.loadConditions,
+    this.nowUtc,
   });
 
   final String? mapDisplayName;
   final ArcServerRegion initialRegion;
   final bool compact;
+  final Future<ArcRegionalMapConditionsSnapshot> Function()? loadConditions;
+  final DateTime Function()? nowUtc;
 
   @override
   State<ArcLiveMapConditionsStrip> createState() =>
@@ -237,12 +244,23 @@ class ArcLiveMapConditionsStrip extends StatefulWidget {
 class _ArcLiveMapConditionsStripState extends State<ArcLiveMapConditionsStrip> {
   late ArcServerRegion _region;
   late Future<ArcRegionalMapConditionsSnapshot> _future;
+  Timer? _clock;
 
   @override
   void initState() {
     super.initState();
     _region = widget.initialRegion;
-    _future = ArcRegionalMapConditionsService.load();
+    _future =
+        widget.loadConditions?.call() ?? ArcRegionalMapConditionsService.load();
+    _clock = Timer.periodic(const Duration(seconds: 15), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _clock?.cancel();
+    super.dispose();
   }
 
   @override
@@ -255,7 +273,9 @@ class _ArcLiveMapConditionsStripState extends State<ArcLiveMapConditionsStrip> {
 
   void _refresh() {
     setState(() {
-      _future = ArcRegionalMapConditionsService.load(forceRefresh: true);
+      _future =
+          widget.loadConditions?.call() ??
+          ArcRegionalMapConditionsService.load(forceRefresh: true);
     });
   }
 
@@ -264,6 +284,18 @@ class _ArcLiveMapConditionsStripState extends State<ArcLiveMapConditionsStrip> {
     return FutureBuilder<ArcRegionalMapConditionsSnapshot>(
       future: _future,
       builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return ArcRaidersSectionCard(
+            child: Row(
+              children: [
+                const Expanded(
+                  child: Text('Map conditions unavailable. Please retry.'),
+                ),
+                TextButton(onPressed: _refresh, child: const Text('Retry')),
+              ],
+            ),
+          );
+        }
         if (!snapshot.hasData) {
           return ArcRaidersSectionCard(
             radius: ArcUiTokens.radiusM,
@@ -281,7 +313,7 @@ class _ArcLiveMapConditionsStripState extends State<ArcLiveMapConditionsStrip> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'Checking official regional map conditions...',
+                    'Checking regional map conditions...',
                     style: ArcUiTokens.bodySmall(),
                   ),
                 ),
@@ -291,7 +323,14 @@ class _ArcLiveMapConditionsStripState extends State<ArcLiveMapConditionsStrip> {
         }
 
         final data = snapshot.data!;
-        final now = ArcRegionalConditionDigest.effectiveServerNow(data);
+        final localNow = widget.nowUtc?.call() ?? DateTime.now().toUtc();
+        final now = ArcRegionalConditionDigest.effectiveServerNow(
+          data,
+          localNowUtc: localNow,
+        );
+        final fresh =
+            data.isOfficialLive &&
+            localNow.difference(data.loadedAtUtc) < const Duration(minutes: 10);
         final active = ArcRegionalConditionDigest.activeEntries(
           data,
           region: _region,
@@ -305,9 +344,7 @@ class _ArcLiveMapConditionsStripState extends State<ArcLiveMapConditionsStrip> {
           nowUtc: now,
           limit: widget.mapDisplayName == null ? 3 : 1,
         );
-        final sourceAccent = data.isOfficialLive
-            ? ArcUiTokens.success
-            : ArcUiTokens.warning;
+        final sourceAccent = fresh ? ArcUiTokens.success : ArcUiTokens.warning;
 
         return ArcRaidersSectionCard(
           accent: sourceAccent,
@@ -323,8 +360,8 @@ class _ArcLiveMapConditionsStripState extends State<ArcLiveMapConditionsStrip> {
                   Expanded(
                     child: Text(
                       widget.mapDisplayName == null
-                          ? 'LIVE REGIONAL CONDITIONS'
-                          : 'LIVE ${widget.mapDisplayName!.toUpperCase()} CONDITIONS',
+                          ? '${fresh ? 'LIVE' : 'SAVED'} REGIONAL CONDITIONS'
+                          : '${fresh ? 'LIVE' : 'SAVED'} ${widget.mapDisplayName!.toUpperCase()} CONDITIONS',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: ArcUiTokens.label(color: sourceAccent),
@@ -334,7 +371,7 @@ class _ArcLiveMapConditionsStripState extends State<ArcLiveMapConditionsStrip> {
                   _regionMenu(),
                   IconButton(
                     visualDensity: VisualDensity.compact,
-                    tooltip: 'Refresh official conditions',
+                    tooltip: 'Refresh conditions',
                     onPressed: _refresh,
                     icon: const Icon(Icons.refresh_rounded, size: 18),
                     color: ArcUiTokens.textSecondary,
@@ -392,9 +429,9 @@ class _ArcLiveMapConditionsStripState extends State<ArcLiveMapConditionsStrip> {
               ],
               const SizedBox(height: 8),
               Text(
-                data.isOfficialLive
-                    ? 'Official ARC Raiders schedule - refreshed from the live source.'
-                    : 'Official captured schedule fallback - live refresh is temporarily unavailable.',
+                fresh
+                    ? 'Schedule checked recently.'
+                    : 'Schedule update unavailable. Saved times may be out of date.',
                 maxLines: widget.compact ? 1 : 2,
                 overflow: TextOverflow.ellipsis,
                 style: ArcUiTokens.metadata(color: ArcUiTokens.textTertiary),

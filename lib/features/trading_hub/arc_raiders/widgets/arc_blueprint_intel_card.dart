@@ -78,14 +78,14 @@ class ArcBlueprintIntelCard extends StatelessWidget {
           if (evidence.isEmpty) const Text('No location evidence yet.'),
           for (final e in reports.take(2)) Text('Reported at ${location(e)}'),
           if (seeded.isNotEmpty)
-            Text('Seeded guidance: ${seeded.map(location).toSet().join(', ')}'),
+            Text('Route guidance: ${seeded.map(location).toSet().join(', ')}'),
           Text(
             'Why here: ${cluster.commonSource}. ${cluster.conditionCorrelation}.',
             style: ArcUiTokens.bodySmall(),
           ),
           if (reports.isNotEmpty) Text('${reports.length} community reports'),
           if (seeded.isNotEmpty)
-            const Text('Seeded guidance is not a confirmed find.'),
+            const Text('Route guidance is not a confirmed find.'),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
@@ -130,7 +130,7 @@ class ArcBlueprintIntelCard extends StatelessWidget {
                   title: Text(
                     e.sourceCategory == 'community_drop_report'
                         ? 'Reported at ${location(e)}'
-                        : 'Seeded guidance: ${location(e)}',
+                        : 'Route guidance: ${location(e)}',
                   ),
                   subtitle: Text(
                     [

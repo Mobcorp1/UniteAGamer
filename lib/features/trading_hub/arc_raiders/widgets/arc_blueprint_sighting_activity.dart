@@ -22,7 +22,7 @@ class ArcBlueprintSightingActivity extends StatelessWidget {
               child: Text(
                 activity.hasLiveReports
                     ? 'LIVE SIGHTING ACTIVITY'
-                    : 'Seeded guidance',
+                    : 'Route guidance',
                 style: AppTheme.bodyTextStyle(
                   fontSize: 10,
                   color: AppTheme.neonCyan,
@@ -120,7 +120,7 @@ class ArcBlueprintSightingActivity extends StatelessWidget {
                 Text(
                   sighting.reportDriven
                       ? sighting.recencyLabel(now)
-                      : 'Seeded guidance',
+                      : 'Route guidance',
                   style: const TextStyle(color: Colors.white54, fontSize: 10),
                 ),
               ],

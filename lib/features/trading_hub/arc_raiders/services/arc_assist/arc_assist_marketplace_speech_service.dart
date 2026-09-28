@@ -20,7 +20,7 @@ class ArcAssistMarketplaceSpeechService {
 
     if (summary.missingBlueprintFallbacks > 0) {
       parts.add(
-        '${summary.missingBlueprintFallbacks} missing blueprint fallbacks',
+        '${summary.missingBlueprintFallbacks} missing Blueprint trades',
       );
     }
 

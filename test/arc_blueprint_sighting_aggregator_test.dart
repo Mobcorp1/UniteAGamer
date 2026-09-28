@@ -76,6 +76,6 @@ void main() {
 
     expect(activity.hasLiveReports, isFalse);
     expect(activity.trend, ArcBlueprintSightingTrend.seeded);
-    expect(activity.sightings.single.recencyLabel(now), 'Seeded Intel');
+    expect(activity.sightings.single.recencyLabel(now), 'General guidance');
   });
 }

@@ -177,7 +177,7 @@ class _ArcEventsWorkspaceState extends State<ArcEventsWorkspace> {
                 style: const TextStyle(fontSize: 12, color: Colors.white70),
               ),
               const Text(
-                'Community reports are separate from schedule and official conditions.',
+                'Compare player reports with scheduled map conditions.',
                 style: TextStyle(fontSize: 12, color: Colors.white70),
               ),
               const SizedBox(height: 8),
@@ -194,8 +194,8 @@ class _ArcEventsWorkspaceState extends State<ArcEventsWorkspace> {
             ],
             Text(
               widget.compact
-                  ? 'MetaForge seed · 27 Apr 2026 · Not live verified'
-                  : 'STANDARD SCHEDULE · MetaForge baseline · 27 Apr 2026 · Not live verified',
+                  ? 'Saved schedule · Not live verified'
+                  : 'STANDARD SCHEDULE · Saved times · Not live verified',
               style: const TextStyle(fontSize: 11, color: Colors.amber),
             ),
             if (events.isEmpty)
@@ -313,7 +313,7 @@ class _ArcEventsWorkspaceState extends State<ArcEventsWorkspace> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _heading('OFFICIAL REGIONAL CONDITIONS'),
+        _heading('REGIONAL CONDITIONS'),
         Wrap(
           spacing: 8,
           crossAxisAlignment: WrapCrossAlignment.center,
@@ -343,8 +343,8 @@ class _ArcEventsWorkspaceState extends State<ArcEventsWorkspace> {
         if (_failed)
           Text(
             snapshot == null
-                ? 'Official source unavailable. Retry conditions.'
-                : 'Official refresh failed. Retained / captured data may be stale.',
+                ? 'Map conditions unavailable. Retry conditions.'
+                : 'Schedule update failed. Saved times may be out of date.',
             style: const TextStyle(color: Colors.amber),
           ),
         if (snapshot != null)

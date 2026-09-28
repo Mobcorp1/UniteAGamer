@@ -101,16 +101,13 @@ void main() {
     );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
-    expect(
-      find.textContaining('Some intel sources unavailable'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('Some intel is unavailable'), findsOneWidget);
     expect(find.byTooltip('Zoom in').hitTestable(), findsOneWidget);
     await tester.tap(find.text('Retry'));
     await tester.pump();
     await tester.pump();
     expect(attempts, 2);
-    expect(find.textContaining('Some intel sources unavailable'), findsNothing);
+    expect(find.textContaining('Some intel is unavailable'), findsNothing);
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(milliseconds: 500));
   });

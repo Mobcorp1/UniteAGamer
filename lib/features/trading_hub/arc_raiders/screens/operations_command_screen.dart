@@ -1195,7 +1195,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
     if (previewTitle == null) {
       return _titlePreviewPanel(
         item: null,
-        label: 'No title rewards seeded',
+        label: 'No title rewards available',
         rarity: ArcCosmeticRarity.common,
         unlocked: false,
         equipped: false,
@@ -2620,7 +2620,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
     if (previewBadge == null) {
       return _badgePreviewPanel(
         item: null,
-        label: 'No badge rewards seeded',
+        label: 'No badge rewards available',
         assetPath: null,
         rarity: ArcCosmeticRarity.common,
         unlocked: false,

@@ -26,7 +26,7 @@ class ArcBlueprintHintData {
   String get confidenceLabel {
     switch (confidence) {
       case ArcIntelConfidence.starter:
-        return 'Seeded Rule';
+        return 'General guidance';
       case ArcIntelConfidence.community:
         return 'Community Led';
       case ArcIntelConfidence.confirmed:
@@ -120,7 +120,7 @@ class ArcBlueprintIntelLibrary {
   static const Map<String, _HintSeed> _categorySeeds = {
     'Attachments': _HintSeed(
       tip:
-          'Attachment baseline. Use seeded container/category rules first, then let community intel narrow the best map and route.',
+          'Attachment baseline. Check likely container types first, then let community intel narrow the best map and route.',
       likelyContainers: <String>[
         'Residential Containers',
         'Attachment Containers',
@@ -131,7 +131,7 @@ class ArcBlueprintIntelLibrary {
     ),
     'Weapons': _HintSeed(
       tip:
-          'Weapon baseline. Use seeded raider-container rules first, then let community intel narrow the best route.',
+          'Weapon baseline. Check raider containers first, then let community intel narrow the best route.',
       likelyContainers: <String>['Raider Containers'],
       likelyMaps: <String>['All maps'],
       bestConditions: <String>['Any'],
@@ -139,7 +139,7 @@ class ArcBlueprintIntelLibrary {
     ),
     'Gadgets': _HintSeed(
       tip:
-          'Gadget baseline. Use seeded industrial/general loot rules first, then let community intel narrow the best route.',
+          'Gadget baseline. Check industrial and general loot first, then let community intel narrow the best route.',
       likelyContainers: <String>['Industrial Containers'],
       likelyMaps: <String>['All maps'],
       bestConditions: <String>['Any'],
@@ -186,7 +186,7 @@ class ArcBlueprintIntelLibrary {
     ),
     'Deployables': _HintSeed(
       tip:
-          'Deployable baseline. Use the seeded condition rule first, then let community intel narrow exact containers.',
+          'Deployable baseline. Check the recommended condition first, then let community intel narrow exact containers.',
       likelyContainers: <String>['General Containers'],
       likelyMaps: <String>['All maps'],
       bestConditions: <String>['Any'],
@@ -218,7 +218,7 @@ class ArcBlueprintIntelLibrary {
     ),
     'Looting Mods': _HintSeed(
       tip:
-          'Mk.3 looting baseline. Search medical/security routes and high-tier containers, with Night Raid as the safest seeded boost.',
+          'Mk.3 looting baseline. Search medical/security routes and high-tier containers, with Night Raid as the recommended condition.',
       likelyContainers: <String>[
         'Medical Containers',
         'Security Containers',
@@ -344,7 +344,7 @@ class ArcBlueprintIntelLibrary {
     ),
     'combat-mk-3-aggressive': _HintSeed(
       tip:
-          'Mk.3 augment baseline. Prioritise Stella Montis and Blue Gate, with Night Raid as the best seeded boost.',
+          'Mk.3 augment baseline. Prioritise Stella Montis and Blue Gate, with Night Raid as the recommended condition.',
       likelyContainers: <String>[
         'Medical Containers',
         'Security Containers',
@@ -356,7 +356,7 @@ class ArcBlueprintIntelLibrary {
     ),
     'combat-mk-3-flanking': _HintSeed(
       tip:
-          'Mk.3 augment baseline. Prioritise Stella Montis and Blue Gate, with Night Raid as the best seeded boost.',
+          'Mk.3 augment baseline. Prioritise Stella Montis and Blue Gate, with Night Raid as the recommended condition.',
       likelyContainers: <String>[
         'Medical Containers',
         'Security Containers',
@@ -534,7 +534,7 @@ class ArcBlueprintIntelLibrary {
     ),
     'extended-shotgun-mag-iii': _HintSeed(
       tip:
-          'Condition-boosted attachment blueprint. Use the seeded baseline first: residential/attachment loot, then prioritise active storm, locked-gate, or night windows until community reports narrow it.',
+          'Condition-boosted attachment blueprint. Start with residential/attachment loot, then prioritise active storm, locked-gate, or night windows until community reports narrow it.',
       likelyContainers: <String>[
         'Residential Containers',
         'Attachment Containers',
@@ -636,7 +636,7 @@ class ArcBlueprintIntelLibrary {
     ),
     'looting-mk-3-safekeeper': _HintSeed(
       tip:
-          'Mk.3 looting augment baseline. Search medical/security containers on any map, with Night Raid as a useful seeded boost.',
+          'Mk.3 looting augment baseline. Search medical/security containers on any map, with Night Raid as a useful condition.',
       likelyContainers: <String>[
         'Medical Containers',
         'Security Containers',
@@ -648,7 +648,7 @@ class ArcBlueprintIntelLibrary {
     ),
     'looting-mk-3-survivor': _HintSeed(
       tip:
-          'Mk.3 looting augment baseline. Search medical/security containers on any map, with Night Raid as a useful seeded boost.',
+          'Mk.3 looting augment baseline. Search medical/security containers on any map, with Night Raid as a useful condition.',
       likelyContainers: <String>[
         'Medical Containers',
         'Security Containers',
@@ -893,7 +893,7 @@ class ArcBlueprintIntelLibrary {
     ),
     'tactical-mk-3-defensive': _HintSeed(
       tip:
-          'Mk.3 augment baseline. Prioritise Stella Montis and Blue Gate, with Night Raid as the best seeded boost.',
+          'Mk.3 augment baseline. Prioritise Stella Montis and Blue Gate, with Night Raid as the recommended condition.',
       likelyContainers: <String>[
         'Medical Containers',
         'Security Containers',
@@ -905,7 +905,7 @@ class ArcBlueprintIntelLibrary {
     ),
     'tactical-mk-3-healing': _HintSeed(
       tip:
-          'Mk.3 augment baseline. Prioritise Stella Montis and Blue Gate, with Night Raid as the best seeded boost.',
+          'Mk.3 augment baseline. Prioritise Stella Montis and Blue Gate, with Night Raid as the recommended condition.',
       likelyContainers: <String>[
         'Medical Containers',
         'Security Containers',
@@ -917,7 +917,7 @@ class ArcBlueprintIntelLibrary {
     ),
     'tactical-mk-3-revival': _HintSeed(
       tip:
-          'Mk.3 augment baseline. Prioritise Stella Montis and Blue Gate, with Night Raid as the best seeded boost.',
+          'Mk.3 augment baseline. Prioritise Stella Montis and Blue Gate, with Night Raid as the recommended condition.',
       likelyContainers: <String>[
         'Medical Containers',
         'Security Containers',
@@ -929,7 +929,7 @@ class ArcBlueprintIntelLibrary {
     ),
     'tactical-mk-3-smoke': _HintSeed(
       tip:
-          'Mk.3 smoke baseline. Treat as high-tier Mk.3 loot, not Riven-only. Prioritise Stella Montis and Blue Gate with Night Raid as the strongest seeded boost.',
+          'Mk.3 smoke baseline. Treat as high-tier Mk.3 loot, not Riven-only. Prioritise Stella Montis and Blue Gate with Night Raid as the recommended condition.',
       likelyContainers: <String>[
         'Medical Containers',
         'Security Containers',

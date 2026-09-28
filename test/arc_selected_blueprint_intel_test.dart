@@ -42,7 +42,7 @@ const marker = ArcRaidMapMarker(
 );
 void main() {
   final clusters = [
-    cluster('a', 'tempest', 'Seed area A'),
+    cluster('a', 'tempest', 'Guidance area A'),
     cluster('b', 'bobcat', 'Report area B', report: true),
     cluster('unrelated', 'wolfpack', 'Unrelated area'),
   ];
@@ -75,7 +75,7 @@ void main() {
       ),
     );
     await tester.pumpWidget(view(marker));
-    expect(find.text('Seeded guidance: Seed area A'), findsOneWidget);
+    expect(find.text('Route guidance: Guidance area A'), findsOneWidget);
     expect(find.textContaining('99'), findsNothing);
     expect(find.textContaining('77'), findsNothing);
     final carousel = find.byType(ArcBlueprintOpportunityCarousel);
@@ -84,7 +84,7 @@ void main() {
     await tester.drag(find.byType(PageView), const Offset(-600, 0));
     await tester.pumpAndSettle();
     expect(find.text('Reported at Report area B'), findsOneWidget);
-    expect(find.text('Seeded guidance: Seed area A'), findsNothing);
+    expect(find.text('Route guidance: Guidance area A'), findsNothing);
     expect(find.text('1 community reports'), findsOneWidget);
     await tester.ensureVisible(carousel);
     await tester.pumpAndSettle();
@@ -103,7 +103,7 @@ void main() {
     );
     await tester.pumpWidget(view(replacement));
     await tester.pumpAndSettle();
-    expect(find.text('Seeded guidance: Seed area A'), findsOneWidget);
+    expect(find.text('Route guidance: Guidance area A'), findsOneWidget);
     expect(find.textContaining('Context unavailable'), findsNothing);
     expect(tester.takeException(), isNull);
   });

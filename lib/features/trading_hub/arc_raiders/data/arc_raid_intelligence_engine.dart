@@ -205,27 +205,39 @@ class ArcRaidIntelligenceEngine {
 
   ArcRaidMapMarker _markerForAdminMarker(ArcAdminMapMarker marker) {
     final category = _categoryForAdminMarker(marker);
-    final sourceLabel = marker.sourceName?.trim().isNotEmpty == true
-        ? marker.sourceName!.trim()
-        : marker.sourceLabel;
     final tags = <String>[
-      sourceLabel,
       marker.kind.label,
       if (marker.subtypeLabel?.trim().isNotEmpty == true)
         marker.subtypeLabel!.trim(),
       marker.confidence.label,
-      if (marker.sourceAttribution?.trim().isNotEmpty == true)
-        marker.sourceAttribution!.trim(),
       if (marker.evidence.isNotEmpty)
         '${marker.evidence.length} evidence ${_plural(marker.evidence.length, 'record', 'records')}',
-      if (marker.alignmentConfidence != null)
-        'Alignment ${(marker.alignmentConfidence! * 100).round()}%',
       if (marker.provisionalVisible) 'Provisional',
-      if (marker.adminVerified) 'Admin verified',
+      if (marker.adminVerified) 'Verified location',
     ];
-    final detail = marker.description.trim().isEmpty
-        ? 'Admin-published Raid Intelligence from $sourceLabel.'
-        : marker.description.trim();
+    // Older published records contain generated provenance in their description.
+    // Keep that metadata in storage/admin tools, not in the player marker card.
+    final description = marker.description
+        .replaceAll(
+          RegExp(
+            r'(?:Source basis|Coordinate status):[^.]*\.',
+            caseSensitive: false,
+          ),
+          '',
+        )
+        .replaceAll('UAG-generated ', '')
+        .replaceAll('Linked to a UAG POI anchor.', 'Approximate location.')
+        .replaceAll(
+          'Location requires admin matching before publication.',
+          'Exact location unconfirmed.',
+        )
+        .trim();
+    final containsInternalId = RegExp(
+      r'\badmin_[a-zA-Z0-9_-]+|\b[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}\b',
+    ).hasMatch(description);
+    final detail = description.isEmpty || containsInternalId
+        ? '${marker.kind.label} location.'
+        : description;
     final iconKey = ArcMapFilterIconRegistry.iconKeyForSubtype(
       marker.subtypeId,
     );
@@ -1026,7 +1038,7 @@ class ArcRaidIntelligenceEngine {
         else if (researchDriven)
           'Research Baseline'
         else
-          'Seeded Intel',
+          'General guidance',
         cluster.commonSource,
         cluster.conditionCorrelation,
         cluster.freshnessLabel,

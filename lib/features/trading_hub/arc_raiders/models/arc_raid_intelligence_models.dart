@@ -963,7 +963,7 @@ class ArcRaidIntelCluster {
     this.confidence = ArcRaidIntelConfidence.limited,
     this.reportCount = 0,
     this.independentReporterCount = 0,
-    this.freshnessLabel = 'Seeded',
+    this.freshnessLabel = 'General guidance',
     this.commonSource = 'Area-level report',
     this.conditionCorrelation = 'Any condition',
     this.markerCategory = ArcRaidMapMarkerCategory.blueprintOpportunity,

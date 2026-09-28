@@ -129,7 +129,7 @@ void main() {
       future.completeError(StateError('offline'));
       await tester.pump();
       expect(
-        find.text('Official source unavailable. Retry conditions.'),
+        find.text('Map conditions unavailable. Retry conditions.'),
         findsOneWidget,
       );
       future = Completer<ArcRegionalMapConditionsSnapshot>();
@@ -164,7 +164,7 @@ void main() {
       const Size(1280, 900),
     );
     expect(
-      find.textContaining('Official captured schedule fallback'),
+      find.textContaining('Saved schedule — update unavailable'),
       findsOneWidget,
     );
     expect(find.textContaining('STALE'), findsOneWidget);
