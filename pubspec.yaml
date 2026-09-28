@@ -42,10 +42,6 @@ dependencies:
   image: ^4.8.0
   flutter_svg: ^2.3.0
 
-# TEMPORARY: firebase_core_web 3.11.0 currently fails Flutter web compilation.
-# Remove once FlutterFire publishes a fixed firebase_core_web release.
-dependency_overrides:
-  firebase_core_web: 3.10.0
 
 dev_dependencies:
   flutter_test:
