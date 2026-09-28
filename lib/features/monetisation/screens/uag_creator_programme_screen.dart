@@ -44,13 +44,13 @@ class UagCreatorProgrammeScreen extends StatelessWidget {
               spacing: ArcUiTokens.gapS,
               runSpacing: ArcUiTokens.gapS,
               children: [
-                _Chip('7.5% → 20% BASE', ArcUiTokens.secondaryAccent),
+                _Chip('5% → 20% BASE', ArcUiTokens.secondaryAccent),
                 _Chip(
                   'UP TO +2.5PP COMMUNITY UPLIFT',
                   ArcUiTokens.secondaryAccent,
                 ),
                 _Chip('30-DAY VALIDATION', ArcUiTokens.primaryAccent),
-                _Chip('PREMIUM CREATOR PRICE £7.99', ArcUiTokens.primaryAccent),
+                _Chip('PREMIUM CREATOR PRICE £6.99', ArcUiTokens.primaryAccent),
               ],
             ),
           ),
