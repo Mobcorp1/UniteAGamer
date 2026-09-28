@@ -1842,6 +1842,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     required double gridHeight,
     required int rowCount,
     required bool enableRowJumps,
+    bool vertical = false,
   }) {
     Widget commandButton({
       required IconData icon,
@@ -1969,9 +1970,30 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
           ),
         ];
 
+        final controlChildren = <Widget>[
+          for (var index = 0; index < controls.length; index++) ...[
+            controls[index],
+            if (index != controls.length - 1)
+              SizedBox(width: vertical ? 0 : 6, height: vertical ? 6 : 0),
+          ],
+          if (!_viewModeLoaded) ...[
+            SizedBox(width: vertical ? 0 : 8, height: vertical ? 8 : 0),
+            const SizedBox(
+              width: 14,
+              height: 14,
+              child: CircularProgressIndicator(strokeWidth: 1.5),
+            ),
+          ],
+        ];
+
         return Container(
-          key: const Key('blueprint-grid-horizontal-command-bar'),
-          height: 44,
+          key: Key(
+            vertical
+                ? 'blueprint-grid-vertical-command-rail'
+                : 'blueprint-grid-horizontal-command-bar',
+          ),
+          width: vertical ? 52 : null,
+          height: vertical ? null : 44,
           decoration: BoxDecoration(
             color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.76),
             borderRadius: BorderRadius.circular(16),
@@ -1980,26 +2002,21 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
             ),
           ),
           child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
+            scrollDirection: vertical ? Axis.vertical : Axis.horizontal,
             physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                for (var index = 0; index < controls.length; index++) ...[
-                  controls[index],
-                  if (index != controls.length - 1) const SizedBox(width: 6),
-                ],
-                if (!_viewModeLoaded) ...[
-                  const SizedBox(width: 8),
-                  const SizedBox(
-                    width: 14,
-                    height: 14,
-                    child: CircularProgressIndicator(strokeWidth: 1.5),
-                  ),
-                ],
-              ],
+            padding: EdgeInsets.symmetric(
+              horizontal: vertical ? 5 : 6,
+              vertical: 5,
             ),
+            child: vertical
+                ? Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: controlChildren,
+                  )
+                : Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: controlChildren,
+                  ),
           ),
         );
       },
@@ -2362,15 +2379,22 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
               return buildRotatePrompt();
             }
 
-            const sideAdLaneWidth = 342.0;
+            final compactNativeLandscape =
+                isNativeMobile && isLandscape && mediaQuery.size.height <= 720;
+            const sideAdLaneWidth = 480.0;
             const sideAdGap = 8.0;
+            const commandRailWidth = 52.0;
+            const commandRailGap = 6.0;
             final landscapeSideAdsActive =
-                isLandscape &&
+                compactNativeLandscape &&
                 maxWidth >= 1180 &&
-                UagAdService.instance.canShowBanner;
-            final reservedSideWidth = landscapeSideAdsActive
-                ? sideAdLaneWidth * 2 + sideAdGap * 2
-                : 0.0;
+                (widget.bannerSlot != null ||
+                    UagAdService.instance.canShowBanner);
+            final reservedSideWidth =
+                (compactNativeLandscape
+                    ? commandRailWidth + commandRailGap
+                    : 0) +
+                (landscapeSideAdsActive ? sideAdLaneWidth + sideAdGap : 0);
             final availableGridWidth = math.max(
               280.0,
               maxWidth - reservedSideWidth,
@@ -2384,10 +2408,12 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
             const gridVerticalSafetyInset = 2.0;
             final availableGridHeight = math.max(
               120.0,
-              bodyHeight -
-                  commandBarHeight -
-                  commandBarGap -
-                  gridVerticalSafetyInset,
+              compactNativeLandscape
+                  ? bodyHeight - gridVerticalSafetyInset
+                  : bodyHeight -
+                        commandBarHeight -
+                        commandBarGap -
+                        gridVerticalSafetyInset,
             );
 
             Widget sponsorLane(Key key) {
@@ -2396,7 +2422,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                 width: sideAdLaneWidth,
                 child: Align(
                   alignment: Alignment.center,
-                  child: const ArcBlueprintBannerSlot(),
+                  child: widget.bannerSlot ?? const ArcBlueprintBannerSlot(),
                 ),
               );
             }
@@ -2408,6 +2434,35 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
               required int rowCount,
               required bool enableRowJumps,
             }) {
+              if (compactNativeLandscape) {
+                return Align(
+                  alignment: Alignment.topCenter,
+                  child: SizedBox(
+                    height: availableGridHeight,
+                    child: Row(
+                      key: const Key('blueprint-landscape-side-layout'),
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        SizedBox(width: availableGridWidth, child: viewport),
+                        const SizedBox(width: commandRailGap),
+                        _buildGridCommandBar(
+                          viewportHeight: viewportHeight,
+                          gridHeight: gridHeight,
+                          rowCount: rowCount,
+                          enableRowJumps: enableRowJumps,
+                          vertical: true,
+                        ),
+                        if (landscapeSideAdsActive) ...[
+                          const SizedBox(width: sideAdGap),
+                          sponsorLane(const Key('blueprint-side-ad-right')),
+                        ],
+                      ],
+                    ),
+                  ),
+                );
+              }
+
               final centre = SizedBox(
                 width: availableGridWidth,
                 child: Column(
@@ -2425,25 +2480,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                 ),
               );
 
-              if (!landscapeSideAdsActive) {
-                return Align(alignment: Alignment.topCenter, child: centre);
-              }
-
-              return Align(
-                alignment: Alignment.topCenter,
-                child: Row(
-                  key: const Key('blueprint-landscape-side-ad-layout'),
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    sponsorLane(const Key('blueprint-side-ad-left')),
-                    const SizedBox(width: sideAdGap),
-                    centre,
-                    const SizedBox(width: sideAdGap),
-                    sponsorLane(const Key('blueprint-side-ad-right')),
-                  ],
-                ),
-              );
+              return Align(alignment: Alignment.topCenter, child: centre);
             }
 
             Widget buildFramedGrid() {
@@ -2705,27 +2742,23 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
               const SizedBox(width: 8),
             ],
           ),
-          bottomNavigationBar: AnimatedBuilder(
-            animation: UagAdService.instance,
-            builder: (context, _) {
-              final landscapeSideAdsActive =
-                  compactMobileLandscape &&
-                  media.size.width >= 1180 &&
-                  UagAdService.instance.canShowBanner;
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (!landscapeSideAdsActive)
-                    widget.bannerSlot ?? const ArcBlueprintBannerSlot(),
-                  if (!compactMobileLandscape)
-                    const ArcBlueprintWorkspaceDock(
-                      current: ArcBlueprintWorkspace.tracker,
-                    ),
-                  const ArcCompanionBottomDock(activeLabel: 'Track'),
-                ],
-              );
-            },
-          ),
+          bottomNavigationBar: compactMobileLandscape
+              ? null
+              : AnimatedBuilder(
+                  animation: UagAdService.instance,
+                  builder: (context, _) {
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        widget.bannerSlot ?? const ArcBlueprintBannerSlot(),
+                        const ArcBlueprintWorkspaceDock(
+                          current: ArcBlueprintWorkspace.tracker,
+                        ),
+                        const ArcCompanionBottomDock(activeLabel: 'Track'),
+                      ],
+                    );
+                  },
+                ),
           body: ArcRaidersScreenShell(
             showAdBanner: false,
             child: SafeArea(
@@ -2773,8 +2806,12 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                     return _buildOwnershipSynchronizingState();
                   }
                   final counts = _buildCounts(allBlueprints, states);
+                  final hasHydrationError =
+                      snapshot.hasError ||
+                      incoming?.status ==
+                          ArcBlueprintStateHydrationStatus.error;
 
-                  return StreamBuilder<ArcSavedLoadout?>(
+                  final loadoutContent = StreamBuilder<ArcSavedLoadout?>(
                     stream: _loadoutStream,
                     builder: (context, loadoutSnapshot) {
                       final loadout = loadoutSnapshot.data;
@@ -2798,66 +2835,67 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                           children: [
                             Column(
                               children: [
-                                SizedBox(
-                                  height: compactMobileLandscape ? 30 : 36,
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          _isFavouriteLoadoutTargetPickMode
-                                              ? _targetPickSavingBlueprintId ==
-                                                        null
-                                                    ? 'Tap a missing Blueprint to add it and return'
-                                                    : 'Adding Blueprint target...'
-                                              : _selectionMode
-                                              ? '${_selectedBlueprintIds.length} selected'
-                                              : '${counts[ArcBlueprintFilter.owned]} / ${allBlueprints.length} owned',
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
+                                if (!compactMobileLandscape)
+                                  SizedBox(
+                                    height: 36,
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            _isFavouriteLoadoutTargetPickMode
+                                                ? _targetPickSavingBlueprintId ==
+                                                          null
+                                                      ? 'Tap a missing Blueprint to add it and return'
+                                                      : 'Adding Blueprint target...'
+                                                : _selectionMode
+                                                ? '${_selectedBlueprintIds.length} selected'
+                                                : '${counts[ArcBlueprintFilter.owned]} / ${allBlueprints.length} owned',
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
                                         ),
-                                      ),
-                                      if (snapshot.hasError ||
-                                          incoming?.status ==
-                                              ArcBlueprintStateHydrationStatus
-                                                  .error)
-                                        TextButton(
+                                        if (hasHydrationError)
+                                          TextButton(
+                                            onPressed: () => setState(
+                                              () => _stateStream =
+                                                  _watchBlueprintStateSnapshot(),
+                                            ),
+                                            child: const Text('Retry sync'),
+                                          ),
+                                        if (_selectionMode)
+                                          IconButton(
+                                            tooltip: 'Mark selected owned',
+                                            onPressed:
+                                                _selectedBlueprintIds.isEmpty
+                                                ? null
+                                                : () => _applyBulkOwned(states),
+                                            icon: const Icon(
+                                              Icons.check,
+                                              size: 18,
+                                            ),
+                                          ),
+                                        if (_selectionMode)
+                                          IconButton(
+                                            tooltip: 'Exit selection',
+                                            onPressed: _clearSelection,
+                                            icon: const Icon(
+                                              Icons.close,
+                                              size: 18,
+                                            ),
+                                          ),
+                                        IconButton(
+                                          tooltip: 'Blueprint tools',
                                           onPressed: () => setState(
-                                            () => _stateStream =
-                                                _watchBlueprintStateSnapshot(),
+                                            () => _toolsOpen = !_toolsOpen,
                                           ),
-                                          child: const Text('Retry sync'),
-                                        ),
-                                      if (_selectionMode)
-                                        IconButton(
-                                          tooltip: 'Mark selected owned',
-                                          onPressed:
-                                              _selectedBlueprintIds.isEmpty
-                                              ? null
-                                              : () => _applyBulkOwned(states),
                                           icon: const Icon(
-                                            Icons.check,
-                                            size: 18,
+                                            Icons.tune,
+                                            size: 20,
                                           ),
                                         ),
-                                      if (_selectionMode)
-                                        IconButton(
-                                          tooltip: 'Exit selection',
-                                          onPressed: _clearSelection,
-                                          icon: const Icon(
-                                            Icons.close,
-                                            size: 18,
-                                          ),
-                                        ),
-                                      IconButton(
-                                        tooltip: 'Blueprint tools',
-                                        onPressed: () => setState(
-                                          () => _toolsOpen = !_toolsOpen,
-                                        ),
-                                        icon: const Icon(Icons.tune, size: 20),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
-                                ),
                                 Expanded(
                                   child: _buildOverviewGrid(
                                     context,
@@ -2882,6 +2920,30 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                         ),
                       );
                     },
+                  );
+
+                  if (!compactMobileLandscape) {
+                    return loadoutContent;
+                  }
+
+                  return Stack(
+                    children: [
+                      Positioned.fill(child: loadoutContent),
+                      if (hasHydrationError)
+                        Positioned(
+                          key: const Key('blueprint-retry-sync-overlay'),
+                          top: 4,
+                          right: 4,
+                          child: TextButton.icon(
+                            onPressed: () => setState(
+                              () =>
+                                  _stateStream = _watchBlueprintStateSnapshot(),
+                            ),
+                            icon: const Icon(Icons.sync_problem, size: 16),
+                            label: const Text('Retry sync'),
+                          ),
+                        ),
+                    ],
                   );
                 },
               ),

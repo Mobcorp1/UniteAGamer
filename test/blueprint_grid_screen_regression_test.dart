@@ -88,9 +88,6 @@ void main() {
         final viewportBox = tester.renderObject<RenderBox>(
           find.byKey(const Key('blueprint-authoritative-grid-viewport')),
         );
-        final dockBox = tester.renderObject<RenderBox>(
-          find.byType(ArcCompanionBottomDock),
-        );
         expect(viewportBox.size.width, greaterThan(0));
         expect(viewportBox.size.height.isFinite, isTrue);
         expect(viewportBox.size.height, greaterThan(100));
@@ -101,14 +98,34 @@ void main() {
         if (workspaceDock.evaluate().isNotEmpty) {
           expect(gridRect.overlaps(tester.getRect(workspaceDock)), isFalse);
         }
-        expect(
-          gridRect.overlaps(
-            tester.getRect(find.byType(ArcCompanionBottomDock)),
-          ),
-          isFalse,
-        );
-        expect(find.byTooltip('Blueprint tools').hitTestable(), findsOneWidget);
-        expect(dockBox.size.height, lessThan(96));
+
+        final compactLandscape =
+            viewport.width > viewport.height && viewport.height <= 720;
+        final appDock = find.byType(ArcCompanionBottomDock);
+        if (compactLandscape) {
+          expect(appDock, findsNothing);
+          expect(
+            find.byKey(const Key('blueprint-grid-vertical-command-rail')),
+            findsOneWidget,
+          );
+        } else {
+          expect(appDock, findsOneWidget);
+          expect(gridRect.overlaps(tester.getRect(appDock)), isFalse);
+          final dockBox = tester.renderObject<RenderBox>(appDock);
+          expect(dockBox.size.height, lessThan(96));
+        }
+        if (compactLandscape) {
+          expect(
+            find.byTooltip('Blueprint menu').hitTestable(),
+            findsOneWidget,
+          );
+          expect(find.byTooltip('Blueprint tools'), findsNothing);
+        } else {
+          expect(
+            find.byTooltip('Blueprint tools').hitTestable(),
+            findsOneWidget,
+          );
+        }
 
         final gridTop = tester
             .getTopLeft(
@@ -120,11 +137,11 @@ void main() {
               find.byKey(const Key('blueprint-authoritative-grid-viewport')),
             )
             .dy;
-        final dockTop = tester
-            .getTopLeft(find.byType(ArcCompanionBottomDock))
-            .dy;
+        final visibleBottom = compactLandscape
+            ? viewport.height
+            : tester.getTopLeft(appDock).dy;
         final visibleGridHeight =
-            math.min(gridBottom, dockTop) - math.max(gridTop, 0);
+            math.min(gridBottom, visibleBottom) - math.max(gridTop, 0);
         expect(visibleGridHeight, greaterThan(100));
 
         await tester.tap(find.byTooltip('Zoom in'));
@@ -149,26 +166,47 @@ void main() {
         await secondFinger.up();
         await tester.pump(const Duration(milliseconds: 80));
 
-        await tester.tap(find.byTooltip('Blueprint tools'));
-        await tester.pump();
-        final select = find.text('Select Multiple');
-        await tester.scrollUntilVisible(
-          select,
-          100,
-          scrollable: find
-              .descendant(
-                of: find.byKey(const Key('blueprint-tools-panel')),
-                matching: find.byType(Scrollable),
-              )
-              .first,
-        );
-        await tester.pump();
-        await tester.tap(select);
-        await tester.pump();
-        expect(find.byTooltip('Exit selection').hitTestable(), findsOneWidget);
-        expect(find.byTooltip('Mark selected owned'), findsOneWidget);
-        await tester.tap(find.byTooltip('Exit selection'));
-        await tester.pump();
+        if (compactLandscape) {
+          await tester.tap(find.byTooltip('Blueprint menu'));
+          await tester.pumpAndSettle();
+          final multiSelectMenuItem = find.ancestor(
+            of: find.text('Multi Select'),
+            matching: find.byType(PopupMenuItem<String>),
+          );
+          expect(multiSelectMenuItem, findsOneWidget);
+          await tester.tap(multiSelectMenuItem);
+          await tester.pumpAndSettle();
+          expect(
+            find.byKey(const Key('blueprint-tools-panel')),
+            findsOneWidget,
+          );
+          expect(find.text('Select All Visible'), findsOneWidget);
+          expect(find.text('Exit Selection'), findsOneWidget);
+        } else {
+          await tester.tap(find.byTooltip('Blueprint tools'));
+          await tester.pump();
+          final select = find.text('Select Multiple');
+          await tester.scrollUntilVisible(
+            select,
+            100,
+            scrollable: find
+                .descendant(
+                  of: find.byKey(const Key('blueprint-tools-panel')),
+                  matching: find.byType(Scrollable),
+                )
+                .first,
+          );
+          await tester.pump();
+          await tester.tap(select);
+          await tester.pump();
+          expect(
+            find.byTooltip('Exit selection').hitTestable(),
+            findsOneWidget,
+          );
+          expect(find.byTooltip('Mark selected owned'), findsOneWidget);
+          await tester.tap(find.byTooltip('Exit selection'));
+          await tester.pump();
+        }
         expect(tester.takeException(), isNull);
       },
     );
@@ -209,6 +247,7 @@ void main() {
     await tester.pump();
     controller.addError(StateError('offline'));
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 20));
     expect(find.text('Retry sync'), findsOneWidget);
     expect(
       find.byKey(const Key('blueprint-authoritative-grid')),
