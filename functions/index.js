@@ -371,41 +371,74 @@ function setCheckoutCors(req, res) {
   return false;
 }
 
-async function resolveReferral(referralCode) {
-  const code = String(referralCode || '').trim().toUpperCase();
-  if (!code) return null;
+function hasPaidSubscriptionHistory(userData) {
+  const monetisation = userData?.monetisation || {};
+  const status = normalizeString(
+    monetisation.subscriptionStatus || userData?.subscriptionStatus,
+  ).toLowerCase();
+  return truthy(monetisation.hasEverPaid) ||
+    truthy(userData?.hasEverPaid) ||
+    Boolean(monetisation.firstPaidAt || userData?.firstPaidAt) ||
+    Boolean(normalizeString(monetisation.stripeSubscriptionId)) ||
+    ['active', 'trialing', 'cancelled', 'past_due', 'unpaid'].includes(status);
+}
 
-  const [creatorCodeSnap, communityCodeSnap] = await Promise.all([
-    db.collection('uag_creator_campaign_code_requests').doc(code).get(),
-    db.collection('uag_community_referral_codes').doc(code).get(),
-  ]);
+async function resolveReferral(referralCode, { uid, planId, userData }) {
+  const code = normalizeCommercialCode(referralCode);
+  if (!code || !uid || !planId) return null;
+
+  const [creatorCodeSnap, communityCodeSnap, ownerCampaignSnap, ownerClaimSnap] =
+    await Promise.all([
+      db.collection('uag_creator_campaign_code_requests').doc(code).get(),
+      db.collection('uag_community_referral_codes').doc(code).get(),
+      db.collection('uag_discount_campaigns').doc(code).get(),
+      db.collection('uag_promotion_claims').doc(`${code}_${uid}`).get(),
+    ]);
+
+  if (ownerCampaignSnap.exists && !ownerClaimSnap.exists) {
+    const policy = ownerCampaignPolicy(ownerCampaignSnap.data() || {}, planId);
+    if (
+      policy &&
+      (!policy.newCustomersOnly || !hasPaidSubscriptionHistory(userData))
+    ) {
+      return {
+        code,
+        ownerUid: '',
+        source: policy.source,
+        subscriberDiscountPercent: policy.discountPercent,
+        subscriberDiscountDuration: 'once',
+        commissionEligible: false,
+        nextRenewalFree: policy.nextRenewalFree,
+        promotionPreset: policy.preset,
+      };
+    }
+  }
+
+  if (hasPaidSubscriptionHistory(userData)) return null;
 
   if (creatorCodeSnap.exists) {
     const creatorCode = creatorCodeSnap.data() || {};
+    const ownerUid = normalizeString(creatorCode.uid);
     if (
       creatorCode.status === 'approved' &&
-      creatorCode.uid &&
-      String(creatorCode.code || '').trim().toUpperCase() === code
+      ownerUid &&
+      ownerUid !== uid &&
+      normalizeCommercialCode(creatorCode.code) === code
     ) {
-      const requestedDiscountPercent = Number(
-        creatorCode.subscriberDiscountPercent || 0,
+      const subscriberDiscountPercent = creatorAcquisitionDiscountPercent(
+        creatorCode.subscriberDiscountPercent,
       );
-      const subscriberDiscountPercent =
-        Number.isFinite(requestedDiscountPercent) &&
-        requestedDiscountPercent > 0 &&
-        requestedDiscountPercent <= 50
-          ? requestedDiscountPercent
-          : 10;
-
       return {
         code,
-        ownerUid: creatorCode.uid,
+        ownerUid,
         source: 'uag_creator_programme',
         subscriberDiscountPercent,
-        subscriberDiscountDuration:
-          creatorCode.subscriberDiscountDuration === 'forever'
-            ? 'forever'
-            : 'once',
+        subscriberDiscountDuration: 'once',
+        commissionEligible: creatorCommissionEligible(
+          subscriberDiscountPercent,
+        ),
+        nextRenewalFree: false,
+        promotionPreset: '',
       };
     }
   }
@@ -413,21 +446,24 @@ async function resolveReferral(referralCode) {
   if (communityCodeSnap.exists) {
     const communityCode = communityCodeSnap.data() || {};
     const ownerUid = normalizeString(communityCode.ownerUid);
-    const canonical = normalizeString(communityCode.code).toUpperCase();
-    if (ownerUid && canonical === code) {
+    const canonical = normalizeCommercialCode(communityCode.code);
+    if (ownerUid && ownerUid !== uid && canonical === code) {
       return {
         code,
         ownerUid,
         source: 'uag_community_referral',
-        subscriberDiscountPercent: 10,
+        subscriberDiscountPercent:
+          COMMERCIAL_ECONOMY.discounts.communityReferralPercent,
         subscriberDiscountDuration: 'once',
+        commissionEligible: true,
+        nextRenewalFree: false,
+        promotionPreset: '',
       };
     }
   }
 
   return null;
 }
-
 async function approvedCreatorProgrammeApplication(uid) {
   const snapshot = await db
     .collection('uag_creator_applications')
