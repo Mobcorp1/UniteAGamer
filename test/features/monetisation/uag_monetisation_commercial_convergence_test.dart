@@ -13,9 +13,9 @@ void main() {
     );
     final premium = UagSubscriptionPlan.forTier(UagSubscriptionTier.premium);
 
-    expect(essential.monthlyPricePence, 799);
-    expect(essential.yearlyPricePence, 6999);
-    expect(premium.monthlyPricePence, 999);
+    expect(essential.monthlyPricePence, 499);
+    expect(essential.yearlyPricePence, 4999);
+    expect(premium.monthlyPricePence, 899);
     expect(premium.yearlyPricePence, 8999);
     expect(UagPremiumPassType.day24.pricePence, 199);
     expect(UagPremiumPassType.week7.pricePence, 349);
