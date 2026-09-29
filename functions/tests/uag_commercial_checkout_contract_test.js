@@ -30,6 +30,12 @@ test('explicit promo codes are server validated and non-stackable', () => {
   assert.match(source, /nextRenewalFree/);
 });
 
+test('legacy and canonical referral registries remain compatible', () => {
+  assert.match(source, /uag_community_referral_codes/);
+  assert.match(source, /referral_codes/);
+  assert.match(source, /ownerUid !== uid/);
+});
+
 test('gift purchase and redemption remain server authoritative', () => {
   assert.match(source, /async function issuePremiumGift/);
   assert.match(source, /exports\.redeemUagGift = onRequest/);
