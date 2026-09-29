@@ -91,7 +91,8 @@ void main() {
     final legal = read('lib/features/legal/screens/legal_hub_screen.dart');
 
     expect(plans, contains('_entitlementService.watchMyEntitlement()'));
-    expect(plans, contains('_checkoutService.startCheckout(planId: planId)'));
+    expect(plans, contains('_checkoutService.startCheckout('));
+    expect(plans, contains('referralCode: _promotionCode'));
     expect(settings, contains('UagNotificationPreferencesPanel'));
     expect(settings, contains('ArcPersonalisationPreferencesPanel'));
     expect(help, contains('ArcHelpCentreCatalog.categories'));
