@@ -5,8 +5,11 @@ const source = fs.readFileSync('functions/index.js', 'utf8');
 const rules = fs.readFileSync('firestore.rules', 'utf8');
 
 for (const token of [
-  'pricePence: 6999',
-  'pricePence: 8999',
+  'COMMERCIAL_ECONOMY.prices.essentialMonthlyPence',
+  'COMMERCIAL_ECONOMY.prices.essentialAnnualPence',
+  'COMMERCIAL_ECONOMY.prices.premiumMonthlyPence',
+  'COMMERCIAL_ECONOMY.prices.premiumAnnualPence',
+  'pricePence: 199',
   'pricePence: 349',
   "source: 'uag_community_referral'",
   'subscriberDiscountPercent: 10',
