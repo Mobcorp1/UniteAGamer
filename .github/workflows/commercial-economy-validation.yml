@@ -36,11 +36,13 @@ jobs:
 
       - name: Run complete Functions test suite
         run: |
-          set -euo pipefail
+          set -uo pipefail
+          status=0
           for test_file in functions/tests/*.js; do
             echo "==> $test_file"
-            node "$test_file"
+            node "$test_file" || status=1
           done
+          exit "$status"
 
       - name: Install Flutter dependencies
         run: flutter pub get
