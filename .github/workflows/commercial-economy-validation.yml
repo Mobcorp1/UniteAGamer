@@ -44,6 +44,12 @@ jobs:
           done
           exit "$status"
 
+      - name: Set up Java 21 for Firebase emulator
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
       - name: Validate Firestore rules
         run: npx --yes firebase-tools@15.30.2 emulators:exec --only firestore --project demo-uag "node -e \"console.log('Firestore rules validated')\""
 
