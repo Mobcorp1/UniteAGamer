@@ -9,7 +9,7 @@ void main() {
     expect(UagBetaCommercialOffer.premiumAnnual.pricePence, 4999);
     expect(UagBetaCommercialOffer.premiumDayPass.pricePence, 149);
     expect(UagBetaCommercialOffer.premiumWeekPass.pricePence, 249);
-    expect(UagBetaCommercialOffer.foundingRaiderAnnual.pricePence, 2999);
+    expect(UagBetaCommercialOffer.foundingRaiderAnnual.pricePence, 4499);
     expect(
       UagBetaCommercialOffer.foundingRaiderAnnual.checkoutPlanId,
       'founding_raider_premium_yearly',
