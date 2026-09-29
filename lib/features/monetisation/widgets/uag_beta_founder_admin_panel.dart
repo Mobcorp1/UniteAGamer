@@ -1,6 +1,10 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_beta_founder_pricing.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_commercial_economy.dart';
@@ -215,50 +219,15 @@ class _UagBetaFounderAdminPanelState extends State<UagBetaFounderAdminPanel> {
   Future<void> _setFoundingRaider(bool enabled) async {
     final target = _target;
     if (target == null || _busy) return;
-
-    if (enabled && !target.recognition.isFoundingRaider) {
-      final founderSnapshot = await _firestore
-          .collection('uag_commercial_recognition')
-          .where('foundingRaider', isEqualTo: true)
-          .get();
-      if (founderSnapshot.docs.length >=
-          UagCommercialEconomy.founderMembershipCap) {
-        if (!mounted) return;
-        setState(() {
-          _message =
-              'Founding Raider cohort is full (${UagCommercialEconomy.founderMembershipCap} memberships).';
-          _messageIsError = true;
-        });
-        return;
-      }
-    }
-
-    await _writeRecognition(
-      recognitionPatch: <String, dynamic>{
-        'foundingRaider': enabled,
-        'founder': enabled,
-        'founderStatus': <String, dynamic>{
-          'active': enabled,
-          if (enabled) 'grantedAt': FieldValue.serverTimestamp(),
-        },
-        if (enabled) 'founderGrantedAt': FieldValue.serverTimestamp(),
-      },
-      userPatch: <String, dynamic>{
-        'foundingRaider': enabled,
-        'founder': enabled,
-        'founderEligible': enabled,
-        'founderStatus': <String, dynamic>{
-          'active': enabled,
-          if (enabled) 'grantedAt': FieldValue.serverTimestamp(),
-        },
-        if (enabled) 'founderGrantedAt': FieldValue.serverTimestamp(),
-      },
+    await _runFounderAdminAction(
+      targetUid: target.uid,
+      action: 'set_status',
+      enabled: enabled,
       success: enabled
           ? 'Founding Raider status granted. £44.99 annual Premium rate is available unless previously forfeited.'
           : 'Founding Raider commercial status removed.',
     );
   }
-
   Future<void> _setWallEligible(bool enabled) async {
     final target = _target;
     if (target == null || _busy) return;
@@ -280,22 +249,83 @@ class _UagBetaFounderAdminPanelState extends State<UagBetaFounderAdminPanel> {
   Future<void> _restoreFounderRate() async {
     final target = _target;
     if (target == null || _busy) return;
-    await _writeRecognition(
-      recognitionPatch: <String, dynamic>{
-        'founderRateForfeited': false,
-        'founderStatus': <String, dynamic>{'rateForfeited': false},
-        'founderRateRestoredAt': FieldValue.serverTimestamp(),
-      },
-      userPatch: <String, dynamic>{
-        'founderRateForfeited': false,
-        'founderStatus': <String, dynamic>{'rateForfeited': false},
-        'monetisation': <String, dynamic>{'founderRateForfeited': false},
-        'founderRateRestoredAt': FieldValue.serverTimestamp(),
-      },
+    await _runFounderAdminAction(
+      targetUid: target.uid,
+      action: 'restore_rate',
       success: '£44.99 Founding Raider annual rate restored by admin.',
     );
   }
 
+  Future<void> _runFounderAdminAction({
+    required String targetUid,
+    required String action,
+    bool? enabled,
+    required String success,
+  }) async {
+    if (_busy) return;
+    _setBusy(true);
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        throw const _FounderAdminException('Admin sign-in is required.');
+      }
+      final idToken = await user.getIdToken();
+      if (idToken == null || idToken.isEmpty) {
+        throw const _FounderAdminException(
+          'Admin session could not be verified. Sign in again and retry.',
+        );
+      }
+      final projectId = Firebase.app().options.projectId;
+      final response = await http.post(
+        Uri.parse(
+          'https://us-central1-$projectId.cloudfunctions.net/setUagFoundingRaiderStatus',
+        ),
+        headers: <String, String>{
+          'Authorization': 'Bearer $idToken',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(<String, dynamic>{
+          'targetUid': targetUid,
+          'action': action,
+          if (enabled != null) 'enabled': enabled,
+        }),
+      );
+      Map<String, dynamic> payload = const <String, dynamic>{};
+      try {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map) payload = Map<String, dynamic>.from(decoded);
+      } catch (_) {}
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        final error = payload['error']?.toString().trim() ?? '';
+        throw _FounderAdminException(
+          error.isEmpty ? 'Founder status update failed.' : error,
+        );
+      }
+
+      final refreshed = await _loadTarget(targetUid);
+      if (!mounted) return;
+      _applyTarget(refreshed);
+      setState(() {
+        _target = refreshed;
+        _message = success;
+        _messageIsError = false;
+      });
+    } on _FounderAdminException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _message = error.message;
+        _messageIsError = true;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _message = 'Founder status update failed. No commercial entitlement was changed.';
+        _messageIsError = true;
+      });
+    } finally {
+      _setBusy(false);
+    }
+  }
   Future<void> _writeRecognition({
     required Map<String, dynamic> recognitionPatch,
     required Map<String, dynamic> userPatch,
@@ -809,4 +839,14 @@ class _CommercialAdminTarget {
   final String email;
   final UagBetaFounderStatus recognition;
   final ArcWallOfLegendsEntry? legend;
+}
+
+
+class _FounderAdminException implements Exception {
+  const _FounderAdminException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
 }

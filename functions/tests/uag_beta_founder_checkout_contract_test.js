@@ -23,6 +23,9 @@ const requiredSourceTokens = [
   "subscription.cancellation_details?.reason === 'cancellation_requested'",
   "safeCheckoutReturnUrl",
   "setCheckoutCors",
+  "exports.setUagFoundingRaiderStatus = onRequest",
+  "COMMERCIAL_ECONOMY.founder.membershipCap",
+  "uag_commercial_counters",
 ];
 
 for (const token of requiredSourceTokens) {
@@ -34,8 +37,12 @@ assert(
   'Secure commercial recognition collection rules are missing.',
 );
 assert(
-  rules.includes('allow create, update, delete: if isAdminOrDev();'),
-  'Commercial recognition writes must stay admin/dev only.',
+  rules.includes("request.resource.data.get('foundingRaider', false) =="),
+  'Founder authority must not be writable directly from the admin client.',
+);
+assert(
+  rules.includes('match /uag_commercial_counters/{counterId}'),
+  'Server-owned Founder cohort counter rules are missing.',
 );
 assert(
   rules.includes('ownerUserCommercialFieldsUnchanged'),

@@ -1254,7 +1254,29 @@ service cloud.firestore {
 
     match /uag_commercial_recognition/{userId} {
       allow read: if isOwner(userId) || isAdminOrDev();
-      allow create, update, delete: if isAdminOrDev();
+      allow create: if isAdminOrDev() &&
+        request.resource.data.get('foundingRaider', false) != true &&
+        request.resource.data.get('founder', false) != true &&
+        request.resource.data.get('founderStatus', {}).get('active', false) != true &&
+        request.resource.data.get('founderRateForfeited', false) != true &&
+        request.resource.data.get('founderStatus', {}).get('rateForfeited', false) != true;
+      allow update: if isAdminOrDev() &&
+        request.resource.data.get('foundingRaider', false) ==
+          resource.data.get('foundingRaider', false) &&
+        request.resource.data.get('founder', false) ==
+          resource.data.get('founder', false) &&
+        request.resource.data.get('founderStatus', {}).get('active', false) ==
+          resource.data.get('founderStatus', {}).get('active', false) &&
+        request.resource.data.get('founderRateForfeited', false) ==
+          resource.data.get('founderRateForfeited', false) &&
+        request.resource.data.get('founderStatus', {}).get('rateForfeited', false) ==
+          resource.data.get('founderStatus', {}).get('rateForfeited', false);
+      allow delete: if false;
+    }
+
+    match /uag_commercial_counters/{counterId} {
+      allow read: if isAdminOrDev();
+      allow create, update, delete: if false;
     }
 
     match /wall_of_legends/{docId} {

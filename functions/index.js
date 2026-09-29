@@ -993,6 +993,164 @@ exports.createUagCheckoutSession = onRequest({ secrets: [stripeSecretKey] }, asy
   }
 });
 
+exports.setUagFoundingRaiderStatus = onRequest(async (req, res) => {
+  try {
+    if (setCheckoutCors(req, res)) return;
+    if (req.method !== 'POST') {
+      res.status(405).send('Method not allowed');
+      return;
+    }
+
+    const authHeader = req.headers.authorization || '';
+    const idToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+    if (!idToken) {
+      res.status(401).json({ error: 'Admin sign-in is required.' });
+      return;
+    }
+    const decoded = await admin.auth().verifyIdToken(idToken);
+    const callerSnap = await db.collection('users').doc(decoded.uid).get();
+    const caller = callerSnap.data() || {};
+    if (caller.isAdmin !== true && caller.isDev !== true) {
+      res.status(403).json({ error: 'Admin or developer access is required.' });
+      return;
+    }
+
+    const targetUid = normalizeString(req.body?.targetUid);
+    const action = normalizeString(req.body?.action);
+    const enabled = req.body?.enabled === true;
+    if (!targetUid || !['set_status', 'restore_rate'].includes(action)) {
+      res.status(400).json({ error: 'A valid Founder admin action is required.' });
+      return;
+    }
+
+    const founderQuery = await db
+      .collection('uag_commercial_recognition')
+      .where('foundingRaider', '==', true)
+      .get();
+    const bootstrapActiveCount = founderQuery.docs.filter((doc) =>
+      isFoundingRaider(doc.data() || {}),
+    ).length;
+
+    const targetRef = db.collection('users').doc(targetUid);
+    const recognitionRef = db
+      .collection('uag_commercial_recognition')
+      .doc(targetUid);
+    const counterRef = db
+      .collection('uag_commercial_counters')
+      .doc('founding_raiders');
+
+    const result = await db.runTransaction(async (transaction) => {
+      const [targetSnap, recognitionSnap, counterSnap] = await Promise.all([
+        transaction.get(targetRef),
+        transaction.get(recognitionRef),
+        transaction.get(counterRef),
+      ]);
+      if (!targetSnap.exists) {
+        const error = new Error('The selected UAG account no longer exists.');
+        error.statusCode = 404;
+        throw error;
+      }
+
+      const recognition = recognitionSnap.data() || {};
+      const currentlyFounder = isFoundingRaider(recognition);
+      let activeCount = counterSnap.exists
+        ? Math.max(0, Number(counterSnap.data()?.activeCount || 0) || 0)
+        : bootstrapActiveCount;
+      const now = admin.firestore.FieldValue.serverTimestamp();
+
+      if (action === 'set_status') {
+        if (enabled && !currentlyFounder) {
+          if (activeCount >= COMMERCIAL_ECONOMY.founder.membershipCap) {
+            const error = new Error(
+              `Founding Raider cohort is full (${COMMERCIAL_ECONOMY.founder.membershipCap} memberships).`,
+            );
+            error.statusCode = 409;
+            throw error;
+          }
+          activeCount += 1;
+        } else if (!enabled && currentlyFounder) {
+          activeCount = Math.max(0, activeCount - 1);
+        }
+
+        transaction.set(recognitionRef, {
+          uid: targetUid,
+          foundingRaider: enabled,
+          founder: enabled,
+          founderStatus: {
+            active: enabled,
+            ...(enabled && !currentlyFounder ? { grantedAt: now } : {}),
+          },
+          ...(enabled && !currentlyFounder ? { founderGrantedAt: now } : {}),
+          updatedByUid: decoded.uid,
+          updatedAt: now,
+        }, { merge: true });
+        transaction.set(targetRef, {
+          foundingRaider: enabled,
+          founder: enabled,
+          founderEligible: enabled,
+          founderStatus: {
+            active: enabled,
+            ...(enabled && !currentlyFounder ? { grantedAt: now } : {}),
+          },
+          ...(enabled && !currentlyFounder ? { founderGrantedAt: now } : {}),
+          updatedAt: now,
+        }, { merge: true });
+      } else {
+        if (!currentlyFounder) {
+          const error = new Error(
+            'Founding Raider status must be active before restoring the rate.',
+          );
+          error.statusCode = 409;
+          throw error;
+        }
+        transaction.set(recognitionRef, {
+          founderRateForfeited: false,
+          founderStatus: { rateForfeited: false },
+          founderRateRestoredAt: now,
+          updatedByUid: decoded.uid,
+          updatedAt: now,
+        }, { merge: true });
+        transaction.set(targetRef, {
+          founderRateForfeited: false,
+          founderStatus: { rateForfeited: false },
+          monetisation: { founderRateForfeited: false },
+          founderRateRestoredAt: now,
+          updatedAt: now,
+        }, { merge: true });
+      }
+
+      transaction.set(counterRef, {
+        id: 'founding_raiders',
+        activeCount,
+        cap: COMMERCIAL_ECONOMY.founder.membershipCap,
+        updatedAt: now,
+        createdAt: counterSnap.exists
+          ? counterSnap.data()?.createdAt || now
+          : now,
+      }, { merge: true });
+
+      return {
+        activeCount,
+        founderActive: action === 'set_status' ? enabled : currentlyFounder,
+      };
+    });
+
+    res.status(200).json({
+      ok: true,
+      activeCount: result.activeCount,
+      founderActive: result.founderActive,
+      founderCap: COMMERCIAL_ECONOMY.founder.membershipCap,
+    });
+  } catch (error) {
+    console.error('Founder admin update failed', error);
+    const statusCode = Number(error?.statusCode || 500);
+    res.status(statusCode >= 400 && statusCode < 600 ? statusCode : 500).json({
+      error: statusCode >= 500
+        ? 'Founder status could not be updated right now.'
+        : (error.message || 'Founder status could not be updated.'),
+    });
+  }
+});
 exports.createUagCustomerPortalSession = onRequest({ secrets: [stripeSecretKey] }, async (req, res) => {
   try {
     if (setCheckoutCors(req, res)) return;
