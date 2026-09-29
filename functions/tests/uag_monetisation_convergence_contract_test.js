@@ -12,7 +12,7 @@ for (const token of [
   'pricePence: 199',
   'pricePence: 349',
   "source: 'uag_community_referral'",
-  'subscriberDiscountPercent: 10',
+  'COMMERCIAL_ECONOMY.discounts.communityReferralPercent',
   'communityBaseCommissionRate',
   'premiumReferralBoost',
   'authoritativeCommunityCommissionRate',
