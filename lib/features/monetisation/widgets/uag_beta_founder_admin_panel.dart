@@ -228,6 +228,7 @@ class _UagBetaFounderAdminPanelState extends State<UagBetaFounderAdminPanel> {
           : 'Founding Raider commercial status removed.',
     );
   }
+
   Future<void> _setWallEligible(bool enabled) async {
     final target = _target;
     if (target == null || _busy) return;
@@ -319,13 +320,15 @@ class _UagBetaFounderAdminPanelState extends State<UagBetaFounderAdminPanel> {
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _message = 'Founder status update failed. No commercial entitlement was changed.';
+        _message =
+            'Founder status update failed. No commercial entitlement was changed.';
         _messageIsError = true;
       });
     } finally {
       _setBusy(false);
     }
   }
+
   Future<void> _writeRecognition({
     required Map<String, dynamic> recognitionPatch,
     required Map<String, dynamic> userPatch,
@@ -840,7 +843,6 @@ class _CommercialAdminTarget {
   final UagBetaFounderStatus recognition;
   final ArcWallOfLegendsEntry? legend;
 }
-
 
 class _FounderAdminException implements Exception {
   const _FounderAdminException(this.message);
