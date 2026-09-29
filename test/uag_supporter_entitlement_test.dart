@@ -59,13 +59,13 @@ void main() {
           UagSubscriptionPlan.forTier(
             UagSubscriptionTier.essential,
           ).monthlyPricePence,
-          799,
+          499,
         );
         expect(
           UagSubscriptionPlan.forTier(
             UagSubscriptionTier.premium,
           ).monthlyPricePence,
-          999,
+          899,
         );
         expect(UagAdPolicy.premium.hasAnyAds, isFalse);
       },
