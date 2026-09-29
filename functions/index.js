@@ -6,6 +6,9 @@ const { defineSecret } = require('firebase-functions/params');
 const Stripe = require('stripe');
 const crypto = require('crypto');
 const {
+  subscriptionCurrentPeriodEndSeconds,
+} = require('./stripe_subscription_compat');
+const {
   COMMERCIAL_ECONOMY,
   normalizeCode: normalizeCommercialCode,
   creatorAcquisitionDiscountPercent,
@@ -254,6 +257,12 @@ function timestampMillis(value) {
   if (value instanceof Date) return value.getTime();
   const parsed = Date.parse(String(value));
   return Number.isFinite(parsed) ? parsed : 0;
+}
+function subscriptionCurrentPeriodEndTimestamp(subscription) {
+  const seconds = subscriptionCurrentPeriodEndSeconds(subscription);
+  return seconds > 0
+    ? admin.firestore.Timestamp.fromMillis(seconds * 1000)
+    : null;
 }
 
 function currentPremiumPass(userData) {
@@ -1781,7 +1790,7 @@ async function handleSubscriptionUpdated(subscription) {
       plan,
       status: subscription.status,
       stripeSubscriptionId: subscription.id,
-      currentPeriodEnd: admin.firestore.Timestamp.fromMillis(subscription.current_period_end * 1000),
+      currentPeriodEnd: subscriptionCurrentPeriodEndTimestamp(subscription),
       active,
     });
     return;
@@ -1793,7 +1802,7 @@ async function handleSubscriptionUpdated(subscription) {
       subscriptionStatus: subscription.status,
       billingPeriod: plan.billingPeriod,
       stripeSubscriptionId: subscription.id,
-      currentPeriodEnd: admin.firestore.Timestamp.fromMillis(subscription.current_period_end * 1000),
+      currentPeriodEnd: subscriptionCurrentPeriodEndTimestamp(subscription),
       commercialOfferId: plan.offerId || null,
       founderRateActive: active && plan.offerAudience === 'founder',
       betaRateActive: active && plan.offerAudience === 'beta',
@@ -2431,9 +2440,7 @@ async function upsertCreatorReferredSubscription({
     active,
     inCancellationGrace: false,
     graceUntil: admin.firestore.FieldValue.delete(),
-    currentPeriodEnd: subscription.current_period_end
-      ? admin.firestore.Timestamp.fromMillis(subscription.current_period_end * 1000)
-      : null,
+    currentPeriodEnd: subscriptionCurrentPeriodEndTimestamp(subscription),
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
   }, { merge: true });
 
