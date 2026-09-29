@@ -13,8 +13,7 @@ enum UagRaiderMarkRedemptionTarget {
 
   String get label => switch (this) {
     UagRaiderMarkRedemptionTarget.tradeAction => '+1 Trade Action',
-    UagRaiderMarkRedemptionTarget.matchRaiderSearch =>
-      '+1 Match Raider Search',
+    UagRaiderMarkRedemptionTarget.matchRaiderSearch => '+1 Match Raider Search',
   };
 }
 

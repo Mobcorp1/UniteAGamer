@@ -37,10 +37,8 @@ class _UagCommercialOffersPanelState extends State<UagCommercialOffersPanel> {
     super.dispose();
   }
 
-  String _normaliseCode(String value) => value
-      .trim()
-      .toUpperCase()
-      .replaceAll(RegExp(r'[^A-Z0-9]'), '');
+  String _normaliseCode(String value) =>
+      value.trim().toUpperCase().replaceAll(RegExp(r'[^A-Z0-9]'), '');
 
   void _promotionChanged(String value) {
     widget.onPromotionCodeChanged(_normaliseCode(value));
@@ -120,10 +118,7 @@ class _UagCommercialOffersPanelState extends State<UagCommercialOffersPanel> {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final wide = constraints.maxWidth >= 820;
-          final children = <Widget>[
-            _promotionCard(),
-            _giftCard(),
-          ];
+          final children = <Widget>[_promotionCard(), _giftCard()];
           if (!wide) {
             return Column(
               children: [
@@ -243,7 +238,8 @@ class _UagCommercialOffersPanelState extends State<UagCommercialOffersPanel> {
           .where('purchaserUid', isEqualTo: uid)
           .snapshots(),
       builder: (context, snapshot) {
-        final docs = snapshot.data?.docs.toList(growable: true) ??
+        final docs =
+            snapshot.data?.docs.toList(growable: true) ??
             <QueryDocumentSnapshot<Map<String, dynamic>>>[];
         docs.sort((a, b) {
           final aMillis = _timestampMillis(a.data()['paidAt']);
@@ -255,64 +251,69 @@ class _UagCommercialOffersPanelState extends State<UagCommercialOffersPanel> {
         return _innerCard(
           title: 'YOUR PURCHASED GIFTS',
           child: Column(
-            children: docs.take(10).map((doc) {
-              final data = doc.data();
-              final code = data['code']?.toString() ?? doc.id;
-              final status = data['status']?.toString() ?? 'active';
-              final active = status == 'active';
-              return Padding(
-                padding: const EdgeInsets.only(bottom: ArcUiTokens.gapS),
-                child: Row(
-                  children: [
-                    Icon(
-                      active
-                          ? Icons.card_giftcard_rounded
-                          : Icons.check_circle_outline_rounded,
-                      color: active
-                          ? ArcUiTokens.secondaryAccent
-                          : ArcUiTokens.textTertiary,
-                    ),
-                    const SizedBox(width: ArcUiTokens.gapS),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SelectableText(
-                            code,
-                            style: ArcUiTokens.body(
-                              weight: FontWeight.w700,
-                              color: ArcUiTokens.textPrimary,
-                            ),
+            children: docs
+                .take(10)
+                .map((doc) {
+                  final data = doc.data();
+                  final code = data['code']?.toString() ?? doc.id;
+                  final status = data['status']?.toString() ?? 'active';
+                  final active = status == 'active';
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: ArcUiTokens.gapS),
+                    child: Row(
+                      children: [
+                        Icon(
+                          active
+                              ? Icons.card_giftcard_rounded
+                              : Icons.check_circle_outline_rounded,
+                          color: active
+                              ? ArcUiTokens.secondaryAccent
+                              : ArcUiTokens.textTertiary,
+                        ),
+                        const SizedBox(width: ArcUiTokens.gapS),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SelectableText(
+                                code,
+                                style: ArcUiTokens.body(
+                                  weight: FontWeight.w700,
+                                  color: ArcUiTokens.textPrimary,
+                                ),
+                              ),
+                              Text(
+                                active
+                                    ? 'Ready to send — recipient claims the code'
+                                    : 'Redeemed',
+                                style: ArcUiTokens.bodySmall(
+                                  color: ArcUiTokens.textSecondary,
+                                ),
+                              ),
+                            ],
                           ),
-                          Text(
-                            active
-                                ? 'Ready to send — recipient claims the code'
-                                : 'Redeemed',
-                            style: ArcUiTokens.bodySmall(
-                              color: ArcUiTokens.textSecondary,
-                            ),
+                        ),
+                        if (active)
+                          IconButton(
+                            tooltip: 'Copy gift code',
+                            onPressed: () async {
+                              await Clipboard.setData(
+                                ClipboardData(text: code),
+                              );
+                              if (!mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Gift code copied.'),
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.copy_rounded),
                           ),
-                        ],
-                      ),
+                      ],
                     ),
-                    if (active)
-                      IconButton(
-                        tooltip: 'Copy gift code',
-                        onPressed: () async {
-                          await Clipboard.setData(ClipboardData(text: code));
-                          if (!mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Gift code copied.'),
-                            ),
-                          );
-                        },
-                        icon: const Icon(Icons.copy_rounded),
-                      ),
-                  ],
-                ),
-              );
-            }).toList(growable: false),
+                  );
+                })
+                .toList(growable: false),
           ),
         );
       },
@@ -343,8 +344,7 @@ class _UagCommercialOffersPanelState extends State<UagCommercialOffersPanel> {
   }
 
   Widget _messagePanel() {
-    final accent =
-        _messageIsError ? ArcUiTokens.danger : ArcUiTokens.success;
+    final accent = _messageIsError ? ArcUiTokens.danger : ArcUiTokens.success;
     return Container(
       width: double.infinity,
       padding: ArcUiTokens.panelPadding,
@@ -360,8 +360,7 @@ class _UagCommercialOffersPanelState extends State<UagCommercialOffersPanel> {
   int _timestampMillis(dynamic value) {
     if (value is Timestamp) return value.millisecondsSinceEpoch;
     if (value is DateTime) return value.millisecondsSinceEpoch;
-    return DateTime.tryParse(value?.toString() ?? '')
-            ?.millisecondsSinceEpoch ??
+    return DateTime.tryParse(value?.toString() ?? '')?.millisecondsSinceEpoch ??
         0;
   }
 }

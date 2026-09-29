@@ -109,8 +109,7 @@ class UagCommercialEconomy {
     if (action == UagBillableAction.matchmakingSearch) {
       return switch (tier) {
         UagSubscriptionTier.free => freeMonthlyMatchRaiderActions,
-        UagSubscriptionTier.essential =>
-          essentialMonthlyMatchRaiderActions,
+        UagSubscriptionTier.essential => essentialMonthlyMatchRaiderActions,
         UagSubscriptionTier.premium => null,
       };
     }

@@ -44,10 +44,10 @@ class _UagCommercialCampaignAdminPanelState
 
   Future<void> _save() async {
     if (_busy) return;
-    final code = _codeController.text
-        .trim()
-        .toUpperCase()
-        .replaceAll(RegExp(r'[^A-Z0-9]'), '');
+    final code = _codeController.text.trim().toUpperCase().replaceAll(
+      RegExp(r'[^A-Z0-9]'),
+      '',
+    );
     if (code.length < 4 || code.length > 28) {
       _setMessage('Code must be 4–28 letters/numbers.', error: true);
       return;
@@ -90,8 +90,8 @@ class _UagCommercialCampaignAdminPanelState
             : Timestamp.fromDate(now.add(Duration(days: validDays))),
         'createdByUid': existing.data()?['createdByUid'] ?? adminUid,
         'updatedByUid': adminUid,
-        'createdAt': existing.data()?['createdAt'] ??
-            FieldValue.serverTimestamp(),
+        'createdAt':
+            existing.data()?['createdAt'] ?? FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
       _codeController.clear();
@@ -225,7 +225,8 @@ class _UagCommercialCampaignAdminPanelState
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: _firestore.collection('uag_discount_campaigns').snapshots(),
       builder: (context, snapshot) {
-        final docs = snapshot.data?.docs.toList(growable: true) ??
+        final docs =
+            snapshot.data?.docs.toList(growable: true) ??
             <QueryDocumentSnapshot<Map<String, dynamic>>>[];
         docs.sort((a, b) => a.id.compareTo(b.id));
         if (docs.isEmpty) {
@@ -235,54 +236,56 @@ class _UagCommercialCampaignAdminPanelState
           );
         }
         return Column(
-          children: docs.map((doc) {
-            final data = doc.data();
-            final status = data['status']?.toString() ?? 'inactive';
-            final uses = (data['redemptions'] as num?)?.toInt() ?? 0;
-            final cap = (data['maxRedemptions'] as num?)?.toInt() ?? 0;
-            final preset = UagOwnerCampaignPreset.fromValue(
-              data['preset']?.toString(),
-            );
-            return Container(
-              margin: const EdgeInsets.only(bottom: ArcUiTokens.gapS),
-              padding: ArcUiTokens.panelPadding,
-              decoration: ArcUiTokens.surfaceDecoration(
-                role: ArcSurfaceRole.base,
-                accent: status == 'active'
-                    ? ArcUiTokens.warning
-                    : ArcUiTokens.textTertiary,
-                borderOpacity: 0.2,
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          doc.id,
-                          style: ArcUiTokens.cardTitle(
-                            color: ArcUiTokens.textPrimary,
-                          ),
-                        ),
-                        Text(
-                          '${preset.label} • $uses / $cap used • ${status.toUpperCase()}',
-                          style: ArcUiTokens.bodySmall(
-                            color: ArcUiTokens.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
+          children: docs
+              .map((doc) {
+                final data = doc.data();
+                final status = data['status']?.toString() ?? 'inactive';
+                final uses = (data['redemptions'] as num?)?.toInt() ?? 0;
+                final cap = (data['maxRedemptions'] as num?)?.toInt() ?? 0;
+                final preset = UagOwnerCampaignPreset.fromValue(
+                  data['preset']?.toString(),
+                );
+                return Container(
+                  margin: const EdgeInsets.only(bottom: ArcUiTokens.gapS),
+                  padding: ArcUiTokens.panelPadding,
+                  decoration: ArcUiTokens.surfaceDecoration(
+                    role: ArcSurfaceRole.base,
+                    accent: status == 'active'
+                        ? ArcUiTokens.warning
+                        : ArcUiTokens.textTertiary,
+                    borderOpacity: 0.2,
                   ),
-                  if (status == 'active')
-                    OutlinedButton(
-                      onPressed: _busy ? null : () => _deactivate(doc.id),
-                      child: const Text('DEACTIVATE'),
-                    ),
-                ],
-              ),
-            );
-          }).toList(growable: false),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              doc.id,
+                              style: ArcUiTokens.cardTitle(
+                                color: ArcUiTokens.textPrimary,
+                              ),
+                            ),
+                            Text(
+                              '${preset.label} • $uses / $cap used • ${status.toUpperCase()}',
+                              style: ArcUiTokens.bodySmall(
+                                color: ArcUiTokens.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (status == 'active')
+                        OutlinedButton(
+                          onPressed: _busy ? null : () => _deactivate(doc.id),
+                          child: const Text('DEACTIVATE'),
+                        ),
+                    ],
+                  ),
+                );
+              })
+              .toList(growable: false),
         );
       },
     );

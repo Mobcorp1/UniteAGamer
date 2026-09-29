@@ -106,7 +106,8 @@ class UagBetaFounderOfferPanel extends StatelessWidget {
                     suffix: '',
                     planId:
                         UagBetaCommercialOffer.premiumDayPass.checkoutPlanId,
-                    detail: 'Reusable 24-hour Premium access when no other Premium access is active.',
+                    detail:
+                        'Reusable 24-hour Premium access when no other Premium access is active.',
                     enabled: entitlement.premiumPass.canPurchase(
                       UagPremiumPassType.day24,
                     ),
@@ -117,7 +118,8 @@ class UagBetaFounderOfferPanel extends StatelessWidget {
                     suffix: '',
                     planId:
                         UagBetaCommercialOffer.premiumWeekPass.checkoutPlanId,
-                    detail: 'Reusable 7-day Premium access when no other Premium access is active.',
+                    detail:
+                        'Reusable 7-day Premium access when no other Premium access is active.',
                     enabled: entitlement.premiumPass.canPurchase(
                       UagPremiumPassType.week7,
                     ),

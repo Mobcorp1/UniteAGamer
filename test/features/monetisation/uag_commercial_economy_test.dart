@@ -8,10 +8,28 @@ import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_subscriptio
 
 void main() {
   test('launch subscription prices are locked', () {
-    expect(UagSubscriptionPlan.forTier(UagSubscriptionTier.essential).monthlyPricePence, 499);
-    expect(UagSubscriptionPlan.forTier(UagSubscriptionTier.essential).yearlyPricePence, 4999);
-    expect(UagSubscriptionPlan.forTier(UagSubscriptionTier.premium).monthlyPricePence, 899);
-    expect(UagSubscriptionPlan.forTier(UagSubscriptionTier.premium).yearlyPricePence, 8999);
+    expect(
+      UagSubscriptionPlan.forTier(
+        UagSubscriptionTier.essential,
+      ).monthlyPricePence,
+      499,
+    );
+    expect(
+      UagSubscriptionPlan.forTier(
+        UagSubscriptionTier.essential,
+      ).yearlyPricePence,
+      4999,
+    );
+    expect(
+      UagSubscriptionPlan.forTier(
+        UagSubscriptionTier.premium,
+      ).monthlyPricePence,
+      899,
+    );
+    expect(
+      UagSubscriptionPlan.forTier(UagSubscriptionTier.premium).yearlyPricePence,
+      8999,
+    );
   });
 
   test('trade and Match Raider limits use the agreed monthly values', () {
@@ -57,8 +75,14 @@ void main() {
       UagOwnerCampaignPreset.christmasNextRenewalFree.nextRenewalFree,
       isTrue,
     );
-    expect(UagCommercialEconomy.creatorCommissionAllowedForDiscount(25), isTrue);
-    expect(UagCommercialEconomy.creatorCommissionAllowedForDiscount(50), isFalse);
+    expect(
+      UagCommercialEconomy.creatorCommissionAllowedForDiscount(25),
+      isTrue,
+    );
+    expect(
+      UagCommercialEconomy.creatorCommissionAllowedForDiscount(50),
+      isFalse,
+    );
   });
 
   test('Raider Marks preserve a material gap to Essential', () {

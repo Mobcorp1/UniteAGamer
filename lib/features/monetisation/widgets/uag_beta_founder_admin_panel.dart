@@ -258,6 +258,7 @@ class _UagBetaFounderAdminPanelState extends State<UagBetaFounderAdminPanel> {
           : 'Founding Raider commercial status removed.',
     );
   }
+
   Future<void> _setWallEligible(bool enabled) async {
     final target = _target;
     if (target == null || _busy) return;

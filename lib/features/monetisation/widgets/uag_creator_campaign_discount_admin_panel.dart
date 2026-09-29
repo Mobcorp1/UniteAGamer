@@ -26,7 +26,8 @@ class _UagCreatorCampaignDiscountAdminPanelState
           .collection('uag_creator_campaign_code_requests')
           .doc(code);
       final snap = await ref.get();
-      if (!snap.exists || (snap.data()?['uid']?.toString().trim() ?? '').isEmpty) {
+      if (!snap.exists ||
+          (snap.data()?['uid']?.toString().trim() ?? '').isEmpty) {
         throw StateError('Creator code is missing its owner.');
       }
       await ref.set(<String, dynamic>{
@@ -35,7 +36,8 @@ class _UagCreatorCampaignDiscountAdminPanelState
         'subscriberDiscountDuration': 'once',
         'commissionEligible': discountPercent <= 25,
         'approvedByUid': FirebaseAuth.instance.currentUser?.uid ?? '',
-        'approvedAt': snap.data()?['approvedAt'] ?? FieldValue.serverTimestamp(),
+        'approvedAt':
+            snap.data()?['approvedAt'] ?? FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
       if (!mounted) return;
@@ -66,9 +68,9 @@ class _UagCreatorCampaignDiscountAdminPanelState
           .collection('uag_creator_campaign_code_requests')
           .doc(code)
           .set(<String, dynamic>{
-        'status': 'inactive',
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+            'status': 'inactive',
+            'updatedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
     } finally {
       if (mounted) setState(() => _busyCode = null);
     }
@@ -87,7 +89,8 @@ class _UagCreatorCampaignDiscountAdminPanelState
             .collection('uag_creator_campaign_code_requests')
             .snapshots(),
         builder: (context, snapshot) {
-          final docs = snapshot.data?.docs.toList(growable: true) ??
+          final docs =
+              snapshot.data?.docs.toList(growable: true) ??
               <QueryDocumentSnapshot<Map<String, dynamic>>>[];
           docs.sort((a, b) => a.id.compareTo(b.id));
           if (docs.isEmpty) {
@@ -134,7 +137,9 @@ class _UagCreatorCampaignDiscountAdminPanelState
                 ),
               ),
               Text(
-                discount == null ? status.toUpperCase() : '$discount% • ${status.toUpperCase()}',
+                discount == null
+                    ? status.toUpperCase()
+                    : '$discount% • ${status.toUpperCase()}',
                 style: ArcUiTokens.label(color: ArcUiTokens.textSecondary),
               ),
             ],
