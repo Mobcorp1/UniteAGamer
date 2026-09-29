@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_beta_founder_pricing.dart';
-import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_commercial_economy.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_profile_social_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_wall_of_legends_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_wall_of_legends_repository.dart';
@@ -288,7 +287,7 @@ class _UagBetaFounderAdminPanelState extends State<UagBetaFounderAdminPanel> {
         body: jsonEncode(<String, dynamic>{
           'targetUid': targetUid,
           'action': action,
-          if (enabled != null) 'enabled': enabled,
+          'enabled': enabled,
         }),
       );
       Map<String, dynamic> payload = const <String, dynamic>{};
