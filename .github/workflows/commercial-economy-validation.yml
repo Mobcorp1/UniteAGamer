@@ -34,8 +34,13 @@ jobs:
       - name: Validate Cloud Functions syntax
         run: node --check functions/index.js
 
-      - name: Run commercial backend tests
-        run: node --test functions/tests/uag_commercial_economy_test.js functions/tests/uag_commercial_checkout_contract_test.js
+      - name: Run complete Functions test suite
+        run: |
+          set -euo pipefail
+          for test_file in functions/tests/*.js; do
+            echo "==> $test_file"
+            node "$test_file"
+          done
 
       - name: Install Flutter dependencies
         run: flutter pub get
