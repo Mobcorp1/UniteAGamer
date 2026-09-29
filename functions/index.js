@@ -387,13 +387,19 @@ async function resolveReferral(referralCode, { uid, planId, userData }) {
   const code = normalizeCommercialCode(referralCode);
   if (!code || !uid || !planId) return null;
 
-  const [creatorCodeSnap, communityCodeSnap, ownerCampaignSnap, ownerClaimSnap] =
-    await Promise.all([
-      db.collection('uag_creator_campaign_code_requests').doc(code).get(),
-      db.collection('uag_community_referral_codes').doc(code).get(),
-      db.collection('uag_discount_campaigns').doc(code).get(),
-      db.collection('uag_promotion_claims').doc(`${code}_${uid}`).get(),
-    ]);
+  const [
+    creatorCodeSnap,
+    communityCodeSnap,
+    legacyReferralCodeSnap,
+    ownerCampaignSnap,
+    ownerClaimSnap,
+  ] = await Promise.all([
+    db.collection('uag_creator_campaign_code_requests').doc(code).get(),
+    db.collection('uag_community_referral_codes').doc(code).get(),
+    db.collection('referral_codes').doc(code).get(),
+    db.collection('uag_discount_campaigns').doc(code).get(),
+    db.collection('uag_promotion_claims').doc(`${code}_${uid}`).get(),
+  ]);
 
   if (ownerCampaignSnap.exists && !ownerClaimSnap.exists) {
     const policy = ownerCampaignPolicy(ownerCampaignSnap.data() || {}, planId);
@@ -443,10 +449,12 @@ async function resolveReferral(referralCode, { uid, planId, userData }) {
     }
   }
 
-  if (communityCodeSnap.exists) {
-    const communityCode = communityCodeSnap.data() || {};
-    const ownerUid = normalizeString(communityCode.ownerUid);
-    const canonical = normalizeCommercialCode(communityCode.code);
+  for (const referralSnapshot of [communityCodeSnap, legacyReferralCodeSnap]) {
+    if (!referralSnapshot.exists) continue;
+    const referralData = referralSnapshot.data() || {};
+    if (referralData.active === false) continue;
+    const ownerUid = normalizeString(referralData.ownerUid);
+    const canonical = normalizeCommercialCode(referralData.code);
     if (ownerUid && ownerUid !== uid && canonical === code) {
       return {
         code,
