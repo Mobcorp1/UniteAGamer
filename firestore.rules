@@ -1140,6 +1140,11 @@ service cloud.firestore {
       allow read, create, update, delete: if isAdminOrDev();
     }
 
+    match /uag_commercial_checkout_reservations/{reservationId} {
+      allow read: if isAdminOrDev();
+      allow create, update, delete: if false;
+    }
+
     match /uag_gift_codes/{code} {
       allow read: if isSignedIn() &&
         (

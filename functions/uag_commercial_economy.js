@@ -135,7 +135,11 @@ function ownerCampaignPolicy(data, planId, nowMillis = Date.now()) {
     Number(data.maxRedemptions || preset.defaultRedemptionCap) || preset.defaultRedemptionCap,
   );
   const redemptions = Math.max(0, Number(data.redemptions || 0) || 0);
-  if (redemptions >= maxRedemptions) return null;
+  const reservedRedemptions = Math.max(
+    0,
+    Number(data.reservedRedemptions || 0) || 0,
+  );
+  if (redemptions + reservedRedemptions >= maxRedemptions) return null;
 
   return {
     code,
@@ -149,6 +153,7 @@ function ownerCampaignPolicy(data, planId, nowMillis = Date.now()) {
     stackable: false,
     maxRedemptions,
     redemptions,
+    reservedRedemptions,
     preset: String(data.preset || ''),
   };
 }

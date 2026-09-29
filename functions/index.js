@@ -371,6 +371,267 @@ function setCheckoutCors(req, res) {
   return false;
 }
 
+const COMMERCIAL_CHECKOUT_RESERVATION_MINUTES = 31;
+
+function commercialCheckoutReservationExpiryMillis(nowMillis = Date.now()) {
+  return Number(nowMillis) +
+    COMMERCIAL_CHECKOUT_RESERVATION_MINUTES * 60 * 1000;
+}
+
+function ownerCheckoutReservationId(code, uid) {
+  const digest = crypto
+    .createHash('sha256')
+    .update(`${normalizeCommercialCode(code)}|${normalizeString(uid)}`)
+    .digest('hex')
+    .slice(0, 40);
+  return `owner_${digest}`;
+}
+
+async function reserveCommercialCheckout({ uid, plan, planId, referral }) {
+  const isGift = plan.kind === 'gift';
+  const isOwnerCampaign = referral?.source === 'uag_owner_campaign';
+  if (!isGift && !isOwnerCampaign) return null;
+
+  const nowMillis = Date.now();
+  const expiresAtMillis = commercialCheckoutReservationExpiryMillis(nowMillis);
+  const expiresAt = admin.firestore.Timestamp.fromMillis(expiresAtMillis);
+
+  if (isGift) {
+    const reservationId = `gift_${uid}_${crypto.randomBytes(12).toString('hex')}`;
+    const reservationRef = db
+      .collection('uag_commercial_checkout_reservations')
+      .doc(reservationId);
+    const monthKey = commercialMonthKey();
+    const monthRef = db
+      .collection('uag_gift_sender_months')
+      .doc(`${uid}_${monthKey}`);
+
+    await db.runTransaction(async (transaction) => {
+      const [monthSnap, reservationSnap] = await Promise.all([
+        transaction.get(monthRef),
+        transaction.get(reservationRef),
+      ]);
+      if (reservationSnap.exists) {
+        throw new Error('Gift checkout reservation already exists.');
+      }
+      const month = monthSnap.data() || {};
+      const completedPurchases = Math.max(
+        0,
+        Number(month.completedPurchases || 0) || 0,
+      );
+      const reservedPurchases = Math.max(
+        0,
+        Number(month.reservedPurchases || 0) || 0,
+      );
+      if (
+        completedPurchases + reservedPurchases >=
+        COMMERCIAL_ECONOMY.gifts.senderMonthlyCap
+      ) {
+        const error = new Error('Monthly Premium gift limit reached.');
+        error.statusCode = 429;
+        throw error;
+      }
+
+      transaction.set(monthRef, {
+        uid,
+        monthKey,
+        completedPurchases,
+        reservedPurchases: reservedPurchases + 1,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdAt: monthSnap.exists
+          ? month.createdAt || admin.firestore.FieldValue.serverTimestamp()
+          : admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+      transaction.set(reservationRef, {
+        id: reservationId,
+        kind: 'premium_gift',
+        uid,
+        planId,
+        counterDocId: monthRef.id,
+        status: 'reserved',
+        expiresAt,
+        stripeSessionId: '',
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: false });
+    });
+
+    return {
+      id: reservationId,
+      kind: 'premium_gift',
+      expiresAtMillis,
+      newlyReserved: true,
+    };
+  }
+
+  const code = normalizeCommercialCode(referral?.code);
+  if (!code) {
+    const error = new Error('Owner campaign reservation requires a valid code.');
+    error.statusCode = 400;
+    throw error;
+  }
+  const reservationId = ownerCheckoutReservationId(code, uid);
+  const reservationRef = db
+    .collection('uag_commercial_checkout_reservations')
+    .doc(reservationId);
+  const campaignRef = db.collection('uag_discount_campaigns').doc(code);
+  const claimRef = db.collection('uag_promotion_claims').doc(`${code}_${uid}`);
+  let newlyReserved = true;
+
+  await db.runTransaction(async (transaction) => {
+    const [campaignSnap, claimSnap, reservationSnap] = await Promise.all([
+      transaction.get(campaignRef),
+      transaction.get(claimRef),
+      transaction.get(reservationRef),
+    ]);
+    if (claimSnap.exists) {
+      const error = new Error('This promotion has already been used on this account.');
+      error.statusCode = 409;
+      throw error;
+    }
+    if (!campaignSnap.exists) {
+      const error = new Error('That owner promotion is no longer available.');
+      error.statusCode = 409;
+      throw error;
+    }
+
+    const campaign = campaignSnap.data() || {};
+    const reservation = reservationSnap.data() || {};
+    const existingReserved =
+      reservationSnap.exists &&
+      normalizeString(reservation.status) === 'reserved' &&
+      normalizeCommercialCode(reservation.code) === code &&
+      normalizeString(reservation.uid) === uid;
+    const oldExpiry = commercialTimestampMillis(reservation.expiresAt);
+    const reservedRedemptions = Math.max(
+      0,
+      Number(campaign.reservedRedemptions || 0) || 0,
+    );
+    const policyData = existingReserved
+      ? {
+          ...campaign,
+          reservedRedemptions: Math.max(0, reservedRedemptions - 1),
+        }
+      : campaign;
+    const policy = ownerCampaignPolicy(policyData, planId, nowMillis);
+    if (
+      !policy ||
+      (policy.newCustomersOnly &&
+        normalizeString(referral?.source) !== 'uag_owner_campaign')
+    ) {
+      const error = new Error('That owner promotion is no longer available.');
+      error.statusCode = 409;
+      throw error;
+    }
+
+    newlyReserved = !existingReserved || oldExpiry <= nowMillis;
+    transaction.set(campaignRef, {
+      reservedRedemptions:
+        reservedRedemptions + (existingReserved ? 0 : 1),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+    transaction.set(reservationRef, {
+      id: reservationId,
+      kind: 'owner_campaign',
+      uid,
+      planId,
+      code,
+      preset: policy.preset,
+      maxRedemptions: policy.maxRedemptions,
+      status: 'reserved',
+      expiresAt,
+      stripeSessionId: '',
+      createdAt: reservationSnap.exists
+        ? reservation.createdAt || admin.firestore.FieldValue.serverTimestamp()
+        : admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+  });
+
+  return {
+    id: reservationId,
+    kind: 'owner_campaign',
+    expiresAtMillis,
+    newlyReserved,
+  };
+}
+
+async function attachCommercialCheckoutReservation(reservation, sessionId) {
+  if (!reservation?.id || !sessionId) return;
+  await db
+    .collection('uag_commercial_checkout_reservations')
+    .doc(reservation.id)
+    .set({
+      stripeSessionId: sessionId,
+      expiresAt: admin.firestore.Timestamp.fromMillis(
+        reservation.expiresAtMillis,
+      ),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+}
+
+async function releaseCommercialCheckoutReservation({
+  reservationId,
+  sessionId = '',
+  reason = 'released',
+}) {
+  const id = normalizeString(reservationId);
+  if (!id) return;
+  const reservationRef = db
+    .collection('uag_commercial_checkout_reservations')
+    .doc(id);
+
+  await db.runTransaction(async (transaction) => {
+    const reservationSnap = await transaction.get(reservationRef);
+    if (!reservationSnap.exists) return;
+    const reservation = reservationSnap.data() || {};
+    if (normalizeString(reservation.status) !== 'reserved') return;
+    const storedSessionId = normalizeString(reservation.stripeSessionId);
+    if (storedSessionId && sessionId && storedSessionId !== sessionId) return;
+
+    const kind = normalizeString(reservation.kind);
+    let counterRef = null;
+    if (kind === 'premium_gift') {
+      const counterDocId = normalizeString(reservation.counterDocId);
+      if (counterDocId) {
+        counterRef = db.collection('uag_gift_sender_months').doc(counterDocId);
+      }
+    } else if (kind === 'owner_campaign') {
+      const code = normalizeCommercialCode(reservation.code);
+      if (code) counterRef = db.collection('uag_discount_campaigns').doc(code);
+    }
+
+    const counterSnap = counterRef ? await transaction.get(counterRef) : null;
+    if (counterRef && counterSnap?.exists) {
+      const counter = counterSnap.data() || {};
+      if (kind === 'premium_gift') {
+        transaction.set(counterRef, {
+          reservedPurchases: Math.max(
+            0,
+            (Number(counter.reservedPurchases || 0) || 0) - 1,
+          ),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+      } else {
+        transaction.set(counterRef, {
+          reservedRedemptions: Math.max(
+            0,
+            (Number(counter.reservedRedemptions || 0) || 0) - 1,
+          ),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+      }
+    }
+
+    transaction.set(reservationRef, {
+      status: 'released',
+      releaseReason: reason,
+      releasedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+  });
+}
+
 function hasPaidSubscriptionHistory(userData) {
   const monetisation = userData?.monetisation || {};
   const status = normalizeString(
@@ -483,6 +744,8 @@ async function approvedCreatorProgrammeApplication(uid) {
 }
 
 exports.createUagCheckoutSession = onRequest({ secrets: [stripeSecretKey] }, async (req, res) => {
+  let commercialReservation = null;
+  let checkoutSessionId = '';
   try {
     if (setCheckoutCors(req, res)) return;
     if (req.method !== 'POST') {
@@ -535,22 +798,6 @@ exports.createUagCheckoutSession = onRequest({ secrets: [stripeSecretKey] }, asy
       return;
     }
     assertPlanEligibility(plan, userData, recognitionData);
-
-    if (plan.kind === 'gift') {
-      const senderMonthRef = db
-        .collection('uag_gift_sender_months')
-        .doc(`${uid}_${commercialMonthKey()}`);
-      const senderMonthSnap = await senderMonthRef.get();
-      const completedPurchases = Number(
-        senderMonthSnap.data()?.completedPurchases || 0,
-      );
-      if (completedPurchases >= COMMERCIAL_ECONOMY.gifts.senderMonthlyCap) {
-        res.status(429).json({
-          error: 'Monthly Premium gift limit reached.',
-        });
-        return;
-      }
-    }
 
     let customerId =
       userData?.monetisation?.stripeCustomerId || userData.stripeCustomerId;
@@ -624,6 +871,13 @@ exports.createUagCheckoutSession = onRequest({ secrets: [stripeSecretKey] }, asy
       throw error;
     }
 
+    commercialReservation = await reserveCommercialCheckout({
+      uid,
+      plan,
+      planId,
+      referral,
+    });
+
     if (
       referral &&
       referral.subscriberDiscountPercent > 0
@@ -664,6 +918,7 @@ exports.createUagCheckoutSession = onRequest({ secrets: [stripeSecretKey] }, asy
       nextRenewalFree: referral?.nextRenewalFree === true ? 'true' : 'false',
       promotionPreset: referral?.promotionPreset || '',
       creatorBenefitApplied: creatorBenefitApplied ? 'true' : 'false',
+      commercialReservationId: commercialReservation?.id || '',
     };
 
     const oneTimePurchase = plan.kind === 'pass' || plan.kind === 'gift';
@@ -679,11 +934,18 @@ exports.createUagCheckoutSession = onRequest({ secrets: [stripeSecretKey] }, asy
       metadata,
     };
     if (discounts.length) checkoutParams.discounts = discounts;
+    if (commercialReservation) {
+      checkoutParams.expires_at = Math.floor(
+        commercialReservation.expiresAtMillis / 1000,
+      );
+    }
     if (!oneTimePurchase) {
       checkoutParams.subscription_data = { metadata };
     }
 
     const session = await stripe.checkout.sessions.create(checkoutParams);
+    checkoutSessionId = session.id;
+    await attachCommercialCheckoutReservation(commercialReservation, session.id);
 
     await db.collection('monetisation_checkout_sessions').doc(session.id).set({
       id: session.id,
@@ -704,12 +966,23 @@ exports.createUagCheckoutSession = onRequest({ secrets: [stripeSecretKey] }, asy
       nextRenewalFree: referral?.nextRenewalFree === true,
       promotionPreset: referral?.promotionPreset || null,
       creatorBenefitApplied,
+      commercialReservationId: commercialReservation?.id || null,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       status: session.status || 'created',
     });
 
     res.status(200).json({ checkoutUrl: session.url, sessionId: session.id });
   } catch (error) {
+    if (commercialReservation?.newlyReserved && !checkoutSessionId) {
+      try {
+        await releaseCommercialCheckoutReservation({
+          reservationId: commercialReservation.id,
+          reason: 'checkout_creation_failed',
+        });
+      } catch (releaseError) {
+        console.error('Commercial reservation release failed', releaseError);
+      }
+    }
     console.error('UAG checkout failed', error);
     const statusCode = Number(error?.statusCode || 500);
     res.status(statusCode >= 400 && statusCode < 600 ? statusCode : 500).json({
@@ -928,6 +1201,14 @@ exports.uagStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripeWebhookS
     if (event.type === 'checkout.session.completed') {
       await handleCheckoutCompleted(event.data.object);
     }
+    if (event.type === 'checkout.session.expired') {
+      const session = event.data.object;
+      await releaseCommercialCheckoutReservation({
+        reservationId: session.metadata?.commercialReservationId,
+        sessionId: session.id,
+        reason: 'checkout_expired',
+      });
+    }
     if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.created') {
       await handleSubscriptionUpdated(event.data.object);
     }
@@ -963,20 +1244,59 @@ async function issuePremiumGift({ uid, plan, session }) {
   const monthRef = db
     .collection('uag_gift_sender_months')
     .doc(`${uid}_${commercialMonthKey()}`);
+  const reservationId = normalizeString(
+    session.metadata?.commercialReservationId,
+  );
+  const reservationRef = reservationId
+    ? db.collection('uag_commercial_checkout_reservations').doc(reservationId)
+    : null;
   const candidateCode = newGiftCode();
   const giftRef = db.collection('uag_gift_codes').doc(candidateCode);
   const eventRef = db.collection('monetisation_events').doc(`gift_${session.id}`);
 
   return db.runTransaction(async (transaction) => {
-    const checkoutSnap = await transaction.get(checkoutRef);
+    const reads = [
+      transaction.get(checkoutRef),
+      transaction.get(giftRef),
+      transaction.get(monthRef),
+    ];
+    if (reservationRef) reads.push(transaction.get(reservationRef));
+    const [checkoutSnap, giftSnap, monthSnap, reservationSnap] =
+      await Promise.all(reads);
+
     const existingCode = normalizeCommercialCode(checkoutSnap.data()?.giftCode);
     if (existingCode) return existingCode;
-
-    const giftSnap = await transaction.get(giftRef);
     if (giftSnap.exists) {
       throw new Error('Gift code collision. Retry webhook delivery.');
     }
-    const monthSnap = await transaction.get(monthRef);
+
+    const month = monthSnap.data() || {};
+    const completedPurchases = Math.max(
+      0,
+      Number(month.completedPurchases || 0) || 0,
+    );
+    const reservedPurchases = Math.max(
+      0,
+      Number(month.reservedPurchases || 0) || 0,
+    );
+    if (!reservationRef) {
+      if (completedPurchases >= COMMERCIAL_ECONOMY.gifts.senderMonthlyCap) {
+        throw new Error('Monthly Premium gift limit reached before fulfilment.');
+      }
+    } else {
+      const reservation = reservationSnap?.data() || {};
+      const storedSessionId = normalizeString(reservation.stripeSessionId);
+      const validReservation =
+        reservationSnap?.exists &&
+        normalizeString(reservation.kind) === 'premium_gift' &&
+        normalizeString(reservation.uid) === uid &&
+        normalizeString(reservation.status) === 'reserved' &&
+        (!storedSessionId || storedSessionId === session.id);
+      if (!validReservation) {
+        throw new Error('Gift checkout reservation is not valid.');
+      }
+    }
+
     const nowMillis = Date.now();
     const paidAt = admin.firestore.Timestamp.fromMillis(nowMillis);
     const claimExpiresAt = admin.firestore.Timestamp.fromMillis(
@@ -1003,12 +1323,24 @@ async function issuePremiumGift({ uid, plan, session }) {
     transaction.set(monthRef, {
       uid,
       monthKey: commercialMonthKey(),
-      completedPurchases: admin.firestore.FieldValue.increment(1),
+      completedPurchases: completedPurchases + 1,
+      reservedPurchases: reservationRef
+        ? Math.max(0, reservedPurchases - 1)
+        : reservedPurchases,
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       createdAt: monthSnap.exists
-        ? monthSnap.data()?.createdAt || admin.firestore.FieldValue.serverTimestamp()
+        ? month.createdAt || admin.firestore.FieldValue.serverTimestamp()
         : admin.firestore.FieldValue.serverTimestamp(),
     }, { merge: true });
+
+    if (reservationRef) {
+      transaction.set(reservationRef, {
+        status: 'consumed',
+        stripeSessionId: session.id,
+        consumedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+    }
 
     transaction.set(checkoutRef, {
       status: 'paid',
@@ -1034,7 +1366,6 @@ async function issuePremiumGift({ uid, plan, session }) {
     return candidateCode;
   });
 }
-
 async function recordOwnerCampaignRedemption({ uid, plan, session }) {
   const source = normalizeString(session.metadata?.referralSource);
   const code = normalizeCommercialCode(session.metadata?.referralCode);
@@ -1044,41 +1375,93 @@ async function recordOwnerCampaignRedemption({ uid, plan, session }) {
 
   const campaignRef = db.collection('uag_discount_campaigns').doc(code);
   const claimRef = db.collection('uag_promotion_claims').doc(`${code}_${uid}`);
-  const existingClaim = await claimRef.get();
+  const reservationId = normalizeString(
+    session.metadata?.commercialReservationId,
+  );
+  const reservationRef = reservationId
+    ? db.collection('uag_commercial_checkout_reservations').doc(reservationId)
+    : null;
 
-  if (!existingClaim.exists) {
-    await db.runTransaction(async (transaction) => {
-      const [campaignSnap, claimSnap] = await Promise.all([
-        transaction.get(campaignRef),
-        transaction.get(claimRef),
-      ]);
-      if (claimSnap.exists) return;
+  await db.runTransaction(async (transaction) => {
+    const reads = [transaction.get(campaignRef), transaction.get(claimRef)];
+    if (reservationRef) reads.push(transaction.get(reservationRef));
+    const [campaignSnap, claimSnap, reservationSnap] = await Promise.all(reads);
+    if (claimSnap.exists) return;
 
-      const campaign = campaignSnap.data() || {};
-      transaction.set(claimRef, {
-        id: claimRef.id,
-        code,
-        uid,
-        planId: session.metadata?.planId || '',
-        status: 'redeemed',
-        preset: session.metadata?.promotionPreset || '',
-        nextRenewalFree: truthy(session.metadata?.nextRenewalFree),
-        stripeCheckoutSessionId: session.id,
-        stripeSubscriptionId: session.subscription || null,
-        redeemedAt: admin.firestore.FieldValue.serverTimestamp(),
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      }, { merge: false });
+    const campaign = campaignSnap.data() || {};
+    let reservedRedemptions = Math.max(
+      0,
+      Number(campaign.reservedRedemptions || 0) || 0,
+    );
+    const currentRedemptions = Math.max(
+      0,
+      Number(campaign.redemptions || 0) || 0,
+    );
 
-      if (campaignSnap.exists) {
-        transaction.set(campaignRef, {
-          redemptions: admin.firestore.FieldValue.increment(1),
-          lastRedeemedAt: admin.firestore.FieldValue.serverTimestamp(),
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        }, { merge: true });
+    if (reservationRef) {
+      const reservation = reservationSnap?.data() || {};
+      const storedSessionId = normalizeString(reservation.stripeSessionId);
+      const validReservation =
+        reservationSnap?.exists &&
+        normalizeString(reservation.kind) === 'owner_campaign' &&
+        normalizeString(reservation.uid) === uid &&
+        normalizeCommercialCode(reservation.code) === code &&
+        normalizeString(reservation.status) === 'reserved' &&
+        (!storedSessionId || storedSessionId === session.id);
+      if (!validReservation) {
+        throw new Error('Owner campaign checkout reservation is not valid.');
       }
-    });
-  }
+      const maxRedemptions = Math.max(
+        1,
+        Number(reservation.maxRedemptions || campaign.maxRedemptions || 1) || 1,
+      );
+      if (currentRedemptions >= maxRedemptions) {
+        throw new Error('Owner campaign redemption cap was reached before fulfilment.');
+      }
+      reservedRedemptions = Math.max(0, reservedRedemptions - 1);
+      transaction.set(reservationRef, {
+        status: 'consumed',
+        stripeSessionId: session.id,
+        consumedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+    } else {
+      if (!campaignSnap.exists) {
+        throw new Error('Owner campaign no longer exists.');
+      }
+      const policy = ownerCampaignPolicy(
+        campaign,
+        session.metadata?.planId || '',
+      );
+      if (!policy) {
+        throw new Error('Owner campaign redemption cap was reached before fulfilment.');
+      }
+    }
+
+    transaction.set(claimRef, {
+      id: claimRef.id,
+      code,
+      uid,
+      planId: session.metadata?.planId || '',
+      status: 'redeemed',
+      preset: session.metadata?.promotionPreset || '',
+      nextRenewalFree: truthy(session.metadata?.nextRenewalFree),
+      stripeCheckoutSessionId: session.id,
+      stripeSubscriptionId: session.subscription || null,
+      redeemedAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: false });
+
+    if (campaignSnap.exists) {
+      transaction.set(campaignRef, {
+        redemptions: currentRedemptions + 1,
+        reservedRedemptions,
+        lastRedeemedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+    }
+  });
 
   if (!truthy(session.metadata?.nextRenewalFree) || !session.subscription) {
     return;
@@ -1118,7 +1501,6 @@ async function recordOwnerCampaignRedemption({ uid, plan, session }) {
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
   }, { merge: true });
 }
-
 async function handleCheckoutCompleted(session) {
   const uid = session.metadata?.uid || session.client_reference_id;
   if (!uid) return;

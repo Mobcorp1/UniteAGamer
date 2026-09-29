@@ -62,6 +62,17 @@ test('owner campaigns are non-stackable, capped and monthly-plan only', () => {
     }, 'premium_yearly', now),
     null,
   );
+  assert.equal(
+    ownerCampaignPolicy({
+      code: 'MIKE25',
+      preset: 'owner_25',
+      status: 'active',
+      redemptions: 49,
+      reservedRedemptions: 1,
+      maxRedemptions: 50,
+    }, 'premium_monthly', now),
+    null,
+  );
 });
 
 test('gift rules block self-gifting and paid recipients', () => {

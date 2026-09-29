@@ -41,6 +41,16 @@ test('gift purchase and redemption remain server authoritative', () => {
   assert.match(source, /exports\.redeemUagGift = onRequest/);
   assert.match(source, /You cannot redeem a Premium gift that you bought yourself\./);
   assert.match(source, /uag_gift_recipient_history/);
+  assert.match(source, /reservedPurchases/);
+  assert.match(source, /commercialReservationId/);
+});
+
+test('commercial checkout reservations close cap races', () => {
+  assert.match(source, /reserveCommercialCheckout/);
+  assert.match(source, /releaseCommercialCheckoutReservation/);
+  assert.match(source, /reservedRedemptions/);
+  assert.match(source, /checkout\.session\.expired/);
+  assert.match(source, /uag_commercial_checkout_reservations/);
 });
 
 test('creator commission ladder matches the canonical Dart policy', () => {
