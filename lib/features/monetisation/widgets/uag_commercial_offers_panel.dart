@@ -300,7 +300,7 @@ class _UagCommercialOffersPanelState extends State<UagCommercialOffersPanel> {
                               await Clipboard.setData(
                                 ClipboardData(text: code),
                               );
-                              if (!mounted) return;
+                              if (!context.mounted) return;
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                   content: Text('Gift code copied.'),
