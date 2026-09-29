@@ -503,6 +503,13 @@ async function reserveCommercialCheckout({ uid, plan, planId, referral }) {
       normalizeCommercialCode(reservation.code) === code &&
       normalizeString(reservation.uid) === uid;
     const oldExpiry = commercialTimestampMillis(reservation.expiresAt);
+    if (existingReserved && oldExpiry > nowMillis) {
+      const error = new Error(
+        'An owner promotion checkout is already open for this account.',
+      );
+      error.statusCode = 409;
+      throw error;
+    }
     const reservedRedemptions = Math.max(
       0,
       Number(campaign.reservedRedemptions || 0) || 0,

@@ -51,6 +51,10 @@ test('commercial checkout reservations close cap races', () => {
   assert.match(source, /reservedRedemptions/);
   assert.match(source, /checkout\.session\.expired/);
   assert.match(source, /uag_commercial_checkout_reservations/);
+  assert.match(
+    source,
+    /An owner promotion checkout is already open for this account\./,
+  );
 });
 
 test('creator commission ladder matches the canonical Dart policy', () => {
