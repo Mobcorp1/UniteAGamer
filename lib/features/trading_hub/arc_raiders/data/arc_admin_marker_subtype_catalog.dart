@@ -1,4 +1,5 @@
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_container_types.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_upgrade_resource_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_conditions.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_filter_taxonomy.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_seed_data.dart';
@@ -12,6 +13,7 @@ class ArcAdminMapMarkerSubtype {
     required this.kind,
     required this.groupLabel,
     this.iconKey,
+    this.upgradeResource,
   });
 
   final String id;
@@ -19,6 +21,7 @@ class ArcAdminMapMarkerSubtype {
   final ArcAdminMapMarkerKind kind;
   final String groupLabel;
   final String? iconKey;
+  final ArcMapUpgradeResource? upgradeResource;
 }
 
 class ArcAdminMapMarkerSubtypeCatalog {
@@ -550,9 +553,23 @@ class ArcAdminMapMarkerSubtypeCatalog {
       ArcAdminMapMarkerKind.hazard ||
       ArcAdminMapMarkerKind.extractionDanger => hazard,
       ArcAdminMapMarkerKind.blueprint ||
+      ArcAdminMapMarkerKind.upgrade ||
       ArcAdminMapMarkerKind.customIntel => const <ArcAdminMapMarkerSubtype>[],
     };
-    return _dedupe([..._canonicalForKind(kind), ...existing]);
+    return _dedupe([
+      ..._canonicalForKind(kind),
+      ...existing,
+      if (kind == ArcAdminMapMarkerKind.upgrade)
+        for (final resource in ArcMapUpgradeResourceCatalog.items)
+          ArcAdminMapMarkerSubtype(
+            id: resource.subtypeId,
+            label: resource.name,
+            kind: kind,
+            groupLabel: resource.usageLabel,
+            iconKey: resource.subtypeId,
+            upgradeResource: resource,
+          ),
+    ]);
   }
 
   static ArcAdminMapMarkerSubtype? resolve(
@@ -768,6 +785,7 @@ class ArcAdminMapMarkerSubtypeCatalog {
       ArcAdminMapMarkerKind.arcThreat => 'ARC',
       ArcAdminMapMarkerKind.hazard ||
       ArcAdminMapMarkerKind.extractionDanger => 'Hazards',
+      ArcAdminMapMarkerKind.upgrade => 'Upgrade',
       ArcAdminMapMarkerKind.weaponCase ||
       ArcAdminMapMarkerKind.weaponCache ||
       ArcAdminMapMarkerKind.firstWaveCache ||

@@ -5,6 +5,7 @@ import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bench_upgrade_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_filter_icon_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_filter_taxonomy.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_upgrade_resource_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_quest_requirement_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_scrappy_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_item.dart';
@@ -134,6 +135,7 @@ class ArcMapFilterIconReviewAtlas extends StatelessWidget {
           title: 'Map Filter Icon Atlas',
           subtitle:
               '${ArcMapFilterTaxonomy.all.length} canonical map icons, '
+              '${ArcMapUpgradeResourceCatalog.items.length} Upgrade resources, '
               '${_uagCommunityItems.length} UAG community icon and '
               '$trackerAssetCount existing tracker item assets reviewed in place.',
           leading: const Icon(
@@ -144,9 +146,25 @@ class ArcMapFilterIconReviewAtlas extends StatelessWidget {
         ),
         const SizedBox(height: AppTheme.spaceL),
         _IconAtlasSummary(
-          iconCount: ArcMapFilterTaxonomy.all.length,
-          sectionCount: _canonicalSections.length + 1,
+          iconCount:
+              ArcMapFilterTaxonomy.all.length +
+              ArcMapUpgradeResourceCatalog.items.length,
+          sectionCount: _canonicalSections.length + 2,
           communityIconCount: _uagCommunityItems.length,
+        ),
+        const SizedBox(height: AppTheme.spaceL),
+        _IconReviewSection(
+          title: 'Upgrade',
+          subtitle:
+              '${ArcMapUpgradeResourceCatalog.items.length} unique Scrappy and Bench resources. These use the same item image resolver as placed map markers.',
+          items: [
+            for (final resource in ArcMapUpgradeResourceCatalog.items)
+              _IconReviewItem(
+                label: resource.name,
+                iconKey: resource.subtypeId,
+                detail: '${resource.itemId} • ${resource.usageLabel}',
+              ),
+          ],
         ),
         const SizedBox(height: AppTheme.spaceL),
         for (final section in _canonicalSections) ...[
@@ -533,10 +551,15 @@ class _SummaryPill extends StatelessWidget {
 }
 
 class _IconReviewItem {
-  const _IconReviewItem({required this.label, required this.iconKey});
+  const _IconReviewItem({
+    required this.label,
+    required this.iconKey,
+    this.detail,
+  });
 
   final String label;
   final String iconKey;
+  final String? detail;
 }
 
 class _IconReviewSectionData {
@@ -660,6 +683,16 @@ class _IconReviewTile extends StatelessWidget {
               color: AppTheme.tradingMutedText,
             ),
           ),
+          if (item.detail != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              item.detail!,
+              style: AppTheme.bodyTextStyle(
+                fontSize: 12,
+                color: AppTheme.tradingMutedText,
+              ),
+            ),
+          ],
           const SizedBox(height: AppTheme.spaceM),
           Wrap(
             spacing: AppTheme.spaceM,

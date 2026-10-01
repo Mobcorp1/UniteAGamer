@@ -231,6 +231,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
   bool _saving = false;
   bool _dirty = false;
   bool _placingNewPoi = false;
+  _NewMarkerResult? _pendingPoi;
   ArcAdminMapMarkerKind _placementKind = ArcAdminMapMarkerKind.poi;
   bool _placementRequiresBlueprint = false;
   String _placementDialogTitle = 'Create POI';
@@ -238,6 +239,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
   bool _showSeedDefinitions = true;
   bool _showCustomIntel = true;
   bool _showReferenceGrid = true;
+  bool _showPlacedItems = true;
   String _searchQuery = '';
   String _saveStatus = 'Saved';
   String _saveError = '';
@@ -376,7 +378,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
           if (!marker.kind.isSeedDefinition && !_showCustomIntel) {
             return false;
           }
-          if (_kindFilter != null && marker.kind != _kindFilter) {
+          if (_kindFilter != null && marker.effectiveKind != _kindFilter) {
             return false;
           }
           if (_subtypeFilterId != null &&
@@ -426,6 +428,26 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
           return marker.mapId == _mapId && marker.layer == _layer;
         })
         .toList(growable: false);
+  }
+
+  List<ArcAdminMapMarker> get _mapCanvasMarkers {
+    final markers = List<ArcAdminMapMarker>.from(_visibleMarkers);
+    markers.sort((a, b) {
+      final aSelected = _selected?.id == a.id;
+      final bSelected = _selected?.id == b.id;
+      if (aSelected != bSelected) return aSelected ? 1 : -1;
+
+      // Canonical seed POIs/exits/hatches form the background reference layer.
+      // User/admin-created markers must render above them so compressed
+      // landscape layouts cannot make a newly-created marker untappable simply
+      // because an alphabetically-later seed marker overlaps its hit target.
+      final aSeed = a.seedReferenceId?.trim().isNotEmpty == true;
+      final bSeed = b.seedReferenceId?.trim().isNotEmpty == true;
+      if (aSeed != bSeed) return aSeed ? -1 : 1;
+
+      return a.name.compareTo(b.name);
+    });
+    return markers;
   }
 
   List<ArcAdminMapMarker> get _importedMarkers {
@@ -866,6 +888,28 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
     );
   }
 
+  Future<void> _preparePoiPlacement() async {
+    final result = await showDialog<_NewMarkerResult>(
+      context: context,
+      builder: (context) => _NewMarkerDialog(
+        title: 'Create POI',
+        actionLabel: 'Place on Map',
+        mapName: _map.displayName,
+        initialKind: ArcAdminMapMarkerKind.poi,
+        includeSeedKinds: true,
+        initialSourceLabel: 'UAG Manual Location',
+      ),
+    );
+    if (!mounted || result == null) return;
+    _beginMarkerPlacement(
+      kind: result.kind,
+      label: result.name,
+      sourceLabel: result.sourceLabel,
+      dialogTitle: 'Create POI',
+      pendingPoi: result,
+    );
+  }
+
   void _beginHistoricalBlueprintPlacement() {
     _beginMarkerPlacement(
       kind: ArcAdminMapMarkerKind.blueprint,
@@ -892,8 +936,10 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
     required String sourceLabel,
     required String dialogTitle,
     bool requireBlueprint = false,
+    _NewMarkerResult? pendingPoi,
   }) {
     setState(() {
+      _pendingPoi = pendingPoi;
       _placingNewPoi = true;
       _placementKind = kind;
       _placementRequiresBlueprint = requireBlueprint;
@@ -905,6 +951,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
   }
 
   void _resetPlacementFields() {
+    _pendingPoi = null;
     _placingNewPoi = false;
     _placementKind = ArcAdminMapMarkerKind.poi;
     _placementRequiresBlueprint = false;
@@ -917,18 +964,20 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
     final initialKind = _placementKind;
     final requireBlueprint = _placementRequiresBlueprint;
     final sourceLabel = _placementSourceLabel;
-    final result = await showDialog<_NewMarkerResult>(
-      context: context,
-      builder: (context) => _NewMarkerDialog(
-        title: dialogTitle,
-        actionLabel: 'Create Draft',
-        mapName: _map.displayName,
-        initialKind: initialKind,
-        includeSeedKinds: true,
-        requireBlueprint: requireBlueprint,
-        initialSourceLabel: sourceLabel,
-      ),
-    );
+    final result =
+        _pendingPoi ??
+        await showDialog<_NewMarkerResult>(
+          context: context,
+          builder: (context) => _NewMarkerDialog(
+            title: dialogTitle,
+            actionLabel: 'Create Draft',
+            mapName: _map.displayName,
+            initialKind: initialKind,
+            includeSeedKinds: true,
+            requireBlueprint: requireBlueprint,
+            initialSourceLabel: sourceLabel,
+          ),
+        );
     if (!mounted) return;
     if (result == null) {
       setState(() {
@@ -960,6 +1009,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
       description: result.description,
       subtypeId: result.subtypeId,
       subtypeLabel: result.subtypeLabel,
+      itemId: result.itemId,
       blueprintId: result.blueprintId,
       sourceLabel: result.sourceLabel,
       confidence: result.confidence,
@@ -1003,6 +1053,8 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
       clearSubtypeId: result.subtypeId == null,
       subtypeLabel: result.subtypeLabel,
       clearSubtypeLabel: result.subtypeLabel == null,
+      itemId: result.itemId,
+      clearItemId: result.itemId == null,
       blueprintId: result.blueprintId,
       clearBlueprintId: result.blueprintId == null,
       sourceLabel: result.sourceLabel,
@@ -1085,6 +1137,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
       description: selected.description,
       subtypeId: selected.subtypeId,
       subtypeLabel: selected.subtypeLabel,
+      itemId: selected.itemId,
       blueprintId: selected.blueprintId,
       sourceLabel: selected.sourceLabel,
       confidence: selected.confidence,
@@ -1225,8 +1278,10 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
                       )
                     : LayoutBuilder(
                         builder: (context, constraints) {
-                          final wide = constraints.maxWidth >= 1000;
-                          final mapPanel = _buildMapPanel();
+                          final wide =
+                              constraints.maxWidth >= 1000 &&
+                              constraints.maxHeight >= 500;
+                          final mapPanel = _buildMapPanel(compact: !wide);
                           final sidePanel = _buildSidePanel();
                           return Padding(
                             padding: ArcLayoutTokens.pagePadding(context),
@@ -1240,12 +1295,20 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
                                       SizedBox(width: 360, child: sidePanel),
                                     ],
                                   )
-                                : Column(
-                                    children: [
-                                      Expanded(flex: 6, child: mapPanel),
-                                      const SizedBox(height: ArcUiTokens.gapM),
-                                      Expanded(flex: 4, child: sidePanel),
-                                    ],
+                                : SingleChildScrollView(
+                                    child: Column(
+                                      children: [
+                                        SizedBox(
+                                          height: (constraints.maxHeight * .6)
+                                              .clamp(300.0, 600.0),
+                                          child: mapPanel,
+                                        ),
+                                        const SizedBox(
+                                          height: ArcUiTokens.gapM,
+                                        ),
+                                        SizedBox(height: 520, child: sidePanel),
+                                      ],
+                                    ),
                                   ),
                           );
                         },
@@ -1258,7 +1321,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
     );
   }
 
-  Widget _buildMapPanel() {
+  Widget _buildMapPanel({required bool compact}) {
     final asset = _map.assetForLayer(_layer);
     final assetPath = asset?.localAssetPath;
 
@@ -1267,7 +1330,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
       clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
-          _toolbar(),
+          _toolbar(compact: compact),
           Expanded(
             child: asset == null || assetPath == null
                 ? const Center(
@@ -1335,8 +1398,9 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
                                         ),
                                       ),
                                     ),
-                                  for (final marker in _visibleMarkers)
-                                    _markerWidget(marker, mapSize),
+                                  if (_showPlacedItems)
+                                    for (final marker in _mapCanvasMarkers)
+                                      _markerWidget(marker, mapSize),
                                 ],
                               ),
                             ),
@@ -1351,105 +1415,164 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
     );
   }
 
-  Widget _toolbar() {
+  Widget _toolbar({required bool compact}) {
     final maps = ArcRaidIntelligenceSeedData.maps
         .where((item) => item.availableLayers.isNotEmpty)
         .toList(growable: false);
 
+    final controls = <Widget>[
+      SizedBox(
+        width: 190,
+        child: DropdownButtonFormField<String>(
+          isExpanded: true,
+          initialValue: _mapId,
+          decoration: const InputDecoration(labelText: 'Map'),
+          items: [
+            for (final map in maps)
+              DropdownMenuItem(
+                value: ArcMapAssetRegistry.canonicalMapIdFor(map.id) ?? map.id,
+                child: Text(
+                  map.displayName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+          ],
+          onChanged: _saving
+              ? null
+              : (value) {
+                  if (value == null || value == _mapId) return;
+                  final next = ArcRaidIntelligenceSeedData.mapById(value);
+                  final nextLayer = next.availableLayers.isEmpty
+                      ? ArcRaidMapLayer.surface
+                      : ArcMapAssetRegistry.resolveLayer(
+                          next.availableLayers.first.name,
+                        );
+                  setState(() {
+                    _mapId =
+                        ArcMapAssetRegistry.canonicalMapIdFor(value) ?? value;
+                    _layer = nextLayer;
+                  });
+                  unawaited(_load());
+                },
+        ),
+      ),
+      SizedBox(
+        width: 170,
+        child: DropdownButtonFormField<ArcRaidMapLayer>(
+          isExpanded: true,
+          initialValue: _layer,
+          decoration: const InputDecoration(labelText: 'Layer'),
+          items: [
+            for (final layer in _map.availableLayers)
+              DropdownMenuItem(
+                value: ArcMapAssetRegistry.resolveLayer(layer.name),
+                child: Text(layer.label),
+              ),
+          ],
+          onChanged: _saving
+              ? null
+              : (value) {
+                  if (value == null || value == _layer) return;
+                  setState(() => _layer = value);
+                  unawaited(_load());
+                },
+        ),
+      ),
+      FilterChip(
+        selected: _showSeedDefinitions,
+        label: const Text('POIs / exits'),
+        onSelected: (value) => setState(() => _showSeedDefinitions = value),
+      ),
+      FilterChip(
+        selected: _showCustomIntel,
+        label: const Text('Custom Intel'),
+        onSelected: (value) => setState(() => _showCustomIntel = value),
+      ),
+      FilterChip(
+        selected: _showReferenceGrid,
+        label: const Text('Grid'),
+        onSelected: (value) => setState(() => _showReferenceGrid = value),
+      ),
+      IconButton(
+        tooltip: 'Undo',
+        onPressed: _undoStack.isEmpty ? null : _undo,
+        icon: const Icon(Icons.undo_rounded),
+      ),
+      IconButton(
+        tooltip: 'Reset zoom',
+        onPressed: () => _transformationController.value = Matrix4.identity(),
+        icon: const Icon(Icons.center_focus_strong_rounded),
+      ),
+    ];
     return Container(
       padding: const EdgeInsets.all(10),
       color: Colors.black.withValues(alpha: 0.35),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        crossAxisAlignment: WrapCrossAlignment.center,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(
-            width: 190,
-            child: DropdownButtonFormField<String>(
-              isExpanded: true,
-              initialValue: _mapId,
-              decoration: const InputDecoration(labelText: 'Map'),
-              items: [
-                for (final map in maps)
-                  DropdownMenuItem(
-                    value:
-                        ArcMapAssetRegistry.canonicalMapIdFor(map.id) ?? map.id,
-                    child: Text(
-                      map.displayName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  key: const Key('admin-map-toggle-items'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
                   ),
-              ],
-              onChanged: _saving
-                  ? null
-                  : (value) {
-                      if (value == null || value == _mapId) return;
-                      final next = ArcRaidIntelligenceSeedData.mapById(value);
-                      final nextLayer = next.availableLayers.isEmpty
-                          ? ArcRaidMapLayer.surface
-                          : ArcMapAssetRegistry.resolveLayer(
-                              next.availableLayers.first.name,
-                            );
-                      setState(() {
-                        _mapId =
-                            ArcMapAssetRegistry.canonicalMapIdFor(value) ??
-                            value;
-                        _layer = nextLayer;
-                      });
-                      unawaited(_load());
-                    },
-            ),
-          ),
-          SizedBox(
-            width: 170,
-            child: DropdownButtonFormField<ArcRaidMapLayer>(
-              isExpanded: true,
-              initialValue: _layer,
-              decoration: const InputDecoration(labelText: 'Layer'),
-              items: [
-                for (final layer in _map.availableLayers)
-                  DropdownMenuItem(
-                    value: ArcMapAssetRegistry.resolveLayer(layer.name),
-                    child: Text(layer.label),
+                  onPressed: () =>
+                      setState(() => _showPlacedItems = !_showPlacedItems),
+                  icon: Icon(
+                    _showPlacedItems
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
+                    size: 18,
                   ),
-              ],
-              onChanged: _saving
-                  ? null
-                  : (value) {
-                      if (value == null || value == _layer) return;
-                      setState(() => _layer = value);
-                      unawaited(_load());
-                    },
+                  label: Text(_showPlacedItems ? 'Hide Icons' : 'Show Icons'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: ElevatedButton.icon(
+                  key: const Key('admin-map-create-poi'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                  onPressed: _saving ? null : _preparePoiPlacement,
+                  icon: const Icon(Icons.add_location_alt_rounded, size: 18),
+                  label: const Text('Create POI'),
+                ),
+              ),
+            ],
+          ),
+          if (_placingNewPoi)
+            TextButton.icon(
+              onPressed: () => setState(() {
+                _resetPlacementFields();
+                _saveStatus = _dirty ? 'Unsaved changes' : 'Saved';
+              }),
+              icon: const Icon(Icons.close_rounded, size: 16),
+              label: const Text('Cancel placement'),
             ),
-          ),
-          FilterChip(
-            selected: _showSeedDefinitions,
-            label: const Text('POIs / exits'),
-            onSelected: (value) => setState(() => _showSeedDefinitions = value),
-          ),
-          FilterChip(
-            selected: _showCustomIntel,
-            label: const Text('Custom Intel'),
-            onSelected: (value) => setState(() => _showCustomIntel = value),
-          ),
-          FilterChip(
-            selected: _showReferenceGrid,
-            label: const Text('Grid'),
-            onSelected: (value) => setState(() => _showReferenceGrid = value),
-          ),
-          IconButton(
-            tooltip: 'Undo',
-            onPressed: _undoStack.isEmpty ? null : _undo,
-            icon: const Icon(Icons.undo_rounded),
-          ),
-          IconButton(
-            tooltip: 'Reset zoom',
-            onPressed: () =>
-                _transformationController.value = Matrix4.identity(),
-            icon: const Icon(Icons.center_focus_strong_rounded),
-          ),
+          const SizedBox(height: 8),
+          compact
+              ? SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      for (final control in controls) ...[
+                        control,
+                        const SizedBox(width: 8),
+                      ],
+                    ],
+                  ),
+                )
+              : Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: controls,
+                ),
         ],
       ),
     );
@@ -1521,8 +1644,8 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
                   ],
                 ),
                 child: ArcMapFilterIcon(
-                  iconKey: ArcMapFilterIconRegistry.iconKeyForSubtype(
-                    marker.subtypeId,
+                  iconKey: ArcMapFilterIconRegistry.iconKeyForAdminMarker(
+                    marker,
                   ),
                   size: selected ? 19 : 16,
                   color: _kindColor(marker.kind),
@@ -1642,7 +1765,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
                             overflow: TextOverflow.ellipsis,
                           ),
                           subtitle: Text(
-                            '${marker.subtypeLabel?.trim().isNotEmpty == true ? '${marker.kind.label} / ${marker.subtypeLabel!.trim()}' : marker.kind.label} • ${marker.point.x.toStringAsFixed(4)}, ${marker.point.y.toStringAsFixed(4)}',
+                            '${marker.subtypeLabel?.trim().isNotEmpty == true ? '${marker.effectiveKind.label} / ${marker.subtypeLabel!.trim()}' : marker.effectiveKind.label} • ${marker.point.x.toStringAsFixed(4)}, ${marker.point.y.toStringAsFixed(4)}',
                           ),
                           trailing: _markerStateIcon(marker),
                           onTap: () => setState(() => _selected = marker),
@@ -2106,7 +2229,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
       }
     }
     for (final marker in _markers) {
-      if (_kindFilter != null && marker.kind != _kindFilter) continue;
+      if (_kindFilter != null && marker.effectiveKind != _kindFilter) continue;
       add(marker.subtypeId, marker.subtypeLabel);
     }
     return options;
@@ -2181,6 +2304,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
 
   Widget _selectedCard(ArcAdminMapMarker marker) {
     final blueprintName = _blueprintNameFor(marker.blueprintId);
+    final resource = marker.upgradeResource;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: AppTheme.tradingCardDecoration(
@@ -2191,9 +2315,14 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(marker.name, style: AppTheme.tradingHeading(fontSize: 20)),
+          if (resource != null)
+            Text(
+              '${resource.usageLabel}: ${resource.usageDetails}',
+              style: const TextStyle(color: Colors.white70, fontSize: 12),
+            ),
           const SizedBox(height: 3),
           Text(
-            marker.kind.label,
+            marker.effectiveKind.label,
             style: TextStyle(color: _kindColor(marker.kind)),
           ),
           if (marker.subtypeLabel?.trim().isNotEmpty == true) ...[
@@ -2327,6 +2456,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
         return Colors.cyanAccent;
       case ArcAdminMapMarkerKind.mapEvent:
         return Colors.lightBlueAccent;
+      case ArcAdminMapMarkerKind.upgrade:
       case ArcAdminMapMarkerKind.resourceNode:
       case ArcAdminMapMarkerKind.naturalResource:
         return Colors.tealAccent;
@@ -2373,6 +2503,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
         return Icons.assignment_turned_in_rounded;
       case ArcAdminMapMarkerKind.mapEvent:
         return Icons.bolt_rounded;
+      case ArcAdminMapMarkerKind.upgrade:
       case ArcAdminMapMarkerKind.resourceNode:
         return Icons.construction_rounded;
       case ArcAdminMapMarkerKind.naturalResource:
@@ -2520,6 +2651,7 @@ class _NewMarkerResult {
     required this.confidence,
     this.subtypeId,
     this.subtypeLabel,
+    this.itemId,
     this.blueprintId,
     this.layer,
   });
@@ -2533,6 +2665,7 @@ class _NewMarkerResult {
   final ArcRaidIntelConfidence confidence;
   final String? subtypeId;
   final String? subtypeLabel;
+  final String? itemId;
   final String? blueprintId;
 }
 
@@ -2582,13 +2715,13 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
     _source = TextEditingController(text: widget.initialSourceLabel);
     final initial = widget.initialMarker;
     _markerLayer = initial?.layer;
-    _kind = initial?.kind ?? widget.initialKind;
+    _kind = initial?.effectiveKind ?? widget.initialKind;
     if (initial != null) {
       _name.text = initial.name;
       _aliases.text = initial.aliases.join(', ');
       _description.text = initial.description;
       _source.text = initial.sourceLabel;
-      _subtypeId = initial.subtypeId;
+      _subtypeId = initial.upgradeResource?.subtypeId ?? initial.subtypeId;
       _customSubtype.text = initial.subtypeLabel ?? '';
       _confidence = initial.confidence;
       _blueprintId = initial.blueprintId;
@@ -2661,16 +2794,20 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
                   isExpanded: true,
                   initialValue: subtypeDropdownValue,
                   decoration: InputDecoration(
-                    labelText:
-                        '${selectedSubtype?.groupLabel ?? 'Filter'} / subtype',
+                    labelText: _kind == ArcAdminMapMarkerKind.upgrade
+                        ? 'Upgrade resource'
+                        : '${selectedSubtype?.groupLabel ?? 'Filter'} / subtype',
                     helperText:
-                        'This value drives the public map filter and future icon.',
+                        selectedSubtype?.upgradeResource?.usageDetails ??
+                        'Choose the resource or location shown on the map.',
+                    helperMaxLines: 6,
                   ),
                   items: <DropdownMenuItem<String?>>[
-                    const DropdownMenuItem<String?>(
-                      value: null,
-                      child: Text('No subtype'),
-                    ),
+                    if (_kind != ArcAdminMapMarkerKind.upgrade)
+                      const DropdownMenuItem<String?>(
+                        value: null,
+                        child: Text('No subtype'),
+                      ),
                     for (final subtype in subtypeOptions)
                       DropdownMenuItem<String?>(
                         value: subtype.id,
@@ -2680,10 +2817,12 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
                           subtypeId: subtype.id,
                         ),
                       ),
-                    const DropdownMenuItem<String?>(
-                      value: '__custom__',
-                      child: Text('Custom subtype...'),
-                    ),
+                    if (_kind != ArcAdminMapMarkerKind.upgrade ||
+                        hasUnknownExistingSubtype)
+                      const DropdownMenuItem<String?>(
+                        value: '__custom__',
+                        child: Text('Custom subtype...'),
+                      ),
                   ],
                   onChanged: (value) => setState(() {
                     if (value == '__custom__') {
@@ -2695,7 +2834,9 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
                     _customSubtype.clear();
                     _subtypeId = value;
                     final subtype = _subtypeForId(subtypeOptions, value);
-                    if (subtype != null && _name.text.trim().isEmpty) {
+                    if (subtype != null &&
+                        (_name.text.trim().isEmpty ||
+                            _name.text == selectedSubtype?.label)) {
                       _name.text = subtype.label;
                     }
                   }),
@@ -2797,73 +2938,90 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
           child: const Text('Cancel'),
         ),
         ElevatedButton(
-          onPressed: () {
-            final name = _name.text.trim();
-            if (name.isEmpty) return;
-            if (widget.requireBlueprint && _blueprintId == null) return;
-            final aliases = _aliases.text
-                .split(',')
-                .map((item) => item.trim())
-                .where((item) => item.isNotEmpty)
-                .toSet()
-                .toList(growable: false);
-            final customSubtypeLabel = _customSubtype.text.trim();
-            final customSubtypeActive =
-                _customSubtypeEnabled || hasUnknownExistingSubtype;
-            final subtype = customSubtypeActive && customSubtypeLabel.isNotEmpty
-                ? ArcAdminMapMarkerSubtype(
-                    id: ArcAdminMapMarkerSubtypeCatalog.slug(
-                      customSubtypeLabel,
+          onPressed:
+              _kind == ArcAdminMapMarkerKind.upgrade &&
+                  selectedSubtype?.upgradeResource == null &&
+                  !hasUnknownExistingSubtype
+              ? null
+              : () {
+                  final name = _name.text.trim();
+                  if (name.isEmpty) return;
+                  if (widget.requireBlueprint && _blueprintId == null) return;
+                  final aliases = _aliases.text
+                      .split(',')
+                      .map((item) => item.trim())
+                      .where((item) => item.isNotEmpty)
+                      .toSet()
+                      .toList(growable: false);
+                  final customSubtypeLabel = _customSubtype.text.trim();
+                  final customSubtypeActive =
+                      _customSubtypeEnabled || hasUnknownExistingSubtype;
+                  final subtype =
+                      customSubtypeActive && customSubtypeLabel.isNotEmpty
+                      ? ArcAdminMapMarkerSubtype(
+                          id: ArcAdminMapMarkerSubtypeCatalog.slug(
+                            customSubtypeLabel,
+                          ),
+                          label: customSubtypeLabel,
+                          kind: _kind,
+                          groupLabel: 'Custom',
+                        )
+                      : ArcAdminMapMarkerSubtypeCatalog.resolve(
+                          _kind,
+                          _subtypeId,
+                          mapName: widget.mapName,
+                        );
+                  Navigator.pop(
+                    context,
+                    _NewMarkerResult(
+                      kind: _kind,
+                      layer: _markerLayer,
+                      name: _name.text == widget.initialMarker?.name
+                          ? widget.initialMarker!.name
+                          : name,
+                      aliases:
+                          _aliases.text ==
+                              widget.initialMarker?.aliases.join(', ')
+                          ? widget.initialMarker!.aliases
+                          : aliases,
+                      description:
+                          _description.text == widget.initialMarker?.description
+                          ? widget.initialMarker!.description
+                          : _description.text.trim(),
+                      subtypeId:
+                          widget.initialMarker?.kind == _kind &&
+                              _subtypeId == widget.initialMarker?.subtypeId &&
+                              _customSubtype.text ==
+                                  (widget.initialMarker?.subtypeLabel ?? '')
+                          ? widget.initialMarker?.subtypeId
+                          : subtype?.id,
+                      subtypeLabel:
+                          widget.initialMarker?.kind == _kind &&
+                              _subtypeId == widget.initialMarker?.subtypeId &&
+                              _customSubtype.text ==
+                                  (widget.initialMarker?.subtypeLabel ?? '')
+                          ? widget.initialMarker?.subtypeLabel
+                          : subtype?.label,
+                      sourceLabel:
+                          _source.text == widget.initialMarker?.sourceLabel
+                          ? widget.initialMarker!.sourceLabel
+                          : _source.text.trim().isEmpty
+                          ? 'Admin Intel'
+                          : _source.text.trim(),
+                      confidence: _confidence,
+                      blueprintId: _blueprintId,
+                      itemId:
+                          subtype?.upgradeResource?.itemId ??
+                          (widget.initialMarker?.kind == _kind &&
+                                  _subtypeId ==
+                                      widget.initialMarker?.subtypeId &&
+                                  _customSubtype.text ==
+                                      (widget.initialMarker?.subtypeLabel ?? '')
+                              ? widget.initialMarker?.itemId
+                              : null),
                     ),
-                    label: customSubtypeLabel,
-                    kind: _kind,
-                    groupLabel: 'Custom',
-                  )
-                : ArcAdminMapMarkerSubtypeCatalog.resolve(
-                    _kind,
-                    _subtypeId,
-                    mapName: widget.mapName,
                   );
-            Navigator.pop(
-              context,
-              _NewMarkerResult(
-                kind: _kind,
-                layer: _markerLayer,
-                name: _name.text == widget.initialMarker?.name
-                    ? widget.initialMarker!.name
-                    : name,
-                aliases:
-                    _aliases.text == widget.initialMarker?.aliases.join(', ')
-                    ? widget.initialMarker!.aliases
-                    : aliases,
-                description:
-                    _description.text == widget.initialMarker?.description
-                    ? widget.initialMarker!.description
-                    : _description.text.trim(),
-                subtypeId:
-                    widget.initialMarker?.kind == _kind &&
-                        _subtypeId == widget.initialMarker?.subtypeId &&
-                        _customSubtype.text ==
-                            (widget.initialMarker?.subtypeLabel ?? '')
-                    ? widget.initialMarker?.subtypeId
-                    : subtype?.id,
-                subtypeLabel:
-                    widget.initialMarker?.kind == _kind &&
-                        _subtypeId == widget.initialMarker?.subtypeId &&
-                        _customSubtype.text ==
-                            (widget.initialMarker?.subtypeLabel ?? '')
-                    ? widget.initialMarker?.subtypeLabel
-                    : subtype?.label,
-                sourceLabel: _source.text == widget.initialMarker?.sourceLabel
-                    ? widget.initialMarker!.sourceLabel
-                    : _source.text.trim().isEmpty
-                    ? 'Admin Intel'
-                    : _source.text.trim(),
-                confidence: _confidence,
-                blueprintId: _blueprintId,
-              ),
-            );
-          },
+                },
           child: Text(widget.actionLabel),
         ),
       ],

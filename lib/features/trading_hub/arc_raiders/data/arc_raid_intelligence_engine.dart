@@ -205,8 +205,10 @@ class ArcRaidIntelligenceEngine {
 
   ArcRaidMapMarker _markerForAdminMarker(ArcAdminMapMarker marker) {
     final category = _categoryForAdminMarker(marker);
+    final resource = marker.upgradeResource;
     final tags = <String>[
-      marker.kind.label,
+      marker.effectiveKind.label,
+      if (resource != null) resource.usageLabel,
       if (marker.subtypeLabel?.trim().isNotEmpty == true)
         marker.subtypeLabel!.trim(),
       marker.confidence.label,
@@ -236,11 +238,9 @@ class ArcRaidIntelligenceEngine {
       r'\badmin_[a-zA-Z0-9_-]+|\b[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}\b',
     ).hasMatch(description);
     final detail = description.isEmpty || containsInternalId
-        ? '${marker.kind.label} location.'
+        ? '${marker.effectiveKind.label} location.'
         : description;
-    final iconKey = ArcMapFilterIconRegistry.iconKeyForSubtype(
-      marker.subtypeId,
-    );
+    final iconKey = ArcMapFilterIconRegistry.iconKeyForAdminMarker(marker);
 
     return ArcRaidMapMarker(
       id: 'admin_${marker.id}',
@@ -253,7 +253,7 @@ class ArcRaidIntelligenceEngine {
       confidence: marker.confidence,
       approximate: !marker.adminVerified,
       count: math.max(1, marker.resolvedEvidenceCount),
-      detail: detail,
+      detail: resource == null ? detail : '$detail\n${resource.usageDetails}',
       iconKey: iconKey,
       tags: tags,
       blueprintIds: marker.blueprintId == null
@@ -872,7 +872,7 @@ class ArcRaidIntelligenceEngine {
   static ArcRaidMapMarkerCategory _categoryForAdminMarker(
     ArcAdminMapMarker marker,
   ) {
-    switch (marker.kind) {
+    switch (marker.effectiveKind) {
       case ArcAdminMapMarkerKind.poi:
         return ArcRaidMapMarkerCategory.poi;
       case ArcAdminMapMarkerKind.extraction:
@@ -887,6 +887,8 @@ class ArcRaidIntelligenceEngine {
         return ArcRaidMapMarkerCategory.mapEvent;
       case ArcAdminMapMarkerKind.resourceNode:
         return ArcRaidMapMarkerCategory.tradePreparationRequirement;
+      case ArcAdminMapMarkerKind.upgrade:
+        return ArcRaidMapMarkerCategory.upgrade;
       case ArcAdminMapMarkerKind.naturalResource:
         return ArcRaidMapMarkerCategory.generalLoot;
       case ArcAdminMapMarkerKind.arcSpawn:

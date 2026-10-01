@@ -33,6 +33,7 @@ enum ArcRaidMapMarkerCategory {
   keyRoom,
   containerCluster,
   generalLoot,
+  upgrade,
   communityIntel,
   researchedIntel,
   confirmedIntel,
@@ -161,6 +162,8 @@ extension ArcRaidMapMarkerCategoryX on ArcRaidMapMarkerCategory {
         return 'Container Cluster';
       case ArcRaidMapMarkerCategory.generalLoot:
         return 'General Loot';
+      case ArcRaidMapMarkerCategory.upgrade:
+        return 'Upgrade';
       case ArcRaidMapMarkerCategory.communityIntel:
         return 'Community Intel';
       case ArcRaidMapMarkerCategory.researchedIntel:
@@ -203,6 +206,7 @@ extension ArcRaidMapMarkerCategoryX on ArcRaidMapMarkerCategory {
       case ArcRaidMapMarkerCategory.keyRoom:
       case ArcRaidMapMarkerCategory.containerCluster:
       case ArcRaidMapMarkerCategory.generalLoot:
+      case ArcRaidMapMarkerCategory.upgrade:
         return 'Loot Sources';
       case ArcRaidMapMarkerCategory.communityIntel:
       case ArcRaidMapMarkerCategory.researchedIntel:
@@ -722,6 +726,7 @@ class ArcRaidMapFilterState {
     this.quests = false,
     this.squadObjectives = false,
     this.lootSources = false,
+    this.upgrades = false,
     this.mapBasics = false,
     this.communityIntel = false,
     this.researchedIntel = false,
@@ -744,6 +749,7 @@ class ArcRaidMapFilterState {
   final bool quests;
   final bool squadObjectives;
   final bool lootSources;
+  final bool upgrades;
   final bool mapBasics;
   final bool communityIntel;
   final bool researchedIntel;
@@ -770,6 +776,7 @@ class ArcRaidMapFilterState {
       quests != defaults.quests,
       squadObjectives != defaults.squadObjectives,
       lootSources != defaults.lootSources,
+      upgrades != defaults.upgrades,
       mapBasics != defaults.mapBasics,
       communityIntel != defaults.communityIntel,
       researchedIntel != defaults.researchedIntel,
@@ -809,6 +816,8 @@ class ArcRaidMapFilterState {
       return false;
     }
     switch (marker.category) {
+      case ArcRaidMapMarkerCategory.upgrade:
+        return upgrades;
       case ArcRaidMapMarkerCategory.blueprintOpportunity:
         return missingBlueprints;
       case ArcRaidMapMarkerCategory.topWanted:
@@ -865,6 +874,7 @@ class ArcRaidMapFilterState {
     bool? quests,
     bool? squadObjectives,
     bool? lootSources,
+    bool? upgrades,
     bool? mapBasics,
     bool? communityIntel,
     bool? researchedIntel,
@@ -887,6 +897,7 @@ class ArcRaidMapFilterState {
       quests: quests ?? this.quests,
       squadObjectives: squadObjectives ?? this.squadObjectives,
       lootSources: lootSources ?? this.lootSources,
+      upgrades: upgrades ?? this.upgrades,
       mapBasics: mapBasics ?? this.mapBasics,
       communityIntel: communityIntel ?? this.communityIntel,
       researchedIntel: researchedIntel ?? this.researchedIntel,

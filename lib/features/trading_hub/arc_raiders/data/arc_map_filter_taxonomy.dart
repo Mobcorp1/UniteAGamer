@@ -1,4 +1,5 @@
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_map_marker.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_container_types.dart';
 
 class ArcMapFilterTaxonomyEntry {
   const ArcMapFilterTaxonomyEntry({
@@ -162,6 +163,14 @@ class ArcMapFilterTaxonomy {
   ];
 
   static const List<ArcMapFilterTaxonomyEntry> loot = [
+    ArcMapFilterTaxonomyEntry(
+      id: ArcContainerTypes.wheelieBinId,
+      label: ArcContainerTypes.wheelieBinLabel,
+      groupId: 'loot',
+      groupLabel: 'Loot & Containers',
+      kind: ArcAdminMapMarkerKind.lootContainer,
+      iconKey: 'loot_wheelie_bin',
+    ),
     ArcMapFilterTaxonomyEntry(
       id: 'weapon_case',
       label: 'Weapon Case',

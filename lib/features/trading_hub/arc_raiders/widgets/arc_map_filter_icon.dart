@@ -52,6 +52,7 @@ class ArcMapFilterIcon extends StatelessWidget {
   }
 
   IconData _fallbackIcon(ArcRaidMapMarkerCategory? category) {
+    if (iconKey == 'loot_wheelie_bin') return Icons.delete_outline_rounded;
     if (category == null) return Icons.location_on_outlined;
     return switch (category) {
       ArcRaidMapMarkerCategory.standardExtraction ||

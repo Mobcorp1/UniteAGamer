@@ -17,6 +17,8 @@ class _FakeAdminMapEditorRepository extends ArcAdminMapEditorRepository {
   final List<ArcAdminMapMarker> initialMarkers;
   ArcAdminMapMarker? movedMarker;
   bool failMove = false;
+  int saveCalls = 0;
+  int archiveCalls = 0;
 
   @override
   Future<ArcAdminMapMarker> updateMarker({
@@ -36,7 +38,7 @@ class _FakeAdminMapEditorRepository extends ArcAdminMapEditorRepository {
     ArcRaidMapLayer layer,
   ) async {
     return [
-      for (final marker in initialMarkers)
+      for (final marker in savedMarkers.isEmpty ? initialMarkers : savedMarkers)
         if (marker.id == movedMarker?.id) movedMarker! else marker,
     ].where((marker) => marker.mapId == mapId).toList(growable: false);
   }
@@ -54,12 +56,13 @@ class _FakeAdminMapEditorRepository extends ArcAdminMapEditorRepository {
     ArcRaidMapLayer layer,
     Iterable<ArcAdminMapMarker> markers,
   ) async {
+    saveCalls++;
     savedMarkers
       ..clear()
       ..addAll(
-        markers.where(
-          (marker) => marker.mapId == mapId && marker.layer == layer,
-        ),
+        markers
+            .map((marker) => ArcAdminMapMarker.fromMap(marker.toMap()))
+            .where((marker) => marker.mapId == mapId && marker.layer == layer),
       );
     return ArcAdminMapEditorSaveResult(
       collectionPath: ArcAdminMapEditorRepository.collectionName,
@@ -104,7 +107,9 @@ class _FakeAdminMapEditorRepository extends ArcAdminMapEditorRepository {
   Future<void> publishAll(Iterable<ArcAdminMapMarker> markers) async {}
 
   @override
-  Future<void> archive(String markerId) async {}
+  Future<void> archive(String markerId) async {
+    archiveCalls++;
+  }
 
   @override
   Future<void> archiveAll(Iterable<String> markerIds) async {}
@@ -117,6 +122,248 @@ class _FakeAdminMapEditorRepository extends ArcAdminMapEditorRepository {
 }
 
 void main() {
+  for (final size in const [
+    Size(320, 740),
+    Size(430, 932),
+    Size(640, 360),
+    Size(740, 360),
+    Size(844, 390),
+    Size(768, 1024),
+    Size(1024, 768),
+    Size(1280, 900),
+  ]) {
+    testWidgets('canvas visibility is reversible and read-only at $size', (
+      tester,
+    ) async {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final markers = [
+        for (final kind in [
+          ArcAdminMapMarkerKind.poi,
+          ArcAdminMapMarkerKind.blueprint,
+          ArcAdminMapMarkerKind.lootContainer,
+          ArcAdminMapMarkerKind.resourceNode,
+        ])
+          ArcAdminMapMarker(
+            id: 'visibility_${kind.name}',
+            mapId: 'buried_city',
+            layer: ArcRaidMapLayer.surface,
+            kind: kind,
+            name: kind.label,
+            point: const ArcNormalizedPoint(x: .3, y: .4),
+            description: 'Preserve metadata',
+          ),
+      ];
+      final repository = _FakeAdminMapEditorRepository(initialMarkers: markers);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ArcAdminMapEditorScreen(
+            repository: repository,
+            appBar: AppBar(title: const Text('Editor')),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      final pins = find.byWidgetPredicate(
+        (w) =>
+            w.key is ValueKey<String> &&
+            (w.key! as ValueKey<String>).value.startsWith('admin-map-marker-'),
+      );
+      final initialCount = pins.evaluate().length;
+      expect(initialCount, greaterThanOrEqualTo(markers.length));
+      final toggle = find.byKey(const Key('admin-map-toggle-items'));
+      expect(toggle.hitTestable(), findsOneWidget);
+      expect(find.text('Hide Icons'), findsOneWidget);
+      for (var i = 0; i < 3; i++) {
+        await tester.ensureVisible(toggle);
+        await tester.tap(toggle);
+        await tester.pumpAndSettle();
+        expect(pins, findsNothing);
+        expect(find.text('Show Icons'), findsOneWidget);
+        expect(repository.saveCalls, 0);
+        expect(repository.archiveCalls, 0);
+        await tester.tap(toggle);
+        await tester.pumpAndSettle();
+        expect(pins, findsNWidgets(initialCount));
+      }
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Save Changes'));
+      await tester.tap(find.text('Save Changes'));
+      await tester.pumpAndSettle();
+      for (final marker in markers) {
+        expect(
+          repository.savedMarkers.singleWhere((m) => m.id == marker.id).toMap(),
+          marker.toMap(),
+        );
+      }
+      expect(
+        repository.savedMarkers.map((m) => m.id).toSet().length,
+        repository.savedMarkers.length,
+      );
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  for (final size in const [Size(1400, 1000), Size(320, 740), Size(740, 360)]) {
+    for (final example in [
+      (
+        kind: ArcAdminMapMarkerKind.upgrade,
+        option: 'Scrappy • Dog Collar',
+        label: 'Dog Collar',
+        itemId: 'dog-collar',
+        subtypeId: 'upgrade_dog_collar',
+      ),
+      (
+        kind: ArcAdminMapMarkerKind.upgrade,
+        option: 'Bench • Rusted Tools',
+        label: 'Rusted Tools',
+        itemId: 'rusted-tools',
+        subtypeId: 'upgrade_rusted_tools',
+      ),
+      (
+        kind: ArcAdminMapMarkerKind.lootContainer,
+        option: 'Loot & Containers • Wheelie Bin',
+        label: 'Wheelie Bin',
+        itemId: null,
+        subtypeId: 'wheelie_bin',
+      ),
+    ]) {
+      testWidgets(
+        '${example.label} can be created while hidden, saved, reloaded, edited, moved and deleted at $size',
+        (tester) async {
+          tester.view.physicalSize = size;
+          tester.view.devicePixelRatio = 1;
+          addTearDown(tester.view.resetPhysicalSize);
+          addTearDown(tester.view.resetDevicePixelRatio);
+          final repository = _FakeAdminMapEditorRepository();
+          Future<void> tapVisible(Finder finder) async {
+            await tester.ensureVisible(finder);
+            await tester.pumpAndSettle();
+            await tester.tap(finder);
+            await tester.pumpAndSettle();
+          }
+
+          Future<void> openEditor() async {
+            await tester.pumpWidget(
+              MaterialApp(
+                home: ArcAdminMapEditorScreen(
+                  repository: repository,
+                  appBar: AppBar(title: const Text('Editor')),
+                ),
+              ),
+            );
+            await tester.pumpAndSettle();
+          }
+
+          await openEditor();
+          await tester.tap(find.byKey(const Key('admin-map-toggle-items')));
+          await tester.pumpAndSettle();
+          await tapVisible(find.byKey(const Key('admin-map-create-poi')));
+          await tester.pumpAndSettle();
+          final canvas = find
+              .descendant(
+                of: find.byType(InteractiveViewer),
+                matching: find.byType(Image),
+              )
+              .first;
+
+          await tester.tap(
+            find.byType(DropdownButtonFormField<ArcAdminMapMarkerKind>),
+          );
+          await tester.pumpAndSettle();
+          await tester.scrollUntilVisible(
+            find.text(example.kind.label),
+            200,
+            scrollable: find.byType(Scrollable).last,
+            maxScrolls: 30,
+          );
+          await tester.pumpAndSettle();
+          await tester.tap(find.text(example.kind.label).last);
+          await tester.pumpAndSettle();
+          await tester.tap(
+            find.byKey(ValueKey<ArcAdminMapMarkerKind>(example.kind)),
+          );
+          await tester.pumpAndSettle();
+          await tester.scrollUntilVisible(
+            find.text(example.option),
+            200,
+            scrollable: find.byType(Scrollable).last,
+            maxScrolls: 40,
+          );
+          await tester.pumpAndSettle();
+          await tester.tap(find.text(example.option).last);
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('Place on Map'));
+          await tester.pumpAndSettle();
+          await tapVisible(canvas);
+          await tester.pumpAndSettle();
+          await tapVisible(find.text('Save Changes'));
+          await tester.pumpAndSettle();
+          final saved = repository.savedMarkers.singleWhere(
+            (m) => m.subtypeId == example.subtypeId,
+          );
+          expect(saved.kind, example.kind);
+          expect(saved.toMap()['kind'], example.kind.name);
+          expect(saved.itemId, example.itemId);
+          expect(saved.subtypeLabel, example.label);
+          final pin = find.byKey(
+            ValueKey<String>('admin-map-marker-${saved.id}'),
+          );
+          expect(pin, findsNothing);
+          await tapVisible(find.byKey(const Key('admin-map-toggle-items')));
+          await tester.pumpAndSettle();
+          expect(pin, findsOneWidget);
+          await tester.pumpWidget(const SizedBox.shrink());
+          await openEditor();
+          expect(pin, findsOneWidget);
+          expect(find.text('Hide Icons'), findsOneWidget);
+          await tapVisible(pin);
+          await tester.pumpAndSettle();
+          await tapVisible(find.text('Edit Marker').first);
+          await tester.pumpAndSettle();
+          final field = tester.widget<DropdownButtonFormField<String?>>(
+            find.byKey(ValueKey<ArcAdminMapMarkerKind>(example.kind)),
+          );
+          expect(field.initialValue, example.subtypeId);
+          await tester.ensureVisible(find.widgetWithText(TextField, 'Name'));
+          await tester.pumpAndSettle();
+          await tester.enterText(
+            find.widgetWithText(TextField, 'Name'),
+            '${example.label} edited',
+          );
+          await tester.tap(find.text('Apply Edit'));
+          await tester.pumpAndSettle();
+          await tester.ensureVisible(pin);
+          await tester.pumpAndSettle();
+          await tester.drag(pin, const Offset(120, 80));
+          await tester.pumpAndSettle();
+          await tapVisible(find.text('Save Changes'));
+          await tester.pumpAndSettle();
+          final edited = repository.savedMarkers.singleWhere(
+            (m) => m.id == saved.id,
+          );
+          expect(edited.name, '${example.label} edited');
+          expect(edited.itemId, saved.itemId);
+          expect(edited.subtypeId, saved.subtypeId);
+          expect(edited.point.toMap(), isNot(saved.point.toMap()));
+          await tapVisible(find.text('Delete Marker').first);
+          await tester.pumpAndSettle();
+          await tester.tap(
+            find.widgetWithText(ElevatedButton, 'Archive POI').last,
+          );
+          await tester.pumpAndSettle();
+          expect(pin, findsNothing);
+          expect(repository.archiveCalls, 1);
+          expect(tester.takeException(), isNull);
+        },
+      );
+    }
+  }
+
   for (final outcome in ['cancel', 'success', 'failure']) {
     testWidgets('cross-layer edit $outcome preserves canonical marker', (
       tester,

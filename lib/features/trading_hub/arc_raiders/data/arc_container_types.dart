@@ -179,6 +179,14 @@ class ArcContainerTypes {
     description: 'Large rubbish bin, dumpster, or waste container.',
   );
 
+  static const String wheelieBinId = 'wheelie_bin';
+  static const String wheelieBinLabel = 'Wheelie Bin';
+  static const ArcContainerType wheelieBin = ArcContainerType(
+    id: wheelieBinId,
+    label: wheelieBinLabel,
+    description: 'Wheeled rubbish bin or waste container.',
+  );
+
   static const ArcContainerType electricalBox = ArcContainerType(
     id: 'electrical_box',
     label: 'Electrical Box',
@@ -270,6 +278,7 @@ class ArcContainerTypes {
     weaponTube,
     weaponCache,
     wickerBasket,
+    wheelieBin,
     looseLoot,
     unknown,
   ];

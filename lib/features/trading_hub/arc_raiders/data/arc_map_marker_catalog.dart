@@ -177,6 +177,13 @@ class ArcMapMarkerCatalog {
           isSelected: (filters) => filters.lootSources,
           apply: (filters, selected) => filters.copyWith(lootSources: selected),
         ),
+        ArcMapMarkerFilterItem(
+          id: 'upgrades',
+          label: 'Upgrade',
+          icon: Icons.build_circle_outlined,
+          isSelected: (filters) => filters.upgrades,
+          apply: (filters, selected) => filters.copyWith(upgrades: selected),
+        ),
       ],
     ),
     ArcMapMarkerFilterGroup(
@@ -271,6 +278,7 @@ class ArcMapMarkerCatalog {
         return const ArcRaidMapFilterState(
           missingBlueprints: false,
           lootSources: true,
+          upgrades: true,
           mapBasics: true,
           communityIntel: false,
           researchedIntel: false,
@@ -294,6 +302,7 @@ class ArcMapMarkerCatalog {
           quests: true,
           squadObjectives: true,
           lootSources: true,
+          upgrades: true,
           mapBasics: true,
           communityIntel: true,
           researchedIntel: true,
@@ -327,6 +336,7 @@ class ArcMapMarkerCatalog {
         a.quests == b.quests &&
         a.squadObjectives == b.squadObjectives &&
         a.lootSources == b.lootSources &&
+        a.upgrades == b.upgrades &&
         a.mapBasics == b.mapBasics &&
         a.communityIntel == b.communityIntel &&
         a.researchedIntel == b.researchedIntel &&

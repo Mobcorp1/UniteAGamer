@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_upgrade_resource_catalog.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_asset_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
@@ -13,6 +14,7 @@ enum ArcAdminMapMarkerKind {
   questLocation,
   mapEvent,
   resourceNode,
+  upgrade,
   naturalResource,
   arcSpawn,
   weaponCase,
@@ -52,6 +54,8 @@ extension ArcAdminMapMarkerKindX on ArcAdminMapMarkerKind {
         return 'Map Event';
       case ArcAdminMapMarkerKind.resourceNode:
         return 'Resource Node';
+      case ArcAdminMapMarkerKind.upgrade:
+        return 'Upgrade';
       case ArcAdminMapMarkerKind.naturalResource:
         return 'Natural Resource';
       case ArcAdminMapMarkerKind.arcSpawn:
@@ -160,6 +164,7 @@ class ArcAdminMapMarker {
     this.description = '',
     this.subtypeId,
     this.subtypeLabel,
+    this.itemId,
     this.blueprintId,
     this.sourceLabel = 'Admin Intel',
     this.confidence = ArcRaidIntelConfidence.confirmed,
@@ -197,6 +202,9 @@ class ArcAdminMapMarker {
   final String description;
   final String? subtypeId;
   final String? subtypeLabel;
+
+  /// Canonical upgrade resource ID; absent on existing non-resource records.
+  final String? itemId;
   final ArcNormalizedPoint point;
   final String? blueprintId;
   final String sourceLabel;
@@ -225,6 +233,19 @@ class ArcAdminMapMarker {
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
+  /// Recognise the previous resource-node representation without rewriting it.
+  ArcMapUpgradeResource? get upgradeResource =>
+      kind == ArcAdminMapMarkerKind.upgrade ||
+          kind == ArcAdminMapMarkerKind.resourceNode
+      ? ArcMapUpgradeResourceCatalog.byItemId(itemId) ??
+            ArcMapUpgradeResourceCatalog.bySubtypeId(subtypeId)
+      : null;
+
+  ArcAdminMapMarkerKind get effectiveKind =>
+      kind == ArcAdminMapMarkerKind.resourceNode && upgradeResource != null
+      ? ArcAdminMapMarkerKind.upgrade
+      : kind;
+
   bool get isPublished => state == ArcAdminMapMarkerState.published;
 
   bool get isLive =>
@@ -250,6 +271,8 @@ class ArcAdminMapMarker {
     bool clearSubtypeId = false,
     String? subtypeLabel,
     bool clearSubtypeLabel = false,
+    String? itemId,
+    bool clearItemId = false,
     ArcNormalizedPoint? point,
     String? blueprintId,
     bool clearBlueprintId = false,
@@ -304,6 +327,7 @@ class ArcAdminMapMarker {
           ? null
           : (subtypeLabel ?? this.subtypeLabel),
       point: point ?? this.point,
+      itemId: clearItemId ? null : (itemId ?? this.itemId),
       blueprintId: clearBlueprintId ? null : (blueprintId ?? this.blueprintId),
       sourceLabel: sourceLabel ?? this.sourceLabel,
       confidence: confidence ?? this.confidence,
@@ -364,6 +388,7 @@ class ArcAdminMapMarker {
       'description': description,
       'subtypeId': subtypeId,
       'subtypeLabel': subtypeLabel,
+      'itemId': itemId,
       'point': point.toMap(),
       'blueprintId': blueprintId,
       'sourceLabel': sourceLabel,
@@ -426,6 +451,7 @@ class ArcAdminMapMarker {
       description: map['description']?.toString() ?? '',
       subtypeId: map['subtypeId']?.toString(),
       subtypeLabel: map['subtypeLabel']?.toString(),
+      itemId: map['itemId']?.toString(),
       point: ArcNormalizedPoint.fromMap(
         map['point'] is Map
             ? Map<String, dynamic>.from(map['point'] as Map)

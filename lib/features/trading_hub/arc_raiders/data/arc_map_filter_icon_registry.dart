@@ -1,5 +1,7 @@
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_filter_taxonomy.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_upgrade_resource_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_map_marker.dart';
 
 class ArcMapFilterIconRegistry {
   const ArcMapFilterIconRegistry._();
@@ -82,6 +84,7 @@ class ArcMapFilterIconRegistry {
   static Set<String> get supportedIconKeys => {
     ...canonicalIconKeys,
     ...uagCommunityIconKeys,
+    for (final item in ArcMapUpgradeResourceCatalog.items) item.subtypeId,
   };
 
   static Set<String> get rasterIconKeys => _rasterAssets.keys.toSet();
@@ -96,6 +99,8 @@ class ArcMapFilterIconRegistry {
 
   static String? tryAssetPathFor(String iconKey) {
     final normalized = _normalize(iconKey);
+    final resource = ArcMapUpgradeResourceCatalog.bySubtypeId(normalized);
+    if (resource != null) return resource.imageAsset;
     final filename = _rasterAssets[normalized];
     return filename == null ? null : '$assetDirectory/$filename';
   }
@@ -105,8 +110,13 @@ class ArcMapFilterIconRegistry {
   }
 
   static String? iconKeyForSubtype(String? subtypeId) {
+    final resource = ArcMapUpgradeResourceCatalog.bySubtypeId(subtypeId);
+    if (resource != null) return resource.subtypeId;
     return ArcMapFilterTaxonomy.iconKeyFor(subtypeId);
   }
+
+  static String? iconKeyForAdminMarker(ArcAdminMapMarker marker) =>
+      marker.upgradeResource?.subtypeId ?? iconKeyForSubtype(marker.subtypeId);
 
   static String assetPathForSubtype(String? subtypeId) {
     final iconKey = iconKeyForSubtype(subtypeId);
@@ -148,6 +158,8 @@ class ArcMapFilterIconRegistry {
   }) {
     final explicit = iconKey?.trim();
     if (explicit != null && explicit.isNotEmpty) {
+      // Use the bin glyph until dedicated raster artwork is registered.
+      if (explicit == 'loot_wheelie_bin') return tryAssetPathFor(explicit);
       final explicitPath = tryAssetPathFor(explicit);
       if (explicitPath != null) return explicitPath;
     }
