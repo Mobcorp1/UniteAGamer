@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_poi_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_conditions.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_drop_report_pinpoint.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_drop_report.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state_recovery.dart';
@@ -404,6 +405,9 @@ class ArcBlueprintRepository {
     String? poiId,
     String? poiName,
     String? publishedMarkerId,
+    ArcNormalizedPoint? historicalPoint,
+    ArcRaidMapLayer? poiLayer,
+    String? serverRegion,
     String? enemySourceId,
     String? enemySourceName,
     String? containerTypeId,
@@ -492,9 +496,10 @@ class ArcBlueprintRepository {
     final normalizedEnemyName = enemySourceName?.trim();
     final normalizedContainerTypeId = containerTypeId?.trim();
     final normalizedContainerTypeLabel = containerTypeLabel?.trim();
+    final normalizedServerRegion = serverRegion?.trim();
     final now = DateTime.now();
 
-    final signature = ArcBlueprintDropReport.buildSignature(
+    final baseSignature = ArcBlueprintDropReport.buildSignature(
       blueprintId: blueprintId,
       mapName: trimmedMapName,
       sourceType: sourceType,
@@ -514,6 +519,8 @@ class ArcBlueprintRepository {
       handoverMapName: handoverMapName,
       handoverPoiId: handoverPoiId,
     );
+    final signature =
+        '$baseSignature${ArcDropReportPinpoint.signatureSuffix(point: historicalPoint, serverRegion: normalizedServerRegion)}';
 
     final existingSnapshot = await _reportsCollection
         .where('signature', isEqualTo: signature)
@@ -532,10 +539,20 @@ class ArcBlueprintRepository {
           'markerId': publishedPoi.id,
           'poiId': normalizedPoiId,
           'poiName': publishedPoi.name,
-          'intelligenceLayer': publishedPoi.layer.storageValue,
-          if (existingReport.historicalPoint == null)
-            'historicalPoint': publishedPoi.point.toMap(),
         },
+        if (historicalPoint != null) ...{
+          'historicalPoint': historicalPoint.toMap(),
+          'exactPin': true,
+          'intelligenceLayer':
+              (poiLayer ?? publishedPoi?.layer ?? ArcRaidMapLayer.surface)
+                  .storageValue,
+        } else if (publishedPoi != null &&
+            existingReport.historicalPoint == null) ...{
+          'historicalPoint': publishedPoi.point.toMap(),
+          'intelligenceLayer': publishedPoi.layer.storageValue,
+        },
+        if (normalizedServerRegion != null && normalizedServerRegion.isNotEmpty)
+          'serverRegion': normalizedServerRegion,
         'lastConfirmedAt': Timestamp.fromDate(now),
         'foundAt': Timestamp.fromDate(foundAt ?? now),
       };
@@ -569,8 +586,9 @@ class ArcBlueprintRepository {
       mapName: trimmedMapName,
       sourceType: sourceType,
       markerId: publishedPoi?.id,
-      poiLayer: publishedPoi?.layer,
-      historicalPoint: publishedPoi?.point,
+      poiLayer: poiLayer ?? publishedPoi?.layer,
+      historicalPoint: historicalPoint ?? publishedPoi?.point,
+      exactPin: historicalPoint != null,
       poiId: normalizedPoiId,
       poiName: normalizedPoiName,
       enemySourceId: normalizedEnemyId,
@@ -581,6 +599,7 @@ class ArcBlueprintRepository {
       weatherConditionLabel: resolvedWeatherConditionLabel,
       mapEventId: resolvedMapEventId,
       mapEventLabel: resolvedMapEventLabel,
+      serverRegion: normalizedServerRegion,
       mode: mode,
       raidType: raidType,
       entryTime: ArcEntryTime.unknown,
@@ -611,7 +630,12 @@ class ArcBlueprintRepository {
       signature: signature,
     );
 
-    await doc.set({...report.toMap(), 'locationName': report.poiName});
+    await doc.set({
+      ...report.toMap(),
+      'locationName': report.poiName,
+      if (normalizedServerRegion != null && normalizedServerRegion.isNotEmpty)
+        'serverRegion': normalizedServerRegion,
+    });
     await ArcOperationsRepository(
       firestore: _firestore,
       auth: _auth,

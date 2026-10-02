@@ -21,7 +21,14 @@ class MissingBlueprintDialog extends StatelessWidget {
 
   Future<void> _markOwned(BuildContext context) async {
     await repository.saveBlueprintState(
-      currentState.copyWith(owned: true, dupesOwned: 0),
+      currentState.copyWith(
+        owned: true,
+        dupesOwned: 0,
+        ownershipSource:
+            currentState.ownershipSource == ArcBlueprintOwnershipSource.scan
+            ? ArcBlueprintOwnershipSource.scan
+            : ArcBlueprintOwnershipSource.manual,
+      ),
     );
 
     if (!context.mounted) return;

@@ -59,20 +59,12 @@ void main() {
         expect(viewportRect.overlaps(railRect), isFalse);
         expect(viewportRect.height, greaterThan(size.height * 0.65));
 
-        if (size.width >= 1180) {
-          final ad = find.text('Creative');
-          final adLane = find.byKey(const Key('blueprint-side-ad-right'));
-          expect(ad, findsOneWidget);
-          expect(adLane, findsOneWidget);
-          expect(viewportRect.overlaps(tester.getRect(ad)), isFalse);
-          final adLaneRect = tester.getRect(adLane);
-          expect(adLaneRect.left, greaterThanOrEqualTo(railRect.right));
-          expect(
-            tester.getRect(ad).left,
-            greaterThanOrEqualTo(adLaneRect.left),
-          );
-          expect(tester.getRect(ad).right, lessThanOrEqualTo(adLaneRect.right));
-        }
+        final staticAd = find.byKey(const Key('blueprint-landscape-static-ad'));
+        final ad = find.text('Creative');
+        expect(staticAd, findsOneWidget);
+        expect(ad, findsOneWidget);
+        expect(viewportRect.overlaps(tester.getRect(ad)), isFalse);
+        expect(find.byKey(const Key('blueprint-side-ad-right')), findsNothing);
 
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox());

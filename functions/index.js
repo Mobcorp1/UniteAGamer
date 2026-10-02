@@ -4657,3 +4657,12 @@ exports.preventDeletedSupporterEntitlementResurrection = onDocumentWritten(
   'supporter_entitlements/{userId}',
   (event) => accountDeletionLifecycle.preventResurrection(event, 'userId'),
 );
+
+// Android rewarded ads: authenticated session + signed AdMob verification.
+const { createRewardHandlers } = require('./uag_rewarded_ads');
+const uagRewardHandlers = createRewardHandlers({ db, auth: admin.auth() });
+const uagRewardOptions = { region: 'us-central1', timeoutSeconds: 60, maxInstances: 10 };
+exports.prepareUagRewardedAd = onRequest(uagRewardOptions, uagRewardHandlers.prepare);
+exports.cancelUagRewardedAd = onRequest(uagRewardOptions, uagRewardHandlers.cancel);
+exports.redeemUagRaiderMarks = onRequest(uagRewardOptions, uagRewardHandlers.redeem);
+exports.verifyUagRewardedAd = onRequest(uagRewardOptions, uagRewardHandlers.ssv);

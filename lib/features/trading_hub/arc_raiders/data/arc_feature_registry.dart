@@ -1,4 +1,3 @@
-import '../screens/arc_events_screen.dart';
 import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
 import 'package:uag_arc_raiders_hub/features/profile/screens/profile_settings_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_user_personalisation_profile.dart';
@@ -54,16 +53,6 @@ class ArcFeatureRegistry {
   const ArcFeatureRegistry._();
 
   static const entries = <ArcFeatureRegistryEntry>[
-    ArcFeatureRegistryEntry(
-      id: 'events',
-      label: 'Events',
-      personalisationFeature: ArcPersonalisationFeature.raidPlanner,
-      lifecycle: ArcFeatureLifecycle.beta,
-      routeName: ArcEventsScreen.routeName,
-      accessFlag: FeatureAccessFlag.raidPlanner,
-      notes:
-          'Planner-owned standard schedule and official regional conditions.',
-    ),
     ArcFeatureRegistryEntry(
       id: 'command_centre',
       label: 'Command Centre',

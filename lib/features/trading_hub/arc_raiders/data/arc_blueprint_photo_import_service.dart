@@ -14,11 +14,57 @@ class ArcBlueprintPhotoImportSummary {
   final int preservedDuplicateCount;
 }
 
+class ArcBlueprintPhotoReconciliationSummary {
+  const ArcBlueprintPhotoReconciliationSummary({
+    required this.removedCount,
+    required this.scanConfirmedCount,
+  });
+
+  final int removedCount;
+  final int scanConfirmedCount;
+
+  bool get changed => removedCount > 0 || scanConfirmedCount > 0;
+}
+
 class ArcBlueprintPhotoImportService {
   ArcBlueprintPhotoImportService({ArcBlueprintRepository? repository})
     : _repository = repository ?? ArcBlueprintRepository();
 
   final ArcBlueprintRepository _repository;
+
+  Future<ArcBlueprintPhotoReconciliationSummary> reconcileOwnershipEvidence({
+    required Iterable<ArcBlueprintPhotoCellDecision> decisions,
+    required Map<String, ArcBlueprintState> existing,
+    bool allowLegacyUnknownCorrection = false,
+  }) async {
+    final updates = buildOwnershipReconciliationUpdates(
+      decisions: decisions,
+      existing: existing,
+      allowLegacyUnknownCorrection: allowLegacyUnknownCorrection,
+    );
+
+    if (updates.isNotEmpty) {
+      await _repository.saveBlueprintStates(updates);
+    }
+
+    var removedCount = 0;
+    var scanConfirmedCount = 0;
+    for (final update in updates) {
+      final before = existing[update.blueprintId];
+      if (before?.owned == true && !update.owned) {
+        removedCount++;
+      } else if (update.owned &&
+          update.ownershipSource == ArcBlueprintOwnershipSource.scan &&
+          before?.ownershipSource != ArcBlueprintOwnershipSource.scan) {
+        scanConfirmedCount++;
+      }
+    }
+
+    return ArcBlueprintPhotoReconciliationSummary(
+      removedCount: removedCount,
+      scanConfirmedCount: scanConfirmedCount,
+    );
+  }
 
   Future<ArcBlueprintPhotoImportSummary> apply(
     Iterable<ArcBlueprintPhotoCellDecision> decisions,
@@ -77,7 +123,7 @@ class ArcBlueprintPhotoImportService {
         ownedDecisions.length >= decisionList.length - 1 &&
         existingOwned < (decisionList.length * 0.85).floor()) {
       return 'The scan tried to mark almost every Blueprint as owned. '
-          'Nothing was changed. Re-align the four corners with the cell grid '
+          'Nothing was changed. Re-align the locked grid with the cell edges '
           'and retake the images.';
     }
 
@@ -99,16 +145,66 @@ class ArcBlueprintPhotoImportService {
           final current =
               existing[decision.blueprintId] ??
               ArcBlueprintState.empty(decision.blueprintId);
-          final requestedOwned =
-              current.owned ||
+          final scannerOwned =
               decision.state == ArcBlueprintPhotoCellState.owned;
+          final requestedOwned = current.owned || scannerOwned;
           return current.copyWith(
             owned: requestedOwned,
             dupesOwned: current.dupesOwned,
             priorityRank: current.priorityRank,
+            ownershipSource: scannerOwned
+                ? ArcBlueprintOwnershipSource.scan
+                : current.ownershipSource,
             updatedAt: DateTime.now(),
           );
         })
         .toList(growable: false);
+  }
+
+  static List<ArcBlueprintState> buildOwnershipReconciliationUpdates({
+    required Iterable<ArcBlueprintPhotoCellDecision> decisions,
+    required Map<String, ArcBlueprintState> existing,
+    bool allowLegacyUnknownCorrection = false,
+  }) {
+    final updates = <ArcBlueprintState>[];
+
+    for (final decision in decisions) {
+      final current = existing[decision.blueprintId];
+      if (current == null || !current.owned) continue;
+
+      if (decision.state == ArcBlueprintPhotoCellState.owned) {
+        if (current.ownershipSource != ArcBlueprintOwnershipSource.scan) {
+          updates.add(
+            current.copyWith(
+              ownershipSource: ArcBlueprintOwnershipSource.scan,
+              updatedAt: DateTime.now(),
+            ),
+          );
+        }
+        continue;
+      }
+
+      if (decision.state != ArcBlueprintPhotoCellState.missing) continue;
+      if (current.dupesOwned > 0) continue;
+      if (current.ownershipSource == ArcBlueprintOwnershipSource.scan) continue;
+
+      final explicitlyManual =
+          current.ownershipSource == ArcBlueprintOwnershipSource.manual;
+      final legacyUnknownAllowed =
+          allowLegacyUnknownCorrection &&
+          current.ownershipSource == ArcBlueprintOwnershipSource.unknown;
+
+      if (!explicitlyManual && !legacyUnknownAllowed) continue;
+
+      updates.add(
+        current.copyWith(
+          owned: false,
+          dupesOwned: 0,
+          updatedAt: DateTime.now(),
+        ),
+      );
+    }
+
+    return updates;
   }
 }

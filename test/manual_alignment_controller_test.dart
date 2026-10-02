@@ -6,13 +6,28 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc
 
 void main() {
   group('ManualAlignmentController', () {
-    test('default top frame has 2:1 aspect ratio', () {
+    test('viewport-aware default is 2:1 in rendered pixels', () {
       final c = ManualAlignmentController();
-      c.resetToTopDefault();
+      const viewportAspect = 2.2;
+      c.resetToTopDefaultForViewport(viewportAspectRatio: viewportAspect);
+
       final rect = c.calibration.normalizedRect;
-      final width = rect.width;
-      final height = rect.height;
-      expect((width / height).toStringAsFixed(2), equals('2.00'));
+      final renderedAspect = (rect.width * viewportAspect) / rect.height;
+
+      expect(rect.width, closeTo(0.60, 0.001));
+      expect(renderedAspect, closeTo(2.0, 0.01));
+      expect(rect.center.dx, closeTo(0.56, 0.001));
+      expect(rect.center.dy, closeTo(0.50, 0.001));
+    });
+
+    test('wide phone viewport produces the taller starting frame', () {
+      final c = ManualAlignmentController();
+      c.resetToTopDefaultForViewport(viewportAspectRatio: 2.2);
+
+      final rect = c.calibration.normalizedRect;
+      expect(rect.height, closeTo(0.66, 0.01));
+      expect(rect.top, lessThan(0.18));
+      expect(rect.bottom, greaterThan(0.82));
     });
 
     test('left edge moves both left corners', () {
@@ -43,7 +58,7 @@ void main() {
       final before = c.calibration;
       final newTop = (before.top - 0.03).clamp(0.0, 1.0);
       c.moveEdge(ArcBlueprintCropEdge.top, newTop);
-      expect(c.calibration.top, equals(newTop));
+      expect(c.calibration.top, closeTo(newTop, 1e-12));
       expect(c.calibration.left, equals(before.left));
       expect(c.calibration.right, equals(before.right));
     });
@@ -70,12 +85,13 @@ void main() {
       expect((c.calibration.top - before.top), closeTo(dy, 1e-6));
     });
 
-    test('reset returns correct default rectangle', () {
+    test('fallback reset uses the new narrower/taller geometry', () {
       final c = ManualAlignmentController();
       c.resetToTopDefault();
       final rect = c.calibration.normalizedRect;
-      expect(rect.width, closeTo(0.72, 0.001));
-      expect((rect.width / rect.height), closeTo(2.0, 0.01));
+
+      expect(rect.width, closeTo(0.60, 0.001));
+      expect(rect.height, greaterThan(0.60));
     });
 
     test('auto-align can consume valid detection bounds', () {

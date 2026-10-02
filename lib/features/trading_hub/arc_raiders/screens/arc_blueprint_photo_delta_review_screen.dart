@@ -26,16 +26,7 @@ class ArcBlueprintPhotoDeltaReviewScreen extends StatefulWidget {
 
 class _ArcBlueprintPhotoDeltaReviewScreenState
     extends State<ArcBlueprintPhotoDeltaReviewScreen> {
-  late final Set<String> _selectedIds;
   bool _saving = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedIds = widget.proposedAdditions
-        .map((decision) => decision.blueprintId)
-        .toSet();
-  }
 
   String _nameFor(String blueprintId) {
     for (final blueprint in ArcBlueprintSeedData.blueprints) {
@@ -44,28 +35,10 @@ class _ArcBlueprintPhotoDeltaReviewScreenState
     return blueprintId;
   }
 
-  String _positionFor(ArcBlueprintPhotoCellDecision decision) {
-    final row = decision.blueprintIndex ~/ 10;
-    final column = decision.blueprintIndex % 10;
-    final rowLabel = String.fromCharCode('A'.codeUnitAt(0) + row);
-    return '$rowLabel${column + 1}';
-  }
-
-  void _setSelected(String blueprintId, bool selected) {
-    setState(() {
-      if (selected) {
-        _selectedIds.add(blueprintId);
-      } else {
-        _selectedIds.remove(blueprintId);
-      }
-    });
-  }
-
   Future<void> _apply() async {
     if (_saving) return;
 
-    final selected = widget.proposedAdditions
-        .where((decision) => _selectedIds.contains(decision.blueprintId))
+    final additions = widget.proposedAdditions
         .map(
           (decision) => decision.copyWith(
             state: ArcBlueprintPhotoCellState.owned,
@@ -75,7 +48,7 @@ class _ArcBlueprintPhotoDeltaReviewScreenState
         )
         .toList(growable: false);
 
-    if (selected.isEmpty) {
+    if (additions.isEmpty) {
       Navigator.of(context).pop(false);
       return;
     }
@@ -84,9 +57,9 @@ class _ArcBlueprintPhotoDeltaReviewScreenState
     try {
       final applySelected = widget.applySelected;
       if (applySelected == null) {
-        await ArcBlueprintPhotoImportService().apply(selected);
+        await ArcBlueprintPhotoImportService().apply(additions);
       } else {
-        await applySelected(selected);
+        await applySelected(additions);
       }
       if (!mounted) return;
       Navigator.of(context).pop(true);
@@ -95,15 +68,15 @@ class _ArcBlueprintPhotoDeltaReviewScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(error.message),
-          backgroundColor: Colors.red.shade800,
+          backgroundColor: ArcUiTokens.danger,
         ),
       );
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Blueprint update failed. Try again.'),
-          backgroundColor: Colors.red.shade800,
+          backgroundColor: ArcUiTokens.danger,
         ),
       );
     } finally {
@@ -113,13 +86,11 @@ class _ArcBlueprintPhotoDeltaReviewScreenState
 
   @override
   Widget build(BuildContext context) {
-    final selectedCount = _selectedIds.length;
-
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(
-          'REVIEW NEW BLUEPRINTS',
+          'BLUEPRINT SCAN RESULT',
           style: ArcUiTokens.pageTitle(color: ArcUiTokens.primaryAccent),
         ),
         backgroundColor: Colors.transparent,
@@ -128,108 +99,99 @@ class _ArcBlueprintPhotoDeltaReviewScreenState
       body: ArcTacticalPageBody(
         width: ArcPageWidth.standard,
         maxWidth: 960,
-        padding: EdgeInsets.zero,
+        padding: ArcLayoutTokens.pagePadding(context),
         scrollable: false,
         child: SizedBox.expand(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Padding(
-                padding: ArcLayoutTokens.pagePadding(
-                  context,
-                ).copyWith(bottom: 10),
-                child: ArcTacticalPanel(
-                  icon: Icons.playlist_add_check_circle_outlined,
-                  title: 'Detected Blueprint Additions',
-                  accent: ArcUiTokens.primaryAccent,
-                  child: Text(
-                    '${widget.proposedAdditions.length} confidently detected '
-                    'Blueprint${widget.proposedAdditions.length == 1 ? '' : 's'} '
-                    'are not currently marked owned. Uncheck anything the scan '
-                    'got wrong. ${widget.uncertainIgnoredCount} uncertain slot'
-                    '${widget.uncertainIgnoredCount == 1 ? '' : 's'} will be '
-                    'ignored and left exactly as they are.',
-                    style: ArcUiTokens.body(fontSize: 13),
-                  ),
+              ArcTacticalPanel(
+                icon: Icons.document_scanner_outlined,
+                title: 'Detected Ownership',
+                accent: ArcUiTokens.primaryAccent,
+                child: Text(
+                  '${widget.proposedAdditions.length} new Blueprint'
+                  '${widget.proposedAdditions.length == 1 ? '' : 's'} detected. '
+                  '${widget.uncertainIgnoredCount} uncertain slot'
+                  '${widget.uncertainIgnoredCount == 1 ? '' : 's'} will be left unchanged. '
+                  'Existing ownership and duplicate counts are preserved.',
+                  style: ArcUiTokens.body(fontSize: 13),
                 ),
               ),
+              const SizedBox(height: 14),
               Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      for (final decision in widget.proposedAdditions)
-                        Builder(
-                          builder: (context) {
-                            final selected = _selectedIds.contains(
-                              decision.blueprintId,
-                            );
-                            return Card(
-                              color: ArcUiTokens.surfacePanel,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                  ArcUiTokens.radiusL,
-                                ),
-                                side: BorderSide(
-                                  color: selected
-                                      ? ArcUiTokens.primaryAccent.withValues(
-                                          alpha: 0.42,
-                                        )
-                                      : ArcUiTokens.borderMedium,
-                                ),
-                              ),
-                              child: CheckboxListTile(
-                                key: ValueKey('delta-${decision.blueprintId}'),
-                                value: selected,
-                                onChanged: _saving
-                                    ? null
-                                    : (value) => _setSelected(
-                                        decision.blueprintId,
-                                        value == true,
-                                      ),
-                                activeColor: ArcUiTokens.primaryAccent,
-                                checkColor: Colors.black,
-                                title: Text(
-                                  _nameFor(decision.blueprintId),
-                                  style: ArcUiTokens.cardTitle(fontSize: 14),
-                                ),
-                                subtitle: Text(
-                                  '${_positionFor(decision)} - '
-                                  '${(decision.confidence * 100).round()}% confidence',
-                                  style: ArcUiTokens.bodySmall(),
-                                ),
-                              ),
-                            );
-                          },
+                child: ListView.separated(
+                  padding: EdgeInsets.zero,
+                  itemCount: widget.proposedAdditions.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 6),
+                  itemBuilder: (context, index) {
+                    final decision = widget.proposedAdditions[index];
+                    return DecoratedBox(
+                      decoration: ArcUiTokens.surfaceDecoration(
+                        role: ArcSurfaceRole.interactive,
+                        accent: ArcUiTokens.primaryAccent,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
                         ),
-                    ],
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.check_circle_outline_rounded,
+                              color: ArcUiTokens.success,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                _nameFor(decision.blueprintId),
+                                style: ArcUiTokens.body(
+                                  fontSize: 13,
+                                  color: ArcUiTokens.textPrimary,
+                                  weight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              '${(decision.confidence * 100).round()}%',
+                              style: ArcUiTokens.metadata(
+                                color: ArcUiTokens.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 12),
+              SafeArea(
+                top: false,
+                minimum: const EdgeInsets.only(bottom: 8),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    key: const Key('blueprint-delta-apply'),
+                    onPressed: _saving ? null : _apply,
+                    icon: _saving
+                        ? const SizedBox.square(
+                            dimension: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.playlist_add_check_circle_outlined),
+                    label: Text(
+                      _saving
+                          ? 'Updating Blueprint Grid...'
+                          : 'Update Blueprint Grid',
+                    ),
                   ),
                 ),
               ),
             ],
-          ),
-        ),
-      ),
-      bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.all(16),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 960),
-            child: FilledButton.icon(
-              key: const Key('blueprint-delta-apply'),
-              onPressed: _saving ? null : _apply,
-              icon: _saving
-                  ? const SizedBox.square(
-                      dimension: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.playlist_add_check_circle_outlined),
-              label: Text(
-                selectedCount == 0
-                    ? 'Keep Tracker Unchanged'
-                    : 'Update Blueprint Grid',
-              ),
-            ),
           ),
         ),
       ),

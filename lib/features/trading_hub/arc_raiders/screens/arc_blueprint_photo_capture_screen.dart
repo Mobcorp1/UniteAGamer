@@ -8,6 +8,10 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bl
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_dual_capture_merge_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_photo_occupancy_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_import_quality_gate.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_photo_import_service.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_bottom_overlap_normalizer.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_grid_lattice_registrar.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_owned_cell_structure_verifier.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_photo_pixel_analyzer.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_personal_calibration_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_template_verification_engine.dart';
@@ -169,68 +173,37 @@ class _ArcBlueprintPhotoCaptureScreenState
               builder: (_) => const ArcBlueprintLiveScannerScreen(),
             ),
           );
+
       if (result == null) {
         _showMessage('No Blueprint grid was captured.');
         return;
       }
-      if (result.decisions.isEmpty) {
-        _showMessage(
-          'The live scanner did not return stable Blueprint positions. Try again or use Photo Import.',
-          error: true,
-        );
-        return;
-      }
-      await _reviewLiveScannerResult(result);
+
+      await _repository.saveDualCapture(
+        topBytes: Uint8List.fromList(result.topImageBytes),
+        bottomBytes: Uint8List.fromList(result.bottomImageBytes),
+        topFileName: 'blueprint_grid_top.jpg',
+        bottomFileName: 'blueprint_grid_bottom.jpg',
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _draft = _repository.current;
+        _activeSection = ArcBlueprintCaptureSection.bottom;
+        _busy = false;
+      });
+
+      await _scanAndImport();
     } on PlatformException catch (error) {
       _showMessage(_pickerErrorMessage(error, ImageSource.camera), error: true);
     } catch (_) {
       _showMessage(
-        'The live Blueprint scanner could not complete the capture. Choose a screenshot or try again.',
+        'The Blueprint camera could not complete the capture. Try again or choose a screenshot.',
         error: true,
       );
     } finally {
       if (mounted) setState(() => _busy = false);
     }
-  }
-
-  Future<void> _reviewLiveScannerResult(
-    ArcBlueprintScannerResult result,
-  ) async {
-    final existing = await ArcBlueprintRepository().loadMyBlueprintStates();
-    final proposedAdditions = result.decisions
-        .where(
-          (decision) =>
-              decision.state == ArcBlueprintPhotoCellState.owned &&
-              existing[decision.blueprintId]?.owned != true,
-        )
-        .toList(growable: false);
-
-    if (kDebugMode) {
-      debugPrint(
-        'ARC LIVE SCANNER: existingOwned=${existing.values.where((state) => state.owned).length} '
-        'proposedAdditions=${proposedAdditions.length}',
-      );
-    }
-
-    if (proposedAdditions.isEmpty) {
-      _showMessage('No new Blueprint ownership was detected by the live scan.');
-      return;
-    }
-
-    if (!mounted) return;
-    final applied = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder: (context) => ArcBlueprintPhotoDeltaReviewScreen(
-          proposedAdditions: proposedAdditions,
-          uncertainIgnoredCount: result.uncertainIgnoredCount,
-        ),
-      ),
-    );
-    if (applied != true) return;
-
-    await _repository.clear();
-    if (!mounted) return;
-    Navigator.of(context).pop(true);
   }
 
   Future<void> _pick(ImageSource source) async {
@@ -298,15 +271,45 @@ class _ArcBlueprintPhotoCaptureScreenState
 
     setState(() => _busy = true);
     try {
+      const latticeRegistrar = ArcBlueprintGridLatticeRegistrar();
+      final registeredTop = latticeRegistrar.register(
+        bytes: topBytes,
+        columns: 10,
+        rows: 5,
+      );
+      final registeredBottomFiveRows = latticeRegistrar.register(
+        bytes: bottomBytes,
+        columns: 10,
+        rows: 5,
+      );
+      final registeredTopBytes = registeredTop.imageBytes;
+      const bottomOverlapNormalizer = ArcBlueprintBottomOverlapNormalizer();
+      final registeredBottomBytes = bottomOverlapNormalizer
+          .removeRegisteredOverlap(registeredBottomFiveRows.imageBytes);
+      if (kDebugMode) {
+        debugPrint(
+          'ARC GRID REGISTER: pipeline '
+          'topRefined=${registeredTop.refined} '
+          'bottomRefined=${registeredBottomFiveRows.refined} '
+          'topX=${registeredTop.horizontalConfidence.toStringAsFixed(3)} '
+          'topY=${registeredTop.verticalConfidence.toStringAsFixed(3)} '
+          'bottomX=${registeredBottomFiveRows.horizontalConfidence.toStringAsFixed(3)} '
+          'bottomY=${registeredBottomFiveRows.verticalConfidence.toStringAsFixed(3)}',
+        );
+      }
+
       const topAnalyzer = ArcBlueprintPhotoPixelAnalyzer(columns: 10, rows: 5);
       const bottomAnalyzer = ArcBlueprintPhotoPixelAnalyzer(
         columns: 10,
         rows: 4,
         validColumnCountsByRow: ArcBlueprintCanonicalGrid.bottomRowColumnCounts,
       );
-      final top = topAnalyzer.analyze(bytes: topBytes, captureId: 'top');
+      final top = topAnalyzer.analyze(
+        bytes: registeredTopBytes,
+        captureId: 'top',
+      );
       final bottom = bottomAnalyzer.analyze(
-        bytes: bottomBytes,
+        bytes: registeredBottomBytes,
         captureId: 'bottom',
       );
 
@@ -361,8 +364,8 @@ class _ArcBlueprintPhotoCaptureScreenState
       // or missing cell into ownership.
       const templateVerifier = ArcBlueprintTemplateVerificationEngine();
       final templateVerification = await templateVerifier.verify(
-        topBytes: topBytes,
-        bottomBytes: bottomBytes,
+        topBytes: registeredTopBytes,
+        bottomBytes: registeredBottomBytes,
         samples: calibrated.samples,
       );
 
@@ -374,8 +377,8 @@ class _ArcBlueprintPhotoCaptureScreenState
       const ownershipMarkerVerifier =
           ArcBlueprintOwnershipMarkerVerificationEngine();
       final markerVerification = ownershipMarkerVerifier.verify(
-        topBytes: topBytes,
-        bottomBytes: bottomBytes,
+        topBytes: registeredTopBytes,
+        bottomBytes: registeredBottomBytes,
         samples: templateVerification.samples,
         templateDiagnostics: templateVerification.diagnostics,
       );
@@ -403,10 +406,86 @@ class _ArcBlueprintPhotoCaptureScreenState
         );
       }
 
+      // V2 structural gate: ownership now has to resemble the actual ARC
+      // completed-card UI, not merely score highly on generic colour/texture.
+      //
+      // Direct console/PC screenshots have materially different colour/luma
+      // distribution from photographs of a display. Keep the live-camera
+      // profile completely unchanged, but use a digital-input profile when
+      // BOTH sections came through the explicit screenshot picker.
+      final screenshotPair =
+          _draft.topFileName.isNotEmpty &&
+          _draft.bottomFileName.isNotEmpty &&
+          _draft.topFileName != 'blueprint_grid_top.jpg' &&
+          _draft.bottomFileName != 'blueprint_grid_bottom.jpg';
+
+      final structureVerifier = screenshotPair
+          ? const ArcBlueprintOwnedCellStructureVerifier(
+              minimumBluePanelCoverage: 0.09,
+              minimumFooterContrast: 0.04,
+            )
+          : const ArcBlueprintOwnedCellStructureVerifier();
+
+      if (kDebugMode) {
+        debugPrint(
+          'ARC STRUCTURE PROFILE: '
+          '${screenshotPair ? "digital-screenshot" : "live-camera"} '
+          'blue=${structureVerifier.minimumBluePanelCoverage.toStringAsFixed(2)} '
+          'contrast=${structureVerifier.minimumFooterContrast.toStringAsFixed(2)}',
+        );
+      }
+
+      final structureVerification = structureVerifier.verify(
+        topBytes: registeredTopBytes,
+        bottomBytes: registeredBottomBytes,
+        bottomFiveRowBytes: registeredBottomFiveRows.imageBytes,
+        samples: markerVerification.samples,
+        templateDiagnostics: templateVerification.diagnostics,
+      );
+
+      if (kDebugMode) {
+        for (final diagnostic in structureVerification.diagnostics) {
+          if (diagnostic.classification != 'uncertain') continue;
+          final failed = <String>[
+            if (diagnostic.bluePanelCoverage <
+                structureVerifier.minimumBluePanelCoverage)
+              'blue',
+            if (diagnostic.footerDarkCoverage <
+                structureVerifier.minimumFooterDarkCoverage)
+              'footer',
+            if (diagnostic.footerContrast <
+                structureVerifier.minimumFooterContrast)
+              'contrast',
+            if (diagnostic.bookShapeEvidence <
+                structureVerifier.minimumMarkerShapeEvidence)
+              'book',
+            if (diagnostic.tickShapeEvidence <
+                structureVerifier.minimumMarkerShapeEvidence)
+              'tick',
+            if (diagnostic.templateSimilarity <
+                structureVerifier.minimumArtworkSimilarity)
+              'artwork',
+          ];
+          debugPrint(
+            'ARC SIX SIGNAL: '
+            '${diagnostic.captureId} '
+            'R${diagnostic.rowIndex + 1}C${diagnostic.columnIndex + 1} '
+            'blue=${diagnostic.bluePanelCoverage.toStringAsFixed(3)} '
+            'footer=${diagnostic.footerDarkCoverage.toStringAsFixed(3)} '
+            'contrast=${diagnostic.footerContrast.toStringAsFixed(3)} '
+            'book=${diagnostic.bookShapeEvidence.toStringAsFixed(3)} '
+            'tick=${diagnostic.tickShapeEvidence.toStringAsFixed(3)} '
+            'artwork=${diagnostic.templateSimilarity.toStringAsFixed(3)} '
+            'failed=${failed.join(",")} '
+            'classification=${diagnostic.classification}',
+          );
+        }
+      }
+
       const engine = ArcBlueprintPhotoOccupancyEngine(columns: 10);
       final result = engine.classify(
         orderedBlueprintIds: orderedBlueprintIds,
-        samples: markerVerification.samples,
+        samples: structureVerification.samples,
       );
 
       if (kDebugMode) {
@@ -451,6 +530,25 @@ class _ArcBlueprintPhotoCaptureScreenState
         return;
       }
 
+      final reconciliation = await ArcBlueprintPhotoImportService()
+          .reconcileOwnershipEvidence(
+            decisions: result.decisions,
+            existing: existing,
+            // Existing installs pre-date ownership provenance. A clean direct
+            // screenshot pair is allowed to reconcile those legacy unknown states;
+            // camera scans only auto-remove entries explicitly marked manual.
+            allowLegacyUnknownCorrection: screenshotPair,
+          );
+
+      if (kDebugMode && reconciliation.changed) {
+        debugPrint(
+          'ARC OWNERSHIP RECONCILE: '
+          'removed=${reconciliation.removedCount} '
+          'scanConfirmed=${reconciliation.scanConfirmedCount} '
+          'legacyUnknownCorrection=$screenshotPair',
+        );
+      }
+
       final uncertainCount = result.decisions
           .where((decision) => decision.needsReview)
           .length;
@@ -473,6 +571,20 @@ class _ArcBlueprintPhotoCaptureScreenState
       }
 
       if (proposedAdditions.isEmpty) {
+        if (reconciliation.removedCount > 0) {
+          final corrected = reconciliation.removedCount;
+          _showMessage(
+            '$corrected manual Blueprint entr'
+            '${corrected == 1 ? 'y was' : 'ies were'} corrected from the scanned grid. '
+            '$uncertainCount uncertain slot'
+            '${uncertainCount == 1 ? '' : 's'} were left unchanged.',
+          );
+          await _repository.clear();
+          if (!mounted) return;
+          Navigator.of(context).pop(true);
+          return;
+        }
+
         _showMessage(
           uncertainCount == 0
               ? 'No new Blueprint ownership was detected.'
@@ -511,7 +623,7 @@ class _ArcBlueprintPhotoCaptureScreenState
 
   String get _stepTitle => _activeSection == ArcBlueprintCaptureSection.top
       ? 'Capture the top of your grid'
-      : 'Capture rows 6-8 and the final three slots';
+      : 'Capture the overlap row, rows 6-8 and the final three slots';
 
   @override
   Widget build(BuildContext context) {
@@ -558,14 +670,20 @@ class _ArcBlueprintPhotoCaptureScreenState
             Text(
               _activeSection == ArcBlueprintCaptureSection.top
                   ? 'Fit the outer edges of the first five Blueprint rows inside the boundary. Keep the full left, right, top and bottom edges visible.'
-                  : 'Start at row 6. Do not include row 5 again. Keep rows 6-8 fully visible and include the final three Blueprint slots beneath them.',
+                  : 'Keep row 5 visible once more as the overlap row. Include rows 6–8 fully and the final three Blueprint slots beneath them.',
               style: ArcUiTokens.body(fontSize: 13),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Avoid direct sunlight or strong screen reflections. If camera recognition struggles, use a clean console or PC screenshot.',
+              style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
             ),
             const SizedBox(height: 14),
             AspectRatio(
-              aspectRatio: _activeSection == ArcBlueprintCaptureSection.top
-                  ? 10 / 5
-                  : 10 / 4,
+              // Both captured images contain five physical rows. The bottom
+              // image includes the one-row overlap until registration removes
+              // it immediately before 4-row canonical analysis.
+              aspectRatio: 10 / 5,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(ArcUiTokens.radiusL),
                 child: Stack(
@@ -627,7 +745,9 @@ class _ArcBlueprintPhotoCaptureScreenState
                   key: const Key('blueprint-import-choose-image'),
                   onPressed: _busy ? null : () => _pick(ImageSource.gallery),
                   icon: const Icon(Icons.image_outlined),
-                  label: Text(bytes == null ? 'Choose Screenshot' : 'Replace'),
+                  label: Text(
+                    bytes == null ? 'Choose Screenshot' : 'Use Screenshot',
+                  ),
                 ),
                 if (bytes != null)
                   TextButton.icon(

@@ -4,79 +4,72 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_blueprint_photo_delta_review_screen.dart';
 
 void main() {
-  testWidgets('delta review defaults proposed additions selected', (
-    tester,
-  ) async {
+  Future<void> pumpReview(WidgetTester tester, {required Widget home}) async {
     tester.view.physicalSize = const Size(1200, 1200);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(
-      const MaterialApp(
-        home: ArcBlueprintPhotoDeltaReviewScreen(
-          uncertainIgnoredCount: 25,
-          proposedAdditions: [
-            ArcBlueprintPhotoCellDecision(
-              blueprintId: 'extended-shotgun-mag-iii',
-              blueprintIndex: 0,
-              state: ArcBlueprintPhotoCellState.owned,
-              confidence: 0.96,
-              sourceCaptureId: 'top',
-              rowIndex: 0,
-              columnIndex: 0,
-            ),
-          ],
-        ),
+    await tester.pumpWidget(MaterialApp(home: home));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('scan result has no per-blueprint checkout controls', (
+    tester,
+  ) async {
+    await pumpReview(
+      tester,
+      home: const ArcBlueprintPhotoDeltaReviewScreen(
+        uncertainIgnoredCount: 25,
+        proposedAdditions: [
+          ArcBlueprintPhotoCellDecision(
+            blueprintId: 'extended-shotgun-mag-iii',
+            blueprintIndex: 0,
+            state: ArcBlueprintPhotoCellState.owned,
+            confidence: 0.96,
+            sourceCaptureId: 'top',
+            rowIndex: 0,
+            columnIndex: 0,
+          ),
+        ],
       ),
     );
-    await tester.pumpAndSettle();
 
-    expect(find.text('REVIEW NEW BLUEPRINTS'), findsOneWidget);
-    expect(find.textContaining('25 uncertain slots'), findsOneWidget);
+    expect(find.text('BLUEPRINT SCAN RESULT'), findsOneWidget);
     expect(find.text('Update Blueprint Grid'), findsOneWidget);
-
-    final tile = find.byType(CheckboxListTile);
-    expect(tile, findsOneWidget);
-    final checkbox = tester.widget<CheckboxListTile>(tile);
-    expect(checkbox.value, isTrue);
-    checkbox.onChanged!(false);
-    await tester.pump();
-
-    expect(find.text('Keep Tracker Unchanged'), findsOneWidget);
+    expect(find.byType(CheckboxListTile), findsNothing);
+    expect(find.byType(Checkbox), findsNothing);
   });
 
-  testWidgets('delta review applies selected additions without confirmation', (
+  testWidgets('Update Blueprint Grid applies every detected addition once', (
     tester,
   ) async {
     final applied = <ArcBlueprintPhotoCellDecision>[];
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: ArcBlueprintPhotoDeltaReviewScreen(
-          uncertainIgnoredCount: 0,
-          proposedAdditions: const [
-            ArcBlueprintPhotoCellDecision(
-              blueprintId: 'extended-medium-magazine-iii',
-              blueprintIndex: 81,
-              state: ArcBlueprintPhotoCellState.owned,
-              confidence: 0.96,
-              sourceCaptureId: 'bottom',
-              rowIndex: 8,
-              columnIndex: 1,
-            ),
-          ],
-          applySelected: (selected) async {
-            applied.addAll(selected);
-          },
-        ),
+    await pumpReview(
+      tester,
+      home: ArcBlueprintPhotoDeltaReviewScreen(
+        uncertainIgnoredCount: 0,
+        proposedAdditions: const [
+          ArcBlueprintPhotoCellDecision(
+            blueprintId: 'extended-medium-magazine-iii',
+            blueprintIndex: 81,
+            state: ArcBlueprintPhotoCellState.owned,
+            confidence: 0.96,
+            sourceCaptureId: 'bottom',
+            rowIndex: 8,
+            columnIndex: 1,
+          ),
+        ],
+        applySelected: (selected) async {
+          applied.addAll(selected);
+        },
       ),
     );
 
     await tester.tap(find.byKey(const Key('blueprint-delta-apply')));
-    await tester.pump();
+    await tester.pumpAndSettle();
 
-    expect(find.byType(AlertDialog), findsNothing);
     expect(applied, hasLength(1));
     expect(applied.single.blueprintId, 'extended-medium-magazine-iii');
     expect(applied.single.manuallyConfirmed, isTrue);

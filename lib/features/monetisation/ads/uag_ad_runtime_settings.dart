@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class UagAdRuntimeSettings {
   const UagAdRuntimeSettings({
+    this.rewardedEnabled = true,
+    this.rewardedSsvReady = false,
     required this.adsEnabled,
     required this.bannerEnabled,
     required this.appOpenEnabled,
@@ -14,6 +16,8 @@ class UagAdRuntimeSettings {
     required this.minimumSessionsBeforeAppOpen,
   });
 
+  final bool rewardedEnabled;
+  final bool rewardedSsvReady;
   final bool adsEnabled;
   final bool bannerEnabled;
   final bool appOpenEnabled;
@@ -46,6 +50,10 @@ class UagAdRuntimeSettings {
     }
 
     return UagAdRuntimeSettings(
+      rewardedEnabled:
+          value['rewardedEnabled'] as bool? ?? defaults.rewardedEnabled,
+      rewardedSsvReady:
+          value['rewardedSsvReady'] as bool? ?? defaults.rewardedSsvReady,
       adsEnabled: value['adsEnabled'] as bool? ?? defaults.adsEnabled,
       bannerEnabled: value['bannerEnabled'] as bool? ?? defaults.bannerEnabled,
       appOpenEnabled:
@@ -84,6 +92,8 @@ class UagAdRuntimeSettings {
   }
 
   Map<String, Object> toMap() => <String, Object>{
+    'rewardedEnabled': rewardedEnabled,
+    'rewardedSsvReady': rewardedSsvReady,
     'adsEnabled': adsEnabled,
     'bannerEnabled': bannerEnabled,
     'appOpenEnabled': appOpenEnabled,
@@ -97,6 +107,8 @@ class UagAdRuntimeSettings {
   };
 
   UagAdRuntimeSettings copyWith({
+    bool? rewardedEnabled,
+    bool? rewardedSsvReady,
     bool? adsEnabled,
     bool? bannerEnabled,
     bool? appOpenEnabled,
@@ -108,6 +120,8 @@ class UagAdRuntimeSettings {
     int? appOpenForegroundCooldownMinutes,
     int? minimumSessionsBeforeAppOpen,
   }) => UagAdRuntimeSettings(
+    rewardedEnabled: rewardedEnabled ?? this.rewardedEnabled,
+    rewardedSsvReady: rewardedSsvReady ?? this.rewardedSsvReady,
     adsEnabled: adsEnabled ?? this.adsEnabled,
     bannerEnabled: bannerEnabled ?? this.bannerEnabled,
     appOpenEnabled: appOpenEnabled ?? this.appOpenEnabled,

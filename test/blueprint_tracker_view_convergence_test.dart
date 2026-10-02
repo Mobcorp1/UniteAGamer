@@ -17,8 +17,14 @@ void main() {
       expect(source, contains('vertical: true'));
       expect(source, isNot(contains('Widget _buildGridControlRail(')));
       expect(source, isNot(contains('Widget _buildViewModeRail(')));
-      expect(source, contains("tooltip: 'In-game view'"));
-      expect(source, contains("tooltip: 'Full grid overview'"));
+      expect(
+        source,
+        contains("tooltip: 'In-game view - five-row game layout'"),
+      );
+      expect(
+        source,
+        contains("tooltip: 'Full grid overview - all Blueprint slots'"),
+      );
       expect(source, contains("tooltip: 'Zoom in'"));
       expect(source, contains("tooltip: 'Reset grid view'"));
       expect(source, contains("tooltip: 'Zoom out'"));
@@ -32,23 +38,21 @@ void main() {
 
     expect(source, contains('showWorkspaceInHeader'));
     expect(source, contains('const ArcBlueprintWorkspaceBar('));
-    expect(source, contains('bottomNavigationBar: compactMobileLandscape'));
-    expect(source, contains('ArcCompanionBottomDock(activeLabel: \'Track\')'));
+    expect(source, contains('bottomNavigationBar: AnimatedBuilder('));
+    expect(source, contains("'blueprint-landscape-static-ad'"));
+    expect(source, contains("ArcCompanionBottomDock(activeLabel: 'Track')"));
   });
 
-  test('wide eligible compact landscape uses one right sponsor lane', () {
+  test('compact landscape uses one static bottom sponsor lane', () {
     final tracker = read(
       'lib/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart',
     );
 
-    expect(tracker, contains('maxWidth >= 1180'));
-    expect(tracker, contains('UagAdService.instance.canShowBanner'));
-    expect(tracker, contains('widget.bannerSlot != null'));
     expect(tracker, contains("Key('blueprint-landscape-side-layout')"));
+    expect(tracker, contains("'blueprint-landscape-static-ad'"));
+    expect(tracker, contains('commandRailWidth = 132.0'));
     expect(tracker, isNot(contains("Key('blueprint-side-ad-left')")));
-    expect(tracker, contains("Key('blueprint-side-ad-right')"));
-    expect(tracker, contains('sideAdLaneWidth = 480.0'));
-    expect(tracker, contains('commandRailWidth = 52.0'));
+    expect(tracker, isNot(contains("Key('blueprint-side-ad-right')")));
   });
 
   test('Wanted Blueprint target-pick flow remains present', () {

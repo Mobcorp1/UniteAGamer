@@ -173,6 +173,16 @@ class ArcBlueprintOpportunityEngine {
     ArcBlueprintDropReport report, {
     required List<ArcAdminMapMarker> canonicalMarkers,
   }) {
+    if (report.exactPin && report.historicalPoint != null) {
+      final label = report.intelligencePoiName?.trim();
+      return _ResolvedReportPoint(
+        point: report.historicalPoint!,
+        layer: report.intelligenceLayer,
+        label: label == null || label.isEmpty ? 'Player pinpoint' : label,
+        approximate: false,
+      );
+    }
+
     final resolution = const ArcIntelligenceLocationResolver()
         .resolveBlueprintReport(
           map: map,
@@ -237,6 +247,11 @@ class ArcBlueprintOpportunityEngine {
   }
 
   String _locationKey(ArcBlueprintDropReport report) {
+    final exactPoint = report.historicalPoint;
+    if (report.exactPin && exactPoint != null) {
+      return 'pin:${exactPoint.x.toStringAsFixed(2)}:'
+          '${exactPoint.y.toStringAsFixed(2)}:${report.intelligenceLayer.name}';
+    }
     final markerId = report.markerId?.trim();
     if (markerId != null && markerId.isNotEmpty) return 'marker:$markerId';
     final poiId = report.intelligencePoiId?.trim();

@@ -28,21 +28,35 @@ void main() {
     expect(source, contains(': _openCameraDiagnostic,'));
   });
 
-  test('PASS 353 live framing rejects small false-positive grids', () {
-    expect(source, contains('_isLiveFrameLargeEnough'));
-    expect(source, contains('width >= 0.68'));
-    expect(
-      source,
-      contains('Move closer so the Blueprint grid fills the screen.'),
-    );
-  });
+  test(
+    'PASS 353 live framing accepts verified TV-scale grids and rejects tiny false positives',
+    () {
+      expect(source, contains('_isLiveFrameLargeEnough'));
+      expect(source, contains('width >= 0.50'));
+      expect(source, contains('_stillCaptureMode'));
+      expect(
+        source,
+        contains('final minimumHeight = bottomSection ? 0.16 : 0.24;'),
+      );
+      expect(
+        source,
+        contains('Move closer so the Blueprint grid fills the screen.'),
+      );
+    },
+  );
 
-  test('PASS 353 uses a large full-view framing guide', () {
-    expect(source, contains('size.width * 0.90'));
-    expect(source, contains('size.height * 0.68'));
+  test('scanner overlay alpha uses Flutter 0-1 range', () {
+    expect(source, isNot(contains('alpha: 184.0')));
+    expect(source, contains('alpha: 0.72'));
+  });
+  test('PASS 353 uses the viewport-aware linked-edge framing guide', () {
+    expect(source, contains('_ensureDefaultAlignmentForViewport'));
+    expect(source, contains('resetToTopDefaultForViewport'));
     expect(
       source,
-      contains('UAG will shrink the guide onto the detected outer grid'),
+      contains(
+        'UAG will snap the outline onto the detected outer edges automatically',
+      ),
     );
   });
 }

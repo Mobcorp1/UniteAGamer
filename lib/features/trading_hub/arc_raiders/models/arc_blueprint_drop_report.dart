@@ -24,6 +24,7 @@ class ArcBlueprintDropReport {
     this.poiLayer,
     this.poiName,
     this.historicalPoint,
+    this.exactPin = false,
     this.enemySourceId,
     this.enemySourceName,
     this.containerTypeId,
@@ -32,6 +33,7 @@ class ArcBlueprintDropReport {
     this.weatherConditionLabel,
     this.mapEventId,
     this.mapEventLabel,
+    this.serverRegion,
     this.acquisitionSource = ArcBlueprintAcquisitionSource.lootDrop,
     this.giftRelationship = ArcGiftedBlueprintRelationship.unknown,
     this.originalFindMapName,
@@ -67,6 +69,7 @@ class ArcBlueprintDropReport {
   final ArcRaidMapLayer? poiLayer;
   final String? poiName;
   final ArcNormalizedPoint? historicalPoint;
+  final bool exactPin;
   final String? enemySourceId;
   final String? enemySourceName;
   final String? containerTypeId;
@@ -75,6 +78,7 @@ class ArcBlueprintDropReport {
   final String? weatherConditionLabel;
   final String? mapEventId;
   final String? mapEventLabel;
+  final String? serverRegion;
   final ArcBlueprintAcquisitionSource acquisitionSource;
   final ArcGiftedBlueprintRelationship giftRelationship;
   final String? originalFindMapName;
@@ -262,6 +266,7 @@ class ArcBlueprintDropReport {
     ArcRaidMapLayer? poiLayer,
     String? poiName,
     ArcNormalizedPoint? historicalPoint,
+    bool? exactPin,
     String? enemySourceId,
     String? enemySourceName,
     String? containerTypeId,
@@ -270,6 +275,7 @@ class ArcBlueprintDropReport {
     String? weatherConditionLabel,
     String? mapEventId,
     String? mapEventLabel,
+    String? serverRegion,
     ArcBlueprintAcquisitionSource? acquisitionSource,
     ArcGiftedBlueprintRelationship? giftRelationship,
     String? originalFindMapName,
@@ -312,6 +318,7 @@ class ArcBlueprintDropReport {
       poiLayer: poiLayer ?? this.poiLayer,
       poiName: poiName ?? this.poiName,
       historicalPoint: historicalPoint ?? this.historicalPoint,
+      exactPin: exactPin ?? this.exactPin,
       enemySourceId: enemySourceId ?? this.enemySourceId,
       enemySourceName: enemySourceName ?? this.enemySourceName,
       containerTypeId: containerTypeId ?? this.containerTypeId,
@@ -321,6 +328,7 @@ class ArcBlueprintDropReport {
           weatherConditionLabel ?? this.weatherConditionLabel,
       mapEventId: mapEventId ?? this.mapEventId,
       mapEventLabel: mapEventLabel ?? this.mapEventLabel,
+      serverRegion: serverRegion ?? this.serverRegion,
       acquisitionSource: acquisitionSource ?? this.acquisitionSource,
       giftRelationship: giftRelationship ?? this.giftRelationship,
       originalFindMapName: originalFindMapName ?? this.originalFindMapName,
@@ -371,6 +379,7 @@ class ArcBlueprintDropReport {
       'intelligenceLayer': intelligenceLayer.storageValue,
       'poiName': poiName,
       'historicalPoint': historicalPoint?.toMap(),
+      'exactPin': exactPin,
       'enemySourceId': enemySourceId,
       'enemySourceName': enemySourceName,
       'containerTypeId': containerTypeId,
@@ -379,6 +388,7 @@ class ArcBlueprintDropReport {
       'weatherConditionLabel': weatherConditionLabel,
       'mapEventId': mapEventId,
       'mapEventLabel': mapEventLabel,
+      'serverRegion': serverRegion,
       'conditionId': conditionId,
       'conditionLabel': conditionLabel,
       'locationName': areaLabel,
@@ -487,6 +497,7 @@ class ArcBlueprintDropReport {
           poiName ??
           (sourceType == ArcDropSourceType.poi ? legacyLocation : null),
       historicalPoint: _historicalPointFrom(map),
+      exactPin: map['exactPin'] == true,
       enemySourceId: (map['enemySourceId'] as String?)?.trim(),
       enemySourceName:
           enemySourceName ??
@@ -505,6 +516,7 @@ class ArcBlueprintDropReport {
           ((weatherConditionLabel == null || weatherConditionLabel.isEmpty)
               ? legacyConditionLabel
               : null),
+      serverRegion: (map['serverRegion'] as String?)?.trim(),
       acquisitionSource:
           ArcBlueprintAcquisitionSourceX.fromStorage(
             map['acquisitionSource'] as String?,
@@ -878,7 +890,7 @@ extension ArcBlueprintAcquisitionSourceX on ArcBlueprintAcquisitionSource {
   String get label {
     switch (this) {
       case ArcBlueprintAcquisitionSource.lootDrop:
-        return 'Found Personally';
+        return 'Found';
       case ArcBlueprintAcquisitionSource.questReward:
         return 'Quest Reward';
       case ArcBlueprintAcquisitionSource.trade:

@@ -1279,6 +1279,31 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
+    // All reward grants and redemptions are server-owned, including admin clients.
+    match /uag_reward_wallets/{uid} {
+      allow read: if isOwner(uid) || isAdminOrDev();
+      allow write: if false;
+    }
+    match /uag_reward_test_wallets/{uid} {
+      allow read: if isOwner(uid) || isAdminOrDev();
+      allow write: if false;
+    }
+    match /uag_reward_sessions/{id} {
+      allow read: if isSignedIn() && resource.data.uid == request.auth.uid;
+      allow write: if false;
+    }
+    match /uag_reward_bonuses/{uid}/months/{month} {
+      allow read: if isOwner(uid) || isAdminOrDev();
+      allow write: if false;
+    }
+    match /uag_reward_transactions/{id} {
+      allow read, write: if false;
+    }
+    match /uag_reward_redemptions/{id} {
+      allow read: if isSignedIn() && resource.data.uid == request.auth.uid;
+      allow write: if false;
+    }
+
     match /wall_of_legends/{docId} {
       allow read: if isSignedIn();
       allow create, update, delete: if isAdminOrDev();

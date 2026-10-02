@@ -6,11 +6,13 @@ class ArcBlueprintEdgeCropOverlay extends StatefulWidget {
   const ArcBlueprintEdgeCropOverlay({
     required this.calibration,
     required this.onChanged,
+    this.enabled = true,
     super.key,
   });
 
   final ArcBlueprintEdgeCalibration calibration;
   final ValueChanged<ArcBlueprintEdgeCalibration> onChanged;
+  final bool enabled;
 
   @override
   State<ArcBlueprintEdgeCropOverlay> createState() =>
@@ -50,38 +52,40 @@ class _ArcBlueprintEdgeCropOverlayState
                 ),
               ),
             ),
-            _verticalHandle(
-              key: const Key('blueprint-crop-edge-left'),
-              edge: ArcBlueprintCropEdge.left,
-              left: rect.left - 24,
-              top: rect.top,
-              height: rect.height,
-              viewportWidth: size.width,
-            ),
-            _verticalHandle(
-              key: const Key('blueprint-crop-edge-right'),
-              edge: ArcBlueprintCropEdge.right,
-              left: rect.right - 24,
-              top: rect.top,
-              height: rect.height,
-              viewportWidth: size.width,
-            ),
-            _horizontalHandle(
-              key: const Key('blueprint-crop-edge-top'),
-              edge: ArcBlueprintCropEdge.top,
-              left: rect.left,
-              top: rect.top - 24,
-              width: rect.width,
-              viewportHeight: size.height,
-            ),
-            _horizontalHandle(
-              key: const Key('blueprint-crop-edge-bottom'),
-              edge: ArcBlueprintCropEdge.bottom,
-              left: rect.left,
-              top: rect.bottom - 24,
-              width: rect.width,
-              viewportHeight: size.height,
-            ),
+            if (widget.enabled) ...[
+              _verticalHandle(
+                key: const Key('blueprint-crop-edge-left'),
+                edge: ArcBlueprintCropEdge.left,
+                left: rect.left - 24,
+                top: rect.top,
+                height: rect.height,
+                viewportWidth: size.width,
+              ),
+              _verticalHandle(
+                key: const Key('blueprint-crop-edge-right'),
+                edge: ArcBlueprintCropEdge.right,
+                left: rect.right - 24,
+                top: rect.top,
+                height: rect.height,
+                viewportWidth: size.width,
+              ),
+              _horizontalHandle(
+                key: const Key('blueprint-crop-edge-top'),
+                edge: ArcBlueprintCropEdge.top,
+                left: rect.left,
+                top: rect.top - 24,
+                width: rect.width,
+                viewportHeight: size.height,
+              ),
+              _horizontalHandle(
+                key: const Key('blueprint-crop-edge-bottom'),
+                edge: ArcBlueprintCropEdge.bottom,
+                left: rect.left,
+                top: rect.bottom - 24,
+                width: rect.width,
+                viewportHeight: size.height,
+              ),
+            ],
           ],
         );
       },
@@ -104,20 +108,22 @@ class _ArcBlueprintEdgeCropOverlayState
       height: height,
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
-        onPanStart: (_) => _setActive(edge),
-        onPanCancel: () => _setActive(null),
-        onPanEnd: (_) => _setActive(null),
-        onPanUpdate: (details) {
-          final current = edge == ArcBlueprintCropEdge.left
-              ? widget.calibration.left
-              : widget.calibration.right;
-          widget.onChanged(
-            widget.calibration.moveEdge(
-              edge,
-              current + (details.delta.dx / viewportWidth),
-            ),
-          );
-        },
+        onPanStart: widget.enabled ? (_) => _setActive(edge) : null,
+        onPanCancel: widget.enabled ? () => _setActive(null) : null,
+        onPanEnd: widget.enabled ? (_) => _setActive(null) : null,
+        onPanUpdate: widget.enabled
+            ? (details) {
+                final current = edge == ArcBlueprintCropEdge.left
+                    ? widget.calibration.left
+                    : widget.calibration.right;
+                widget.onChanged(
+                  widget.calibration.moveEdge(
+                    edge,
+                    current + (details.delta.dx / viewportWidth),
+                  ),
+                );
+              }
+            : null,
         child: Center(
           child: _EdgeHandle(active: _activeEdge == edge, quarterTurns: 1),
         ),
@@ -141,20 +147,22 @@ class _ArcBlueprintEdgeCropOverlayState
       height: 48,
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
-        onPanStart: (_) => _setActive(edge),
-        onPanCancel: () => _setActive(null),
-        onPanEnd: (_) => _setActive(null),
-        onPanUpdate: (details) {
-          final current = edge == ArcBlueprintCropEdge.top
-              ? widget.calibration.top
-              : widget.calibration.bottom;
-          widget.onChanged(
-            widget.calibration.moveEdge(
-              edge,
-              current + (details.delta.dy / viewportHeight),
-            ),
-          );
-        },
+        onPanStart: widget.enabled ? (_) => _setActive(edge) : null,
+        onPanCancel: widget.enabled ? () => _setActive(null) : null,
+        onPanEnd: widget.enabled ? (_) => _setActive(null) : null,
+        onPanUpdate: widget.enabled
+            ? (details) {
+                final current = edge == ArcBlueprintCropEdge.top
+                    ? widget.calibration.top
+                    : widget.calibration.bottom;
+                widget.onChanged(
+                  widget.calibration.moveEdge(
+                    edge,
+                    current + (details.delta.dy / viewportHeight),
+                  ),
+                );
+              }
+            : null,
         child: Center(child: _EdgeHandle(active: _activeEdge == edge)),
       ),
     );
@@ -221,7 +229,6 @@ class _EdgeCropPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 3,
     );
-
     if (activeEdge == null) return;
     final active = Paint()
       ..color = Colors.white

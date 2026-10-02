@@ -40,9 +40,10 @@ class ArcBlueprintSectionGridExtractor {
     final decoded = _decode(imageBytes);
 
     if (detection.verticalDividers.length != 11 ||
-        detection.horizontalDividers.length != 4) {
+        detection.horizontalDividers.length != 5) {
       throw const FormatException(
-        'Rows 6–8 could not be detected as a complete 10 × 3 grid.',
+        'Overlap row 5 and rows 6–8 could not be detected as a complete '
+        '10 × 4 grid.',
       );
     }
 
@@ -67,11 +68,14 @@ class ArcBlueprintSectionGridExtractor {
       inferredBottom.clamp(0.0, 1.0),
     ];
 
-    final output = img.Image(width: 10 * cellWidth, height: 4 * cellHeight);
+    // Preserve the same five physical rows as the live-camera path:
+    // overlap row 5, rows 6–8, then the final three slots. The common scan
+    // pipeline removes row 5 only after the 10x5 registration step.
+    final output = img.Image(width: 10 * cellWidth, height: 5 * cellHeight);
     img.fill(output, color: img.ColorRgb8(8, 10, 14));
 
-    for (var row = 0; row < 4; row++) {
-      final maxColumns = row == 3 ? 3 : 10;
+    for (var row = 0; row < 5; row++) {
+      final maxColumns = row == 4 ? 3 : 10;
       final rawTop = horizontalDividers[row] * decoded.height;
       final rawBottom = horizontalDividers[row + 1] * decoded.height;
       final rowHeight = rawBottom - rawTop;

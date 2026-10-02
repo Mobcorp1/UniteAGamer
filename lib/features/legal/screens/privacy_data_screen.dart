@@ -1,3 +1,4 @@
+import 'package:uag_arc_raiders_hub/features/monetisation/ads/uag_ad_consent_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
@@ -74,6 +75,43 @@ class _UagPrivacyDataScreenState extends State<UagPrivacyDataScreen> {
                 'Review UAG privacy information, use public support routes, or permanently delete your account.',
             accent: ArcUiTokens.primaryAccent,
             child: SizedBox.shrink(),
+          ),
+          AnimatedBuilder(
+            animation: UagAdConsentController.instance,
+            builder: (context, _) =>
+                UagAdConsentController.instance.privacyOptionsRequired
+                ? _ActionTile(
+                    icon: Icons.manage_accounts_outlined,
+                    title: 'Advertising privacy choices',
+                    subtitle:
+                        'Review or change your Google advertising privacy choices.',
+                    onTap: () async {
+                      try {
+                        await UagAdConsentController.instance
+                            .showPrivacyOptions();
+                        if (!context.mounted) {
+                          return;
+                        }
+                        final error = UagAdConsentController.instance.error;
+                        if (error != null) {
+                          ScaffoldMessenger.of(
+                            context,
+                          ).showSnackBar(SnackBar(content: Text(error)));
+                        }
+                      } catch (_) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Privacy choices could not be opened. Please try again.',
+                              ),
+                            ),
+                          );
+                        }
+                      }
+                    },
+                  )
+                : const SizedBox.shrink(),
           ),
           _ActionTile(
             icon: Icons.privacy_tip_outlined,

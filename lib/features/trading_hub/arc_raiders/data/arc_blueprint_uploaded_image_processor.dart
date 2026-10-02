@@ -35,7 +35,7 @@ class ArcBlueprintUploadedImageProcessor {
       confidence: selection.detection.confidence,
       message: section == ArcBlueprintGridSection.top
           ? 'Rows 1–5 automatically detected and perspective-corrected.'
-          : 'Rows 6–8 and the final three slots automatically detected.',
+          : 'Overlap row 5, rows 6–8 and the final three slots automatically detected.',
       rows: selection.rows,
     );
   }

@@ -6,8 +6,8 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bl
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_grid_detection.dart';
 
 void main() {
-  test('extracts bottom rows 6–8 plus the final three slots', () {
-    final image = img.Image(width: 1100, height: 520);
+  test('extracts overlap row 5, rows 6-8 and the final three slots', () {
+    final image = img.Image(width: 1100, height: 620);
     img.fill(image, color: img.ColorRgb8(8, 10, 14));
 
     const left = 50;
@@ -15,8 +15,8 @@ void main() {
     const cellWidth = 100;
     const cellHeight = 100;
 
-    for (var row = 0; row < 4; row++) {
-      final columns = row == 3 ? 3 : 10;
+    for (var row = 0; row < 5; row++) {
+      final columns = row == 4 ? 3 : 10;
       for (var column = 0; column < columns; column++) {
         img.fillRect(
           image,
@@ -30,21 +30,21 @@ void main() {
     }
 
     final detection = ArcBlueprintGridDetection(
-      topLeft: const Offset(left / 1100, top / 520),
-      topRight: const Offset((left + 1000) / 1100, top / 520),
-      bottomLeft: const Offset(left / 1100, (top + 300) / 520),
-      bottomRight: const Offset((left + 1000) / 1100, (top + 300) / 520),
+      topLeft: const Offset(left / 1100, top / 620),
+      topRight: const Offset((left + 1000) / 1100, top / 620),
+      bottomLeft: const Offset(left / 1100, (top + 400) / 620),
+      bottomRight: const Offset((left + 1000) / 1100, (top + 400) / 620),
       confidence: 0.95,
       message: 'Grid locked',
       columns: 10,
-      rows: 3,
+      rows: 4,
       verticalDividers: List<double>.generate(
         11,
         (index) => (left + index * cellWidth) / 1100,
       ),
       horizontalDividers: List<double>.generate(
-        4,
-        (index) => (top + index * cellHeight) / 520,
+        5,
+        (index) => (top + index * cellHeight) / 620,
       ),
     );
 
@@ -57,11 +57,13 @@ void main() {
     final output = img.decodeImage(bytes);
     expect(output, isNotNull);
     expect(output!.width, 1000);
-    expect(output.height, 400);
+    expect(output.height, 500);
 
-    final finalThirdCell = output.getPixel(250, 350);
-    final emptyFourthCell = output.getPixel(350, 350);
+    final overlapCell = output.getPixel(50, 50);
+    final finalThirdCell = output.getPixel(250, 450);
+    final emptyFourthCell = output.getPixel(350, 450);
 
+    expect(overlapCell.r, greaterThan(8));
     expect(finalThirdCell.r, greaterThan(8));
     expect(emptyFourthCell.r, lessThanOrEqualTo(12));
   });

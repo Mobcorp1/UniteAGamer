@@ -9,6 +9,7 @@ import 'package:uag_arc_raiders_hub/widgets/arc_tactical_page.dart';
 import 'uag_creator_programme_screen.dart';
 import '../widgets/uag_community_growth_live_panel.dart';
 import '../widgets/uag_programme_section.dart';
+import '../widgets/uag_raider_mark_panel.dart';
 import '../widgets/uag_refer_a_raider_panel.dart';
 import '../widgets/uag_referral_progress_panel.dart';
 import '../widgets/uag_referral_reward_locker_panel.dart';
@@ -39,6 +40,7 @@ class UagBenefitsCommunityRewardsScreen extends StatelessWidget {
               'Bring Raiders together, build your creator community or take on a contract. Each programme has its own rules and rewards.',
             ),
           ),
+          const UagRaiderMarkPanel(),
           LayoutBuilder(
             builder: (context, constraints) {
               final columns = constraints.maxWidth >= 760 ? 3 : 1;

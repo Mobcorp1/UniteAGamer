@@ -89,21 +89,26 @@ void main() {
     expect(result.canonicalPositions, hasLength(50));
   });
 
-  test('bottom selector detects three full rows and infers final row', () {
-    final result = const ArcBlueprintAutomaticGridSelector().select(
-      Uint8List.fromList(
-        img.encodePng(buildGrid(completeRows: 3, includePartialFinalRow: true)),
-      ),
-      section: ArcBlueprintGridSection.bottom,
-    );
+  test(
+    'bottom selector preserves overlap plus three full rows and infers final row',
+    () {
+      final result = const ArcBlueprintAutomaticGridSelector().select(
+        Uint8List.fromList(
+          img.encodePng(
+            buildGrid(completeRows: 4, includePartialFinalRow: true),
+          ),
+        ),
+        section: ArcBlueprintGridSection.bottom,
+      );
 
-    final decoded = img.decodeImage(result.imageBytes);
-    expect(decoded, isNotNull);
-    expect(decoded!.width, 1000);
-    expect(decoded.height, 400);
-    expect(result.detection.horizontalDividers, hasLength(4));
-    expect(result.canonicalPositions, hasLength(33));
-    expect(result.canonicalPositions.last.globalRowIndex, 8);
-    expect(result.canonicalPositions.last.columnIndex, 2);
-  });
+      final decoded = img.decodeImage(result.imageBytes);
+      expect(decoded, isNotNull);
+      expect(decoded!.width, 1000);
+      expect(decoded.height, 500);
+      expect(result.detection.horizontalDividers, hasLength(5));
+      expect(result.canonicalPositions, hasLength(33));
+      expect(result.canonicalPositions.last.globalRowIndex, 8);
+      expect(result.canonicalPositions.last.columnIndex, 2);
+    },
+  );
 }

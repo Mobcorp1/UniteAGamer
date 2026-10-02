@@ -172,48 +172,26 @@ class ArcBlueprintOwnershipMarkerVerificationEngine {
       final evidence = sample.occupancyScore.clamp(0.0, 1.0).toDouble();
       var finalScore = evidence;
       var suppressed = false;
-
-      final markersAbsent =
-          marker.bookEvidence < minimumBookMarkerEvidence &&
-          marker.tickEvidence < minimumTickMarkerEvidence &&
-          marker.combinedEvidence < minimumCombinedMarkerEvidence;
-      final ambiguousBookOnly =
-          marker.tickEvidence < minimumTickMarkerEvidence &&
-          marker.bookEvidence >= minimumBookMarkerEvidence &&
-          marker.bookEvidence < minimumReliableSingleBookEvidence;
-      final markerEvidenceRejects = markersAbsent || ambiguousBookOnly;
-
-      // PASS 345 dual-gate proposal policy.
-      //
-      // Real-device first-run evidence now shows a stable separation:
-      //   - false positives can still reach 0.929-0.974 whole-cell confidence
-      //     while carrying weak ownership-marker corroboration;
-      //   - genuine owned cards below 0.980 retain strong combined marker
-      //     evidence, or a genuinely strong lower-left book marker when the
-      //     tick is clipped by residual capture drift.
-      //
-      // A candidate therefore survives when either:
-      //   1. whole-cell evidence is exceptionally high (>= 0.980), OR
-      //   2. ownership-marker corroboration is strong (>= 0.700), OR
-      //   3. the book marker alone is strong enough to survive a clipped tick.
-      //
-      // This remains suppression-only and can never promote a weak cell.
+      // Launch recovery: a high whole-cell score is not ownership evidence by
+      // itself. Empty ARC cells can score extremely highly. A candidate now
+      // survives only with independent ownership evidence.
       final highConfidenceCandidate = evidence >= highConfidenceProposalFloor;
       final corroboratedMarkers =
           marker.combinedEvidence >= minimumCorroboratedMarkerEvidence;
       final reliableBookOnly =
           marker.bookEvidence >= minimumReliableSingleBookEvidence;
+      final highConfidenceWithTemplate =
+          highConfidenceCandidate &&
+          template.templateSimilarity >= glareSafetyTemplateSimilarity;
+      final exceptionalArtworkMatch = template.templateSimilarity >= 0.86;
 
-      final dualGateRejects =
-          evidence >= ownedThreshold &&
-          !highConfidenceCandidate &&
-          !corroboratedMarkers &&
-          !reliableBookOnly;
+      final independentlyVerified =
+          corroboratedMarkers ||
+          reliableBookOnly ||
+          highConfidenceWithTemplate ||
+          exceptionalArtworkMatch;
 
-      if (evidence >= ownedThreshold &&
-          (markerEvidenceRejects || dualGateRejects) &&
-          !highConfidenceCandidate &&
-          template.templateSimilarity < glareSafetyTemplateSimilarity) {
+      if (evidence >= ownedThreshold && !independentlyVerified) {
         finalScore = math.min(finalScore, maximumSuppressedScore);
         suppressed = true;
         suppressedCount++;
@@ -338,22 +316,30 @@ class ArcBlueprintOwnershipMarkerVerificationEngine {
     required double baseRight,
     required double baseBottom,
   }) {
-    const shifts = <double>[-0.10, -0.05, 0.0, 0.05, 0.10];
+    const horizontalShifts = <double>[-0.10, -0.05, 0.0, 0.05, 0.10];
+    const verticalShifts = <double>[-0.08, 0.0, 0.08];
     var strongest = 0.0;
-    for (final horizontalShift in shifts) {
+    for (final horizontalShift in horizontalShifts) {
       final left = (baseLeft + horizontalShift).clamp(0.015, 0.965);
       final right = (baseRight + horizontalShift).clamp(0.035, 0.985);
       if (right <= left) continue;
-      strongest = math.max(
-        strongest,
-        _measureWhiteMarkerRegion(
-          image,
-          left: cellLeft + cellWidth * left,
-          top: cellTop + cellHeight * baseTop,
-          right: cellLeft + cellWidth * right,
-          bottom: cellTop + cellHeight * baseBottom,
-        ),
-      );
+
+      for (final verticalShift in verticalShifts) {
+        final top = (baseTop + verticalShift).clamp(0.015, 0.965);
+        final bottom = (baseBottom + verticalShift).clamp(0.035, 0.985);
+        if (bottom <= top) continue;
+
+        strongest = math.max(
+          strongest,
+          _measureWhiteMarkerRegion(
+            image,
+            left: cellLeft + cellWidth * left,
+            top: cellTop + cellHeight * top,
+            right: cellLeft + cellWidth * right,
+            bottom: cellTop + cellHeight * bottom,
+          ),
+        );
+      }
     }
     return strongest;
   }

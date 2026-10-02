@@ -38,7 +38,7 @@ class ArcBlueprintAutomaticGridSelector {
       throw const FormatException('The selected image was empty.');
     }
 
-    final detectedRows = section == ArcBlueprintGridSection.top ? 5 : 3;
+    final detectedRows = section == ArcBlueprintGridSection.top ? 5 : 4;
 
     final detector = ArcBlueprintGridDetector(
       columns: 10,
@@ -56,7 +56,7 @@ class ArcBlueprintAutomaticGridSelector {
         detection.confidence < minimumConfidence) {
       final label = section == ArcBlueprintGridSection.top
           ? 'rows 1–5'
-          : 'rows 6–8 plus the final three slots';
+          : 'overlap row 5, rows 6–8 plus the final three slots';
       throw FormatException(
         'The automatic scanner could not lock $label. '
         'Keep the complete section visible and square to the camera.',
@@ -72,13 +72,13 @@ class ArcBlueprintAutomaticGridSelector {
     return ArcBlueprintAutomaticGridSelection(
       imageBytes: Uint8List.fromList(normalized),
       detection: detection,
-      rows: section == ArcBlueprintGridSection.top ? 5 : 4,
+      rows: 5,
       canonicalPositions: section == ArcBlueprintGridSection.top
           ? ArcBlueprintCanonicalGrid.topCapturePositions()
           : ArcBlueprintCanonicalGrid.bottomCapturePositions(),
       message: section == ArcBlueprintGridSection.top
           ? 'Rows 1–5 locked automatically.'
-          : 'Rows 6–8 and the final three slots locked automatically.',
+          : 'Overlap row 5, rows 6–8 and the final three slots locked automatically.',
     );
   }
 }

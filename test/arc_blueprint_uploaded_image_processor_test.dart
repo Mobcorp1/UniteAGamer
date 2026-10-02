@@ -108,19 +108,24 @@ void main() {
     );
   });
 
-  test('uploaded bottom image keeps the inferred final three-slot row', () {
-    final result = const ArcBlueprintUploadedImageProcessor().process(
-      Uint8List.fromList(
-        img.encodePng(buildGrid(completeRows: 3, includePartialFinalRow: true)),
-      ),
-      section: ArcBlueprintGridSection.bottom,
-    );
+  test(
+    'uploaded bottom image preserves overlap row and final three-slot row',
+    () {
+      final result = const ArcBlueprintUploadedImageProcessor().process(
+        Uint8List.fromList(
+          img.encodePng(
+            buildGrid(completeRows: 4, includePartialFinalRow: true),
+          ),
+        ),
+        section: ArcBlueprintGridSection.bottom,
+      );
 
-    final decoded = img.decodeImage(result.imageBytes);
+      final decoded = img.decodeImage(result.imageBytes);
 
-    expect(decoded, isNotNull);
-    expect(decoded!.width, 1000);
-    expect(decoded.height, 400);
-    expect(result.rows, 4);
-  });
+      expect(decoded, isNotNull);
+      expect(decoded!.width, 1000);
+      expect(decoded.height, 500);
+      expect(result.rows, 5);
+    },
+  );
 }

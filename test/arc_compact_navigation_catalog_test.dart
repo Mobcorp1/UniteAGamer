@@ -7,6 +7,7 @@ import 'package:uag_arc_raiders_hub/features/profile/screens/profile_settings_sc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_help_centre_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_beta_feedback_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_compact_navigation_catalog.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_feature_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_match_rider_invite.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_user_personalisation_profile.dart';
@@ -47,7 +48,6 @@ void main() {
 
       expect(labels, [
         'Discover UAG',
-        'Events',
         'Command Centre',
         'Raid Intelligence',
         'Raid Planner',
@@ -79,8 +79,14 @@ void main() {
         'Legal',
       ]);
 
-      expect(_item('Events').accessFlag, FeatureAccessFlag.raidPlanner);
-      expect(_item('Events').routeName, '/trading-hub/arc-raiders/events');
+      expect(labels, isNot(contains('Events')));
+      expect(_item('Raid Planner').accessFlag, FeatureAccessFlag.raidPlanner);
+      expect(_item('Raid Planner').routeName, RaidPlannerScreen.routeName);
+      expect(ArcFeatureRegistry.byId('events'), isNull);
+      expect(
+        ArcFeatureRegistry.byId('raid_planner')?.routeName,
+        RaidPlannerScreen.routeName,
+      );
 
       for (final oldDrawerItem in const [
         'Intel Snapshot',

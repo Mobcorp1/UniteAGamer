@@ -41,7 +41,7 @@ void main() {
   });
 
   test('PASS 353A keeps overlap optional in user guidance', () {
-    expect(scanner, contains('A little overlap is ideal'));
+    expect(scanner, contains('remains as the overlap row'));
     expect(scanner, isNot(contains('until Row 6 is at the top')));
   });
 }

@@ -36,8 +36,8 @@ void main() {
       'lib/features/trading_hub/arc_raiders/screens/arc_blueprint_photo_capture_screen.dart',
     ).readAsStringSync();
 
-    // One load belongs to photo classification and one to the live-scanner result handoff.
-    expect('loadMyBlueprintStates()'.allMatches(source), hasLength(2));
+    // One authoritative load belongs to photo classification before ownership reconciliation.
+    expect('loadMyBlueprintStates()'.allMatches(source), hasLength(1));
     expect(
       source.indexOf('loadMyBlueprintStates()'),
       lessThan(source.indexOf('engine.classify(')),

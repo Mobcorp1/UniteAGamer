@@ -115,7 +115,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
   late Stream<ArcBlueprintStateSnapshot> _stateStream;
   late Stream<ArcSavedLoadout?> _loadoutStream;
   bool _showOverviewHint = true;
-  ArcBlueprintGridViewMode _viewMode = ArcBlueprintGridViewMode.fullOverview;
+  ArcBlueprintGridViewMode _viewMode = ArcBlueprintGridViewMode.inGameFramed;
   bool _viewModeLoaded = false;
   final Set<String> _selectedBlueprintIds = <String>{};
   String _searchQuery = '';
@@ -450,6 +450,10 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     final ownedState = currentState.copyWith(
       owned: true,
       dupesOwned: 0,
+      ownershipSource:
+          currentState.ownershipSource == ArcBlueprintOwnershipSource.scan
+          ? ArcBlueprintOwnershipSource.scan
+          : ArcBlueprintOwnershipSource.manual,
       updatedAt: DateTime.now(),
     );
 
@@ -492,7 +496,13 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     final updates = _selectedBlueprintIds
         .map((id) {
           final current = states[id] ?? ArcBlueprintState.empty(id);
-          return current.copyWith(owned: true);
+          return current.copyWith(
+            owned: true,
+            ownershipSource:
+                current.ownershipSource == ArcBlueprintOwnershipSource.scan
+                ? ArcBlueprintOwnershipSource.scan
+                : ArcBlueprintOwnershipSource.manual,
+          );
         })
         .toList(growable: false);
 
@@ -534,6 +544,11 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
           return current.copyWith(
             owned: !isMissing,
             dupesOwned: isMissing ? 0 : current.dupesOwned,
+            ownershipSource: isMissing
+                ? ArcBlueprintOwnershipSource.unknown
+                : current.ownershipSource == ArcBlueprintOwnershipSource.scan
+                ? ArcBlueprintOwnershipSource.scan
+                : ArcBlueprintOwnershipSource.manual,
             updatedAt: now,
           );
         })
@@ -642,6 +657,46 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Could not clear ${blueprint.name}. Try again.'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _confirmClearBlueprintGridOnly() async {
+    final confirmed = await UagDialogs.confirm(
+      context: context,
+      title: 'Clear Blueprint Grid?',
+      message:
+          'This clears only Blueprint ownership, duplicate counts and Blueprint priorities. '
+          'It does not reset Scrappy, quests, bench progress, Operations, profile or reputation.',
+      titleColor: Colors.redAccent,
+      confirmLabel: 'Clear Grid',
+      confirmBackgroundColor: Colors.redAccent,
+      confirmForegroundColor: Colors.black,
+      borderColor: Colors.redAccent,
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await _blueprintRepository.resetAllBlueprintStates(
+        ArcBlueprintSeedData.blueprints.map((blueprint) => blueprint.id),
+      );
+      if (!mounted) return;
+
+      _blueprintGridTransformController.value = Matrix4.identity();
+      _returnToFullGridView();
+
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(content: Text('Blueprint Grid cleared.')),
+        );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not clear the Blueprint Grid. Try again.'),
         ),
       );
     }
@@ -1842,48 +1897,9 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     required double gridHeight,
     required int rowCount,
     required bool enableRowJumps,
+    required bool hasOwnedBlueprints,
     bool vertical = false,
   }) {
-    Widget commandButton({
-      required IconData icon,
-      required String tooltip,
-      required Color accent,
-      required VoidCallback onTap,
-      bool selected = false,
-      bool enabled = true,
-    }) {
-      final resolvedColor = !enabled
-          ? Colors.white30
-          : selected
-          ? accent
-          : Colors.white70;
-
-      return Tooltip(
-        message: tooltip,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: enabled ? onTap : null,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 160),
-            width: 40,
-            height: 34,
-            decoration: BoxDecoration(
-              color: selected
-                  ? accent.withValues(alpha: 0.14)
-                  : AppTheme.cardBackgroundDeep.withValues(alpha: 0.72),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: selected
-                    ? accent.withValues(alpha: 0.68)
-                    : Colors.white.withValues(alpha: 0.12),
-              ),
-            ),
-            child: Icon(icon, color: resolvedColor, size: 18),
-          ),
-        ),
-      );
-    }
-
     return AnimatedBuilder(
       animation: _blueprintGridTransformController,
       builder: (context, _) {
@@ -1903,88 +1919,11 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
             rowCount > 5 &&
             (scale <= 1.01 || jumpState.canJumpDown);
 
-        final controls = <Widget>[
-          commandButton(
-            icon: Icons.crop_free_rounded,
-            tooltip: 'In-game view',
-            accent: AppTheme.neonCyan,
-            selected: _viewMode == ArcBlueprintGridViewMode.inGameFramed,
-            onTap: () => _setViewMode(ArcBlueprintGridViewMode.inGameFramed),
-          ),
-          commandButton(
-            icon: Icons.grid_view_rounded,
-            tooltip: 'Full grid overview',
-            accent: AppTheme.neonCyan,
-            selected: _viewMode == ArcBlueprintGridViewMode.fullOverview,
-            onTap: () => _setViewMode(ArcBlueprintGridViewMode.fullOverview),
-          ),
-          commandButton(
-            icon: Icons.camera_alt_outlined,
-            tooltip: 'Import blueprint grid from game',
-            accent: AppTheme.neonPink,
-            onTap: _openBlueprintPhotoImport,
-          ),
-          if (enableRowJumps)
-            commandButton(
-              icon: Icons.keyboard_arrow_up_rounded,
-              tooltip: 'Jump back to upper grid',
-              accent: AppTheme.neonPink,
-              enabled: canJumpUp,
-              onTap: () => _jumpBlueprintOverviewRows(
-                down: false,
-                viewportHeight: viewportHeight,
-                gridHeight: gridHeight,
-                rowCount: rowCount,
-              ),
-            ),
-          if (enableRowJumps)
-            commandButton(
-              icon: Icons.keyboard_arrow_down_rounded,
-              tooltip: 'Jump to lower grid',
-              accent: AppTheme.neonPink,
-              enabled: canJumpDown,
-              onTap: () => _jumpBlueprintOverviewRows(
-                down: true,
-                viewportHeight: viewportHeight,
-                gridHeight: gridHeight,
-                rowCount: rowCount,
-              ),
-            ),
-          commandButton(
-            icon: Icons.zoom_out_rounded,
-            tooltip: 'Zoom out',
-            accent: AppTheme.neonCyan,
-            onTap: () => _zoomBlueprintGrid(-0.45),
-          ),
-          commandButton(
-            icon: Icons.center_focus_strong_rounded,
-            tooltip: 'Reset grid view',
-            accent: AppTheme.neonCyan,
-            onTap: _resetBlueprintGridZoom,
-          ),
-          commandButton(
-            icon: Icons.zoom_in_rounded,
-            tooltip: 'Zoom in',
-            accent: AppTheme.neonCyan,
-            onTap: () => _zoomBlueprintGrid(0.45),
-          ),
-        ];
-
-        final controlChildren = <Widget>[
-          for (var index = 0; index < controls.length; index++) ...[
-            controls[index],
-            if (index != controls.length - 1)
-              SizedBox(width: vertical ? 0 : 6, height: vertical ? 6 : 0),
-          ],
-          if (!_viewModeLoaded) ...[
-            SizedBox(width: vertical ? 0 : 8, height: vertical ? 8 : 0),
-            const SizedBox(
-              width: 14,
-              height: 14,
-              child: CircularProgressIndicator(strokeWidth: 1.5),
-            ),
-          ],
-        ];
+        const gap = 6.0;
+        const portraitSmallColumns = 4;
+        const verticalColumns = 2;
+        final panelWidth = vertical ? 132.0 : double.infinity;
+        final panelHeight = vertical ? 270.0 : 190.0;
 
         return Container(
           key: Key(
@@ -1992,8 +1931,8 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                 ? 'blueprint-grid-vertical-command-rail'
                 : 'blueprint-grid-horizontal-command-bar',
           ),
-          width: vertical ? 52 : null,
-          height: vertical ? null : 44,
+          width: panelWidth,
+          height: panelHeight,
           decoration: BoxDecoration(
             color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.76),
             borderRadius: BorderRadius.circular(16),
@@ -2001,22 +1940,403 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
               color: AppTheme.neonCyan.withValues(alpha: 0.24),
             ),
           ),
-          child: SingleChildScrollView(
-            scrollDirection: vertical ? Axis.vertical : Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            padding: EdgeInsets.symmetric(
-              horizontal: vertical ? 5 : 6,
-              vertical: 5,
-            ),
-            child: vertical
-                ? Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: controlChildren,
-                  )
-                : Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: controlChildren,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              const padding = 6.0;
+              final contentWidth = math.max(
+                constraints.maxWidth - (padding * 2),
+                1.0,
+              );
+              final portraitSmallWidth = math.max(
+                (contentWidth - (gap * (portraitSmallColumns - 1))) /
+                    portraitSmallColumns,
+                1.0,
+              );
+              final portraitLargeWidth = math.max(
+                (contentWidth - gap) / 2,
+                1.0,
+              );
+              final verticalCellWidth = math.max(
+                (contentWidth - (gap * (verticalColumns - 1))) /
+                    verticalColumns,
+                1.0,
+              );
+              final verticalPrimaryWidth = contentWidth;
+              final buttonHeight = vertical ? 44.0 : 48.0;
+              const portraitLargeHeight = 58.0;
+
+              Widget commandButton({
+                required IconData icon,
+                required String tooltip,
+                required Color accent,
+                required VoidCallback onTap,
+                String? label,
+                String? subtitle,
+                bool selected = false,
+                bool enabled = true,
+                bool primaryCameraAction = false,
+                double? width,
+                double? height,
+              }) {
+                final resolvedColor = !enabled
+                    ? Colors.white30
+                    : primaryCameraAction
+                    ? AppTheme.neonCyan
+                    : selected
+                    ? accent
+                    : Colors.white70;
+                final resolvedWidth =
+                    width ??
+                    (vertical
+                        ? primaryCameraAction
+                              ? verticalPrimaryWidth
+                              : verticalCellWidth
+                        : label == null
+                        ? portraitSmallWidth
+                        : portraitLargeWidth);
+                final resolvedHeight =
+                    height ??
+                    (vertical || label == null
+                        ? buttonHeight
+                        : portraitLargeHeight);
+
+                final content = label == null
+                    ? Icon(icon, color: resolvedColor, size: vertical ? 21 : 22)
+                    : vertical
+                    ? Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(icon, color: resolvedColor, size: 20),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              label,
+                              maxLines: 1,
+                              overflow: TextOverflow.fade,
+                              softWrap: false,
+                              style: AppTheme.bodyTextStyle(
+                                fontSize: 10,
+                                color: resolvedColor,
+                                isBold: true,
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    : Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Row(
+                          children: [
+                            Icon(icon, color: resolvedColor, size: 22),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    label,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppTheme.bodyTextStyle(
+                                      fontSize: 11,
+                                      color: resolvedColor,
+                                      isBold: true,
+                                    ),
+                                  ),
+                                  if (subtitle != null) ...[
+                                    const SizedBox(height: 1),
+                                    Text(
+                                      subtitle,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: AppTheme.bodyTextStyle(
+                                        fontSize: 8.5,
+                                        color: resolvedColor.withValues(
+                                          alpha: enabled ? 0.72 : 0.45,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+
+                return Tooltip(
+                  message: tooltip,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: enabled ? onTap : null,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 160),
+                      width: resolvedWidth,
+                      height: resolvedHeight,
+                      decoration: BoxDecoration(
+                        color: primaryCameraAction
+                            ? AppTheme.neonPink.withValues(
+                                alpha: enabled ? 0.92 : 0.32,
+                              )
+                            : selected
+                            ? accent.withValues(alpha: 0.14)
+                            : AppTheme.cardBackgroundDeep.withValues(
+                                alpha: 0.72,
+                              ),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: primaryCameraAction
+                              ? AppTheme.neonCyan.withValues(
+                                  alpha: enabled ? 0.95 : 0.35,
+                                )
+                              : selected
+                              ? accent.withValues(alpha: 0.68)
+                              : Colors.white.withValues(alpha: 0.12),
+                          width: primaryCameraAction ? 1.8 : 1,
+                        ),
+                        boxShadow: primaryCameraAction && enabled
+                            ? [
+                                BoxShadow(
+                                  color: AppTheme.neonPink.withValues(
+                                    alpha: 0.24,
+                                  ),
+                                  blurRadius: 10,
+                                  spreadRadius: 1,
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: content,
+                    ),
                   ),
+                );
+              }
+
+              Widget inGameButton({double? width, double? height}) =>
+                  commandButton(
+                    icon: Icons.crop_free_rounded,
+                    tooltip: 'In-game view - five-row game layout',
+                    accent: AppTheme.neonCyan,
+                    label: vertical ? null : 'IN-GAME VIEW',
+                    subtitle: vertical ? null : '5-row game layout',
+                    selected:
+                        _viewMode == ArcBlueprintGridViewMode.inGameFramed,
+                    width: width,
+                    height: height,
+                    onTap: () =>
+                        _setViewMode(ArcBlueprintGridViewMode.inGameFramed),
+                  );
+
+              Widget fullGridButton({double? width, double? height}) =>
+                  commandButton(
+                    icon: Icons.grid_view_rounded,
+                    tooltip: 'Full grid overview - all Blueprint slots',
+                    accent: AppTheme.neonCyan,
+                    label: vertical ? null : 'FULL GRID',
+                    subtitle: vertical ? null : 'All 83 Blueprints',
+                    selected:
+                        _viewMode == ArcBlueprintGridViewMode.fullOverview,
+                    width: width,
+                    height: height,
+                    onTap: () =>
+                        _setViewMode(ArcBlueprintGridViewMode.fullOverview),
+                  );
+
+              Widget updateButton({double? width, double? height}) =>
+                  commandButton(
+                    icon: Icons.camera_alt_outlined,
+                    tooltip: hasOwnedBlueprints
+                        ? 'Update Blueprint ownership from game'
+                        : 'Scan Blueprint grid from game',
+                    accent: AppTheme.neonCyan,
+                    label: hasOwnedBlueprints ? 'UPDATE' : 'SCAN',
+                    subtitle: vertical ? null : 'Scan ownership',
+                    primaryCameraAction: true,
+                    width: width,
+                    height: height,
+                    onTap: _openBlueprintPhotoImport,
+                  );
+
+              Widget upButton({double? width}) => commandButton(
+                icon: Icons.keyboard_arrow_up_rounded,
+                tooltip: 'Jump back to upper grid',
+                accent: AppTheme.neonPink,
+                enabled: canJumpUp,
+                width: width,
+                onTap: () => _jumpBlueprintOverviewRows(
+                  down: false,
+                  viewportHeight: viewportHeight,
+                  gridHeight: gridHeight,
+                  rowCount: rowCount,
+                ),
+              );
+
+              Widget downButton({double? width}) => commandButton(
+                icon: Icons.keyboard_arrow_down_rounded,
+                tooltip: 'Jump to lower grid',
+                accent: AppTheme.neonPink,
+                enabled: canJumpDown,
+                width: width,
+                onTap: () => _jumpBlueprintOverviewRows(
+                  down: true,
+                  viewportHeight: viewportHeight,
+                  gridHeight: gridHeight,
+                  rowCount: rowCount,
+                ),
+              );
+
+              Widget zoomOutButton({double? width}) => commandButton(
+                icon: Icons.zoom_out_rounded,
+                tooltip: 'Zoom out',
+                accent: AppTheme.neonCyan,
+                width: width,
+                onTap: () => _zoomBlueprintGrid(-0.45),
+              );
+
+              Widget zoomInButton({double? width}) => commandButton(
+                icon: Icons.zoom_in_rounded,
+                tooltip: 'Zoom in',
+                accent: AppTheme.neonCyan,
+                width: width,
+                onTap: () => _zoomBlueprintGrid(0.45),
+              );
+
+              Widget resetViewButton({double? width, double? height}) =>
+                  commandButton(
+                    icon: Icons.center_focus_strong_rounded,
+                    tooltip: 'Reset grid view',
+                    accent: AppTheme.neonCyan,
+                    label: vertical ? null : 'RESET VIEW',
+                    subtitle: vertical ? null : 'Fit & centre',
+                    width: width,
+                    height: height,
+                    onTap: _resetBlueprintGridZoom,
+                  );
+
+              Widget clearGridButton() => commandButton(
+                icon: Icons.delete_sweep_outlined,
+                tooltip: 'Clear Blueprint Grid',
+                accent: Colors.redAccent,
+                onTap: _confirmClearBlueprintGridOnly,
+              );
+
+              if (vertical) {
+                final controls = <Widget>[
+                  inGameButton(),
+                  fullGridButton(),
+                  updateButton(),
+                  upButton(),
+                  downButton(),
+                  zoomOutButton(),
+                  resetViewButton(),
+                  zoomInButton(),
+                  clearGridButton(),
+                ];
+
+                return Padding(
+                  padding: const EdgeInsets.all(padding),
+                  child: Stack(
+                    children: [
+                      Align(
+                        alignment: Alignment.topCenter,
+                        child: Wrap(
+                          spacing: gap,
+                          runSpacing: gap,
+                          alignment: WrapAlignment.start,
+                          children: controls,
+                        ),
+                      ),
+                      if (!_viewModeLoaded)
+                        const Positioned(
+                          right: 2,
+                          bottom: 2,
+                          child: SizedBox(
+                            width: 12,
+                            height: 12,
+                            child: CircularProgressIndicator(strokeWidth: 1.3),
+                          ),
+                        ),
+                    ],
+                  ),
+                );
+              }
+
+              return Padding(
+                padding: const EdgeInsets.all(padding),
+                child: Stack(
+                  children: [
+                    Column(
+                      key: const Key('blueprint-portrait-command-layout'),
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(child: upButton(width: double.infinity)),
+                            const SizedBox(width: gap),
+                            Expanded(child: downButton(width: double.infinity)),
+                            const SizedBox(width: gap),
+                            Expanded(
+                              child: zoomOutButton(width: double.infinity),
+                            ),
+                            const SizedBox(width: gap),
+                            Expanded(
+                              child: zoomInButton(width: double.infinity),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: gap),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: inGameButton(
+                                width: double.infinity,
+                                height: portraitLargeHeight,
+                              ),
+                            ),
+                            const SizedBox(width: gap),
+                            Expanded(
+                              child: fullGridButton(
+                                width: double.infinity,
+                                height: portraitLargeHeight,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: gap),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: resetViewButton(
+                                width: double.infinity,
+                                height: portraitLargeHeight,
+                              ),
+                            ),
+                            const SizedBox(width: gap),
+                            Expanded(
+                              child: updateButton(
+                                width: double.infinity,
+                                height: portraitLargeHeight,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    if (!_viewModeLoaded)
+                      const Positioned(
+                        right: 2,
+                        bottom: 2,
+                        child: SizedBox(
+                          width: 12,
+                          height: 12,
+                          child: CircularProgressIndicator(strokeWidth: 1.3),
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            },
           ),
         );
       },
@@ -2122,6 +2442,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
         !kIsWeb &&
         (defaultTargetPlatform == TargetPlatform.android ||
             defaultTargetPlatform == TargetPlatform.iOS);
+    final hasOwnedBlueprints = states.values.any((state) => state.owned);
 
     Widget buildTiles({required double width, required double height}) {
       return SizedBox(
@@ -2292,69 +2613,6 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
       );
     }
 
-    Widget buildRotatePrompt() {
-      return Semantics(
-        container: true,
-        label:
-            'Rotate your device. The In-Game View needs a wider screen. Turn your device to landscape, or use Full Grid Overview.',
-        child: Container(
-          padding: AppTheme.sectionCardPadding,
-          decoration: ArcUiTokens.surfaceDecoration(
-            role: ArcSurfaceRole.raised,
-            accent: AppTheme.neonCyan,
-            radius: 16,
-            borderOpacity: 0.28,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Icon(
-                    Icons.screen_rotation_alt_rounded,
-                    color: AppTheme.neonCyan,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'Rotate your device',
-                      style: AppTheme.tradingHeading(
-                        fontSize: 24,
-                        color: AppTheme.neonCyan,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              const Text(
-                'The In-Game View needs a wider screen. Turn your device to landscape, or use Full Grid Overview.',
-                style: TextStyle(color: Colors.white70, height: 1.35),
-              ),
-              const SizedBox(height: 14),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: () =>
-                        _setViewMode(ArcBlueprintGridViewMode.fullOverview),
-                    icon: const Icon(Icons.grid_view_rounded),
-                    label: const Text('Use Full Grid'),
-                  ),
-                  OutlinedButton.icon(
-                    onPressed: () => setState(() {}),
-                    icon: const Icon(Icons.refresh_rounded),
-                    label: const Text('Retry'),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
     return AnimatedBuilder(
       animation: UagAdService.instance,
       builder: (context, _) {
@@ -2371,30 +2629,13 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                 child: buildResponsiveSearchResults(),
               );
             }
-            if (_viewMode == ArcBlueprintGridViewMode.inGameFramed &&
-                ArcBlueprintGridResponsivePolicy.shouldShowInGameRotatePrompt(
-                  width: maxWidth,
-                  height: mediaQuery.size.height,
-                )) {
-              return buildRotatePrompt();
-            }
-
             final compactNativeLandscape =
                 isNativeMobile && isLandscape && mediaQuery.size.height <= 720;
-            const sideAdLaneWidth = 480.0;
-            const sideAdGap = 8.0;
-            const commandRailWidth = 52.0;
-            const commandRailGap = 6.0;
-            final landscapeSideAdsActive =
-                compactNativeLandscape &&
-                maxWidth >= 1180 &&
-                (widget.bannerSlot != null ||
-                    UagAdService.instance.canShowBanner);
-            final reservedSideWidth =
-                (compactNativeLandscape
-                    ? commandRailWidth + commandRailGap
-                    : 0) +
-                (landscapeSideAdsActive ? sideAdLaneWidth + sideAdGap : 0);
+            const commandRailWidth = 132.0;
+            const commandRailGap = 8.0;
+            final reservedSideWidth = compactNativeLandscape
+                ? commandRailWidth + commandRailGap
+                : 0.0;
             final availableGridWidth = math.max(
               280.0,
               maxWidth - reservedSideWidth,
@@ -2403,7 +2644,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
             final bodyHeight = constraints.maxHeight.isFinite
                 ? constraints.maxHeight
                 : mediaQuery.size.height;
-            const commandBarHeight = 44.0;
+            const commandBarHeight = 190.0;
             const commandBarGap = 6.0;
             const gridVerticalSafetyInset = 2.0;
             final availableGridHeight = math.max(
@@ -2415,17 +2656,6 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                         commandBarGap -
                         gridVerticalSafetyInset,
             );
-
-            Widget sponsorLane(Key key) {
-              return SizedBox(
-                key: key,
-                width: sideAdLaneWidth,
-                child: Align(
-                  alignment: Alignment.center,
-                  child: widget.bannerSlot ?? const ArcBlueprintBannerSlot(),
-                ),
-              );
-            }
 
             Widget compose({
               required Widget viewport,
@@ -2441,22 +2671,20 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                     height: availableGridHeight,
                     child: Row(
                       key: const Key('blueprint-landscape-side-layout'),
+                      mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(width: availableGridWidth, child: viewport),
+                        viewport,
                         const SizedBox(width: commandRailGap),
                         _buildGridCommandBar(
                           viewportHeight: viewportHeight,
                           gridHeight: gridHeight,
                           rowCount: rowCount,
                           enableRowJumps: enableRowJumps,
+                          hasOwnedBlueprints: hasOwnedBlueprints,
                           vertical: true,
                         ),
-                        if (landscapeSideAdsActive) ...[
-                          const SizedBox(width: sideAdGap),
-                          sponsorLane(const Key('blueprint-side-ad-right')),
-                        ],
                       ],
                     ),
                   ),
@@ -2475,6 +2703,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                       gridHeight: gridHeight,
                       rowCount: rowCount,
                       enableRowJumps: enableRowJumps,
+                      hasOwnedBlueprints: hasOwnedBlueprints,
                     ),
                   ],
                 ),
@@ -2568,9 +2797,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
               final viewportHeight = isLandscape
                   ? availableGridHeight
                   : math.min(fittedHeight, availableGridHeight);
-              final viewportWidth = isLandscape
-                  ? availableGridWidth
-                  : fittedWidth;
+              final viewportWidth = fittedWidth;
               final canvasWidth = math.max(viewportWidth, fittedWidth);
               final canvasHeight = math.max(viewportHeight, fittedHeight);
 
@@ -2699,6 +2926,9 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                     case 'reset':
                       _confirmResetGrid();
                       return;
+                    case 'clear-grid':
+                      _confirmClearBlueprintGridOnly();
+                      return;
                     case 'search':
                       setState(() => _toolsOpen = true);
                       return;
@@ -2737,28 +2967,39 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                   PopupMenuDivider(),
                   PopupMenuItem(value: 'feedback', child: Text('Feedback')),
                   PopupMenuItem(value: 'reset', child: Text('Reset Ownership')),
+                  PopupMenuItem(
+                    value: 'clear-grid',
+                    child: Text(
+                      'Clear Blueprint Grid',
+                      style: TextStyle(color: Colors.redAccent),
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(width: 8),
             ],
           ),
-          bottomNavigationBar: compactMobileLandscape
-              ? null
-              : AnimatedBuilder(
-                  animation: UagAdService.instance,
-                  builder: (context, _) {
-                    return Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        widget.bannerSlot ?? const ArcBlueprintBannerSlot(),
-                        const ArcBlueprintWorkspaceDock(
-                          current: ArcBlueprintWorkspace.tracker,
-                        ),
-                        const ArcCompanionBottomDock(activeLabel: 'Track'),
-                      ],
-                    );
-                  },
-                ),
+          bottomNavigationBar: AnimatedBuilder(
+            animation: UagAdService.instance,
+            builder: (context, _) {
+              if (compactMobileLandscape) {
+                return KeyedSubtree(
+                  key: const Key('blueprint-landscape-static-ad'),
+                  child: widget.bannerSlot ?? const ArcBlueprintBannerSlot(),
+                );
+              }
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  widget.bannerSlot ?? const ArcBlueprintBannerSlot(),
+                  const ArcBlueprintWorkspaceDock(
+                    current: ArcBlueprintWorkspace.tracker,
+                  ),
+                  const ArcCompanionBottomDock(activeLabel: 'Track'),
+                ],
+              );
+            },
+          ),
           body: ArcRaidersScreenShell(
             showAdBanner: false,
             child: SafeArea(

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../data/arc_event_relevance.dart';
 import '../raid_planner/data/arc_regional_map_conditions.dart';
 import '../raid_planner/data/raid_planner_event_schedule.dart';
+import '../raid_planner/screens/raid_planner_screen.dart';
 import '../raid_planner/models/raid_planner_models.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -127,10 +128,11 @@ class _ArcEventsWorkspaceState extends State<ArcEventsWorkspace> {
                 ),
                 if (widget.compact)
                   TextButton(
-                    onPressed: () =>
-                        Navigator.of(context).pushNamed(arcEventsRoute),
+                    onPressed: () => Navigator.of(
+                      context,
+                    ).pushNamed(RaidPlannerScreen.routeName),
                     child: const Text(
-                      'SHOW ALL EVENTS',
+                      'OPEN RAID PLANNER',
                       style: TextStyle(fontSize: 12),
                     ),
                   ),
@@ -159,7 +161,7 @@ class _ArcEventsWorkspaceState extends State<ArcEventsWorkspace> {
                   TextButton(
                     onPressed: () => Navigator.of(
                       context,
-                    ).pushNamed('/trading-hub/arc-raiders/raid-planner'),
+                    ).pushNamed(RaidPlannerScreen.routeName),
                     child: const Text('RAID PLANNER'),
                   ),
                   TextButton(

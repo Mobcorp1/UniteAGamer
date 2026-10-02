@@ -152,9 +152,30 @@ class UagEntitlementService {
         });
   }
 
+  Future<int?> _limitIncludingRewards(
+    UagUserEntitlement entitlement,
+    UagBillableAction action,
+  ) async {
+    final base = entitlement.limits.limitFor(action);
+    if (base == null ||
+        entitlement.effectiveTier != UagSubscriptionTier.free ||
+        (action != UagBillableAction.trade &&
+            action != UagBillableAction.matchmakingSearch)) {
+      return base;
+    }
+    final bonus = await _firestore
+        .collection('uag_reward_bonuses')
+        .doc(entitlement.uid)
+        .collection('months')
+        .doc(_currentMonthKey())
+        .get();
+    final extra = (bonus.data()?[action.usageKey] as num?)?.toInt() ?? 0;
+    return base + extra.clamp(0, 4).toInt();
+  }
+
   Future<UagUsageGateResult> canUseAction(UagBillableAction action) async {
     final entitlement = await getMyEntitlement();
-    final limit = entitlement.limits.limitFor(action);
+    final limit = await _limitIncludingRewards(entitlement, action);
     if (limit == null) {
       return UagUsageGateResult(
         allowed: true,
@@ -191,7 +212,7 @@ class UagEntitlementService {
     if (currentUid == null) throw StateError('User must be signed in.');
 
     final entitlement = await getMyEntitlement();
-    final limit = entitlement.limits.limitFor(action);
+    final limit = await _limitIncludingRewards(entitlement, action);
     if (limit == null) {
       return UagUsageGateResult(
         allowed: true,

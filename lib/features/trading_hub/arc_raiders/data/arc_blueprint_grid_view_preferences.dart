@@ -19,7 +19,7 @@ enum ArcBlueprintGridViewMode {
     return switch (value) {
       'in_game_framed' => ArcBlueprintGridViewMode.inGameFramed,
       'full_overview' => ArcBlueprintGridViewMode.fullOverview,
-      _ => ArcBlueprintGridViewMode.fullOverview,
+      _ => ArcBlueprintGridViewMode.inGameFramed,
     };
   }
 }
@@ -27,7 +27,9 @@ enum ArcBlueprintGridViewMode {
 class ArcBlueprintGridViewPreferences {
   const ArcBlueprintGridViewPreferences._();
 
-  static const _storagePrefix = 'arcBlueprintGridViewMode';
+  // V2 resets the legacy full-grid-first preference so the tracker opens in
+  // the five-row in-game view. New user choices are still persisted.
+  static const _storagePrefix = 'arcBlueprintGridViewModeV2';
 
   static String _storageKey() {
     final uid = FirebaseAuth.instance.currentUser?.uid.trim();

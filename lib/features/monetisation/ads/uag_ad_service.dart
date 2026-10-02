@@ -14,7 +14,19 @@ import 'uag_ad_consent_controller.dart';
 import 'uag_admob_config.dart';
 
 class UagAdService extends ChangeNotifier with WidgetsBindingObserver {
-  UagAdService._();
+  UagAdService._() {
+    UagAdConsentController.instance.addListener(_consentChanged);
+  }
+
+  void _consentChanged() {
+    if (_initialised) {
+      _disposeFullScreenAds();
+      _preloadEligibleFullScreenAds();
+      notifyListeners();
+    } else if (_consentAllowsRequests) {
+      unawaited(initialise());
+    }
+  }
 
   static final UagAdService instance = UagAdService._();
 
@@ -56,6 +68,28 @@ class UagAdService extends ChangeNotifier with WidgetsBindingObserver {
 
   UagAdRuntimeSettings get settings => _settings;
   UagAdPolicy get policy => _policy;
+  bool get canUseRewardedAds =>
+      _initialised &&
+      _consentAllowsRequests &&
+      _signedIn &&
+      _settings.adsEnabled &&
+      _settings.rewardedEnabled &&
+      _policy.showRewardedAds;
+
+  bool beginRewardedPresentation() {
+    if (!canUseRewardedAds || _fullScreenShowing) return false;
+    _fullScreenShowing = true;
+    return true;
+  }
+
+  void endRewardedPresentation() {
+    _fullScreenShowing = false;
+    _pausedSinceLastResume = false;
+    _lastAppOpenShownAt = DateTime.now();
+    _lastInterstitialShownAt = DateTime.now();
+    notifyListeners();
+  }
+
   bool get initialised => _initialised;
   bool get signedIn => _signedIn;
   String? get currentRoute => _currentRoute;
@@ -76,22 +110,27 @@ class UagAdService extends ChangeNotifier with WidgetsBindingObserver {
       _policy.showBannerAds &&
       !_routeBlocksAds(_currentRoute);
 
-  Future<void> initialise() async {
+  Future<void>? _initialisation;
+  Future<void> initialise() => _initialisation ??= _initialise().whenComplete(
+    () => _initialisation = null,
+  );
+
+  Future<void> _initialise() async {
     if (_initialised ||
         kIsWeb ||
         !UagAdMobConfig.isAndroid ||
         !_consentAllowsRequests) {
       return;
     }
-    _initialised = true;
     _initialisedAt = DateTime.now();
-    WidgetsBinding.instance.addObserver(this);
 
     final prefs = await SharedPreferences.getInstance();
     _sessionCount = (prefs.getInt(_sessionCountKey) ?? 0) + 1;
     await prefs.setInt(_sessionCountKey, _sessionCount);
 
     await MobileAds.instance.initialize();
+    _initialised = true;
+    WidgetsBinding.instance.addObserver(this);
     _listenSettings();
     _listenAuth();
     notifyListeners();
@@ -428,6 +467,7 @@ class UagAdService extends ChangeNotifier with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    UagAdConsentController.instance.removeListener(_consentChanged);
     WidgetsBinding.instance.removeObserver(this);
     _authSub?.cancel();
     _entitlementSub?.cancel();

@@ -96,7 +96,7 @@ Future<void> main() async {
 
   WidgetsBinding.instance.addPostFrameCallback((_) async {
     try {
-      await UagAdConsentController.instance.initialiseForDevelopment();
+      await UagAdConsentController.instance.initialise();
     } catch (e, st) {
       debugPrint('Consent init failed: $e');
       debugPrintStack(stackTrace: st);

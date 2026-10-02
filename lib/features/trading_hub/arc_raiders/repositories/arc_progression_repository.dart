@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -272,6 +273,99 @@ class ArcProgressionRepository {
       'updatedAt': now.toIso8601String(),
     }, SetOptions(merge: true));
     await batch.commit();
+  }
+
+  /// Imports existing game progress without material checks or completion credit.
+  /// Returns false when signed out or the stored level is already at least this
+  /// high. Level 1 is the model's starting baseline, not an earned upgrade.
+  Future<bool> setScrappyBaseline({required int level}) async {
+    final uid = _uid;
+    if (uid == null) return false;
+    if (level != ArcScrappyProgressionState.empty.currentLevel &&
+        !_engine.scrappyDefinitions.any(
+          (definition) => definition.level == level,
+        )) {
+      throw ArgumentError.value(level, 'level', 'Unknown Scrappy level');
+    }
+
+    final ref = _scrappyProgressRef(uid);
+    return _firestore.runTransaction<bool>((transaction) async {
+      final snapshot = await transaction.get(ref);
+      var current = ArcScrappyProgressionState.fromMap(
+        snapshot.exists ? _normalizeMap(snapshot.data()) : null,
+      );
+      if (snapshot.exists && current.currentLevel >= level) return false;
+      if (!snapshot.exists) {
+        final season = await transaction.get(_seasonRef(uid));
+        current = current.copyWith(seasonId: _seasonIdFrom(season.data()));
+      }
+      final baseline = current.copyWith(
+        currentLevel: level,
+        maximumLevelReachedThisSeason: math.max(
+          current.maximumLevelReachedThisSeason,
+          level,
+        ),
+        historicalMaximumLevel: math.max(current.historicalMaximumLevel, level),
+        updatedAt: DateTime.now().toUtc(),
+      );
+      transaction.set(ref, baseline.toMap(), SetOptions(merge: true));
+      return true;
+    });
+  }
+
+  /// Imports a canonical bench level without recording an upgrade completion.
+  /// Unknown stations/levels are rejected; equal or lower imports are no-ops.
+  Future<bool> setBenchBaseline({
+    required String station,
+    required int level,
+  }) async {
+    final uid = _uid;
+    if (uid == null) return false;
+    final definitions = _engine.benchDefinitions
+        .where((definition) => definition.station == station.trim())
+        .toList(growable: false);
+    if (definitions.isEmpty) {
+      throw ArgumentError.value(
+        station,
+        'station',
+        'Unknown progression station',
+      );
+    }
+    if (!definitions.any((definition) => definition.level == level)) {
+      throw ArgumentError.value(level, 'level', 'Unknown level for $station');
+    }
+    final canonicalStation = definitions.first.station;
+    final benchId = ArcProgressionEngine.benchIdFor(canonicalStation);
+    final ref = _benchProgressRef(uid).doc(benchId);
+    return _firestore.runTransaction<bool>((transaction) async {
+      final snapshot = await transaction.get(ref);
+      final ArcBenchProgressionRecord current;
+      if (snapshot.exists) {
+        current = ArcBenchProgressionRecord.fromMap(
+          benchId,
+          _normalizeMap(snapshot.data()),
+        );
+        if (current.currentLevel >= level) return false;
+      } else {
+        final season = await transaction.get(_seasonRef(uid));
+        current = ArcBenchProgressionRecord(
+          benchId: benchId,
+          station: canonicalStation,
+          seasonId: _seasonIdFrom(season.data()),
+        );
+      }
+      final baseline = current.copyWith(
+        currentLevel: level,
+        maximumLevelReachedThisSeason: math.max(
+          current.maximumLevelReachedThisSeason,
+          level,
+        ),
+        historicalMaximumLevel: math.max(current.historicalMaximumLevel, level),
+        updatedAt: DateTime.now().toUtc(),
+      );
+      transaction.set(ref, baseline.toMap(), SetOptions(merge: true));
+      return true;
+    });
   }
 
   Future<bool> confirmScrappyUpgrade({

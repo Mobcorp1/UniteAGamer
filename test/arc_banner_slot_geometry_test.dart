@@ -67,7 +67,12 @@ void main() {
         expect(before.height, greaterThan(100));
         if (compactLandscape) {
           expect(appDock, findsNothing);
-          expect(banner, findsNothing);
+          expect(banner, findsOneWidget);
+          expect(
+            find.byKey(const Key('blueprint-landscape-static-ad')),
+            findsOneWidget,
+          );
+          expect(before.overlaps(tester.getRect(banner)), isFalse);
           expect(workspaceDock, findsNothing);
           expect(
             find.descendant(of: find.byType(AppBar), matching: workspaceBar),

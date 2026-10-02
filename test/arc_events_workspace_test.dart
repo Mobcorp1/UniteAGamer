@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_event_relevance.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/data/arc_regional_map_conditions.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_events_workspace.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 void main() {
@@ -39,8 +40,8 @@ void main() {
       MaterialApp(
         theme: AppTheme.theme,
         routes: {
-          arcEventsRoute: (_) =>
-              const Scaffold(body: Text('Events destination')),
+          RaidPlannerScreen.routeName: (_) =>
+              const Scaffold(body: Text('Raid Planner destination')),
         },
         home: Scaffold(body: SingleChildScrollView(child: child)),
       ),
@@ -104,9 +105,9 @@ void main() {
         lessThan(360),
       );
       expect(tester.takeException(), isNull);
-      await tester.tap(find.text('SHOW ALL EVENTS'));
+      await tester.tap(find.text('OPEN RAID PLANNER'));
       await tester.pumpAndSettle();
-      expect(find.text('Events destination'), findsOneWidget);
+      expect(find.text('Raid Planner destination'), findsOneWidget);
     });
   }
 

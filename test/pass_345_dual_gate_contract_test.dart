@@ -14,7 +14,7 @@ void main() {
     expect(source, contains('final highConfidenceCandidate'));
     expect(source, contains('final corroboratedMarkers'));
     expect(source, contains('final reliableBookOnly'));
-    expect(source, contains('final dualGateRejects'));
+    expect(source, contains('final independentlyVerified'));
     expect(source, contains('proposalFloor='));
     expect(source, contains('markerFloor='));
   });

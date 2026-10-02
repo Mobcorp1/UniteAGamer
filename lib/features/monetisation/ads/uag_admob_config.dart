@@ -12,6 +12,11 @@ class UagAdMobConfig {
   static const String androidProductionInterstitialAdUnitId =
       'ca-app-pub-2994575443987525/8892102017';
 
+  static const String androidProductionRewardedAdUnitId =
+      'ca-app-pub-2994575443987525/3866328391';
+  static const String androidTestRewardedAdUnitId =
+      'ca-app-pub-3940256099942544/5224354917';
+
   static const String androidTestBannerAdUnitId =
       'ca-app-pub-3940256099942544/6300978111';
   static const String androidTestAppOpenAdUnitId =
@@ -61,4 +66,15 @@ class UagAdMobConfig {
       )
       ? androidProductionInterstitialAdUnitId
       : androidTestInterstitialAdUnitId;
+
+  static String rewardedAdUnitId({
+    required bool productionAdsEnabled,
+    required bool forceTestAds,
+  }) =>
+      useProductionInventory(
+        productionAdsEnabled: productionAdsEnabled,
+        forceTestAds: forceTestAds,
+      )
+      ? androidProductionRewardedAdUnitId
+      : androidTestRewardedAdUnitId;
 }

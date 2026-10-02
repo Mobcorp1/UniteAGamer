@@ -6,7 +6,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_automatic_grid_selector.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_grid_detector.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_live_occupancy_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_live_occupancy_stabilizer.dart';
@@ -14,6 +13,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bl
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_live_scan_result_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_section_grid_extractor.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_dual_capture_session.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_edge_calibration.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_grid_detection.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_photo_import_models.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
@@ -25,6 +25,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bl
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_camera_operation_queue.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_camera_diagnostic_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_blueprint_edge_crop_overlay.dart';
 
 bool canStartCapture({
   required bool controllerInitialized,
@@ -62,9 +63,6 @@ enum _BlueprintLockState { searching, detected, locked }
 class _ArcBlueprintLiveScannerScreenState
     extends State<ArcBlueprintLiveScannerScreen>
     with WidgetsBindingObserver {
-  final ArcBlueprintAutomaticGridSelector _selector =
-      const ArcBlueprintAutomaticGridSelector();
-
   CameraController? _controller;
   CameraDescription? _description;
   bool _initializing = true;
@@ -96,6 +94,8 @@ class _ArcBlueprintLiveScannerScreenState
   final ManualAlignmentController _alignmentController =
       ManualAlignmentController()..resetToTopDefault();
 
+  ArcBlueprintEdgeCalibration? _lockedFirstCaptureCalibration;
+  bool _defaultAlignmentInitialized = false;
   // Last known viewport size used for normalized->source coordinate mapping.
   Size? _viewportSize;
 
@@ -115,6 +115,7 @@ class _ArcBlueprintLiveScannerScreenState
       );
 
   bool get _liveAnalysisEnabled =>
+      !_stillCaptureMode &&
       arcBlueprintLiveAnalysisEnabled(defaultTargetPlatform);
 
   final ArcBlueprintPreviewFrameGate _previewFrameGate =
@@ -135,6 +136,7 @@ class _ArcBlueprintLiveScannerScreenState
   final ArcBlueprintLiveScanFlowController _liveScanFlow =
       ArcBlueprintLiveScanFlowController();
   bool _autoCompletingLiveSection = false;
+  bool _stillCaptureMode = true;
   DateTime? _lastLiveOccupancyAnalysisAt;
   static const Duration _liveOccupancyInterval = Duration(milliseconds: 650);
 
@@ -619,14 +621,21 @@ class _ArcBlueprintLiveScannerScreenState
     // The scanner is intended to frame the Blueprint panel, not a small
     // regular sub-grid elsewhere in the camera image. Bottom rows naturally
     // occupy less vertical space, so width is the stronger invariant.
-    final minimumHeight = _capturingBottom ? 0.20 : 0.34;
-    return width >= 0.68 && height >= minimumHeight;
+    final bottomSection = _stillCaptureMode
+        ? _captureSession.hasTop
+        : _capturingBottom;
+    final minimumHeight = bottomSection ? 0.16 : 0.24;
+    return width >= 0.50 && height >= minimumHeight;
   }
 
   void _processLiveOccupancy(
     img.Image frameImage,
     ArcBlueprintGridDetection detection,
   ) {
+    // Once the user chooses deliberate still capture, keep live detection for
+    // framing feedback but stop the automatic occupancy flow from racing it.
+    if (_stillCaptureMode) return;
+
     if (_liveScanFlow.phase == ArcBlueprintLiveScanPhase.awaitingBottomScroll ||
         _liveScanFlow.phase == ArcBlueprintLiveScanPhase.complete) {
       return;
@@ -706,7 +715,7 @@ class _ArcBlueprintLiveScannerScreenState
           _latestDetection = const ArcBlueprintGridDetection.notFound();
         });
         _showMessage(
-          'First section scanned. Scroll down until the next Blueprint section is visible. Keeping one repeated row in view helps UAG verify the join, but exact overlap is not required.',
+          'First section scanned. Scroll down exactly one row so the final row from the first section remains as the overlap row, then scan the next section.',
         );
         return;
       }
@@ -753,6 +762,8 @@ class _ArcBlueprintLiveScannerScreenState
   }
 
   void _restartLiveScan() {
+    _stillCaptureMode = false;
+    _captureSession = const ArcBlueprintDualCaptureSession();
     _liveScanFlow.restart();
     _liveOccupancyStabilizer.reset();
     setState(() {
@@ -948,6 +959,35 @@ class _ArcBlueprintLiveScannerScreenState
     _baseZoom = _zoom;
   }
 
+  void _ensureDefaultAlignmentForViewport(Size viewportSize) {
+    if (_defaultAlignmentInitialized ||
+        _captureSession.hasTop ||
+        viewportSize.isEmpty) {
+      return;
+    }
+
+    _alignmentController.resetToTopDefaultForViewport(
+      viewportAspectRatio: viewportSize.width / viewportSize.height,
+    );
+    _defaultAlignmentInitialized = true;
+  }
+
+  void _resetLockedGrid() {
+    if (_captureSession.hasTop || _capturing) return;
+
+    final viewportSize = _viewportSize;
+    setState(() {
+      if (viewportSize != null && !viewportSize.isEmpty) {
+        _alignmentController.resetToTopDefaultForViewport(
+          viewportAspectRatio: viewportSize.width / viewportSize.height,
+        );
+      } else {
+        _alignmentController.resetToTopDefault();
+      }
+      _defaultAlignmentInitialized = true;
+    });
+  }
+
   // PASS 348 keeps the still-capture implementation as a recovery fallback for
   // PASS 349 integration, but normal scanner UX never invokes it.
   // ignore: unused_element
@@ -995,6 +1035,7 @@ class _ArcBlueprintLiveScannerScreenState
 
     setState(() {
       _capturing = true;
+      _stillCaptureMode = true;
     });
 
     var didNavigateAway = false;
@@ -1015,53 +1056,30 @@ class _ArcBlueprintLiveScannerScreenState
 
       final photo = await controller.takePicture();
       final bytes = await photo.readAsBytes();
-      final section = _capturingBottom
-          ? ArcBlueprintGridSection.bottom
-          : ArcBlueprintGridSection.top;
-
-      // Use manual alignment calibration where possible as the authoritative crop.
-      Uint8List corrected;
-      try {
-        final alignmentController = _alignmentController;
-        if (_viewportSize != null && alignmentController.calibration.isValid) {
-          final manuallyRectified = ArcBlueprintPerspectiveCropper().rectify(
-            imageBytes: bytes,
-            viewportSize: _viewportSize!,
-            calibration: alignmentController.calibration,
-            outputRows: section == ArcBlueprintGridSection.bottom ? 4 : 5,
-          );
-
-          try {
-            final normalized = _selector.select(
-              manuallyRectified,
-              section: section,
-            );
-            corrected = normalized.imageBytes;
-            _debugLog(
-              'Post-capture grid normalized: '
-              '${normalized.detection.confidence.toStringAsFixed(3)}',
-            );
-          } on FormatException catch (error) {
-            corrected = manuallyRectified;
-            _debugLog(
-              'Post-capture normalization unavailable; using manual frame: '
-              '${error.message}',
-            );
-          }
-        } else {
-          // Fallback to automatic selector when viewport not available
-          final selection = _selector.select(bytes, section: section);
-          corrected = selection.imageBytes;
-        }
-      } catch (_) {
-        // If cropper fails, fallback to automatic selection
-        final selection = _selector.select(bytes, section: section);
-        corrected = selection.imageBytes;
+      final captureBottom = _captureSession.hasTop;
+      // LOCKED GRID: the user's paired-edge rectangle is authoritative.
+      // Do not run automatic grid detection/selection after capture.
+      final viewportSize = _viewportSize;
+      if (viewportSize == null || !_alignmentController.calibration.isValid) {
+        throw const FormatException(
+          'Align the locked Blueprint grid before capturing.',
+        );
       }
+
+      final corrected = ArcBlueprintPerspectiveCropper().rectify(
+        imageBytes: bytes,
+        viewportSize: viewportSize,
+        calibration: _captureSession.hasTop
+            ? (_lockedFirstCaptureCalibration ??
+                  _alignmentController.calibration)
+            : _alignmentController.calibration,
+        outputRows: 5,
+      );
 
       if (!mounted) return;
 
-      if (!_capturingBottom) {
+      if (!captureBottom) {
+        _lockedFirstCaptureCalibration = _alignmentController.calibration;
         final nextSession = _captureSession.captureTop(corrected);
         _liveOccupancyStabilizer.reset();
         _liveOccupancySnapshot =
@@ -1074,7 +1092,7 @@ class _ArcBlueprintLiveScannerScreenState
           _latestDetection = const ArcBlueprintGridDetection.notFound();
         });
         _showMessage(
-          'First section captured. Scroll down to the next Blueprint section. A repeated row is helpful but not required.',
+          'Top grid captured. The frame is now locked. Scroll down one row so row 5 stays as the overlap row, then capture again.',
         );
         if (mounted && _liveAnalysisEnabled) {
           await _startPreviewStream();
@@ -1163,8 +1181,10 @@ class _ArcBlueprintLiveScannerScreenState
   }
 
   Future<void> _closeScanner([ArcBlueprintScannerResult? result]) async {
-    await _releaseCameraForNavigation();
     if (!mounted) return;
+    if (!_scannerClosing) {
+      setState(() => _scannerClosing = true);
+    }
     Navigator.of(context).pop(result);
   }
 
@@ -1198,7 +1218,11 @@ class _ArcBlueprintLiveScannerScreenState
     final controller = _controller;
     return Scaffold(
       backgroundColor: Colors.black,
-      body: _initializing
+      body: _scannerClosing
+          ? (_captureSession.isComplete
+                ? const _BlueprintScannerProcessingState()
+                : const ColoredBox(color: Colors.black))
+          : _initializing
           ? const Center(child: CircularProgressIndicator())
           : _error != null || controller == null
           ? _ErrorState(
@@ -1213,33 +1237,51 @@ class _ArcBlueprintLiveScannerScreenState
                 final awaitingBottom =
                     _liveScanFlow.phase ==
                     ArcBlueprintLiveScanPhase.awaitingBottomScroll;
-                final scanStep = _capturingBottom
+                final stillBottom = _captureSession.hasTop;
+                final scanStep = _stillCaptureMode
+                    ? (stillBottom
+                          ? 'Locked grid - bottom section'
+                          : 'Locked grid - top section')
+                    : _capturingBottom
                     ? 'Live scan - next section'
                     : awaitingBottom
                     ? 'Top section complete'
                     : 'Live scan - rows 1-5';
-                final scanInstructions = awaitingBottom
-                    ? 'Scroll down to the next Blueprint section. A little overlap is ideal because UAG can verify the repeated row, but exact overlap is not required.'
-                    : 'Fill the large guide with the complete Blueprint grid. UAG will shrink the guide onto the detected outer grid automatically. No photo capture is required.';
+                final scanInstructions = _stillCaptureMode
+                    ? (stillBottom
+                          ? 'Frame locked. Scroll down one row so row 5 remains in the first guide row, with rows 6-9 beneath it, then capture.'
+                          : 'Drag top/bottom or left/right cyan handles to fit the outer cell grid exactly, then capture.')
+                    : awaitingBottom
+                    ? 'Scroll down exactly one row so the final row from the first section remains as the overlap row, then continue.'
+                    : 'Fill the guide with the Blueprint grid. UAG will snap the outline onto the detected outer edges automatically.';
                 final liveOccupancySuffix =
                     _liveOccupancySnapshot.totalCellCount > 0
                     ? ' - Live ${_liveOccupancySnapshot.stableCellCount}/${_liveOccupancySnapshot.totalCellCount} stable'
                     : '';
-                final lockStatusText = awaitingBottom
+                final lockStatusText = _stillCaptureMode
+                    ? 'LOCKED GRID - ALIGN THE CYAN RECTANGLE TO THE OUTER CELL EDGES'
+                    : awaitingBottom
                     ? 'First section scanned - scroll to the next section'
                     : _lockState == _BlueprintLockState.searching
                     ? 'Finding the outer Blueprint grid edges...'
                     : _lockState == _BlueprintLockState.detected
                     ? 'Blueprint grid found - framing edges...'
                     : 'Auto frame locked$liveOccupancySuffix';
-                final statusColor = _gridLocked
+                final statusColor = _stillCaptureMode
+                    ? AppTheme.neonCyan
+                    : _gridLocked
                     ? Colors.greenAccent
                     : Colors.white;
-                // record viewport size for coordinate mapping
-                _viewportSize = Size(
+                // Record the real camera viewport for source-coordinate mapping
+                // and initialize the starting frame in rendered-pixel geometry.
+                final viewportSize = Size(
                   constraints.maxWidth,
                   constraints.maxHeight,
                 );
+                _viewportSize = viewportSize;
+                if (!isPortrait) {
+                  _ensureDefaultAlignmentForViewport(viewportSize);
+                }
 
                 return GestureDetector(
                   onScaleStart: (_) => _baseZoom = _zoom,
@@ -1252,18 +1294,26 @@ class _ArcBlueprintLiveScannerScreenState
                         _CoverCameraPreview(controller: controller),
                       if (!isPortrait)
                         Positioned.fill(
-                          child: IgnorePointer(
-                            child: _BlueprintAutoFrameOverlay(
-                              locked: _gridLocked,
-                              detection: _latestDetection,
-                            ),
+                          child: ArcBlueprintEdgeCropOverlay(
+                            calibration: (_captureSession.hasTop
+                                ? (_lockedFirstCaptureCalibration ??
+                                      _alignmentController.calibration)
+                                : _alignmentController.calibration),
+                            enabled: !_captureSession.hasTop,
+                            onChanged: (calibration) {
+                              setState(() {
+                                _alignmentController.setCalibration(
+                                  calibration,
+                                );
+                              });
+                            },
                           ),
                         ),
                       if (!isPortrait)
                         Positioned(
-                          left: 12,
-                          right: 12,
-                          top: media.padding.top + 6,
+                          left: math.max(12, media.viewPadding.left + 8),
+                          right: math.max(12, media.viewPadding.right + 8),
+                          top: math.max(6, media.viewPadding.top + 6),
                           child: Row(
                             children: [
                               IconButton.filledTonal(
@@ -1282,7 +1332,7 @@ class _ArcBlueprintLiveScannerScreenState
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontFamily: AppTheme.headingFontFamily,
-                                        fontSize: 22,
+                                        fontSize: 20,
                                       ),
                                     ),
                                     Text(
@@ -1304,6 +1354,47 @@ class _ArcBlueprintLiveScannerScreenState
                               ),
                               const SizedBox(width: 6),
                               IconButton.filledTonal(
+                                key: const Key(
+                                  'blueprint-live-scanner-reset-grid',
+                                ),
+                                tooltip: 'Reset locked grid',
+                                onPressed: _capturing || _captureSession.hasTop
+                                    ? null
+                                    : _resetLockedGrid,
+                                icon: const Icon(Icons.crop_free_rounded),
+                              ),
+                              const SizedBox(width: 6),
+                              IconButton.filled(
+                                key: const Key(
+                                  'blueprint-live-scanner-capture',
+                                ),
+                                tooltip: _captureSession.hasTop
+                                    ? 'Capture bottom Blueprint section'
+                                    : 'Capture top Blueprint section',
+                                onPressed: _capturing ? null : _capture,
+                                style: IconButton.styleFrom(
+                                  minimumSize: const Size(52, 52),
+                                  backgroundColor: AppTheme.neonPink,
+                                  foregroundColor: AppTheme.neonCyan,
+                                  disabledBackgroundColor: AppTheme.neonPink
+                                      .withValues(alpha: 0.34),
+                                  disabledForegroundColor: AppTheme.neonCyan
+                                      .withValues(alpha: 0.42),
+                                  side: BorderSide(
+                                    color: AppTheme.neonCyan.withValues(
+                                      alpha: 0.96,
+                                    ),
+                                    width: 2,
+                                  ),
+                                ),
+                                icon: Icon(
+                                  _captureSession.hasTop
+                                      ? Icons.add_a_photo_rounded
+                                      : Icons.camera_alt_rounded,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              IconButton.filledTonal(
                                 onPressed: _capturing ? null : _toggleFlash,
                                 icon: Icon(
                                   _flashMode == FlashMode.off
@@ -1314,7 +1405,7 @@ class _ArcBlueprintLiveScannerScreenState
                             ],
                           ),
                         ),
-                      if (!isPortrait)
+                      if (!isPortrait && !_stillCaptureMode)
                         Positioned(
                           left: 16,
                           right: 16,
@@ -1353,7 +1444,7 @@ class _ArcBlueprintLiveScannerScreenState
                               border: Border.all(color: AppTheme.neonCyan),
                             ),
                             child: const Text(
-                              'ROWS 1-5 SAVED - START AT ROW 6, NO DUPLICATE ROW',
+                              'TOP SECTION SAVED - START THE NEXT SECTION',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: Colors.white,
@@ -1363,11 +1454,11 @@ class _ArcBlueprintLiveScannerScreenState
                             ),
                           ),
                         ),
-                      if (!isPortrait)
+                      if (!isPortrait && !_stillCaptureMode)
                         Positioned(
-                          left: 24,
-                          right: 24,
-                          bottom: media.padding.bottom + 12,
+                          left: math.max(24, media.viewPadding.left + 12),
+                          right: math.max(24, media.viewPadding.right + 12),
+                          bottom: math.max(12, media.viewPadding.bottom + 12),
                           child: Center(
                             child: awaitingBottom
                                 ? FilledButton.icon(
@@ -1378,7 +1469,7 @@ class _ArcBlueprintLiveScannerScreenState
                                     icon: const Icon(
                                       Icons.keyboard_double_arrow_down_rounded,
                                     ),
-                                    label: const Text('SCAN ROWS 6-9'),
+                                    label: const Text('SCAN NEXT SECTION'),
                                   )
                                 : Container(
                                     padding: const EdgeInsets.symmetric(
@@ -1387,7 +1478,7 @@ class _ArcBlueprintLiveScannerScreenState
                                     ),
                                     decoration: BoxDecoration(
                                       color: Colors.black.withValues(
-                                        alpha: 184.0,
+                                        alpha: 0.72,
                                       ),
                                       borderRadius: BorderRadius.circular(14),
                                       border: Border.all(
@@ -1438,7 +1529,7 @@ class _ArcBlueprintLiveScannerScreenState
                                   ),
                           ),
                         ),
-                      if (!isPortrait && kDebugMode)
+                      if (!isPortrait && kDebugMode && !_stillCaptureMode)
                         Positioned(
                           left: 18,
                           bottom: media.padding.bottom + 100,
@@ -1453,6 +1544,84 @@ class _ArcBlueprintLiveScannerScreenState
                 );
               },
             ),
+    );
+  }
+}
+
+class _BlueprintScannerProcessingState extends StatelessWidget {
+  const _BlueprintScannerProcessingState();
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: Colors.black,
+      child: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 28),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 58,
+                    height: 58,
+                    decoration: BoxDecoration(
+                      color: AppTheme.neonPink.withValues(alpha: 0.92),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: AppTheme.neonCyan,
+                        width: 2,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppTheme.neonPink.withValues(alpha: 0.28),
+                          blurRadius: 18,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.document_scanner_rounded,
+                      color: AppTheme.neonCyan,
+                      size: 30,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    'SCANNING BLUEPRINT GRID',
+                    textAlign: TextAlign.center,
+                    style: AppTheme.tradingHeading(
+                      fontSize: 22,
+                      color: AppTheme.neonCyan,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Checking grid positions and preparing your Blueprint update...',
+                    textAlign: TextAlign.center,
+                    style: AppTheme.bodyTextStyle(
+                      fontSize: 13,
+                      color: Colors.white70,
+                      isBold: true,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(999),
+                    child: const LinearProgressIndicator(
+                      minHeight: 5,
+                      color: AppTheme.neonPink,
+                      backgroundColor: Colors.white12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -1505,99 +1674,6 @@ class _CoverCameraPreview extends StatelessWidget {
   }
 }
 
-class _BlueprintAutoFrameOverlay extends StatelessWidget {
-  const _BlueprintAutoFrameOverlay({
-    required this.locked,
-    required this.detection,
-  });
-
-  final bool locked;
-  final ArcBlueprintGridDetection detection;
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: _BlueprintAutoFramePainter(locked: locked, detection: detection),
-      size: Size.infinite,
-    );
-  }
-}
-
-class _BlueprintAutoFramePainter extends CustomPainter {
-  const _BlueprintAutoFramePainter({
-    required this.locked,
-    required this.detection,
-  });
-
-  final bool locked;
-  final ArcBlueprintGridDetection detection;
-
-  Offset _point(Offset normalized, Size size) =>
-      Offset(normalized.dx * size.width, normalized.dy * size.height);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (!detection.isValid) {
-      final guide = Rect.fromLTWH(
-        size.width * 0.05,
-        size.height * 0.16,
-        size.width * 0.90,
-        size.height * 0.68,
-      );
-      final guidePaint = Paint()
-        ..color = AppTheme.neonCyan.withValues(alpha: 0.72)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.5;
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(guide, const Radius.circular(14)),
-        guidePaint,
-      );
-      return;
-    }
-
-    final topLeft = _point(detection.topLeft, size);
-    final topRight = _point(detection.topRight, size);
-    final bottomRight = _point(detection.bottomRight, size);
-    final bottomLeft = _point(detection.bottomLeft, size);
-
-    final frame = Path()
-      ..moveTo(topLeft.dx, topLeft.dy)
-      ..lineTo(topRight.dx, topRight.dy)
-      ..lineTo(bottomRight.dx, bottomRight.dy)
-      ..lineTo(bottomLeft.dx, bottomLeft.dy)
-      ..close();
-
-    final framePaint = Paint()
-      ..color = locked ? Colors.greenAccent : AppTheme.neonCyan
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = locked ? 3.5 : 2.0
-      ..strokeJoin = StrokeJoin.round;
-    canvas.drawPath(frame, framePaint);
-
-    final cornerPaint = Paint()
-      ..color = locked ? Colors.greenAccent : Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 4
-      ..strokeCap = StrokeCap.round;
-    const length = 30.0;
-
-    void bracket(Offset corner, Offset horizontal, Offset vertical) {
-      canvas.drawLine(corner, corner + horizontal * length, cornerPaint);
-      canvas.drawLine(corner, corner + vertical * length, cornerPaint);
-    }
-
-    bracket(topLeft, const Offset(1, 0), const Offset(0, 1));
-    bracket(topRight, const Offset(-1, 0), const Offset(0, 1));
-    bracket(bottomLeft, const Offset(1, 0), const Offset(0, -1));
-    bracket(bottomRight, const Offset(-1, 0), const Offset(0, -1));
-  }
-
-  @override
-  bool shouldRepaint(covariant _BlueprintAutoFramePainter oldDelegate) {
-    return oldDelegate.locked != locked || oldDelegate.detection != detection;
-  }
-}
-
 class _DebugGridMetrics extends StatelessWidget {
   const _DebugGridMetrics({required this.detection, required this.locked});
 
@@ -1642,7 +1718,7 @@ class _DebugGridMetrics extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 158.0),
+        color: Colors.black.withValues(alpha: 0.62),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: locked ? Colors.greenAccent : Colors.white24),
       ),

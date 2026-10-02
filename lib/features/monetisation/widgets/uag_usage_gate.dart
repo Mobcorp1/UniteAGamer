@@ -5,6 +5,7 @@ import '../models/uag_match_intelligence_copy.dart';
 import '../models/uag_subscription_tier.dart';
 import '../screens/monetisation_screen.dart';
 import '../services/uag_entitlement_service.dart';
+import 'uag_raider_mark_panel.dart';
 
 class UagUsageGate {
   const UagUsageGate._();
@@ -37,9 +38,21 @@ class UagUsageGate {
             color: ArcUiTokens.secondaryAccent,
           ),
         ),
-        content: Text(
-          _upgradeBody(action, result.reason),
-          style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                _upgradeBody(action, result.reason),
+                style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
+              ),
+              if (action == UagBillableAction.trade ||
+                  action == UagBillableAction.matchmakingSearch) ...[
+                const SizedBox(height: 12),
+                const UagRaiderMarkPanel(),
+              ],
+            ],
+          ),
         ),
         actions: [
           TextButton(

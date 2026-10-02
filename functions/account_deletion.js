@@ -36,6 +36,9 @@ const DIRECT_PRIVATE_DOCS = Object.freeze([
   'arc_rewards_inventory',
   'uag_referral_reward_lockers',
   'uag_commercial_recognition',
+  'uag_reward_wallets',
+  'uag_reward_test_wallets',
+  'uag_reward_bonuses',
   'uag_voice_preferences',
   'supporter_entitlements',
 ]);
@@ -68,6 +71,8 @@ const PRIVATE_QUERY_DELETIONS = Object.freeze([
   ['uag_user_blocks', 'blockerUid'],
   ['uag_user_blocks', 'blockedUid'],
   ['uag_image_import_sessions', 'uid'],
+  ['uag_reward_sessions', 'uid'],
+  ['uag_reward_redemptions', 'uid'],
   ['uag_age_verification_requests', 'uid'],
   ['uag_referral_reward_activation_requests', 'uid'],
   ['arc_raid_routes', 'ownerUid'],

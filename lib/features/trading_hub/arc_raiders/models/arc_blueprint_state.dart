@@ -1,11 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+enum ArcBlueprintOwnershipSource { unknown, manual, scan }
+
 class ArcBlueprintState {
   final String blueprintId;
   final bool owned;
   final int dupesOwned;
   final int priorityRank;
   final DateTime? updatedAt;
+  final ArcBlueprintOwnershipSource ownershipSource;
 
   const ArcBlueprintState({
     required this.blueprintId,
@@ -13,6 +16,7 @@ class ArcBlueprintState {
     required this.dupesOwned,
     required this.priorityRank,
     required this.updatedAt,
+    this.ownershipSource = ArcBlueprintOwnershipSource.unknown,
   });
 
   factory ArcBlueprintState.empty(String blueprintId) {
@@ -22,6 +26,7 @@ class ArcBlueprintState {
       dupesOwned: 0,
       priorityRank: 0,
       updatedAt: null,
+      ownershipSource: ArcBlueprintOwnershipSource.unknown,
     );
   }
 
@@ -29,6 +34,10 @@ class ArcBlueprintState {
   bool get availableToTrade => dupesOwned > 0;
   bool get hasDuplicates => dupesOwned > 0;
   bool get isPrioritized => priorityRank > 0;
+  bool get isManualOwnership =>
+      owned && ownershipSource == ArcBlueprintOwnershipSource.manual;
+  bool get isScanConfirmed =>
+      owned && ownershipSource == ArcBlueprintOwnershipSource.scan;
 
   ArcBlueprintState copyWith({
     String? blueprintId,
@@ -36,19 +45,25 @@ class ArcBlueprintState {
     int? dupesOwned,
     int? priorityRank,
     DateTime? updatedAt,
+    ArcBlueprintOwnershipSource? ownershipSource,
   }) {
     final nextOwned = owned ?? this.owned;
     final nextDupesRaw = dupesOwned ?? this.dupesOwned;
     final nextPriorityRaw = priorityRank ?? this.priorityRank;
     final safeDupes = nextDupesRaw < 0 ? 0 : nextDupesRaw;
     final safePriority = nextPriorityRaw < 0 ? 0 : nextPriorityRaw;
+    final effectiveOwned = nextOwned || safeDupes > 0;
+    final effectiveSource = effectiveOwned
+        ? (ownershipSource ?? this.ownershipSource)
+        : ArcBlueprintOwnershipSource.unknown;
 
     return ArcBlueprintState(
       blueprintId: blueprintId ?? this.blueprintId,
-      owned: nextOwned || safeDupes > 0,
-      dupesOwned: (nextOwned || safeDupes > 0) ? safeDupes : 0,
+      owned: effectiveOwned,
+      dupesOwned: effectiveOwned ? safeDupes : 0,
       priorityRank: safePriority,
       updatedAt: updatedAt ?? this.updatedAt,
+      ownershipSource: effectiveSource,
     );
   }
 
@@ -60,6 +75,7 @@ class ArcBlueprintState {
       'wanted': wanted,
       'availableToTrade': availableToTrade,
       'priorityRank': priorityRank,
+      'ownershipSource': ownershipSource.name,
       'updatedAt': updatedAt == null ? null : Timestamp.fromDate(updatedAt!),
     };
   }
@@ -91,6 +107,11 @@ class ArcBlueprintState {
             : hasOwnershipSignal && explicitWanted != true);
 
     final rawPriority = (map['priorityRank'] as num?)?.toInt() ?? 0;
+    final rawOwnershipSource = map['ownershipSource']?.toString().trim() ?? '';
+    final ownershipSource = ArcBlueprintOwnershipSource.values.firstWhere(
+      (value) => value.name == rawOwnershipSource,
+      orElse: () => ArcBlueprintOwnershipSource.unknown,
+    );
 
     return ArcBlueprintState(
       blueprintId: blueprintId,
@@ -98,6 +119,7 @@ class ArcBlueprintState {
       dupesOwned: dupesOwned < 0 ? 0 : dupesOwned,
       priorityRank: rawPriority < 0 ? 0 : rawPriority,
       updatedAt: (map['updatedAt'] as Timestamp?)?.toDate(),
+      ownershipSource: ownershipSource,
     );
   }
 }

@@ -7,7 +7,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 void main() {
   group('Blueprint Intel report options', () {
     test('acquisition source labels and legacy parsing remain stable', () {
-      expect(ArcBlueprintAcquisitionSource.lootDrop.label, 'Found Personally');
+      expect(ArcBlueprintAcquisitionSource.lootDrop.label, 'Found');
       expect(ArcBlueprintAcquisitionSource.gifted.label, 'Gifted');
       expect(
         ArcBlueprintAcquisitionSource.giftedBySquadmate.label,

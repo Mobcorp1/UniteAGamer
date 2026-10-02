@@ -87,6 +87,16 @@ class _UagAdAdminControlsCardState extends State<UagAdAdminControlsCard> {
               (v) => _save(s.copyWith(interstitialEnabled: v)),
             ),
             _toggle(
+              'Optional rewarded ads (Free only)',
+              s.rewardedEnabled,
+              (v) => _save(s.copyWith(rewardedEnabled: v)),
+            ),
+            _toggle(
+              'Rewarded SSV callback configured in AdMob',
+              s.rewardedSsvReady,
+              (v) => _save(s.copyWith(rewardedSsvReady: v)),
+            ),
+            _toggle(
               'Force Google test ads',
               s.forceTestAds,
               (v) => _save(s.copyWith(forceTestAds: v)),
