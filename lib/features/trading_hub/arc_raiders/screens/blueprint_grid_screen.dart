@@ -31,6 +31,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_blueprint_drop_report_sheet.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_beta_first_run.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/blueprint_tile.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/blueprint_progress_header.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/blueprint_voice_search_button.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raid_intelligence_screen.dart';
@@ -115,6 +116,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
   late Stream<ArcBlueprintStateSnapshot> _stateStream;
   late Stream<ArcSavedLoadout?> _loadoutStream;
   bool _showOverviewHint = true;
+  bool _showProgressHeader = true;
   ArcBlueprintGridViewMode _viewMode = ArcBlueprintGridViewMode.inGameFramed;
   bool _viewModeLoaded = false;
   final Set<String> _selectedBlueprintIds = <String>{};
@@ -1173,6 +1175,13 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     Map<ArcBlueprintFilter, int> counts, {
     ArcSmartBuildHuntSnapshot? hunt,
   }) {
+    final media = MediaQuery.of(context);
+    final compactBlueprintToolsLandscape =
+        !kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.android ||
+            defaultTargetPlatform == TargetPlatform.iOS) &&
+        media.orientation == Orientation.landscape &&
+        media.size.height <= 720;
     Widget action(String label, VoidCallback? onPressed) =>
         OutlinedButton(onPressed: onPressed, child: Text(label));
     return Material(
@@ -1208,6 +1217,22 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
             ],
           ),
           const SizedBox(height: 8),
+          if (_showProgressHeader && !compactBlueprintToolsLandscape) ...[
+            BlueprintProgressHeader(
+              completion: allBlueprints.isEmpty
+                  ? 0.0
+                  : (counts[ArcBlueprintFilter.owned] ?? 0) /
+                        allBlueprints.length,
+              ownedCount: counts[ArcBlueprintFilter.owned] ?? 0,
+              missingCount: counts[ArcBlueprintFilter.missing] ?? 0,
+              dupesCount: counts[ArcBlueprintFilter.duplicates] ?? 0,
+              totalCount: allBlueprints.length,
+              landscape:
+                  MediaQuery.of(context).orientation == Orientation.landscape,
+              onClose: () => setState(() => _showProgressHeader = false),
+            ),
+            const SizedBox(height: 8),
+          ],
           Text(
             '${counts[ArcBlueprintFilter.owned]} / ${allBlueprints.length} owned · ${counts[ArcBlueprintFilter.missing]} missing · ${counts[ArcBlueprintFilter.duplicates]} dupes',
           ),
@@ -2494,6 +2519,10 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                     return;
                   }
 
+                  if (!state.owned) {
+                    await _markMissingAsOwned(blueprint, state);
+                    return;
+                  }
                   await _openBlueprintPreview(blueprint, state);
                 },
                 onLongPress: () =>
@@ -2597,6 +2626,10 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                               return;
                             }
 
+                            if (!state.owned) {
+                              await _markMissingAsOwned(blueprint, state);
+                              return;
+                            }
                             await _openBlueprintPreview(blueprint, state);
                           },
                           onLongPress: () =>
