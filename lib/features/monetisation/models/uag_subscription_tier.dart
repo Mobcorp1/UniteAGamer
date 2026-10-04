@@ -89,11 +89,11 @@ enum UagBillableAction {
       case UagBillableAction.advancedVoiceCommand:
         return 'Advanced voice command';
       case UagBillableAction.premiumIntelUnlock:
-        return 'Premium intel unlock';
+        return 'Raid Intelligence unlock';
       case UagBillableAction.traderAnalyticsView:
         return 'Trader analytics view';
       case UagBillableAction.raidCompanionPreset:
-        return 'Raid Companion preset';
+        return 'Raid Planner run';
     }
   }
 }

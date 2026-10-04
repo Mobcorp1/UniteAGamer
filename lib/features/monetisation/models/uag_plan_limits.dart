@@ -97,9 +97,10 @@ class UagPlanLimits {
         UagCommercialEconomy.freeMonthlyMatchRaiderActions,
     weeklyIntelHints: 8,
     weeklyAdvancedVoiceCommands: 25,
-    weeklyPremiumIntelUnlocks: 2,
+    weeklyPremiumIntelUnlocks:
+        UagCommercialEconomy.freeMonthlyRaidIntelligenceUnlocks,
     weeklyTraderAnalyticsViews: 0,
-    weeklyRaidCompanionPresets: 0,
+    weeklyRaidCompanionPresets: UagCommercialEconomy.freeMonthlyRaidPlannerRuns,
     activeTradeListings: 2,
     dailyTradeOffers: 5,
     prioritySlots: 3,
@@ -116,7 +117,8 @@ class UagPlanLimits {
     referralDiscountPercent:
         UagCommercialEconomy.referralFirstPurchaseDiscountPercent,
     referralCommissionPercent: 0,
-    monthlyReferralBonusActionCap: 8,
+    monthlyReferralBonusActionCap:
+        999, // Legacy field; referral gameplay rewards are uncapped.
     payoutThresholdPence: UagCommercialEconomy.payoutThresholdPence,
   );
 
@@ -127,9 +129,11 @@ class UagPlanLimits {
         UagCommercialEconomy.essentialMonthlyMatchRaiderActions,
     weeklyIntelHints: 40,
     weeklyAdvancedVoiceCommands: null,
-    weeklyPremiumIntelUnlocks: 12,
+    weeklyPremiumIntelUnlocks:
+        UagCommercialEconomy.essentialMonthlyRaidIntelligenceUnlocks,
     weeklyTraderAnalyticsViews: 15,
-    weeklyRaidCompanionPresets: 10,
+    weeklyRaidCompanionPresets:
+        UagCommercialEconomy.essentialMonthlyRaidPlannerRuns,
     activeTradeListings: 10,
     dailyTradeOffers: 25,
     prioritySlots: 10,
@@ -146,7 +150,8 @@ class UagPlanLimits {
     referralDiscountPercent:
         UagCommercialEconomy.referralFirstPurchaseDiscountPercent,
     referralCommissionPercent: 0,
-    monthlyReferralBonusActionCap: 25,
+    monthlyReferralBonusActionCap:
+        999, // Legacy field; referral gameplay rewards are uncapped.
     payoutThresholdPence: UagCommercialEconomy.payoutThresholdPence,
   );
 

@@ -102,10 +102,10 @@ class UagRewardedAdService {
       await Future.wait<void>([showFuture, dismissed.future], eagerError: true);
       ad = null;
       if (!earned) {
-        return 'Ad closed before completion. No Raider Mark earned.';
+        return 'Ad closed before completion. No Hub Credit earned.';
       }
       if (!live) {
-        return 'Test ad completed. Test ads do not add Raider Marks.';
+        return 'Test ad completed. Test ads do not add Hub Credits.';
       }
       try {
         final verified = await _marks.waitForVerification(
@@ -113,10 +113,10 @@ class UagRewardedAdService {
           currentUid,
         );
         return verified
-            ? '1 Raider Mark added to your wallet.'
+            ? '1 Hub Credit added to your wallet.'
             : 'Reward saved to the account that watched the ad.';
       } on TimeoutException {
-        return 'Ad completed. Your Raider Mark will appear when verification arrives.';
+        return 'Ad completed. Your Hub Credit will appear when verification arrives.';
       }
     } finally {
       if (ad != null) {

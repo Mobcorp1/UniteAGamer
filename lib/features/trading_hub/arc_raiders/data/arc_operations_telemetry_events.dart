@@ -20,6 +20,7 @@ class ArcOperationsTelemetryEvents {
   static const loginRecorded = ArcOperationTelemetryType.loginRecorded;
   static const availabilitySaved = ArcOperationTelemetryType.availabilitySaved;
   static const intelConfirmed = ArcOperationTelemetryType.intelConfirmed;
+  static const raidPlannerRun = ArcOperationTelemetryType.raidPlannerRun;
   static const questCompleted = ArcOperationTelemetryType.questCompleted;
   static const scrappyUpgradeCompleted =
       ArcOperationTelemetryType.scrappyUpgradeCompleted;

@@ -65,8 +65,12 @@ class UagCommercialEconomy {
 
   static const int freeMonthlyTrades = 5;
   static const int freeMonthlyMatchRaiderActions = 5;
+  static const int freeMonthlyRaidIntelligenceUnlocks = 5;
+  static const int freeMonthlyRaidPlannerRuns = 5;
   static const int essentialMonthlyTrades = 30;
   static const int essentialMonthlyMatchRaiderActions = 30;
+  static const int essentialMonthlyRaidIntelligenceUnlocks = 30;
+  static const int essentialMonthlyRaidPlannerRuns = 30;
 
   static const int referralFirstPurchaseDiscountPercent = 10;
   static const int creatorStandardFirstPurchaseDiscountPercent = 20;
@@ -90,7 +94,9 @@ class UagCommercialEconomy {
 
   static bool usesMonthlyAllowance(UagBillableAction action) =>
       action == UagBillableAction.trade ||
-      action == UagBillableAction.matchmakingSearch;
+      action == UagBillableAction.matchmakingSearch ||
+      action == UagBillableAction.premiumIntelUnlock ||
+      action == UagBillableAction.raidCompanionPreset;
 
   static String allowancePeriodLabel(UagBillableAction action) =>
       usesMonthlyAllowance(action) ? 'monthly' : 'weekly';
@@ -110,6 +116,21 @@ class UagCommercialEconomy {
       return switch (tier) {
         UagSubscriptionTier.free => freeMonthlyMatchRaiderActions,
         UagSubscriptionTier.essential => essentialMonthlyMatchRaiderActions,
+        UagSubscriptionTier.premium => null,
+      };
+    }
+    if (action == UagBillableAction.premiumIntelUnlock) {
+      return switch (tier) {
+        UagSubscriptionTier.free => freeMonthlyRaidIntelligenceUnlocks,
+        UagSubscriptionTier.essential =>
+          essentialMonthlyRaidIntelligenceUnlocks,
+        UagSubscriptionTier.premium => null,
+      };
+    }
+    if (action == UagBillableAction.raidCompanionPreset) {
+      return switch (tier) {
+        UagSubscriptionTier.free => freeMonthlyRaidPlannerRuns,
+        UagSubscriptionTier.essential => essentialMonthlyRaidPlannerRuns,
         UagSubscriptionTier.premium => null,
       };
     }

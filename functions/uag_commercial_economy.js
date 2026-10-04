@@ -12,8 +12,12 @@ const COMMERCIAL_ECONOMY = Object.freeze({
   allowances: Object.freeze({
     freeMonthlyTrades: 5,
     freeMonthlyMatchRaiderActions: 5,
+    freeMonthlyRaidIntelligenceUnlocks: 5,
+    freeMonthlyRaidPlannerRuns: 5,
     essentialMonthlyTrades: 30,
     essentialMonthlyMatchRaiderActions: 30,
+    essentialMonthlyRaidIntelligenceUnlocks: 30,
+    essentialMonthlyRaidPlannerRuns: 30,
   }),
   discounts: Object.freeze({
     communityReferralPercent: 10,
@@ -31,6 +35,16 @@ const COMMERCIAL_ECONOMY = Object.freeze({
     recipientCooldownDays: 365,
     senderMonthlyCap: 5,
   }),
+  hubCredits: Object.freeze({
+    marksPerCompletedAd: 1,
+    marksPerBonusAction: 5,
+    walletCap: 10,
+    maxRewardedAdsPerDay: 3,
+    maxRewardedAdsPerMonth: 20,
+    maxBonusRedemptionsPerMonth: 4,
+    minimumIntervalMinutes: 20,
+  }),
+  // Legacy server key retained while deployed clients/functions roll forward.
   raiderMarks: Object.freeze({
     marksPerCompletedAd: 1,
     marksPerBonusAction: 5,

@@ -50,7 +50,7 @@ void main() {
       'lib/features/trading_hub/arc_raiders/screens/'
       'arc_mandatory_onboarding_screen.dart',
     ).readAsStringSync();
-    final web = File('web/index.html').readAsStringSync();
+    final web = File('web/app.html').readAsStringSync();
 
     expect(
       appEntry,

@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_hub_rewards_overview_panel.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_operation_completion_panel.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_raider_mark_panel.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_referral_challenge_panel.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_dynamic_operations_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
@@ -69,6 +73,14 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
                 ),
                 const SizedBox(height: 10),
                 _buildHero(userState),
+                const SizedBox(height: 10),
+                const UagHubRewardsOverviewPanel(),
+                const SizedBox(height: 10),
+                const UagRaiderMarkPanel(),
+                const SizedBox(height: 10),
+                const UagReferralChallengePanel(),
+                const SizedBox(height: 10),
+                const UagOperationCompletionPanel(),
                 const SizedBox(height: 10),
                 _buildProfileRewardStrip(userState),
                 const SizedBox(height: 10),
@@ -882,6 +894,8 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
         case ArcOperationRewardType.intelXp:
         case ArcOperationRewardType.tradeSlot:
         case ArcOperationRewardType.matchmakingSlot:
+        case ArcOperationRewardType.intelUnlock:
+        case ArcOperationRewardType.raidPlannerRun:
         case ArcOperationRewardType.premiumTrial:
         case ArcOperationRewardType.operationCredit:
           return;
@@ -3517,6 +3531,8 @@ IconData _rewardTypeIcon(ArcOperationRewardType type) {
     ArcOperationRewardType.profileBanner => Icons.view_day_rounded,
     ArcOperationRewardType.tradeSlot => Icons.swap_horiz_rounded,
     ArcOperationRewardType.matchmakingSlot => Icons.groups_rounded,
+    ArcOperationRewardType.intelUnlock => Icons.radar_rounded,
+    ArcOperationRewardType.raidPlannerRun => Icons.route_rounded,
     ArcOperationRewardType.premiumTrial => Icons.workspace_premium_rounded,
     ArcOperationRewardType.operationCredit => Icons.toll_rounded,
     ArcOperationRewardType.intelXp => Icons.psychology_rounded,
@@ -3555,6 +3571,13 @@ class _OperationTaskCard extends StatelessWidget {
         : (progress / task.target).clamp(0, 1).toDouble();
     final ready = state == ArcOperationClaimState.readyToClaim;
     final complete = state == ArcOperationClaimState.completed;
+    const autoTrackedRewardOperations = <String>{
+      'monthly_trader_bronze',
+      'monthly_match_raider',
+      'monthly_intel_network',
+      'monthly_raid_runner',
+    };
+    final autoTracked = autoTrackedRewardOperations.contains(task.id);
 
     return ArcRaidersSectionCard(
       accent: complete ? Colors.lightGreenAccent : task.accent,
@@ -3660,12 +3683,16 @@ class _OperationTaskCard extends StatelessWidget {
                       ? null
                       : ready
                       ? onClaim
+                      : autoTracked
+                      ? null
                       : onTrack,
                   icon: Icon(
                     ready
                         ? Icons.redeem_rounded
                         : complete
                         ? Icons.check_circle_rounded
+                        : autoTracked
+                        ? Icons.sensors_rounded
                         : Icons.add_task_rounded,
                     size: 16,
                   ),
@@ -3674,6 +3701,8 @@ class _OperationTaskCard extends StatelessWidget {
                         ? 'CLAIM REWARD'
                         : complete
                         ? 'COMPLETED'
+                        : autoTracked
+                        ? 'AUTO TRACKED'
                         : 'TRACK +1',
                   ),
                 ),
@@ -3712,6 +3741,8 @@ class _OperationTaskCard extends StatelessWidget {
       ArcOperationRewardType.profileBanner => Colors.lightBlueAccent,
       ArcOperationRewardType.tradeSlot => Colors.lightGreenAccent,
       ArcOperationRewardType.matchmakingSlot => Colors.lightBlueAccent,
+      ArcOperationRewardType.intelUnlock => Colors.lightGreenAccent,
+      ArcOperationRewardType.raidPlannerRun => Colors.amberAccent,
       ArcOperationRewardType.premiumTrial => Colors.purpleAccent,
       ArcOperationRewardType.operationCredit => Colors.orangeAccent,
       ArcOperationRewardType.intelXp => Colors.white70,

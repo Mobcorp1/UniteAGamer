@@ -152,15 +152,48 @@ class UagEntitlementService {
         });
   }
 
+  Stream<Map<String, int>> watchCurrentMonthlyUsage() {
+    final currentUid = uid;
+    if (currentUid == null) return Stream.value(const <String, int>{});
+    return _firestore
+        .collection('users')
+        .doc(currentUid)
+        .collection('usage_counters')
+        .doc(_currentMonthKey())
+        .snapshots()
+        .map((snapshot) {
+          final data = snapshot.data() ?? <String, dynamic>{};
+          return {
+            for (final action in UagBillableAction.values)
+              action.usageKey: (data[action.usageKey] as num?)?.toInt() ?? 0,
+          };
+        });
+  }
+
+  Stream<Map<String, int>> watchCurrentMonthlyBonuses() {
+    final currentUid = uid;
+    if (currentUid == null) return Stream.value(const <String, int>{});
+    return _firestore
+        .collection('uag_reward_bonuses')
+        .doc(currentUid)
+        .collection('months')
+        .doc(_currentMonthKey())
+        .snapshots()
+        .map((snapshot) {
+          final data = snapshot.data() ?? <String, dynamic>{};
+          return {
+            for (final action in UagBillableAction.values)
+              action.usageKey: (data[action.usageKey] as num?)?.toInt() ?? 0,
+          };
+        });
+  }
+
   Future<int?> _limitIncludingRewards(
     UagUserEntitlement entitlement,
     UagBillableAction action,
   ) async {
     final base = entitlement.limits.limitFor(action);
-    if (base == null ||
-        entitlement.effectiveTier != UagSubscriptionTier.free ||
-        (action != UagBillableAction.trade &&
-            action != UagBillableAction.matchmakingSearch)) {
+    if (base == null || !UagCommercialEconomy.usesMonthlyAllowance(action)) {
       return base;
     }
     final bonus = await _firestore
@@ -170,7 +203,7 @@ class UagEntitlementService {
         .doc(_currentMonthKey())
         .get();
     final extra = (bonus.data()?[action.usageKey] as num?)?.toInt() ?? 0;
-    return base + extra.clamp(0, 4).toInt();
+    return base + (extra < 0 ? 0 : extra);
   }
 
   Future<UagUsageGateResult> canUseAction(UagBillableAction action) async {
@@ -265,6 +298,31 @@ class UagEntitlementService {
         limit: limit,
         tier: entitlement.effectiveTier,
       );
+    });
+  }
+
+  Future<void> refundAction(UagBillableAction action) async {
+    final currentUid = uid;
+    if (currentUid == null) return;
+    final entitlement = await getMyEntitlement();
+    final limit = entitlement.limits.limitFor(action);
+    if (limit == null) return;
+
+    final docRef = _firestore
+        .collection('users')
+        .doc(currentUid)
+        .collection('usage_counters')
+        .doc(_periodKeyForAction(action));
+    await _firestore.runTransaction((transaction) async {
+      final snapshot = await transaction.get(docRef);
+      if (!snapshot.exists) return;
+      final data = snapshot.data() ?? const <String, dynamic>{};
+      final used = (data[action.usageKey] as num?)?.toInt() ?? 0;
+      if (used <= 0) return;
+      transaction.set(docRef, {
+        action.usageKey: used - 1,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
     });
   }
 

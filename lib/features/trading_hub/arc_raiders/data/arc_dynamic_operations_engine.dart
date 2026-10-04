@@ -142,6 +142,8 @@ class ArcDynamicOperationsEngine {
         ArcOperationRewardType.profileBanner => 60,
         ArcOperationRewardType.tradeSlot => 55,
         ArcOperationRewardType.matchmakingSlot => 50,
+        ArcOperationRewardType.intelUnlock => 55,
+        ArcOperationRewardType.raidPlannerRun => 55,
         ArcOperationRewardType.premiumTrial => 75,
         ArcOperationRewardType.operationCredit => 35,
         ArcOperationRewardType.intelXp => reward.amount,

@@ -3,17 +3,26 @@ import 'uag_subscription_tier.dart';
 
 enum UagRaiderMarkRedemptionTarget {
   tradeAction,
-  matchRaiderSearch;
+  matchRaiderSearch,
+  raidIntelligenceUnlock,
+  raidPlannerRun;
 
   UagBillableAction get action => switch (this) {
     UagRaiderMarkRedemptionTarget.tradeAction => UagBillableAction.trade,
     UagRaiderMarkRedemptionTarget.matchRaiderSearch =>
       UagBillableAction.matchmakingSearch,
+    UagRaiderMarkRedemptionTarget.raidIntelligenceUnlock =>
+      UagBillableAction.premiumIntelUnlock,
+    UagRaiderMarkRedemptionTarget.raidPlannerRun =>
+      UagBillableAction.raidCompanionPreset,
   };
 
   String get label => switch (this) {
     UagRaiderMarkRedemptionTarget.tradeAction => '+1 Trade Action',
     UagRaiderMarkRedemptionTarget.matchRaiderSearch => '+1 Match Raider Search',
+    UagRaiderMarkRedemptionTarget.raidIntelligenceUnlock =>
+      '+1 Raid Intelligence Unlock',
+    UagRaiderMarkRedemptionTarget.raidPlannerRun => '+1 Raid Planner Run',
   };
 }
 

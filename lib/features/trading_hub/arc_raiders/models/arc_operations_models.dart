@@ -49,6 +49,8 @@ enum ArcOperationRewardType {
   profileBanner,
   tradeSlot,
   matchmakingSlot,
+  intelUnlock,
+  raidPlannerRun,
   premiumTrial,
   operationCredit,
 }
@@ -892,6 +894,7 @@ enum ArcOperationTelemetryType {
   feedbackSubmitted,
   availabilitySaved,
   intelConfirmed,
+  raidPlannerRun,
   questCompleted,
   scrappyUpgradeCompleted,
   benchUpgradeCompleted,
@@ -931,6 +934,7 @@ class ArcOperationTelemetryEvent {
     ArcOperationTelemetryType.feedbackSubmitted => 'feedback_submitted',
     ArcOperationTelemetryType.availabilitySaved => 'availability_saved',
     ArcOperationTelemetryType.intelConfirmed => 'intel_confirmed',
+    ArcOperationTelemetryType.raidPlannerRun => 'raid_planner_run',
     ArcOperationTelemetryType.questCompleted => 'quest_completed',
     ArcOperationTelemetryType.scrappyUpgradeCompleted =>
       'scrappy_upgrade_completed',
@@ -966,6 +970,7 @@ class ArcOperationTelemetrySummary {
     this.feedbackSubmitted = 0,
     this.availabilitySaved = 0,
     this.intelConfirmed = 0,
+    this.raidPlannerRuns = 0,
     this.questsCompleted = 0,
     this.scrappyUpgrades = 0,
     this.benchUpgrades = 0,
@@ -985,6 +990,7 @@ class ArcOperationTelemetrySummary {
   final int feedbackSubmitted;
   final int availabilitySaved;
   final int intelConfirmed;
+  final int raidPlannerRuns;
   final int questsCompleted;
   final int scrappyUpgrades;
   final int benchUpgrades;
@@ -1004,6 +1010,7 @@ class ArcOperationTelemetrySummary {
       feedbackSubmitted +
       availabilitySaved +
       intelConfirmed +
+      raidPlannerRuns +
       questsCompleted +
       scrappyUpgrades +
       benchUpgrades;
@@ -1032,6 +1039,7 @@ class ArcOperationTelemetrySummary {
       feedbackSubmitted: read('feedbackSubmitted'),
       availabilitySaved: read('availabilitySaved'),
       intelConfirmed: read('intelConfirmed'),
+      raidPlannerRuns: read('raidPlannerRuns'),
       questsCompleted: read('questsCompleted'),
       scrappyUpgrades: read('scrappyUpgrades'),
       benchUpgrades: read('benchUpgrades'),

@@ -1304,6 +1304,28 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    match /uag_referral_action_rewards/{uid}/months/{month} {
+      allow read: if isOwner(uid) || isAdminOrDev();
+      allow write: if false;
+    }
+    match /uag_referral_action_redemptions/{id} {
+      allow read: if isSignedIn() && resource.data.uid == request.auth.uid;
+      allow write: if false;
+    }
+    match /uag_referral_action_qualification_receipts/{id} {
+      allow read, write: if false;
+    }
+
+    match /uag_operation_action_redemptions/{id} {
+      allow read: if isSignedIn() && resource.data.uid == request.auth.uid;
+      allow write: if false;
+    }
+
+    match /uag_operation_completion_redemptions/{id} {
+      allow read: if isSignedIn() && resource.data.uid == request.auth.uid;
+      allow write: if false;
+    }
+
     match /wall_of_legends/{docId} {
       allow read: if isSignedIn();
       allow create, update, delete: if isAdminOrDev();

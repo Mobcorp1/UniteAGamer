@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_subscription_tier.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/services/uag_entitlement_service.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_usage_gate.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/services/smart_trade_intelligence_service.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
@@ -28,6 +31,7 @@ class _SmartTradeIntelligencePanelState
     extends State<SmartTradeIntelligencePanel> {
   final SmartTradeIntelligenceService _service =
       SmartTradeIntelligenceService();
+  final UagEntitlementService _entitlements = UagEntitlementService();
 
   late Future<SmartTradeSuggestion> _future;
   bool _creatingListing = false;
@@ -105,6 +109,13 @@ class _SmartTradeIntelligencePanelState
       return;
     }
 
+    final allowed = await UagUsageGate.consumeOrShowUpgrade(
+      context,
+      action: UagBillableAction.trade,
+      service: _entitlements,
+    );
+    if (!allowed || !mounted) return;
+
     setState(() => _creatingOffer = true);
 
     try {
@@ -120,6 +131,7 @@ class _SmartTradeIntelligencePanelState
       ).showSnackBar(const SnackBar(content: Text('Smart offer created.')));
       await _refresh();
     } catch (_) {
+      await _entitlements.refundAction(UagBillableAction.trade);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Could not create smart offer. Try again.')),

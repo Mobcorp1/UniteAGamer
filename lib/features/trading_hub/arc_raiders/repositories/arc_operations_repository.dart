@@ -6,15 +6,23 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_co
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_reward_eligibility.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/services/uag_operation_action_reward_service.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_season_reset_models.dart';
 
 class ArcOperationsRepository {
-  ArcOperationsRepository({FirebaseFirestore? firestore, FirebaseAuth? auth})
-    : _firestore = firestore ?? FirebaseFirestore.instance,
-      _auth = auth ?? FirebaseAuth.instance;
+  ArcOperationsRepository({
+    FirebaseFirestore? firestore,
+    FirebaseAuth? auth,
+    UagOperationActionRewardService? operationActionRewards,
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _auth = auth ?? FirebaseAuth.instance,
+       _operationActionRewards =
+           operationActionRewards ??
+           UagOperationActionRewardService(auth: auth);
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
+  final UagOperationActionRewardService _operationActionRewards;
 
   String? get _uid => _auth.currentUser?.uid;
 
@@ -160,8 +168,20 @@ class ArcOperationsRepository {
     };
 
     final progressById = <String, ArcOperationProgress>{};
+    final taskById = <String, ArcOperationTask>{
+      for (final task in ArcOperationsSeedData.allOperations) task.id: task,
+    };
+    final currentSeasonId =
+        _string(seasonData['currentSeasonId']) ??
+        ArcSeasonResetPolicy.defaultCurrentSeasonId;
     for (final doc in progressSnapshot.docs) {
-      progressById[doc.id] = ArcOperationProgress.fromMap(doc.id, doc.data());
+      final data = doc.data();
+      final task = taskById[doc.id];
+      if (task != null && _isRecurringCadence(task.cadence)) {
+        final expectedPeriod = _periodKeyForTask(task, currentSeasonId);
+        if (_string(data['periodKey']) != expectedPeriod) continue;
+      }
+      progressById[doc.id] = ArcOperationProgress.fromMap(doc.id, data);
     }
 
     final inventory = inventorySnapshot.docs
@@ -196,19 +216,28 @@ class ArcOperationsRepository {
     if (uid == null) return;
 
     final seasonId = await _currentSeasonId(uid);
+    final periodKey = _periodKeyForTask(task, seasonId);
     final ref = _progressRef(uid).doc(task.id);
     await _firestore.runTransaction((transaction) async {
       final snapshot = await transaction.get(ref);
       final existing = snapshot.data() ?? const <String, dynamic>{};
-      final current = (existing['progress'] as num?)?.toInt() ?? task.progress;
-      if (existing['claimed'] == true) return;
+      final samePeriod = _string(existing['periodKey']) == periodKey;
+      final current = samePeriod
+          ? (existing['progress'] as num?)?.toInt() ?? task.progress
+          : task.progress;
+      final claimed = samePeriod && existing['claimed'] == true;
+      if (claimed) return;
       final next = (current + amount).clamp(0, task.target);
       transaction.set(ref, {
         'operationId': task.id,
         'seasonId': seasonId,
+        'periodKey': periodKey,
         'progress': next,
         'target': task.target,
-        'claimed': existing['claimed'] == true,
+        'claimed': false,
+        'commercialRewardClaimed': samePeriod
+            ? existing['commercialRewardClaimed'] == true
+            : false,
         'updatedAt': DateTime.now().toIso8601String(),
       }, SetOptions(merge: true));
     });
@@ -219,18 +248,26 @@ class ArcOperationsRepository {
     if (uid == null) return;
 
     final seasonId = await _currentSeasonId(uid);
+    final periodKey = _periodKeyForTask(task, seasonId);
     final progressRef = _progressRef(uid).doc(task.id);
     final summaryRef = _summaryRef(uid);
     final profileRef = _profileRef(uid);
+
+    final commercialActionReward = _operationActionRewards
+        .isCommercialRewardOperation(task.id);
+    if (commercialActionReward) {
+      await _operationActionRewards.claim(task.id);
+    }
 
     await _firestore.runTransaction((transaction) async {
       final progressSnapshot = await transaction.get(progressRef);
       final progressData = progressSnapshot.data() ?? const <String, dynamic>{};
       final progress =
           (progressData['progress'] as num?)?.toInt() ?? task.progress;
-      final alreadyClaimed = progressData['claimed'] == true;
+      final samePeriod = _string(progressData['periodKey']) == periodKey;
+      final alreadyClaimed = samePeriod && progressData['claimed'] == true;
 
-      if (progress < task.target || alreadyClaimed) return;
+      if (!samePeriod || progress < task.target || alreadyClaimed) return;
 
       var xpGain = 0;
       var creditsGain = 0;
@@ -245,9 +282,12 @@ class ArcOperationsRepository {
           case ArcOperationRewardType.operationCredit:
             creditsGain += reward.amount;
           case ArcOperationRewardType.tradeSlot:
-            tradeSlots += reward.amount;
+            if (!commercialActionReward) tradeSlots += reward.amount;
           case ArcOperationRewardType.matchmakingSlot:
-            matchSlots += reward.amount;
+            if (!commercialActionReward) matchSlots += reward.amount;
+          case ArcOperationRewardType.intelUnlock:
+          case ArcOperationRewardType.raidPlannerRun:
+            break;
           case ArcOperationRewardType.badge:
           case ArcOperationRewardType.title:
           case ArcOperationRewardType.profileFrame:
@@ -493,6 +533,8 @@ class ArcOperationsRepository {
       case ArcOperationRewardType.intelXp:
       case ArcOperationRewardType.tradeSlot:
       case ArcOperationRewardType.matchmakingSlot:
+      case ArcOperationRewardType.intelUnlock:
+      case ArcOperationRewardType.raidPlannerRun:
       case ArcOperationRewardType.premiumTrial:
       case ArcOperationRewardType.operationCredit:
         return const <String, dynamic>{};
@@ -591,14 +633,22 @@ class ArcOperationsRepository {
       final ref = _progressRef(uid).doc(task.id);
       final currentSnapshot = await ref.get();
       final existing = currentSnapshot.data() ?? const <String, dynamic>{};
-      final current = (existing['progress'] as num?)?.toInt() ?? task.progress;
+      final periodKey = _periodKeyForTask(task, seasonId);
+      final samePeriod = _string(existing['periodKey']) == periodKey;
+      final current = samePeriod
+          ? (existing['progress'] as num?)?.toInt() ?? task.progress
+          : task.progress;
       final next = (current + safeAmount).clamp(0, task.target).toInt();
       batch.set(ref, {
         'operationId': task.id,
         'seasonId': seasonId,
+        'periodKey': periodKey,
         'progress': next,
         'target': task.target,
-        'claimed': existing['claimed'] == true,
+        'claimed': samePeriod && existing['claimed'] == true,
+        'commercialRewardClaimed': samePeriod
+            ? existing['commercialRewardClaimed'] == true
+            : false,
         'lastTelemetryType': type.name,
         'updatedAt': now,
       }, SetOptions(merge: true));
@@ -737,6 +787,12 @@ class ArcOperationsRepository {
             : 'confirmation:$confirmationId',
       );
 
+  Future<void> recordRaidPlannerRun({String? runId}) => recordTelemetry(
+    ArcOperationTelemetryType.raidPlannerRun,
+    source: 'raid_planner',
+    idempotencyKey: runId == null ? null : 'raid-run:$runId',
+  );
+
   Future<void> recordQuestCompleted({required String questId}) =>
       recordTelemetry(
         ArcOperationTelemetryType.questCompleted,
@@ -788,6 +844,7 @@ class ArcOperationsRepository {
       ArcOperationTelemetryType.feedbackSubmitted => 'feedbackSubmitted',
       ArcOperationTelemetryType.availabilitySaved => 'availabilitySaved',
       ArcOperationTelemetryType.intelConfirmed => 'intelConfirmed',
+      ArcOperationTelemetryType.raidPlannerRun => 'raidPlannerRuns',
       ArcOperationTelemetryType.questCompleted => 'questsCompleted',
       ArcOperationTelemetryType.scrappyUpgradeCompleted => 'scrappyUpgrades',
       ArcOperationTelemetryType.benchUpgradeCompleted => 'benchUpgrades',
@@ -811,6 +868,7 @@ class ArcOperationsRepository {
       },
       ArcOperationTelemetryType.matchmakingCompleted => const <String>{
         'beta_match_raider',
+        'monthly_match_raider',
       },
       ArcOperationTelemetryType.blueprintReportSubmitted => const <String>{
         'beta_verified_intel',
@@ -818,7 +876,11 @@ class ArcOperationsRepository {
       ArcOperationTelemetryType.intelConfirmed => const <String>{
         'daily_verify_intel',
         'weekly_verified_intel',
+        'monthly_intel_network',
         'beta_verified_intel',
+      },
+      ArcOperationTelemetryType.raidPlannerRun => const <String>{
+        'monthly_raid_runner',
       },
       ArcOperationTelemetryType.loginRecorded => const <String>{
         'beta_return_days',
@@ -864,6 +926,31 @@ class ArcOperationsRepository {
     return allTasks
         .where((task) => ids.contains(task.id))
         .toList(growable: false);
+  }
+
+  bool _isRecurringCadence(ArcOperationCadence cadence) =>
+      cadence == ArcOperationCadence.daily ||
+      cadence == ArcOperationCadence.weekly ||
+      cadence == ArcOperationCadence.monthly;
+
+  String _periodKeyForTask(
+    ArcOperationTask task,
+    String seasonId, {
+    DateTime? at,
+  }) {
+    final now = (at ?? DateTime.now()).toUtc();
+    String two(int value) => value.toString().padLeft(2, '0');
+    return switch (task.cadence) {
+      ArcOperationCadence.daily =>
+        '${now.year}-${two(now.month)}-${two(now.day)}',
+      ArcOperationCadence.weekly => () {
+        final monday = now.subtract(Duration(days: now.weekday - 1));
+        return '${monday.year}-W-${two(monday.month)}-${two(monday.day)}';
+      }(),
+      ArcOperationCadence.monthly => '${now.year}-M${two(now.month)}',
+      ArcOperationCadence.beta => 'beta:$seasonId',
+      ArcOperationCadence.lifetime => 'lifetime',
+    };
   }
 
   String _telemetryEventId(ArcOperationTelemetryType type, String key) {

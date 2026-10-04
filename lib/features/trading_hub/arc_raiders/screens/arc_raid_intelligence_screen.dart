@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_subscription_tier.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_usage_gate.dart';
 import '../widgets/arc_raid_location_picker.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_frozen_trail_preview_screen.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
@@ -1702,6 +1704,11 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
         _showSnack('No current objective stops are available for this map.');
         return;
       }
+      final allowed = await UagUsageGate.consumeOrShowUpgrade(
+        context,
+        action: UagBillableAction.premiumIntelUnlock,
+      );
+      if (!allowed || !mounted) return;
       setState(() {
         _routePlan = null;
         _objectiveOnlyStops = objectiveStops;
@@ -1735,6 +1742,11 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       );
       return;
     }
+    final allowed = await UagUsageGate.consumeOrShowUpgrade(
+      context,
+      action: UagBillableAction.premiumIntelUnlock,
+    );
+    if (!allowed || !mounted) return;
     setState(() {
       _routePlan = route;
       _objectiveOnlyStops = const <ArcRaidIntelCluster>[];

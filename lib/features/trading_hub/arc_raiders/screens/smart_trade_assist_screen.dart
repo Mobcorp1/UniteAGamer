@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_subscription_tier.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/services/uag_entitlement_service.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_usage_gate.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_bottom_action_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_reference_visuals.dart';
@@ -30,6 +33,7 @@ class SmartTradeAssistScreen extends StatefulWidget {
 
 class _SmartTradeAssistScreenState extends State<SmartTradeAssistScreen> {
   final TradingRepository _repository = TradingRepository();
+  final UagEntitlementService _entitlements = UagEntitlementService();
   final SmartTradeAssistEngine _engine = const SmartTradeAssistEngine();
   final ArcTradeIntelligenceEngine _tradeIntelligenceEngine =
       const ArcTradeIntelligenceEngine();
@@ -310,6 +314,13 @@ class _SmartTradeAssistScreenState extends State<SmartTradeAssistScreen> {
       return;
     }
 
+    final allowed = await UagUsageGate.consumeOrShowUpgrade(
+      context,
+      action: UagBillableAction.trade,
+      service: _entitlements,
+    );
+    if (!allowed || !mounted) return;
+
     setState(() => _busyKeys.add(key));
 
     final duplicateLabel = _labelForBlueprint(opportunity.duplicateBlueprintId);
@@ -340,6 +351,7 @@ class _SmartTradeAssistScreenState extends State<SmartTradeAssistScreen> {
 
       _showSnack('Offer sent for $duplicateLabel.');
     } catch (_) {
+      await _entitlements.refundAction(UagBillableAction.trade);
       if (!mounted) {
         return;
       }

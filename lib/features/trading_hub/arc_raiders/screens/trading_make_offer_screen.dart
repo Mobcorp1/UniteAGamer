@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_subscription_tier.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/services/uag_entitlement_service.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_usage_gate.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_trade_intelligence_engine.dart';
@@ -25,6 +28,7 @@ class TradingMakeOfferScreen extends StatefulWidget {
 class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
   final _formKey = GlobalKey<FormState>();
   final TradingRepository _repository = TradingRepository();
+  final UagEntitlementService _entitlements = UagEntitlementService();
   final ArcTradeIntelligenceEngine _tradeIntelligenceEngine =
       const ArcTradeIntelligenceEngine();
 
@@ -621,6 +625,12 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
 
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
+    final allowed = await UagUsageGate.consumeOrShowUpgrade(
+      context,
+      action: UagBillableAction.trade,
+      service: _entitlements,
+    );
+    if (!allowed || !mounted) return;
 
     setState(() {
       _isSaving = true;
@@ -675,6 +685,7 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
 
       navigator.pop();
     } catch (_) {
+      await _entitlements.refundAction(UagBillableAction.trade);
       if (!mounted) return;
 
       setState(() {

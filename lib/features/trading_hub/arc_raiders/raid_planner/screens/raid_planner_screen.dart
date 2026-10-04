@@ -1,6 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_subscription_tier.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/services/uag_entitlement_service.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_usage_gate.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_intelligence_workspace_bar.dart';
@@ -21,6 +24,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planne
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_hunt_targets_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_trader_profile_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_operations_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_command_centre_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/collapsible_section_card.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
@@ -53,6 +57,9 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
       ArcBlueprintRepository();
   late final ArcTraderProfileRepository _profileRepository =
       ArcTraderProfileRepository();
+  late final UagEntitlementService _entitlements = UagEntitlementService();
+  late final ArcOperationsRepository _operationsRepository =
+      ArcOperationsRepository();
   late final TextEditingController _eventFinderController;
   String _eventFinderQuery = '';
   ArcServerRegion _selectedServerRegion = ArcServerRegion.europe;
@@ -675,11 +682,31 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
   }
 
   Future<void> _refreshRegionalConditions() async {
-    final next = ArcRegionalMapConditionsService.load(forceRefresh: true);
-    setState(() {
-      _regionalConditionsFuture = next;
-    });
-    await next;
+    final allowed = await UagUsageGate.consumeOrShowUpgrade(
+      context,
+      action: UagBillableAction.raidCompanionPreset,
+      service: _entitlements,
+    );
+    if (!allowed || !mounted) return;
+
+    try {
+      final next = ArcRegionalMapConditionsService.load(forceRefresh: true);
+      setState(() {
+        _regionalConditionsFuture = next;
+      });
+      await next;
+      await _operationsRepository.recordRaidPlannerRun();
+    } catch (_) {
+      await _entitlements.refundAction(UagBillableAction.raidCompanionPreset);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Raid Planner refresh failed. Your monthly run was restored.',
+          ),
+        ),
+      );
+    }
   }
 
   String _regionalStatusText(

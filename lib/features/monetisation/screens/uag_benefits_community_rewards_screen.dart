@@ -10,6 +10,7 @@ import 'uag_creator_programme_screen.dart';
 import '../widgets/uag_community_growth_live_panel.dart';
 import '../widgets/uag_programme_section.dart';
 import '../widgets/uag_raider_mark_panel.dart';
+import '../widgets/uag_referral_challenge_panel.dart';
 import '../widgets/uag_refer_a_raider_panel.dart';
 import '../widgets/uag_referral_progress_panel.dart';
 import '../widgets/uag_referral_reward_locker_panel.dart';
@@ -41,6 +42,7 @@ class UagBenefitsCommunityRewardsScreen extends StatelessWidget {
             ),
           ),
           const UagRaiderMarkPanel(),
+          const UagReferralChallengePanel(),
           LayoutBuilder(
             builder: (context, constraints) {
               final columns = constraints.maxWidth >= 760 ? 3 : 1;

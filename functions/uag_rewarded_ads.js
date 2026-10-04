@@ -2,7 +2,7 @@
 
 const crypto = require('node:crypto');
 const { COMMERCIAL_ECONOMY } = require('./uag_commercial_economy');
-const POLICY = COMMERCIAL_ECONOMY.raiderMarks;
+const POLICY = COMMERCIAL_ECONOMY.hubCredits;
 const LIVE_UNIT = 'ca-app-pub-2994575443987525/3866328391';
 const TEST_UNIT = 'ca-app-pub-3940256099942544/5224354917';
 const PLACEMENT = 'arc_free_intel_refresh';
@@ -59,7 +59,7 @@ function normalizedWallet(wallet = {}, now = Date.now()) {
   };
 }
 function assertCanEarn(wallet, now) {
-  if (wallet.balance >= POLICY.walletCap) throw new RewardError('Your Raider Mark wallet is full.', 409);
+  if (wallet.balance >= POLICY.walletCap) throw new RewardError('Your Hub Credit wallet is full. Spend 5 HC to keep earning.', 409);
   if (wallet.adsToday >= POLICY.maxRewardedAdsPerDay) throw new RewardError('Daily reward limit reached.', 429);
   if (wallet.adsThisMonth >= POLICY.maxRewardedAdsPerMonth) throw new RewardError('Monthly reward limit reached.', 429);
   if (wallet.lastVerifiedAt && now - wallet.lastVerifiedAt < POLICY.minimumIntervalMinutes * 60000) {
@@ -162,7 +162,7 @@ function createRewardHandlers({ db, auth, now = Date.now, keyProvider = googleKe
     return { cancelled: true };
   });
   const redeem = api(async (uid, body) => {
-    if (!['trades', 'matchmakingSearches'].includes(body.action) || !/^[a-f0-9]{32}$/.test(body.requestId || '')) throw new RewardError('Invalid redemption.');
+    if (!['trades', 'matchmakingSearches', 'premiumIntelUnlocks', 'raidCompanionPresets'].includes(body.action) || !/^[a-f0-9]{32}$/.test(body.requestId || '')) throw new RewardError('Invalid redemption.');
     const time = now(), wr = walletRef(uid, false), br = bonusRef(uid, time);
     const receipt = db.collection('uag_reward_redemptions').doc(`${uid}_${body.requestId}`);
     return db.runTransaction(async tx => {
@@ -175,7 +175,7 @@ function createRewardHandlers({ db, auth, now = Date.now, keyProvider = googleKe
       }
       if (!user.exists || effectiveTier(user.data(), time) !== 'free') throw new RewardError('Rewards are available to Free Raiders only.', 403);
       const wallet = normalizedWallet(walletSnap.data(), time);
-      if (wallet.balance < POLICY.marksPerBonusAction) throw new RewardError('You need 5 Raider Marks to redeem.', 409);
+      if (wallet.balance < POLICY.marksPerBonusAction) throw new RewardError('You need 5 Hub Credits to redeem.', 409);
       if (wallet.redemptionsThisMonth >= POLICY.maxBonusRedemptionsPerMonth) throw new RewardError('Monthly redemption limit reached.', 429);
       tx.set(wr, { ...wallet, balance: wallet.balance - POLICY.marksPerBonusAction,
         redemptionsThisMonth: wallet.redemptionsThisMonth + 1 }, { merge: true });

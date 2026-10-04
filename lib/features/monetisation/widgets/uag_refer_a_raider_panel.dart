@@ -6,6 +6,7 @@ import 'package:uag_arc_raiders_hub/widgets/arc_tactical_page.dart';
 import '../models/uag_community_referral_policy.dart';
 import '../models/uag_referral_commission_policy.dart';
 import '../models/uag_referral_terms_policy.dart';
+import '../screens/monetisation_screen.dart';
 import '../repositories/uag_community_referral_repository.dart';
 
 class UagReferARaiderPanel extends StatefulWidget {
@@ -42,7 +43,9 @@ class _UagReferARaiderPanelState extends State<UagReferARaiderPanel> {
     } on StateError catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not create referral link. Try again.')),
+        const SnackBar(
+          content: Text('Could not create referral link. Try again.'),
+        ),
       );
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -59,14 +62,31 @@ class _UagReferARaiderPanelState extends State<UagReferARaiderPanel> {
         final pending = (data['pendingReferrals'] as num?)?.toInt() ?? 0;
         final activePaid = (data['activePaidReferrals'] as num?)?.toInt() ?? 0;
         final tier = (data['_subscriptionTier'] ?? '').toString().toLowerCase();
-        final status = (data['_subscriptionStatus'] ?? '').toString().toLowerCase();
-        final premiumActive = tier == 'premium' &&
-            const {'active', 'trialing', 'trial', 'paid'}.contains(status);
-        final baseRate = UagReferralCommissionPolicy.baseRatePercent(activePaid);
-        final effectiveRate = UagReferralCommissionPolicy.effectiveRatePercent(
-          activePaidReferrals: activePaid,
-          premiumActive: premiumActive,
+        final status = (data['_subscriptionStatus'] ?? '')
+            .toString()
+            .toLowerCase();
+        final activeStatus = const {
+          'active',
+          'trialing',
+          'trial',
+          'paid',
+        }.contains(status);
+        final premiumActive = tier == 'premium' && activeStatus;
+        final essentialActive = tier == 'essential' && activeStatus;
+        final cashCommissionUnlocked = premiumActive || essentialActive;
+        final baseRate = UagReferralCommissionPolicy.baseRatePercent(
+          activePaid,
         );
+        final effectiveRate = cashCommissionUnlocked
+            ? UagReferralCommissionPolicy.effectiveRatePercent(
+                activePaidReferrals: activePaid,
+                premiumActive: premiumActive,
+              )
+            : 0.0;
+        final projectedEssentialRate = baseRate > 0 ? baseRate : 5.0;
+        final projectedPremiumRate =
+            projectedEssentialRate +
+            UagReferralCommissionPolicy.premiumBoostPercentagePoints;
         final nextBand = UagReferralCommissionPolicy.nextBand(activePaid);
         final nextReward = UagCommunityReferralPolicy.nextMilestone(validated);
 
@@ -77,8 +97,9 @@ class _UagReferARaiderPanelState extends State<UagReferARaiderPanel> {
             return ArcTacticalPanel(
               icon: Icons.person_add_alt_1_rounded,
               title: 'REFER & EARN',
-              subtitle:
-                  'Share UAG. Your Raider gets 10% off their first paid purchase; you earn recurring commission when paid referrals stay active.',
+              subtitle: cashCommissionUnlocked
+                  ? 'Share UAG. Your Raider gets 10% off their first paid purchase; active paid referrals can earn recurring commission.'
+                  : 'Share UAG. Free Raiders earn gameplay referral rewards. Cash referral commission unlocks with Essential or Premium.',
               accent: ArcUiTokens.secondaryAccent,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -91,33 +112,47 @@ class _UagReferARaiderPanelState extends State<UagReferARaiderPanel> {
                       _Stat(label: 'VALIDATED', value: '$validated'),
                       _Stat(label: 'PENDING', value: '$pending'),
                       _Stat(
-                        label: 'YOUR RATE',
-                        value: effectiveRate <= 0
-                            ? '5% from first paid referral'
-                            : '${_pct(effectiveRate)}%',
-                        accent: ArcUiTokens.secondaryAccent,
+                        label: 'YOUR CASH RATE',
+                        value: cashCommissionUnlocked
+                            ? effectiveRate <= 0
+                                  ? 'Starts at 5%'
+                                  : '${_pct(effectiveRate)}%'
+                            : 'LOCKED • 0%',
+                        accent: cashCommissionUnlocked
+                            ? ArcUiTokens.secondaryAccent
+                            : ArcUiTokens.textTertiary,
                       ),
                     ],
                   ),
                   const SizedBox(height: ArcUiTokens.gapM),
                   Text(
-                    premiumActive && baseRate > 0
+                    !cashCommissionUnlocked
+                        ? activePaid > 0
+                              ? 'Cash commission is locked on Free. With your current $activePaid active paid referral${activePaid == 1 ? '' : 's'}, Essential would unlock ${_pct(projectedEssentialRate)}% recurring commission and Premium ${_pct(projectedPremiumRate)}%.'
+                              : 'Cash commission is locked on Free. Essential starts at 5% recurring commission from the first active paid referral; Premium starts at 7.5%. The base ladder rises to 15%, with Premium adding +2.5 percentage points.'
+                        : premiumActive && baseRate > 0
                         ? 'Premium boost active: ${_pct(baseRate)}% base + 2.5 percentage points.'
                         : 'Commission ladder: 5% → 7.5% → 10% → 12.5% → 15%. Premium adds +2.5 percentage points while active.',
-                    style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
+                    style: ArcUiTokens.bodySmall(
+                      color: ArcUiTokens.textSecondary,
+                    ),
                   ),
-                  if (nextBand != null) ...[
+                  if (cashCommissionUnlocked && nextBand != null) ...[
                     const SizedBox(height: ArcUiTokens.gapXS),
                     Text(
                       'Next cash rate at ${nextBand.minActivePaidReferrals} active paid referrals: ${_pct(nextBand.baseRatePercent)}% base.',
-                      style: ArcUiTokens.metadata(color: ArcUiTokens.primaryAccent),
+                      style: ArcUiTokens.metadata(
+                        color: ArcUiTokens.primaryAccent,
+                      ),
                     ),
                   ],
                   if (nextReward != null) ...[
                     const SizedBox(height: ArcUiTokens.gapXS),
                     Text(
                       'Next community reward: ${nextReward.validatedReferrals} validated referrals • ${nextReward.label}.',
-                      style: ArcUiTokens.metadata(color: ArcUiTokens.textTertiary),
+                      style: ArcUiTokens.metadata(
+                        color: ArcUiTokens.textTertiary,
+                      ),
                     ),
                   ],
                   if (!termsAccepted) ...[
@@ -128,7 +163,8 @@ class _UagReferARaiderPanelState extends State<UagReferARaiderPanel> {
                       value: _termsChecked,
                       onChanged: _busy
                           ? null
-                          : (value) => setState(() => _termsChecked = value == true),
+                          : (value) =>
+                                setState(() => _termsChecked = value == true),
                       controlAffinity: ListTileControlAffinity.leading,
                       activeColor: ArcUiTokens.secondaryAccent,
                       title: Text(
@@ -145,6 +181,19 @@ class _UagReferARaiderPanelState extends State<UagReferARaiderPanel> {
                     Text(
                       'Referral terms accepted • ${UagReferralTermsPolicy.version}',
                       style: ArcUiTokens.metadata(color: ArcUiTokens.success),
+                    ),
+                  ],
+                  if (!cashCommissionUnlocked) ...[
+                    const SizedBox(height: ArcUiTokens.gapM),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => Navigator.of(
+                          context,
+                        ).pushNamed(MonetisationScreen.routeName),
+                        icon: const Icon(Icons.lock_open_rounded),
+                        label: const Text('UNLOCK REFERRAL EARNINGS'),
+                      ),
                     ),
                   ],
                   const SizedBox(height: ArcUiTokens.gapM),
@@ -193,7 +242,10 @@ class _Stat extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: ArcUiTokens.label(color: ArcUiTokens.textTertiary)),
+          Text(
+            label,
+            style: ArcUiTokens.label(color: ArcUiTokens.textTertiary),
+          ),
           const SizedBox(height: 3),
           Text(value, style: ArcUiTokens.numeric(fontSize: 16, color: color)),
         ],
@@ -202,5 +254,6 @@ class _Stat extends StatelessWidget {
   }
 }
 
-String _pct(double value) =>
-    value == value.roundToDouble() ? value.toStringAsFixed(0) : value.toStringAsFixed(1);
+String _pct(double value) => value == value.roundToDouble()
+    ? value.toStringAsFixed(0)
+    : value.toStringAsFixed(1);

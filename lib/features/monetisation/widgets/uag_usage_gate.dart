@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 
+import '../models/uag_commercial_economy.dart';
 import '../models/uag_match_intelligence_copy.dart';
 import '../models/uag_subscription_tier.dart';
 import '../screens/monetisation_screen.dart';
@@ -46,8 +47,7 @@ class UagUsageGate {
                 _upgradeBody(action, result.reason),
                 style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
               ),
-              if (action == UagBillableAction.trade ||
-                  action == UagBillableAction.matchmakingSearch) ...[
+              if (UagCommercialEconomy.usesMonthlyAllowance(action)) ...[
                 const SizedBox(height: 12),
                 const UagRaiderMarkPanel(),
               ],

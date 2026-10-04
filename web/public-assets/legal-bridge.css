@@ -1,0 +1,5 @@
+/* Preserve legal text and its existing content layout; share the public navigation. */
+.site-header .brand,.site-footer .brand{margin:0;color:var(--text);font-weight:600;letter-spacing:0;display:inline-flex}
+.site-footer{margin-top:56px;font-size:.77rem}.site-footer p{margin:0 0 .55rem}.site-header nav a.button{color:#021014}.site-footer .footer-top .brand{margin-bottom:20px}
+.shell>.brand{white-space:normal;font-size:.82rem}.shell>.hero{padding:28px}.shell h1{color:var(--text)}
+@media(max-width:600px){.shell>.hero{padding:18px}}

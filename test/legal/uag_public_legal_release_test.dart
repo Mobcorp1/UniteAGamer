@@ -39,7 +39,9 @@ void main() {
       expect(firebase, contains('"source": "/support"'));
 
       final privacyIndex = firebase.indexOf('"source": "/privacy"');
-      final spaFallback = firebase.indexOf('"source": "**"');
+      final spaFallback = firebase.indexOf(
+        '"source": "!/@(guides|about|public-assets){,/**}"',
+      );
       expect(privacyIndex, greaterThanOrEqualTo(0));
       expect(spaFallback, greaterThan(privacyIndex));
     },

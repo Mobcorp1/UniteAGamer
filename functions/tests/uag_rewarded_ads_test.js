@@ -163,5 +163,5 @@ test('redemption protects paid lanes, 4/month cap and supported actions', async 
   assert.equal((await invoke(f.handlers.redeem, body)).status, 429);
   f.db.docs.set('users/u', { isAdmin: true });
   assert.equal((await invoke(f.handlers.redeem, body)).status, 403);
-  assert.equal((await invoke(f.handlers.redeem, { ...body, action: 'premiumIntelUnlocks' })).status, 400);
+  assert.equal((await invoke(f.handlers.redeem, { ...body, action: 'unsupportedAction' })).status, 400);
 });

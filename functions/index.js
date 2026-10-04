@@ -20,6 +20,14 @@ const {
   giftRecipientEligible,
   timestampMillis: commercialTimestampMillis,
 } = require('./uag_commercial_economy');
+const {
+  incrementQualifiedReferral,
+  createReferralActionRewardHandler,
+} = require('./uag_referral_action_rewards');
+const {
+  createOperationActionRewardHandler,
+  createOperationCompletionRewardHandler,
+} = require('./uag_operation_action_rewards');
 
 admin.initializeApp();
 
@@ -2173,6 +2181,11 @@ async function handleInvoicePaid(invoice) {
 }
 
 
+function formatGbpPence(value) {
+  const pence = Math.max(0, Math.round(Number(value || 0)));
+  return `£${(pence / 100).toFixed(2)}`;
+}
+
 function communityBaseCommissionRate(activePaidReferrals) {
   const count = Number(activePaidReferrals || 0);
   if (count >= 100) return 15;
@@ -2183,7 +2196,7 @@ function communityBaseCommissionRate(activePaidReferrals) {
   return 0;
 }
 
-function premiumReferralBoost(userData) {
+function communityCashCommissionTier(userData) {
   const monetisation = userData?.monetisation || {};
   const tier = normalizeString(
     monetisation.tier || userData?.subscriptionTier || userData?.tier,
@@ -2191,9 +2204,18 @@ function premiumReferralBoost(userData) {
   const status = normalizeString(
     monetisation.subscriptionStatus || userData?.subscriptionStatus,
   ).toLowerCase();
-  return tier === 'premium' && ['active', 'trialing', 'trial', 'paid'].includes(status)
-    ? 2.5
-    : 0;
+  if (!['active', 'trialing', 'trial', 'paid'].includes(status)) return 'free';
+  if (['premium', 'elite', 'elite_raider', 'elite-raider'].includes(tier)) {
+    return 'premium';
+  }
+  if (['essential', 'active_raider', 'active-raider'].includes(tier)) {
+    return 'essential';
+  }
+  return 'free';
+}
+
+function premiumReferralBoost(userData) {
+  return communityCashCommissionTier(userData) === 'premium' ? 2.5 : 0;
 }
 
 async function authoritativeCommunityCommissionRate(referrerUid) {
@@ -2205,6 +2227,8 @@ async function authoritativeCommunityCommissionRate(referrerUid) {
       .get(),
   ]);
   const data = userSnap.data() || {};
+  const cashTier = communityCashCommissionTier(data);
+  if (cashTier === 'free') return 0;
   const activePaidReferrals = referralStateSnap.docs
     .filter((doc) => truthy(doc.data()?.active))
     .length;
@@ -2227,18 +2251,29 @@ async function syncCommunityPaidReferralSubscription({
     .collection('uag_community_referral_paid_subscriptions')
     .doc(subscription.id);
   const referrerRef = db.collection('users').doc(referrerUid);
+  let firstPaidActivation = false;
 
   await db.runTransaction(async (transaction) => {
     const existing = await transaction.get(stateRef);
     const previousActive = existing.exists && truthy(existing.data()?.active);
     const delta = active === previousActive ? 0 : (active ? 1 : -1);
+    firstPaidActivation = active && !truthy(existing.data()?.everActivated);
 
     transaction.set(stateRef, {
       subscriptionId: subscription.id,
       referrerUid,
       referredUid,
       tier: plan.tier,
+      planId: normalizeString(subscription.metadata?.planId),
+      billingPeriod: plan.billingPeriod,
+      pricePence: Number(plan.pricePence || 0),
       active,
+      everActivated: truthy(existing.data()?.everActivated) || active,
+      firstActivatedAt: truthy(existing.data()?.everActivated)
+        ? existing.data()?.firstActivatedAt || null
+        : active
+          ? admin.firestore.FieldValue.serverTimestamp()
+          : null,
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       createdAt: existing.exists
         ? existing.data()?.createdAt || admin.firestore.FieldValue.serverTimestamp()
@@ -2254,7 +2289,58 @@ async function syncCommunityPaidReferralSubscription({
       }, { merge: true });
     }
   });
+
+  if (!firstPaidActivation) return;
+
+  await incrementQualifiedReferral({
+    db,
+    admin,
+    uid: referrerUid,
+    kind: 'paid',
+    sourceKey: `paid-referral:${referredUid}`,
+  });
+
+  const referrerSnap = await referrerRef.get();
+  if (!referrerSnap.exists) return;
+  const referrerData = referrerSnap.data() || {};
+  const activePaidReferrals = Number(referrerData.communityReferral?.activePaidReferrals || 0);
+  const baseRate = communityBaseCommissionRate(activePaidReferrals);
+  const premiumRate = baseRate > 0 ? baseRate + 2.5 : 0;
+  const cashTier = communityCashCommissionTier(referrerData);
+  const currentRate = cashTier === 'free'
+    ? 0
+    : baseRate + (cashTier === 'premium' ? 2.5 : 0);
+  const notificationId = `community_paid_referral_${referrerUid}_${referredUid}`;
+  const notificationRef = db.collection('trading_notifications').doc(notificationId);
+  const planPricePence = Math.max(0, Number(plan.pricePence || 0));
+  const essentialPotentialPence = Math.round(planPricePence * (baseRate / 100));
+  const premiumPotentialPence = Math.round(planPricePence * (premiumRate / 100));
+  const billingLabel = plan.billingPeriod === 'yearly'
+    ? 'this annual payment'
+    : 'this monthly renewal';
+  const freeBody = baseRate > 0
+    ? `A referral just became a paid Raider. Free accounts earn gameplay referral rewards, not cash commission. On ${billingLabel}, Essential could have earned about ${formatGbpPence(essentialPotentialPence)} at your current ${baseRate}% band; Premium about ${formatGbpPence(premiumPotentialPence)} at ${premiumRate}%, before payment fees, refunds or adjustments.`
+    : 'A referral just became a paid Raider. Free accounts earn gameplay referral rewards, not cash commission. Upgrade to Essential or Premium to unlock recurring referral commission.';
+  const paidBody = `A referral just became a paid Raider. Your current community referral commission rate is ${currentRate}%. Their active subscription also counts toward your monthly paid-referral challenge.`;
+  await notificationRef.set({
+    id: notificationId,
+    targetUid: referrerUid,
+    actorUid: 'system',
+    title: 'YOUR REFERRAL JUST UPGRADED',
+    body: cashTier === 'free' ? freeBody : paidBody,
+    type: 'subscription_event',
+    route: '/monetisation',
+    deepLink: '/monetisation',
+    entityId: referredUid,
+    read: false,
+    archived: false,
+    deleted: false,
+    priority: 'normal',
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  }, { merge: true });
 }
+
 
 function creatorBaseCommissionRate(points) {
   const value = Number(points || 0);
@@ -2628,12 +2714,16 @@ async function validateCommunityReferralAuthoritatively({
 
   const referrerRef = db.collection('users').doc(referrerUid);
   let newlyAwarded = [];
+  let validatedNow = false;
+  let qualifiesFreeGameplayReferral = false;
 
   await db.runTransaction(async (transaction) => {
-    const [freshAttribution, referrerSnap, freshQueue] = await Promise.all([
+    const referredRef = db.collection('users').doc(referredUid);
+    const [freshAttribution, referrerSnap, freshQueue, referredSnap] = await Promise.all([
       transaction.get(attributionRef),
       transaction.get(referrerRef),
       transaction.get(queueRef),
+      transaction.get(referredRef),
     ]);
 
     if (
@@ -2690,7 +2780,20 @@ async function validateCommunityReferralAuthoritatively({
       completedAt: admin.firestore.FieldValue.serverTimestamp(),
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     }, { merge: true });
+    validatedNow = true;
+    qualifiesFreeGameplayReferral =
+      !referredSnap.exists || communityCashCommissionTier(referredSnap.data() || {}) === 'free';
   });
+
+  if (validatedNow && qualifiesFreeGameplayReferral) {
+    await incrementQualifiedReferral({
+      db,
+      admin,
+      uid: referrerUid,
+      kind: 'free',
+      sourceKey: `validated-referral:${referredUid}`,
+    });
+  }
 
   for (const threshold of newlyAwarded) {
     const reward = referralMilestoneReward(threshold, referrerUid);
@@ -4666,3 +4769,30 @@ exports.prepareUagRewardedAd = onRequest(uagRewardOptions, uagRewardHandlers.pre
 exports.cancelUagRewardedAd = onRequest(uagRewardOptions, uagRewardHandlers.cancel);
 exports.redeemUagRaiderMarks = onRequest(uagRewardOptions, uagRewardHandlers.redeem);
 exports.verifyUagRewardedAd = onRequest(uagRewardOptions, uagRewardHandlers.ssv);
+const referralActionRewardHandler = createReferralActionRewardHandler({
+  db,
+  auth: admin.auth(),
+  admin,
+});
+exports.redeemUagReferralActionReward = onRequest(
+  uagRewardOptions,
+  referralActionRewardHandler,
+);
+const operationActionRewardHandler = createOperationActionRewardHandler({
+  db,
+  auth: admin.auth(),
+  admin,
+});
+exports.redeemUagOperationActionReward = onRequest(
+  uagRewardOptions,
+  operationActionRewardHandler,
+);
+const operationCompletionRewardHandler = createOperationCompletionRewardHandler({
+  db,
+  auth: admin.auth(),
+  admin,
+});
+exports.redeemUagOperationCompletionReward = onRequest(
+  uagRewardOptions,
+  operationCompletionRewardHandler,
+);

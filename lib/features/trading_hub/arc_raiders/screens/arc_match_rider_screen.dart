@@ -5,6 +5,7 @@ import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_subscriptio
 import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_user_entitlement.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/screens/monetisation_screen.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/services/uag_entitlement_service.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_usage_gate.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_player_archetype_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_player_session_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
@@ -193,6 +194,13 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
 
     if (shouldSend != true || !mounted || _profile == null) return;
 
+    final allowed = await UagUsageGate.consumeOrShowUpgrade(
+      context,
+      action: UagBillableAction.matchmakingSearch,
+      service: _entitlementService,
+    );
+    if (!allowed || !mounted) return;
+
     try {
       await _repository.sendInvite(
         sender: _profile!,
@@ -204,6 +212,9 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
         SnackBar(content: Text('Invite sent to ${candidate.profile.title}.')),
       );
     } catch (_) {
+      await _entitlementService.refundAction(
+        UagBillableAction.matchmakingSearch,
+      );
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,

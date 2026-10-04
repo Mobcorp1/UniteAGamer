@@ -69,7 +69,7 @@ class _UagRaiderMarkPanelState extends State<UagRaiderMarkPanel> {
     final id = _retryIds.putIfAbsent(target, UagRaiderMarkService.newRequestId);
     setState(() {
       _busy = true;
-      _message = 'Redeeming Raider Marks…';
+      _message = 'Redeeming Hub Credits…';
     });
     try {
       await _marks.redeem(target, id);
@@ -151,17 +151,17 @@ class _UagRaiderMarkPanelState extends State<UagRaiderMarkPanel> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'RAIDER MARKS',
+                  'HUB CREDITS',
                   style: ArcUiTokens.sectionTitle(fontSize: 20),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '${wallet.balance} / 10 marks',
+                  '${wallet.balance} / ${UagRaiderMarkPolicy.walletCap} HC',
                   style: ArcUiTokens.cardTitle(fontSize: 18),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Complete an optional ad to earn 1 Raider Mark. Spend 5 marks on one extra Trade Action or Match Raider Search. Marks carry over.',
+                  'Complete an optional ad to earn 1 Hub Credit. Spend 5 HC on one extra Trade, Match Raider search, Raid Intelligence unlock or Raid Planner run. Hub Credits carry over. When your 10 HC wallet is full, spend credits before earning more.',
                   style: ArcUiTokens.body(fontSize: 13),
                 ),
                 const SizedBox(height: 8),
@@ -194,7 +194,7 @@ class _UagRaiderMarkPanelState extends State<UagRaiderMarkPanel> {
                     _busy
                         ? 'Please wait…'
                         : live
-                        ? 'Watch ad • earn 1 Raider Mark'
+                        ? 'Watch ad • earn 1 Hub Credit'
                         : 'Preview Google test ad',
                   ),
                 ),
@@ -202,7 +202,7 @@ class _UagRaiderMarkPanelState extends State<UagRaiderMarkPanel> {
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
-                      'Test ads do not add Raider Marks.',
+                      'Test ads do not add Hub Credits.',
                       style: ArcUiTokens.bodySmall(),
                     ),
                   ),
@@ -221,7 +221,7 @@ class _UagRaiderMarkPanelState extends State<UagRaiderMarkPanel> {
                         child: Text(
                           _retryIds.containsKey(target)
                               ? 'Retry ${target.label}'
-                              : '5 marks • ${target.label}',
+                              : '5 HC • ${target.label}',
                         ),
                       ),
                   ],

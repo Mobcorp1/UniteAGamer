@@ -27,8 +27,8 @@
         "destination": "/support.html"
       },
       {
-        "source": "**",
-        "destination": "/index.html"
+        "source": "!/@(guides|about|public-assets){,/**}",
+        "destination": "/app.html"
       }
     ],
     "headers": [
@@ -114,6 +114,51 @@
           {
             "key": "Cache-Control",
             "value": "no-cache, must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "/app.html",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, no-store, must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "/manifest-uag-v2.json",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, no-store, must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "/@(guides|about){,/**}",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, no-store, must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "/@(privacy|terms|support|subscriptions-refunds){,.html}",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, no-store, must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "/public-assets/*.@(js|css)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, no-store, must-revalidate"
           }
         ]
       }
