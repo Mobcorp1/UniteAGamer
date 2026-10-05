@@ -1,0 +1,90 @@
+name: PASS 221 Release Certification
+
+on:
+  push:
+    branches:
+      - codex/full-arc-ui-convergence
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  certify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+
+    steps:
+      - name: Checkout validated branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify certification baseline and clean checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Branch: ${GITHUB_REF_NAME}"
+          echo "HEAD: $(git rev-parse HEAD)"
+          git merge-base --is-ancestor 2933d975dcfec67fe5e6a33146aeb74ff92f8610 HEAD
+          test -z "$(git status --porcelain)"
+
+      - name: Set up Flutter 3.41.0
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.0'
+          channel: stable
+          cache: true
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Flutter pub get
+        run: flutter pub get
+
+      - name: Dart format gate
+        run: dart format --set-exit-if-changed .
+
+      - name: Flutter analyze
+        run: flutter analyze
+
+      - name: Flutter tests
+        run: flutter test --reporter expanded
+
+      - name: Flutter web release build
+        run: flutter build web --release --no-wasm-dry-run
+
+      - name: Flutter Android debug APK build
+        run: flutter build apk --debug
+
+      - name: Validate Cloud Functions syntax
+        run: node --check functions/index.js
+
+      - name: Run complete Functions test suite
+        shell: bash
+        run: |
+          set -uo pipefail
+          status=0
+          for test_file in functions/tests/*.js; do
+            echo "==> $test_file"
+            node "$test_file" || status=1
+          done
+          exit "$status"
+
+      - name: Validate Firestore rules compile in emulator
+        run: npx --yes firebase-tools@15.30.2 emulators:exec --only firestore --project demo-uag "node -e \"console.log('Firestore rules compile: PASS')\""
+
+      - name: Confirm certification run left source clean
+        shell: bash
+        run: |
+          set -euo pipefail
+          git status --short
+          test -z "$(git status --porcelain)"
