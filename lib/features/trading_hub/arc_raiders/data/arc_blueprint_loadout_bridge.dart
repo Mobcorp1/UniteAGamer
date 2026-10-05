@@ -134,7 +134,7 @@ class ArcBlueprintLoadoutBridge {
     if (current != null) return current;
     final now = DateTime.now();
     const quickUse = <String>[
-      'Survivor',
+      'Triggernade',
       'Snap Hook',
       'Vita Shot',
       'Lure Grenade',
@@ -143,7 +143,6 @@ class ArcBlueprintLoadoutBridge {
     ];
     final migration = ArcLoadoutLayoutEngine.normaliseQuickUseSlots(
       savedItems: quickUse,
-      legacyAugment: 'Survivor',
     );
 
     return ArcSavedLoadout(
