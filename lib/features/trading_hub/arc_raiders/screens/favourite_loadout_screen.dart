@@ -1122,8 +1122,8 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           icon: empty
               ? Icons.remove_circle_outline_rounded
               : option.type == ArcLoadoutSlotType.consumables
-              ? Icons.medical_services_rounded
-              : Icons.inventory_2_rounded,
+                  ? Icons.medical_services_rounded
+                  : Icons.inventory_2_rounded,
         );
       },
       selectedBuilder: (option) => option.name == _quickSlots[index],
