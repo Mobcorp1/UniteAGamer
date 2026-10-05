@@ -1112,6 +1112,14 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       subtitleBuilder: (option) => option.description,
       leadingBuilder: (option) {
         final empty = option.name == ArcLoadoutLayoutEngine.emptySlot;
+        final IconData icon;
+        if (empty) {
+          icon = Icons.remove_circle_outline_rounded;
+        } else if (option.type == ArcLoadoutSlotType.consumables) {
+          icon = Icons.medical_services_rounded;
+        } else {
+          icon = Icons.inventory_2_rounded;
+        }
         return _itemImage(
           imageAsset: _assetForLoadoutItem(
             option.name,
@@ -1119,11 +1127,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           ),
           accent: empty ? Colors.white70 : Colors.amberAccent,
           owned: true,
-          icon: empty
-              ? Icons.remove_circle_outline_rounded
-              : option.type == ArcLoadoutSlotType.consumables
-                  ? Icons.medical_services_rounded
-                  : Icons.inventory_2_rounded,
+          icon: icon,
         );
       },
       selectedBuilder: (option) => option.name == _quickSlots[index],
