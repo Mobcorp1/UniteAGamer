@@ -191,7 +191,7 @@ void main() {
         markers.add([]);
         await tester.pump();
         await tester.scrollUntilVisible(
-          find.text('Generate Best Loot Run'),
+          find.text('BUILD MY RAID'),
           150,
           scrollable: find
               .descendant(
@@ -202,15 +202,12 @@ void main() {
         );
         await tester.pump(const Duration(milliseconds: 300));
         await Scrollable.ensureVisible(
-          tester.element(find.text('Generate Best Loot Run')),
+          tester.element(find.text('BUILD MY RAID')),
           alignment: 0.5,
         );
         await tester.pump();
-        expect(
-          find.text('Generate Best Loot Run').hitTestable(),
-          findsOneWidget,
-        );
-        await tester.tap(find.text('Generate Best Loot Run'));
+        expect(find.text('BUILD MY RAID').hitTestable(), findsOneWidget);
+        await tester.tap(find.text('BUILD MY RAID'));
         await tester.pump();
         expect(
           find.text(
