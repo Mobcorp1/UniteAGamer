@@ -9,13 +9,19 @@ void main() {
     expect(source, contains("tier: 'free'"));
     expect(source, contains("tier: 'essential'"));
     expect(source, contains("tier: 'premium'"));
-    expect(source, contains(r"price: '\u00A37.99/month'"));
-    expect(source, contains(r"price: '\u00A39.99/month'"));
+    expect(
+      source,
+      contains('UagCommercialEconomy.essentialMonthlyPricePence'),
+    );
+    expect(
+      source,
+      contains('UagCommercialEconomy.premiumMonthlyPricePence'),
+    );
 
     expect(source, isNot(contains("tier: 'Operator'")));
     expect(source, isNot(contains("tier: 'Overseer'")));
-    expect(source, isNot(contains('£4.99/month')));
-    expect(source, isNot(contains('£8.99/month')));
+    expect(source, isNot(contains(r"price: '\u00A37.99/month'")));
+    expect(source, isNot(contains(r"price: '\u00A39.99/month'")));
     expect(source, isNot(contains('Â£')));
     expect(source, isNot(contains('commission path')));
   });
