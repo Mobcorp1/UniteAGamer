@@ -165,6 +165,10 @@ service cloud.firestore {
         request.resource.data.get('founderEligible', false) != true &&
         request.resource.data.get('wallOfLegendsEligible', false) != true &&
         request.resource.data.get('wallOfLegendsInducted', false) != true &&
+        request.resource.data.get('subscriptionTier', 'free') == 'free' &&
+        request.resource.data.get('tier', 'free') == 'free' &&
+        request.resource.data.get('planTier', 'free') == 'free' &&
+        request.resource.data.get('monetisation', {}).get('tier', 'free') == 'free' &&
         !(request.resource.data.get('subscriptionStatus', 'inactive') in ['active', 'trialing']) &&
         !(request.resource.data.get('monetisation', {}).get('subscriptionStatus', 'inactive') in ['active', 'trialing']);
     }
@@ -311,7 +315,7 @@ service cloud.firestore {
         allow delete: if isAdminOrDev();
       }
 
-      match /{document=**} {
+      match /{childCollection}/{document=**} {
         allow read, create, update, delete: if isOwner(userId) || isAdminOrDev();
       }
     }
