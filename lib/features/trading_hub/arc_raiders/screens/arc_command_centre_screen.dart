@@ -1,6 +1,4 @@
-import '../data/arc_event_relevance.dart';
-import '../data/arc_progression_engine.dart';
-import '../widgets/arc_events_workspace.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -44,6 +42,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositorie
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_user_personalisation_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_beta_feedback_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raid_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/my_hub_screen.dart';
@@ -529,18 +528,15 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
     required ArcUserPersonalisationProfile personalisation,
   }) {
     final eventPreview = eventsAvailable
-        ? ArcEventsWorkspace(
-            compact: true,
-            relevance: ArcEventRelevance(
-              profile: personalisation,
-              blueprints: blueprintStates,
-              loadouts: loadouts,
-              progression: scrappyState.data == null
-                  ? ArcProgressionSnapshotBundle.empty
-                  : const ArcProgressionEngine().build(
-                      scrappyStates: scrappyState.data!,
-                      records: progressionRecords,
-                    ),
+        ? SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              style: ArcUiTokens.textButtonStyle(primary: true),
+              onPressed: () => Navigator.of(context).pushNamed(
+                ArcRaidIntelligenceScreen.routeName,
+              ),
+              icon: const Icon(Icons.route_rounded),
+              label: const Text('OPEN RECOMMENDED RAID'),
             ),
           )
         : null;

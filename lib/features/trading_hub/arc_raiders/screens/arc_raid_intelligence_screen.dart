@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_subscription_tier.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/services/uag_entitlement_service.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_usage_gate.dart';
 import '../widgets/arc_raid_location_picker.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_frozen_trail_preview_screen.dart';
@@ -11,22 +12,29 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_ma
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_marker_stack_resolver.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_view_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_auto_recommendation_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_map_marker.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_availability.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_drop_report.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_community_intel_report.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_nomadic_trader_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_progression_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trader_profile.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_admin_map_editor_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_community_intel_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_progression_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_nomadic_trader_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_trader_profile_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_scrappy_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_raid_intelligence_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_saved_loadout_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/data/arc_regional_map_conditions.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
@@ -71,6 +79,8 @@ class ArcRaidIntelligenceScreen extends StatefulWidget {
 
 class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   final ArcRaidIntelligenceEngine _engine = const ArcRaidIntelligenceEngine();
+  final ArcRaidAutoRecommendationEngine _autoRecommendationEngine =
+      const ArcRaidAutoRecommendationEngine();
   final ArcMapMarkerStackResolver _stackResolver =
       const ArcMapMarkerStackResolver();
   late final ArcBlueprintRepository _blueprintRepository =
@@ -86,9 +96,21 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   late final ArcScrappyRepository _scrappyRepository = ArcScrappyRepository();
   late final ArcProgressionRepository _progressionRepository =
       ArcProgressionRepository();
+  late final ArcTraderProfileRepository _traderProfileRepository =
+      ArcTraderProfileRepository();
+  final ArcNomadicTraderRepository _nomadicTraderRepository =
+      const ArcNomadicTraderRepository();
+  late final UagEntitlementService _entitlementService =
+      UagEntitlementService();
   final ArcMapViewRepository _mapViewRepository = const ArcMapViewRepository();
   final TransformationController _mapController = TransformationController();
   final TextEditingController _searchController = TextEditingController();
+
+  ArcRegionalMapConditionsSnapshot? _regionalConditions;
+  ArcAvailability _savedAvailability = ArcAvailability.initial();
+  ArcTraderProfile? _traderProfile;
+  ArcNomadicTraderTrackerSnapshot _nomadicTraderTracker =
+      ArcNomadicTraderTrackerSnapshot.empty;
 
   String _mapId = ArcMapAssetRegistry.blueGateMapId;
   ArcRaidMapLayer _activeLayer = ArcRaidMapLayer.surface;
@@ -103,11 +125,14 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   bool _usesHatch = false;
   bool _hatchKeyConfirmed = false;
   ArcRaidRoutePlan? _routePlan;
+  List<ArcRaidRoutePlan> _routeAlternatives = const <ArcRaidRoutePlan>[];
+  UagSubscriptionTier _generatedRouteTier = UagSubscriptionTier.free;
   List<ArcRaidIntelCluster> _objectiveOnlyStops = const <ArcRaidIntelCluster>[];
   ArcRaidMapMarker? _selectedMarker;
   Timer? _mapViewSaveTimer;
   bool _restoringMapView = false;
   bool _controlPanelCollapsed = true;
+  bool _showExplorerMarkers = false;
   final Map<String, Stream<dynamic>> _streams = {};
   final Map<String, dynamic> _lastData = {};
   final ScrollController _panelScroll = ScrollController();
@@ -156,6 +181,13 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
         await (widget.loadActiveRoute?.call() ??
             _routeRepository.loadActiveRoute());
     if (!mounted || route == null) return;
+    var routeTier = UagSubscriptionTier.free;
+    try {
+      routeTier = (await _entitlementService.getMyEntitlement()).effectiveTier;
+    } catch (_) {
+      routeTier = UagSubscriptionTier.free;
+    }
+    if (!mounted) return;
     setState(() {
       final canonicalRouteMapId =
           ArcMapAssetRegistry.canonicalMapIdFor(route.mapId) ?? route.mapId;
@@ -173,6 +205,8 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       _usesHatch = route.usesRaiderHatch;
       _hatchKeyConfirmed = route.hatchKeyConfirmed;
       _routePlan = route;
+      _routeAlternatives = <ArcRaidRoutePlan>[route];
+      _generatedRouteTier = routeTier;
     });
   }
 
@@ -182,7 +216,39 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     } catch (_) {
       if (mounted) setState(() => _lastData['routeError'] = true);
     }
+    await _loadRecommendationContext();
     await _restoreLastMapView();
+  }
+
+  Future<void> _loadRecommendationContext() async {
+    final regional = await ArcRegionalMapConditionsService.load();
+    var availability = ArcAvailability.initial();
+    ArcTraderProfile? profile;
+    var nomadic = ArcNomadicTraderTrackerSnapshot.empty;
+
+    try {
+      if (_traderProfileRepository.currentUid != null) {
+        availability = await _traderProfileRepository.getAvailability();
+        profile = await _traderProfileRepository.getProfile();
+      }
+    } catch (_) {
+      // Recommendation context is additive; the core Raid Intelligence screen
+      // remains usable if profile or availability cannot be read.
+    }
+
+    try {
+      nomadic = await _nomadicTraderRepository.loadTrackerSnapshot();
+    } catch (_) {
+      nomadic = ArcNomadicTraderTrackerSnapshot.empty;
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _regionalConditions = regional;
+      _savedAvailability = availability;
+      _traderProfile = profile;
+      _nomadicTraderTracker = nomadic;
+    });
   }
 
   Future<void> _restoreLastMapView() async {
@@ -519,6 +585,22 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                                   activeLayer: _activeLayer,
                                   activeRoute: _routePlan,
                                 );
+                                final snapshot = _regionalConditions;
+                                final profile = _traderProfile;
+                                final recommendation =
+                                    snapshot == null || profile == null
+                                    ? null
+                                    : _autoRecommendationEngine.recommend(
+                                        snapshot: snapshot,
+                                        availability: _savedAvailability,
+                                        profile: profile,
+                                        nomadicTraderTracker:
+                                            _nomadicTraderTracker,
+                                        blueprintStates: states,
+                                        favouriteLoadout: loadout,
+                                        trackedObjectives:
+                                            intelligence.trackedObjectives,
+                                      );
                                 return Column(
                                   children: [
                                     if (showWorkspaceBar) ...[
@@ -557,6 +639,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                                     Expanded(
                                       child: _buildLayout(
                                         intelligence,
+                                        autoRecommendation: recommendation,
                                         communityReports: communityReports,
                                       ),
                                     ),
@@ -580,6 +663,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
 
   Widget _buildLayout(
     ArcRaidIntelligenceState intelligence, {
+    required ArcRaidAutoRecommendation? autoRecommendation,
     required List<ArcCommunityIntelReport> communityReports,
   }) {
     return LayoutBuilder(
@@ -592,6 +676,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
         final panel = _controlPanel(
           intelligence,
           desktop: sideBySide,
+          autoRecommendation: autoRecommendation,
           communityReports: communityReports,
         );
         final map = _mapPanel(intelligence);
@@ -638,6 +723,36 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     );
   }
 
+  ArcRaidIntelligenceState _playerFacingMapState(
+    ArcRaidIntelligenceState intelligence,
+  ) {
+    if (_showExplorerMarkers) return intelligence;
+    final routeCategories = <ArcRaidMapMarkerCategory>{
+      ArcRaidMapMarkerCategory.spawn,
+      ArcRaidMapMarkerCategory.standardExtraction,
+      ArcRaidMapMarkerCategory.raiderHatch,
+      ArcRaidMapMarkerCategory.routeWaypoint,
+      ArcRaidMapMarkerCategory.currentPosition,
+    };
+    final routeMarkers = _routePlan == null
+        ? const <ArcRaidMapMarker>[]
+        : intelligence.visibleMarkers
+              .where((marker) => routeCategories.contains(marker.category))
+              .toList(growable: false);
+    return ArcRaidIntelligenceState(
+      map: intelligence.map,
+      activeLayer: intelligence.activeLayer,
+      filters: intelligence.filters,
+      visibleMarkers: routeMarkers,
+      opportunityClusters: intelligence.opportunityClusters,
+      routePlan: intelligence.routePlan,
+      activeConditionLabel: intelligence.activeConditionLabel,
+      statusLabel: intelligence.statusLabel,
+      recommendation: intelligence.recommendation,
+      trackedObjectives: intelligence.trackedObjectives,
+    );
+  }
+
   Widget _mapPanel(ArcRaidIntelligenceState intelligence) {
     return Container(
       key: const Key('raid-map-viewport'),
@@ -655,7 +770,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
             child: Padding(
               padding: const EdgeInsets.all(8),
               child: ArcRaidIntelligenceMapRenderer(
-                state: intelligence,
+                state: _playerFacingMapState(intelligence),
                 playerFacingLabels: true,
                 controller: _mapController,
                 selectedMarkerId: _selectedMarker?.id,
@@ -666,6 +781,33 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
               ),
             ),
           ),
+          if (!_showExplorerMarkers && _routePlan == null)
+            Positioned(
+              left: 18,
+              right: 18,
+              bottom: 18,
+              child: IgnorePointer(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  decoration: ArcUiTokens.surfaceDecoration(
+                    role: ArcSurfaceRole.overlay,
+                    accent: ArcUiTokens.primaryAccent,
+                    radius: ArcUiTokens.radiusM,
+                    borderOpacity: 0.24,
+                  ),
+                  child: Text(
+                    'Clean map mode â€¢ choose your spawn, raid time and extraction, then generate a run. UAG will only reveal intel that matters to that route.',
+                    textAlign: TextAlign.center,
+                    style: ArcUiTokens.bodySmall(
+                      color: ArcUiTokens.textSecondary,
+                    ),
+                  ),
+                ),
+              ),
+            ),
           Positioned(right: 8, top: 8, child: _mapControls(intelligence)),
           if (intelligence.map.availableLayers.length > 1)
             Positioned(
@@ -808,6 +950,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   Widget _controlPanel(
     ArcRaidIntelligenceState intelligence, {
     required bool desktop,
+    required ArcRaidAutoRecommendation? autoRecommendation,
     required List<ArcCommunityIntelReport> communityReports,
   }) {
     return Container(
@@ -844,6 +987,10 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
           ],
           _secondaryMapControls(intelligence),
           _hero(intelligence),
+          if (autoRecommendation != null) ...[
+            const SizedBox(height: 10),
+            _autoRecommendationCard(autoRecommendation),
+          ],
           const SizedBox(height: 10),
           ArcLiveMapConditionsStrip(
             mapDisplayName: intelligence.map.displayName,
@@ -953,6 +1100,61 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     );
   }
 
+  Widget _autoRecommendationCard(ArcRaidAutoRecommendation recommendation) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: Colors.amberAccent,
+        radius: ArcUiTokens.radiusM,
+        borderOpacity: 0.34,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'RECOMMENDED RAID - ${recommendation.statusLabel}',
+            style: ArcUiTokens.label(color: Colors.amberAccent),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            recommendation.mapName,
+            style: ArcUiTokens.sectionTitle(
+              fontSize: 18,
+              color: ArcUiTokens.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${recommendation.conditionName} - ${recommendation.targetLabel}',
+            style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            recommendation.live
+                ? 'Official condition is live now and falls inside your saved play window.'
+                : 'Best upcoming official condition inside your saved play window.',
+            style: ArcUiTokens.bodySmall(color: ArcUiTokens.textTertiary),
+          ),
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            style: ArcUiTokens.textButtonStyle(primary: true),
+            onPressed: () async {
+              if (recommendation.mapId != _mapId) {
+                await _changeMap(recommendation.mapId);
+              }
+              if (!mounted) return;
+              setState(() => _controlPanelCollapsed = false);
+            },
+            icon: const Icon(Icons.radar_rounded),
+            label: const Text('USE RECOMMENDED RAID'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _hero(ArcRaidIntelligenceState intelligence) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1035,7 +1237,10 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
           _chips<String>(
             values: const ['Full', 'Mid', 'Late'],
             selected: _raidStage,
-            label: (value) => value,
+            label: (value) {
+              final budget = ArcRaidTimeBudget.forStage(value);
+              return '${budget.label} Â· ~${budget.totalMinutes}m';
+            },
             onSelected: (value) => setState(() => _raidStage = value),
           ),
           const SizedBox(height: 10),
@@ -1090,7 +1295,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
             style: ArcUiTokens.textButtonStyle(primary: true),
             onPressed: () => _generateRoute(intelligence),
             icon: const Icon(Icons.auto_awesome_rounded),
-            label: const Text('Generate Best Loot Run'),
+            label: const Text('BUILD MY RAID'),
           ),
         ],
       ),
@@ -1131,20 +1336,46 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   }
 
   Widget _filterSection() {
-    return _section(
-      title: 'Map Layers',
-      child: ArcMapMarkerFilterPanel(
-        filters: _filters,
-        searchController: _searchController,
-        onChanged: (filters) {
-          setState(() {
-            _filters = filters;
-            if (_selectedMarker != null && !_filters.allows(_selectedMarker!)) {
-              _selectedMarker = null;
-            }
-          });
-        },
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SwitchListTile.adaptive(
+          dense: true,
+          contentPadding: EdgeInsets.zero,
+          value: _showExplorerMarkers,
+          onChanged: (value) => setState(() {
+            _showExplorerMarkers = value;
+            if (!value) _selectedMarker = null;
+          }),
+          title: const Text(
+            'Explore all intel markers',
+            style: TextStyle(color: ArcUiTokens.textPrimary),
+          ),
+          subtitle: const Text(
+            'Off keeps the map clean and only shows your generated run. Turn on for manual map exploration.',
+            style: TextStyle(color: ArcUiTokens.textTertiary),
+          ),
+        ),
+        if (_showExplorerMarkers) ...[
+          const SizedBox(height: 6),
+          _section(
+            title: 'Map Layers',
+            child: ArcMapMarkerFilterPanel(
+              filters: _filters,
+              searchController: _searchController,
+              onChanged: (filters) {
+                setState(() {
+                  _filters = filters;
+                  if (_selectedMarker != null &&
+                      !_filters.allows(_selectedMarker!)) {
+                    _selectedMarker = null;
+                  }
+                });
+              },
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -1459,6 +1690,10 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(route.summary, style: ArcUiTokens.body()),
+                if (_routeAlternatives.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  _routeAlternativesPanel(route),
+                ],
                 if (route.metrics.hasData) ...[
                   const SizedBox(height: 10),
                   Wrap(
@@ -1466,9 +1701,23 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                     runSpacing: 8,
                     children: [
                       _pill(
-                        '${route.metrics.estimatedMinutes} min',
-                        AppTheme.neonCyan,
+                        route.metrics.routeBudgetMinutes > 0
+                            ? '${route.metrics.estimatedMinutes}/${route.metrics.routeBudgetMinutes} min route'
+                            : '${route.metrics.estimatedMinutes} min',
+                        route.metrics.fitsTimeBudget
+                            ? AppTheme.neonCyan
+                            : Colors.redAccent,
                       ),
+                      if (route.metrics.extractionReserveMinutes > 0)
+                        _pill(
+                          '${route.metrics.extractionReserveMinutes} min extract reserve',
+                          Colors.amberAccent,
+                        ),
+                      if (route.metrics.bufferMinutes > 0)
+                        _pill(
+                          '+${route.metrics.bufferMinutes} min buffer',
+                          Colors.lightGreenAccent,
+                        ),
                       if (route.metrics.objectiveTargetCount > 0)
                         _pill(
                           '${route.metrics.objectiveTargetCount} tracker goals',
@@ -1544,13 +1793,80 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                     _smallButton('Archive', Icons.archive_rounded, () async {
                       await _routeRepository.archiveActiveRoute();
                       if (!mounted) return;
-                      setState(() => _routePlan = null);
+                      setState(() {
+                        _routePlan = null;
+                        _routeAlternatives = const <ArcRaidRoutePlan>[];
+                      });
                       _showSnack('Active route archived.');
                     }),
                   ],
                 ),
               ],
             ),
+    );
+  }
+
+  Widget _routeAlternativesPanel(ArcRaidRoutePlan activeRoute) {
+    final tier = _generatedRouteTier;
+    final accent = tier == UagSubscriptionTier.premium
+        ? ArcUiTokens.secondaryAccent
+        : ArcUiTokens.primaryAccent;
+    final message = switch (tier) {
+      UagSubscriptionTier.free =>
+        'Free gives you one complete recommended run. Essential adds a second viable strategy; Premium compares every viable route style.',
+      UagSubscriptionTier.essential =>
+        'Essential gives you two viable run strategies. Premium unlocks every viable Fast, Balanced, Thorough and Safer route.',
+      UagSubscriptionTier.premium =>
+        'Premium intelligence: every viable route style found for this raid is available below.',
+    };
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(10),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        radius: ArcUiTokens.radiusM,
+        accent: accent,
+        borderOpacity: 0.32,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${tier.label.toUpperCase()} ROUTE INTELLIGENCE',
+            style: ArcUiTokens.label(color: accent),
+          ),
+          const SizedBox(height: 7),
+          Wrap(
+            spacing: 7,
+            runSpacing: 7,
+            children: [
+              for (final option in _routeAlternatives)
+                ChoiceChip(
+                  selected: option.routeStyle == activeRoute.routeStyle,
+                  label: Text(
+                    '${option.routeStyle.label} Â· ${option.metrics.estimatedMinutes}m Â· ${option.metrics.efficiencyScore}%',
+                  ),
+                  onSelected: (_) => _selectRouteAlternative(option),
+                  selectedColor: accent.withValues(alpha: 0.20),
+                  backgroundColor: ArcUiTokens.surfaceRaised,
+                  side: BorderSide(
+                    color: option.routeStyle == activeRoute.routeStyle
+                        ? accent.withValues(alpha: 0.72)
+                        : ArcUiTokens.textTertiary.withValues(alpha: 0.25),
+                  ),
+                  labelStyle: ArcUiTokens.bodySmall(
+                    color: option.routeStyle == activeRoute.routeStyle
+                        ? ArcUiTokens.textPrimary
+                        : ArcUiTokens.textSecondary,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 7),
+          Text(message, style: ArcUiTokens.bodySmall()),
+        ],
+      ),
     );
   }
 
@@ -1711,6 +2027,8 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       if (!allowed || !mounted) return;
       setState(() {
         _routePlan = null;
+        _routeAlternatives = const <ArcRaidRoutePlan>[];
+        _generatedRouteTier = UagSubscriptionTier.free;
         _objectiveOnlyStops = objectiveStops;
       });
       _showSnack(
@@ -1747,8 +2065,25 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       action: UagBillableAction.premiumIntelUnlock,
     );
     if (!allowed || !mounted) return;
+    var generatedTier = UagSubscriptionTier.free;
+    try {
+      generatedTier =
+          (await _entitlementService.getMyEntitlement()).effectiveTier;
+    } catch (_) {
+      generatedTier = UagSubscriptionTier.free;
+    }
+    if (!mounted) return;
+    final alternatives = _buildTierRouteAlternatives(
+      intelligence: intelligence,
+      spawn: spawn,
+      extraction: resolvedExtraction,
+      primary: route,
+      tier: generatedTier,
+    );
     setState(() {
       _routePlan = route;
+      _routeAlternatives = alternatives;
+      _generatedRouteTier = generatedTier;
       _objectiveOnlyStops = const <ArcRaidIntelCluster>[];
     });
     if (await _saveActiveRoute(route)) {
@@ -1756,6 +2091,64 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     } else {
       _showSnack('Smart Raid Run generated locally; route save failed.');
     }
+  }
+
+  List<ArcRaidRoutePlan> _buildTierRouteAlternatives({
+    required ArcRaidIntelligenceState intelligence,
+    required ArcRaidRouteStop spawn,
+    required ArcRaidRouteStop extraction,
+    required ArcRaidRoutePlan primary,
+    required UagSubscriptionTier tier,
+  }) {
+    if (tier == UagSubscriptionTier.free) {
+      return <ArcRaidRoutePlan>[primary];
+    }
+
+    final candidates = <ArcRaidRoutePlan>[primary];
+    for (final style in ArcRaidRouteStyle.values) {
+      if (style == primary.routeStyle) continue;
+      final candidate = _engine.generateRoute(
+        map: intelligence.map,
+        clusters: intelligence.opportunityClusters,
+        spawn: spawn,
+        extraction: extraction,
+        routeStyle: style,
+        raidStage: _raidStage,
+        squadMode: _squadMode,
+        objectivePriority: _objectivePriority,
+        usesRaiderHatch: _usesHatch,
+        hatchKeyConfirmed: _hatchKeyConfirmed,
+      );
+      if (candidate == null || !candidate.metrics.fitsTimeBudget) continue;
+      candidates.add(candidate);
+    }
+
+    if (tier == UagSubscriptionTier.premium) {
+      return candidates;
+    }
+
+    if (candidates.length <= 2) return candidates;
+    final secondary = candidates.skip(1).toList(growable: false)
+      ..sort((a, b) {
+        final efficiency = b.metrics.efficiencyScore.compareTo(
+          a.metrics.efficiencyScore,
+        );
+        if (efficiency != 0) return efficiency;
+        return a.metrics.estimatedMinutes.compareTo(b.metrics.estimatedMinutes);
+      });
+    return <ArcRaidRoutePlan>[primary, secondary.first];
+  }
+
+  Future<void> _selectRouteAlternative(ArcRaidRoutePlan route) async {
+    if (identical(_routePlan, route)) return;
+    setState(() => _routePlan = route);
+    final saved = await _saveActiveRoute(route);
+    if (!mounted) return;
+    _showSnack(
+      saved
+          ? '${route.routeStyle.label} route selected and saved.'
+          : '${route.routeStyle.label} route selected locally; save failed.',
+    );
   }
 
   void _addClusterStop(ArcRaidIntelCluster cluster) {
