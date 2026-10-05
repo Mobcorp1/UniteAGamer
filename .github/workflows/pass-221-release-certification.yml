@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   certify:
@@ -49,6 +49,21 @@ jobs:
 
       - name: Flutter pub get
         run: flutter pub get
+
+      - name: Repair formatter-only drift once
+        shell: bash
+        run: |
+          set -euo pipefail
+          dart format .
+          if ! git diff --quiet -- '*.dart'; then
+            git config user.name "UAG PASS 221"
+            git config user.email "actions@users.noreply.github.com"
+            git add -- '*.dart'
+            git commit -m "PASS 221 - Release certification and closed-beta closure gate"
+            git push origin HEAD:codex/full-arc-ui-convergence
+            echo "Formatter-only repair committed; next push will rerun certification."
+            exit 1
+          fi
 
       - name: Dart format gate
         run: dart format --set-exit-if-changed .
