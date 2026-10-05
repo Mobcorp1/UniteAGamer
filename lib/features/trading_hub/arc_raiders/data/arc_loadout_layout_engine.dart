@@ -131,9 +131,6 @@ class ArcLoadoutLayoutEngine {
       optionsByName.putIfAbsent(normalise(option.name), () => option);
     }
 
-    for (final option in ArcLoadoutSeedData.augments) {
-      add(option);
-    }
     for (final option in ArcLoadoutSeedData.equipment) {
       add(option);
     }
@@ -179,7 +176,6 @@ class ArcLoadoutLayoutEngine {
     String? legacyAugment,
   }) {
     final normalised = <String>[];
-    var hasAugment = false;
 
     for (final item in savedItems) {
       if (normalised.length == quickUseSlotCount) break;
@@ -190,50 +186,16 @@ class ArcLoadoutLayoutEngine {
       }
 
       final option = quickUseOptionForName(value);
-      if (option == null) {
-        normalised.add(emptySlot);
-        continue;
-      }
-      if (option.type == ArcLoadoutSlotType.augment) {
-        if (hasAugment) {
-          normalised.add(emptySlot);
-          continue;
-        }
-        hasAugment = true;
-      }
-      normalised.add(option.name);
+      normalised.add(option?.name ?? emptySlot);
     }
 
     while (normalised.length < quickUseSlotCount) {
       normalised.add(emptySlot);
     }
 
-    final legacy = legacyAugment?.trim() ?? '';
-    final legacyOption = quickUseOptionForName(legacy);
-    if (!hasAugment && legacyOption?.type == ArcLoadoutSlotType.augment) {
-      final emptyIndex = normalised.indexOf(emptySlot);
-      if (emptyIndex != -1) {
-        normalised[emptyIndex] = legacyOption!.name;
-        hasAugment = true;
-      }
-    }
-
-    final augment = normalised
-        .map(quickUseOptionForName)
-        .whereType<ArcLoadoutOption>()
-        .firstWhere(
-          (option) => option.type == ArcLoadoutSlotType.augment,
-          orElse: () => const ArcLoadoutOption(
-            name: '',
-            type: ArcLoadoutSlotType.augment,
-            description: '',
-          ),
-        )
-        .name;
-
     return ArcQuickUseMigrationResult(
       quickUse: List<String>.unmodifiable(normalised),
-      augment: augment,
+      augment: '',
     );
   }
 
@@ -252,7 +214,7 @@ class ArcLoadoutLayoutEngine {
       case 'tactical mods':
       case 'combat mods':
       case 'looting mods':
-        return ArcLoadoutSlotType.augment;
+        return null;
       case 'consumables':
       case 'grenades':
         return ArcLoadoutSlotType.consumables;
