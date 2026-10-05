@@ -51,7 +51,12 @@ jobs:
         run: flutter pub get
 
       - name: Dart format gate
-        run: dart format --set-exit-if-changed .
+        shell: bash
+        run: |
+          set -euo pipefail
+          dart format .
+          git diff -- lib/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart
+          test -z "$(git status --porcelain)"
 
       - name: Flutter analyze
         run: flutter analyze
