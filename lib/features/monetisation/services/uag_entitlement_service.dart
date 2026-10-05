@@ -134,23 +134,68 @@ class UagEntitlementService {
     return !entitlement.adPolicy.allowMidSessionAds;
   }
 
-  Stream<Map<String, int>> watchCurrentWeeklyUsage() {
+  Stream<Map<String, int>> watchCurrentUsage() {
     final currentUid = uid;
     if (currentUid == null) return Stream.value(const <String, int>{});
-    return _firestore
-        .collection('users')
-        .doc(currentUid)
-        .collection('usage_counters')
-        .doc(_currentWeekKey())
-        .snapshots()
-        .map((snapshot) {
-          final data = snapshot.data() ?? <String, dynamic>{};
-          return {
-            for (final action in UagBillableAction.values)
-              action.usageKey: (data[action.usageKey] as num?)?.toInt() ?? 0,
-          };
-        });
+
+    late StreamController<Map<String, int>> controller;
+    StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? monthlySub;
+    StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? weeklySub;
+
+    Map<String, dynamic> monthly = const <String, dynamic>{};
+    Map<String, dynamic> weekly = const <String, dynamic>{};
+
+    var monthlyReady = false;
+    var weeklyReady = false;
+
+    void emit() {
+      if (!monthlyReady || !weeklyReady || controller.isClosed) return;
+
+      controller.add(<String, int>{
+        for (final action in UagBillableAction.values)
+          action.usageKey:
+              ((UagCommercialEconomy.usesMonthlyAllowance(action)
+                          ? monthly[action.usageKey]
+                          : weekly[action.usageKey])
+                      as num?)
+                  ?.toInt() ??
+              0,
+      });
+    }
+
+    controller = StreamController<Map<String, int>>(
+      onListen: () {
+        final base = _firestore
+            .collection('users')
+            .doc(currentUid)
+            .collection('usage_counters');
+
+        monthlySub = base.doc(_currentMonthKey()).snapshots().listen((
+          snapshot,
+        ) {
+          monthly = snapshot.data() ?? const <String, dynamic>{};
+          monthlyReady = true;
+          emit();
+        }, onError: controller.addError);
+
+        weeklySub = base.doc(_currentWeekKey()).snapshots().listen((snapshot) {
+          weekly = snapshot.data() ?? const <String, dynamic>{};
+          weeklyReady = true;
+          emit();
+        }, onError: controller.addError);
+      },
+      onCancel: () async {
+        await monthlySub?.cancel();
+        await weeklySub?.cancel();
+      },
+    );
+
+    return controller.stream;
   }
+
+  /// Backwards-compatible name retained for existing consumers.
+  /// The returned snapshot respects each action's actual billing cadence.
+  Stream<Map<String, int>> watchCurrentWeeklyUsage() => watchCurrentUsage();
 
   Stream<Map<String, int>> watchCurrentMonthlyUsage() {
     final currentUid = uid;

@@ -638,7 +638,7 @@ class _UagBetaFounderAdminPanelState extends State<UagBetaFounderAdminPanel> {
             OutlinedButton.icon(
               onPressed: _busy ? null : _restoreFounderRate,
               icon: const Icon(Icons.restore_rounded),
-              label: const Text('RESTORE £29.99 FOUNDER RATE'),
+              label: const Text('RESTORE £44.99 FOUNDER RATE'),
             ),
           ],
         ],
