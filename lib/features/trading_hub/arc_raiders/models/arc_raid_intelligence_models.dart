@@ -272,6 +272,33 @@ extension ArcRaidIntelConfidenceX on ArcRaidIntelConfidence {
   }
 }
 
+@immutable
+class ArcRaidTimeBudget {
+  const ArcRaidTimeBudget({required this.label, required this.totalMinutes});
+
+  final String label;
+  final int totalMinutes;
+
+  int extractionReserveMinutes({required bool usesRaiderHatch}) =>
+      usesRaiderHatch ? 2 : 3;
+
+  int routeMinutes({required bool usesRaiderHatch}) => math.max(
+    1,
+    totalMinutes - extractionReserveMinutes(usesRaiderHatch: usesRaiderHatch),
+  );
+
+  static ArcRaidTimeBudget forStage(String raidStage) {
+    switch (raidStage.trim().toLowerCase()) {
+      case 'late':
+        return const ArcRaidTimeBudget(label: 'Late', totalMinutes: 11);
+      case 'mid':
+        return const ArcRaidTimeBudget(label: 'Mid', totalMinutes: 17);
+      default:
+        return const ArcRaidTimeBudget(label: 'Full', totalMinutes: 28);
+    }
+  }
+}
+
 extension ArcRaidRouteStyleX on ArcRaidRouteStyle {
   String get label {
     switch (this) {
@@ -1166,6 +1193,10 @@ class ArcRaidRouteMetrics {
     this.averageConfidence = 0,
     this.efficiencyScore = 0,
     this.riskLabel = 'Unknown',
+    this.timeBudgetMinutes = 0,
+    this.routeBudgetMinutes = 0,
+    this.extractionReserveMinutes = 0,
+    this.fitsTimeBudget = true,
   });
 
   static const ArcRaidRouteMetrics empty = ArcRaidRouteMetrics();
@@ -1178,6 +1209,14 @@ class ArcRaidRouteMetrics {
   final int averageConfidence;
   final int efficiencyScore;
   final String riskLabel;
+  final int timeBudgetMinutes;
+  final int routeBudgetMinutes;
+  final int extractionReserveMinutes;
+  final bool fitsTimeBudget;
+
+  int get bufferMinutes => routeBudgetMinutes <= 0
+      ? 0
+      : math.max(0, routeBudgetMinutes - estimatedMinutes);
 
   bool get hasData => opportunityCount > 0 || totalDistance > 0;
 }

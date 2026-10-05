@@ -86,6 +86,10 @@ class ArcRaidIntelligenceRepository {
         'averageConfidence': route.metrics.averageConfidence,
         'efficiencyScore': route.metrics.efficiencyScore,
         'riskLabel': route.metrics.riskLabel,
+        'timeBudgetMinutes': route.metrics.timeBudgetMinutes,
+        'routeBudgetMinutes': route.metrics.routeBudgetMinutes,
+        'extractionReserveMinutes': route.metrics.extractionReserveMinutes,
+        'fitsTimeBudget': route.metrics.fitsTimeBudget,
       },
       'participants': route.participants
           .map(
@@ -194,6 +198,13 @@ class ArcRaidIntelligenceRepository {
       averageConfidence: (map['averageConfidence'] as num?)?.round() ?? 0,
       efficiencyScore: (map['efficiencyScore'] as num?)?.round() ?? 0,
       riskLabel: _string(map['riskLabel'], 'Unknown'),
+      timeBudgetMinutes: (map['timeBudgetMinutes'] as num?)?.round() ?? 0,
+      routeBudgetMinutes: (map['routeBudgetMinutes'] as num?)?.round() ?? 0,
+      extractionReserveMinutes:
+          (map['extractionReserveMinutes'] as num?)?.round() ?? 0,
+      fitsTimeBudget: map['fitsTimeBudget'] is bool
+          ? map['fitsTimeBudget'] as bool
+          : true,
     );
   }
 

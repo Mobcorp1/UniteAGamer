@@ -23,6 +23,7 @@ const {
 const {
   incrementQualifiedReferral,
   createReferralActionRewardHandler,
+  usageMonthKey,
 } = require('./uag_referral_action_rewards');
 const {
   createOperationActionRewardHandler,
@@ -4087,6 +4088,98 @@ async function cancelSessionSchedules({ sessionId, kind, targetUids }) {
   await batch.commit();
 }
 
+const TRADE_COMPLETION_REPUTATION_POINTS = 25;
+const TRADE_COMPLETION_INTEL_REWARD_MONTHLY_CAP = 4;
+
+function tradingSessionCompleted(data) {
+  if (!data) return false;
+  return normalizeString(data.status) === 'completed' ||
+    (data.traderOneMarkedComplete === true && data.traderTwoMarkedComplete === true);
+}
+
+async function rewardCompletedTradingSession({ sessionId, beforeData, afterData }) {
+  if (!tradingSessionCompleted(afterData) || tradingSessionCompleted(beforeData)) return;
+  const participants = participantsForTradingSession(afterData);
+  if (participants.length !== 2) return;
+
+  const rewardRef = db.collection('uag_trade_completion_rewards').doc(sessionId);
+  const periodKey = usageMonthKey();
+  const profileRefs = participants.map(participant => db
+    .collection('users')
+    .doc(participant.uid)
+    .collection('trading_activity')
+    .doc('profile'));
+  const userRefs = participants.map(participant => db.collection('users').doc(participant.uid));
+  const bonusRefs = participants.map(participant => db
+    .collection('uag_reward_bonuses')
+    .doc(participant.uid)
+    .collection('months')
+    .doc(periodKey));
+
+  await db.runTransaction(async tx => {
+    const rewardSnap = await tx.get(rewardRef);
+    if (rewardSnap.exists) return;
+
+    const [profileSnaps, bonusSnaps] = await Promise.all([
+      Promise.all(profileRefs.map(ref => tx.get(ref))),
+      Promise.all(bonusRefs.map(ref => tx.get(ref))),
+    ]);
+
+    const participantRewards = [];
+    for (let index = 0; index < participants.length; index += 1) {
+      const participant = participants[index];
+      const profileRef = profileRefs[index];
+      const profileData = profileSnaps[index].data() || {};
+      const bonusRef = bonusRefs[index];
+      const bonusData = bonusSnaps[index].data() || {};
+      const tradeIntelRewards = Math.max(0, Number(bonusData.tradeCompletionIntelRewards || 0) || 0);
+      const awardsIntelCredit = tradeIntelRewards < TRADE_COMPLETION_INTEL_REWARD_MONTHLY_CAP;
+
+      tx.set(profileRef, {
+        uid: participant.uid,
+        completedTrades: Math.max(0, Number(profileData.completedTrades || 0) || 0) + 1,
+        successfulTradeStreak: Math.max(0, Number(profileData.successfulTradeStreak || 0) || 0) + 1,
+        reputationPoints: Math.max(0, Number(profileData.reputationPoints || 0) || 0) +
+          TRADE_COMPLETION_REPUTATION_POINTS,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+
+      tx.set(userRefs[index], {
+        completedTrades: admin.firestore.FieldValue.increment(1),
+        reputationScore: admin.firestore.FieldValue.increment(TRADE_COMPLETION_REPUTATION_POINTS),
+        lastTradeRewardSessionId: sessionId,
+        lastTradeRewardAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+
+      if (awardsIntelCredit) {
+        tx.set(bonusRef, {
+          uid: participant.uid,
+          periodKey,
+          premiumIntelUnlocks: Math.max(0, Number(bonusData.premiumIntelUnlocks || 0) || 0) + 1,
+          tradeCompletionIntelRewards: tradeIntelRewards + 1,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+      }
+
+      participantRewards.push({
+        uid: participant.uid,
+        reputationPoints: TRADE_COMPLETION_REPUTATION_POINTS,
+        raidIntelCreditAwarded: awardsIntelCredit,
+      });
+    }
+
+    tx.set(rewardRef, {
+      sessionId,
+      periodKey,
+      participantRewards,
+      reputationPointsPerTrader: TRADE_COMPLETION_REPUTATION_POINTS,
+      intelRewardMonthlyCap: TRADE_COMPLETION_INTEL_REWARD_MONTHLY_CAP,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+  });
+}
+
 function participantsForTradingSession(data) {
   const traderOneUid = normalizeString(data.traderOneUid);
   const traderTwoUid = normalizeString(data.traderTwoUid);
@@ -4127,6 +4220,10 @@ async function syncTradingSessionSchedules(event) {
   const beforeData = event.data?.before?.data() || {};
   const afterData = after?.exists ? after.data() || {} : null;
   const fallbackParticipants = participantsForTradingSession(afterData || beforeData);
+
+  if (afterData) {
+    await rewardCompletedTradingSession({ sessionId, beforeData, afterData });
+  }
 
   if (!afterData) {
     await cancelSessionSchedules({

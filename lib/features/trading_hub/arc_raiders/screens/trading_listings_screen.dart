@@ -286,6 +286,7 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
             runSpacing: 8,
             children: [
               _pill(listing.riskLabel, listing.riskColor()),
+              _pill(listing.reputationLabel, AppTheme.neonPink),
               _metaChip(listing.region),
               _metaChip(listing.playWindow),
               _metaChip(listing.listingModeLabel),

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_subscription_tier.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/services/uag_entitlement_service.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_usage_gate.dart';
 import '../widgets/arc_raid_location_picker.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_frozen_trail_preview_screen.dart';
@@ -86,6 +87,8 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   late final ArcScrappyRepository _scrappyRepository = ArcScrappyRepository();
   late final ArcProgressionRepository _progressionRepository =
       ArcProgressionRepository();
+  late final UagEntitlementService _entitlementService =
+      UagEntitlementService();
   final ArcMapViewRepository _mapViewRepository = const ArcMapViewRepository();
   final TransformationController _mapController = TransformationController();
   final TextEditingController _searchController = TextEditingController();
@@ -103,11 +106,14 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   bool _usesHatch = false;
   bool _hatchKeyConfirmed = false;
   ArcRaidRoutePlan? _routePlan;
+  List<ArcRaidRoutePlan> _routeAlternatives = const <ArcRaidRoutePlan>[];
+  UagSubscriptionTier _generatedRouteTier = UagSubscriptionTier.free;
   List<ArcRaidIntelCluster> _objectiveOnlyStops = const <ArcRaidIntelCluster>[];
   ArcRaidMapMarker? _selectedMarker;
   Timer? _mapViewSaveTimer;
   bool _restoringMapView = false;
   bool _controlPanelCollapsed = true;
+  bool _showExplorerMarkers = false;
   final Map<String, Stream<dynamic>> _streams = {};
   final Map<String, dynamic> _lastData = {};
   final ScrollController _panelScroll = ScrollController();
@@ -156,6 +162,13 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
         await (widget.loadActiveRoute?.call() ??
             _routeRepository.loadActiveRoute());
     if (!mounted || route == null) return;
+    var routeTier = UagSubscriptionTier.free;
+    try {
+      routeTier = (await _entitlementService.getMyEntitlement()).effectiveTier;
+    } catch (_) {
+      routeTier = UagSubscriptionTier.free;
+    }
+    if (!mounted) return;
     setState(() {
       final canonicalRouteMapId =
           ArcMapAssetRegistry.canonicalMapIdFor(route.mapId) ?? route.mapId;
@@ -173,6 +186,8 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       _usesHatch = route.usesRaiderHatch;
       _hatchKeyConfirmed = route.hatchKeyConfirmed;
       _routePlan = route;
+      _routeAlternatives = <ArcRaidRoutePlan>[route];
+      _generatedRouteTier = routeTier;
     });
   }
 
@@ -638,6 +653,36 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     );
   }
 
+  ArcRaidIntelligenceState _playerFacingMapState(
+    ArcRaidIntelligenceState intelligence,
+  ) {
+    if (_showExplorerMarkers) return intelligence;
+    final routeCategories = <ArcRaidMapMarkerCategory>{
+      ArcRaidMapMarkerCategory.spawn,
+      ArcRaidMapMarkerCategory.standardExtraction,
+      ArcRaidMapMarkerCategory.raiderHatch,
+      ArcRaidMapMarkerCategory.routeWaypoint,
+      ArcRaidMapMarkerCategory.currentPosition,
+    };
+    final routeMarkers = _routePlan == null
+        ? const <ArcRaidMapMarker>[]
+        : intelligence.visibleMarkers
+              .where((marker) => routeCategories.contains(marker.category))
+              .toList(growable: false);
+    return ArcRaidIntelligenceState(
+      map: intelligence.map,
+      activeLayer: intelligence.activeLayer,
+      filters: intelligence.filters,
+      visibleMarkers: routeMarkers,
+      opportunityClusters: intelligence.opportunityClusters,
+      routePlan: intelligence.routePlan,
+      activeConditionLabel: intelligence.activeConditionLabel,
+      statusLabel: intelligence.statusLabel,
+      recommendation: intelligence.recommendation,
+      trackedObjectives: intelligence.trackedObjectives,
+    );
+  }
+
   Widget _mapPanel(ArcRaidIntelligenceState intelligence) {
     return Container(
       key: const Key('raid-map-viewport'),
@@ -655,7 +700,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
             child: Padding(
               padding: const EdgeInsets.all(8),
               child: ArcRaidIntelligenceMapRenderer(
-                state: intelligence,
+                state: _playerFacingMapState(intelligence),
                 playerFacingLabels: true,
                 controller: _mapController,
                 selectedMarkerId: _selectedMarker?.id,
@@ -666,6 +711,33 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
               ),
             ),
           ),
+          if (!_showExplorerMarkers && _routePlan == null)
+            Positioned(
+              left: 18,
+              right: 18,
+              bottom: 18,
+              child: IgnorePointer(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  decoration: ArcUiTokens.surfaceDecoration(
+                    role: ArcSurfaceRole.overlay,
+                    accent: ArcUiTokens.primaryAccent,
+                    radius: ArcUiTokens.radiusM,
+                    borderOpacity: 0.24,
+                  ),
+                  child: Text(
+                    'Clean map mode • choose your spawn, raid time and extraction, then generate a run. UAG will only reveal intel that matters to that route.',
+                    textAlign: TextAlign.center,
+                    style: ArcUiTokens.bodySmall(
+                      color: ArcUiTokens.textSecondary,
+                    ),
+                  ),
+                ),
+              ),
+            ),
           Positioned(right: 8, top: 8, child: _mapControls(intelligence)),
           if (intelligence.map.availableLayers.length > 1)
             Positioned(
@@ -1035,7 +1107,10 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
           _chips<String>(
             values: const ['Full', 'Mid', 'Late'],
             selected: _raidStage,
-            label: (value) => value,
+            label: (value) {
+              final budget = ArcRaidTimeBudget.forStage(value);
+              return '${budget.label} · ~${budget.totalMinutes}m';
+            },
             onSelected: (value) => setState(() => _raidStage = value),
           ),
           const SizedBox(height: 10),
@@ -1131,20 +1206,46 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   }
 
   Widget _filterSection() {
-    return _section(
-      title: 'Map Layers',
-      child: ArcMapMarkerFilterPanel(
-        filters: _filters,
-        searchController: _searchController,
-        onChanged: (filters) {
-          setState(() {
-            _filters = filters;
-            if (_selectedMarker != null && !_filters.allows(_selectedMarker!)) {
-              _selectedMarker = null;
-            }
-          });
-        },
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SwitchListTile.adaptive(
+          dense: true,
+          contentPadding: EdgeInsets.zero,
+          value: _showExplorerMarkers,
+          onChanged: (value) => setState(() {
+            _showExplorerMarkers = value;
+            if (!value) _selectedMarker = null;
+          }),
+          title: const Text(
+            'Explore all intel markers',
+            style: TextStyle(color: ArcUiTokens.textPrimary),
+          ),
+          subtitle: const Text(
+            'Off keeps the map clean and only shows your generated run. Turn on for manual map exploration.',
+            style: TextStyle(color: ArcUiTokens.textTertiary),
+          ),
+        ),
+        if (_showExplorerMarkers) ...[
+          const SizedBox(height: 6),
+          _section(
+            title: 'Map Layers',
+            child: ArcMapMarkerFilterPanel(
+              filters: _filters,
+              searchController: _searchController,
+              onChanged: (filters) {
+                setState(() {
+                  _filters = filters;
+                  if (_selectedMarker != null &&
+                      !_filters.allows(_selectedMarker!)) {
+                    _selectedMarker = null;
+                  }
+                });
+              },
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -1459,6 +1560,10 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(route.summary, style: ArcUiTokens.body()),
+                if (_routeAlternatives.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  _routeAlternativesPanel(route),
+                ],
                 if (route.metrics.hasData) ...[
                   const SizedBox(height: 10),
                   Wrap(
@@ -1466,9 +1571,23 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                     runSpacing: 8,
                     children: [
                       _pill(
-                        '${route.metrics.estimatedMinutes} min',
-                        AppTheme.neonCyan,
+                        route.metrics.routeBudgetMinutes > 0
+                            ? '${route.metrics.estimatedMinutes}/${route.metrics.routeBudgetMinutes} min route'
+                            : '${route.metrics.estimatedMinutes} min',
+                        route.metrics.fitsTimeBudget
+                            ? AppTheme.neonCyan
+                            : Colors.redAccent,
                       ),
+                      if (route.metrics.extractionReserveMinutes > 0)
+                        _pill(
+                          '${route.metrics.extractionReserveMinutes} min extract reserve',
+                          Colors.amberAccent,
+                        ),
+                      if (route.metrics.bufferMinutes > 0)
+                        _pill(
+                          '+${route.metrics.bufferMinutes} min buffer',
+                          Colors.lightGreenAccent,
+                        ),
                       if (route.metrics.objectiveTargetCount > 0)
                         _pill(
                           '${route.metrics.objectiveTargetCount} tracker goals',
@@ -1544,13 +1663,80 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                     _smallButton('Archive', Icons.archive_rounded, () async {
                       await _routeRepository.archiveActiveRoute();
                       if (!mounted) return;
-                      setState(() => _routePlan = null);
+                      setState(() {
+                        _routePlan = null;
+                        _routeAlternatives = const <ArcRaidRoutePlan>[];
+                      });
                       _showSnack('Active route archived.');
                     }),
                   ],
                 ),
               ],
             ),
+    );
+  }
+
+  Widget _routeAlternativesPanel(ArcRaidRoutePlan activeRoute) {
+    final tier = _generatedRouteTier;
+    final accent = tier == UagSubscriptionTier.premium
+        ? ArcUiTokens.secondaryAccent
+        : ArcUiTokens.primaryAccent;
+    final message = switch (tier) {
+      UagSubscriptionTier.free =>
+        'Free gives you one complete recommended run. Essential adds a second viable strategy; Premium compares every viable route style.',
+      UagSubscriptionTier.essential =>
+        'Essential gives you two viable run strategies. Premium unlocks every viable Fast, Balanced, Thorough and Safer route.',
+      UagSubscriptionTier.premium =>
+        'Premium intelligence: every viable route style found for this raid is available below.',
+    };
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(10),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        radius: ArcUiTokens.radiusM,
+        accent: accent,
+        borderOpacity: 0.32,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${tier.label.toUpperCase()} ROUTE INTELLIGENCE',
+            style: ArcUiTokens.label(color: accent),
+          ),
+          const SizedBox(height: 7),
+          Wrap(
+            spacing: 7,
+            runSpacing: 7,
+            children: [
+              for (final option in _routeAlternatives)
+                ChoiceChip(
+                  selected: option.routeStyle == activeRoute.routeStyle,
+                  label: Text(
+                    '${option.routeStyle.label} · ${option.metrics.estimatedMinutes}m · ${option.metrics.efficiencyScore}%',
+                  ),
+                  onSelected: (_) => _selectRouteAlternative(option),
+                  selectedColor: accent.withValues(alpha: 0.20),
+                  backgroundColor: ArcUiTokens.surfaceRaised,
+                  side: BorderSide(
+                    color: option.routeStyle == activeRoute.routeStyle
+                        ? accent.withValues(alpha: 0.72)
+                        : ArcUiTokens.textTertiary.withValues(alpha: 0.25),
+                  ),
+                  labelStyle: ArcUiTokens.bodySmall(
+                    color: option.routeStyle == activeRoute.routeStyle
+                        ? ArcUiTokens.textPrimary
+                        : ArcUiTokens.textSecondary,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 7),
+          Text(message, style: ArcUiTokens.bodySmall()),
+        ],
+      ),
     );
   }
 
@@ -1711,6 +1897,8 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       if (!allowed || !mounted) return;
       setState(() {
         _routePlan = null;
+        _routeAlternatives = const <ArcRaidRoutePlan>[];
+        _generatedRouteTier = UagSubscriptionTier.free;
         _objectiveOnlyStops = objectiveStops;
       });
       _showSnack(
@@ -1747,8 +1935,25 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       action: UagBillableAction.premiumIntelUnlock,
     );
     if (!allowed || !mounted) return;
+    var generatedTier = UagSubscriptionTier.free;
+    try {
+      generatedTier =
+          (await _entitlementService.getMyEntitlement()).effectiveTier;
+    } catch (_) {
+      generatedTier = UagSubscriptionTier.free;
+    }
+    if (!mounted) return;
+    final alternatives = _buildTierRouteAlternatives(
+      intelligence: intelligence,
+      spawn: spawn,
+      extraction: resolvedExtraction,
+      primary: route,
+      tier: generatedTier,
+    );
     setState(() {
       _routePlan = route;
+      _routeAlternatives = alternatives;
+      _generatedRouteTier = generatedTier;
       _objectiveOnlyStops = const <ArcRaidIntelCluster>[];
     });
     if (await _saveActiveRoute(route)) {
@@ -1756,6 +1961,64 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     } else {
       _showSnack('Smart Raid Run generated locally; route save failed.');
     }
+  }
+
+  List<ArcRaidRoutePlan> _buildTierRouteAlternatives({
+    required ArcRaidIntelligenceState intelligence,
+    required ArcRaidRouteStop spawn,
+    required ArcRaidRouteStop extraction,
+    required ArcRaidRoutePlan primary,
+    required UagSubscriptionTier tier,
+  }) {
+    if (tier == UagSubscriptionTier.free) {
+      return <ArcRaidRoutePlan>[primary];
+    }
+
+    final candidates = <ArcRaidRoutePlan>[primary];
+    for (final style in ArcRaidRouteStyle.values) {
+      if (style == primary.routeStyle) continue;
+      final candidate = _engine.generateRoute(
+        map: intelligence.map,
+        clusters: intelligence.opportunityClusters,
+        spawn: spawn,
+        extraction: extraction,
+        routeStyle: style,
+        raidStage: _raidStage,
+        squadMode: _squadMode,
+        objectivePriority: _objectivePriority,
+        usesRaiderHatch: _usesHatch,
+        hatchKeyConfirmed: _hatchKeyConfirmed,
+      );
+      if (candidate == null || !candidate.metrics.fitsTimeBudget) continue;
+      candidates.add(candidate);
+    }
+
+    if (tier == UagSubscriptionTier.premium) {
+      return candidates;
+    }
+
+    if (candidates.length <= 2) return candidates;
+    final secondary = candidates.skip(1).toList(growable: false)
+      ..sort((a, b) {
+        final efficiency = b.metrics.efficiencyScore.compareTo(
+          a.metrics.efficiencyScore,
+        );
+        if (efficiency != 0) return efficiency;
+        return a.metrics.estimatedMinutes.compareTo(b.metrics.estimatedMinutes);
+      });
+    return <ArcRaidRoutePlan>[primary, secondary.first];
+  }
+
+  Future<void> _selectRouteAlternative(ArcRaidRoutePlan route) async {
+    if (identical(_routePlan, route)) return;
+    setState(() => _routePlan = route);
+    final saved = await _saveActiveRoute(route);
+    if (!mounted) return;
+    _showSnack(
+      saved
+          ? '${route.routeStyle.label} route selected and saved.'
+          : '${route.routeStyle.label} route selected locally; save failed.',
+    );
   }
 
   void _addClusterStop(ArcRaidIntelCluster cluster) {

@@ -38,6 +38,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_profile_edit_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_profile_setup_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raid_intelligence_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_duplicate_blueprints_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_season_reset_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_smart_build_trade_draft_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_trader_search_screen.dart';
@@ -435,6 +436,16 @@ class UAGTradersHubApp extends StatefulWidget {
             flag: FeatureAccessFlag.intelExplorer,
             title: 'Raid Intelligence',
             child: ArcRaidIntelligenceScreen(),
+          ),
+          settings: settings,
+        );
+
+      case ArcDuplicateBlueprintsScreen.routeName:
+        return MaterialPageRoute(
+          builder: (_) => const FeatureAccessRouteGate(
+            flag: FeatureAccessFlag.traderHub,
+            title: 'Have • Need • Trade',
+            child: ArcDuplicateBlueprintsScreen(),
           ),
           settings: settings,
         );

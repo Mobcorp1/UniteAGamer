@@ -35,6 +35,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/blu
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/blueprint_voice_search_button.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raid_intelligence_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_duplicate_blueprints_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_blueprint_watches_screen.dart';
@@ -1252,6 +1253,12 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                 () =>
                     Navigator.of(context).pushNamed(TraderHubScreen.routeName),
               ),
+              action(
+                'Have • Need • Trade',
+                () => Navigator.of(
+                  context,
+                ).pushNamed(ArcDuplicateBlueprintsScreen.routeName),
+              ),
               action('Select Multiple', () {
                 _enterSelectionMode();
                 setState(() => _toolsOpen = false);
@@ -1629,7 +1636,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
         );
         return;
       case 'trade':
-        Navigator.of(context).pushNamed(TraderHubScreen.routeName);
+        Navigator.of(context).pushNamed(ArcDuplicateBlueprintsScreen.routeName);
         return;
       case 'intel':
         Navigator.of(context).pushNamed(ArcMarketIntelligenceScreen.routeName);
@@ -1811,7 +1818,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                             Navigator.of(sheetContext).pop();
                             Navigator.of(context).pushNamed(
                               state.hasDuplicates
-                                  ? TraderHubScreen.routeName
+                                  ? ArcDuplicateBlueprintsScreen.routeName
                                   : ArcMarketIntelligenceScreen.routeName,
                             );
                           },
