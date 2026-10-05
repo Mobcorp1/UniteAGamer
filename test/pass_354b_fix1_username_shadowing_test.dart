@@ -16,9 +16,6 @@ void main() {
       source,
       contains('final reportedScreenUsername = screenUsername.text.trim();'),
     );
-    expect(
-      source,
-      contains('targetDisplayName: reportedScreenUsername'),
-    );
+    expect(source, contains('targetDisplayName: reportedScreenUsername'));
   });
 }

@@ -138,7 +138,6 @@ class _ArcBlueprintDropReportSheetState
     });
   }
 
-
   List<String> get _availableMaps {
     final maps = List<String>.from(ArcPoiDataStore.availableMaps);
     maps.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
@@ -252,10 +251,7 @@ class _ArcBlueprintDropReportSheetState
     }
   }
 
-  String _pinpointLabel(
-    ArcNormalizedPoint? point,
-    ArcRaidMapLayer layer,
-  ) {
+  String _pinpointLabel(ArcNormalizedPoint? point, ArcRaidMapLayer layer) {
     if (point == null) return 'Tap to pinpoint exact location';
     return 'Exact location pinned • ${layer.label}';
   }
@@ -360,8 +356,9 @@ class _ArcBlueprintDropReportSheetState
               _acquisitionSource ?? ArcBlueprintAcquisitionSource.lootDrop,
           foundAt: reportTime,
           localTimeLabel: isRaidReport ? _formatLocalTime(reportTime) : null,
-          timezoneOffsetMinutes:
-              isRaidReport ? _capturedTimezoneOffsetMinutes : null,
+          timezoneOffsetMinutes: isRaidReport
+              ? _capturedTimezoneOffsetMinutes
+              : null,
           notes: _notesController.text,
         );
       }
@@ -492,8 +489,9 @@ class _ArcBlueprintDropReportSheetState
       _selectedMap = selection;
       _selectedPoint = null;
       _selectedLayer = ArcRaidMapLayer.surface;
-      _selectedContainerType =
-          _usesAssessorFlow ? ArcContainerTypes.assessor : null;
+      _selectedContainerType = _usesAssessorFlow
+          ? ArcContainerTypes.assessor
+          : null;
       _raidType = null;
       _eventManuallySelected = false;
       _additionalReports.clear();
@@ -607,7 +605,9 @@ class _ArcBlueprintDropReportSheetState
     final blueprint = _additionalReports[index].blueprint;
     if (mapName == null || blueprint == null || !mounted) return;
     final entry = _additionalReports[index];
-    final asset = blueprint.imageAssetPath ?? ArcBlueprintAssetRegistry.assetFor(blueprint.name);
+    final asset =
+        blueprint.imageAssetPath ??
+        ArcBlueprintAssetRegistry.assetFor(blueprint.name);
     final selection = await showArcDropReportMapPicker(
       context: context,
       mapName: mapName,
@@ -643,10 +643,13 @@ class _ArcBlueprintDropReportSheetState
         .map((entry) => entry.blueprint?.id)
         .whereType<String>()
         .toSet();
-    final items = ArcBlueprintSeedData.blueprints
-        .where((item) => !usedIds.contains(item.id))
-        .toList(growable: false)
-      ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    final items =
+        ArcBlueprintSeedData.blueprints
+            .where((item) => !usedIds.contains(item.id))
+            .toList(growable: false)
+          ..sort(
+            (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+          );
 
     final selection = await showArcDropReportCarouselPicker<ArcBlueprint>(
       context: context,
@@ -744,7 +747,10 @@ class _ArcBlueprintDropReportSheetState
       stream: widget.repository.watchIntelForBlueprint(widget.blueprint.id),
       builder: (context, snapshot) {
         final intel = snapshot.data ?? ArcDropIntel.empty(widget.blueprint.id);
-        return ArcBlueprintIntelPanel(blueprint: widget.blueprint, intel: intel);
+        return ArcBlueprintIntelPanel(
+          blueprint: widget.blueprint,
+          intel: intel,
+        );
       },
     );
   }
@@ -788,9 +794,8 @@ class _ArcBlueprintDropReportSheetState
       _DropReportStep.event => _DropReportStep.region,
       _DropReportStep.container => _DropReportStep.event,
       _DropReportStep.round => _DropReportStep.container,
-      _DropReportStep.review => _requiresRaidDetails
-          ? _DropReportStep.round
-          : _DropReportStep.source,
+      _DropReportStep.review =>
+        _requiresRaidDetails ? _DropReportStep.round : _DropReportStep.source,
     };
     _goToStep(next);
   }
@@ -961,57 +966,59 @@ class _ArcBlueprintDropReportSheetState
   Widget _buildActiveStepCard() {
     final body = switch (_activeDropStep) {
       _DropReportStep.source => _stepChoice(
-          label: 'How Was It Obtained',
-          value: _acquisitionSource?.label ?? 'Select source',
-          icon: Icons.inventory_2_outlined,
-          onTap: _pickAcquisitionSource,
-          helper: 'Pick once and this step collapses into the summary strip.',
-        ),
+        label: 'How Was It Obtained',
+        value: _acquisitionSource?.label ?? 'Select source',
+        icon: Icons.inventory_2_outlined,
+        onTap: _pickAcquisitionSource,
+        helper: 'Pick once and this step collapses into the summary strip.',
+      ),
       _DropReportStep.map => _stepChoice(
-          label: 'Map',
-          value: _selectedMap ?? 'Select map',
-          icon: Icons.map_outlined,
-          onTap: _pickMap,
-          helper: 'Selecting a map immediately opens the exact pinpoint view.',
-        ),
+        label: 'Map',
+        value: _selectedMap ?? 'Select map',
+        icon: Icons.map_outlined,
+        onTap: _pickMap,
+        helper: 'Selecting a map immediately opens the exact pinpoint view.',
+      ),
       _DropReportStep.pinpoint => _stepChoice(
-          label: 'Exact Drop Pinpoint',
-          value: _pinpointLabel(_selectedPoint, _selectedLayer),
-          icon: Icons.add_location_alt_outlined,
-          onTap: _selectedMap == null ? null : _pickPrimaryLocation,
-          helper: 'This remains an exact coordinate. It is not attached to a nearby POI.',
-        ),
+        label: 'Exact Drop Pinpoint',
+        value: _pinpointLabel(_selectedPoint, _selectedLayer),
+        icon: Icons.add_location_alt_outlined,
+        onTap: _selectedMap == null ? null : _pickPrimaryLocation,
+        helper:
+            'This remains an exact coordinate. It is not attached to a nearby POI.',
+      ),
       _DropReportStep.region => _stepChoice(
-          label: 'Server Region',
-          value: _regionalLoading
-              ? '${_serverRegion.label} • checking schedule…'
-              : _serverRegion.label,
-          icon: Icons.public_rounded,
-          onTap: _pickServerRegion,
-          helper: 'Used only to match the correct regional event schedule.',
-        ),
+        label: 'Server Region',
+        value: _regionalLoading
+            ? '${_serverRegion.label} • checking schedule…'
+            : _serverRegion.label,
+        icon: Icons.public_rounded,
+        onTap: _pickServerRegion,
+        helper: 'Used only to match the correct regional event schedule.',
+      ),
       _DropReportStep.event => _stepChoice(
-          label: 'Map Event',
-          value: _selectedMapEvent?.label ?? 'No event / standard raid',
-          icon: Icons.bolt_outlined,
-          onTap: _usesAssessorFlow ? null : _pickMapEvent,
-          helper: _regionalSnapshot == null
-              ? 'No event / standard raid stays first.'
-              : '${_regionalSnapshot!.sourceLabel} • ${_serverRegion.label}',
-        ),
+        label: 'Map Event',
+        value: _selectedMapEvent?.label ?? 'No event / standard raid',
+        icon: Icons.bolt_outlined,
+        onTap: _usesAssessorFlow ? null : _pickMapEvent,
+        helper: _regionalSnapshot == null
+            ? 'No event / standard raid stays first.'
+            : '${_regionalSnapshot!.sourceLabel} • ${_serverRegion.label}',
+      ),
       _DropReportStep.container => _stepChoice(
-          label: 'Container Type',
-          value: _selectedContainerType?.label ??
-              (_usesAssessorFlow ? 'Assessor' : 'Select container type'),
-          icon: Icons.inventory_2_outlined,
-          onTap: _usesAssessorFlow ? null : _pickContainerType,
-        ),
+        label: 'Container Type',
+        value:
+            _selectedContainerType?.label ??
+            (_usesAssessorFlow ? 'Assessor' : 'Select container type'),
+        icon: Icons.inventory_2_outlined,
+        onTap: _usesAssessorFlow ? null : _pickContainerType,
+      ),
       _DropReportStep.round => _stepChoice(
-          label: 'Raid Round',
-          value: _raidType?.label ?? 'Select raid round',
-          icon: Icons.timelapse_rounded,
-          onTap: _pickRaidType,
-        ),
+        label: 'Raid Round',
+        value: _raidType?.label ?? 'Select raid round',
+        icon: Icons.timelapse_rounded,
+        onTap: _pickRaidType,
+      ),
       _DropReportStep.review => _buildReviewStep(),
     };
 
@@ -1348,17 +1355,19 @@ class _ArcBlueprintDropReportSheetState
                   const SizedBox(height: 4),
                   Text(
                     '${widget.blueprint.category} ${String.fromCharCode(0x2022)} ${widget.blueprint.group} ${String.fromCharCode(0x2022)} ${widget.blueprint.rarityLabel}',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(color: Colors.white70),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
                   ),
                   const SizedBox(height: AppTheme.spaceL),
                   SwitchListTile(
                     value: _owned,
                     contentPadding: EdgeInsets.zero,
                     activeThumbColor: AppTheme.neonPink,
-                    title: const Text('Owned', style: TextStyle(color: Colors.white)),
+                    title: const Text(
+                      'Owned',
+                      style: TextStyle(color: Colors.white),
+                    ),
                     subtitle: Text(
                       _owned
                           ? 'This blueprint is in your collection.'
@@ -1387,7 +1396,9 @@ class _ArcBlueprintDropReportSheetState
                         _effectiveOwned ? AppTheme.neonCyan : AppTheme.neonPink,
                       ),
                       _tag(
-                        _currentDupes > 0 ? 'Tradeable x$_currentDupes' : 'No Dupes',
+                        _currentDupes > 0
+                            ? 'Tradeable x$_currentDupes'
+                            : 'No Dupes',
                         _currentDupes > 0 ? Colors.amberAccent : Colors.white54,
                       ),
                     ],
@@ -1395,14 +1406,16 @@ class _ArcBlueprintDropReportSheetState
                   const SizedBox(height: AppTheme.spaceL),
                   _buildExpandablePanel(
                     title: 'Community Intel',
-                    subtitle: 'Open community drop data, confidence and reported locations.',
+                    subtitle:
+                        'Open community drop data, confidence and reported locations.',
                     icon: Icons.insights_rounded,
                     children: [_buildIntelSummary()],
                   ),
                   const SizedBox(height: AppTheme.spaceM),
                   _buildExpandablePanel(
                     title: 'Drop Report',
-                    subtitle: 'A stable step-by-step report with exact map pinpointing.',
+                    subtitle:
+                        'A stable step-by-step report with exact map pinpointing.',
                     icon: Icons.add_location_alt_outlined,
                     children: [
                       const Text(
@@ -1450,7 +1463,9 @@ class _ArcBlueprintDropReportSheetState
                               ? const SizedBox(
                                   width: 18,
                                   height: 18,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 )
                               : const Text(
                                   'Save Owned / Dupes Only',
@@ -1461,7 +1476,8 @@ class _ArcBlueprintDropReportSheetState
                       const SizedBox(width: AppTheme.spaceM),
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: (_isSaving ||
+                          onPressed:
+                              (_isSaving ||
                                   !_canSubmitReport ||
                                   !_allAdditionalReportsValid)
                               ? null

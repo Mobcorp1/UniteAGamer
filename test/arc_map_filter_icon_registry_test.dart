@@ -15,13 +15,16 @@ void main() {
     }
   });
 
-  test('taxonomy keys remain stable while unfinished artwork falls back safely', () {
-    for (final entry in ArcMapFilterTaxonomy.all) {
-      expect(entry.iconKey.trim(), isNotEmpty, reason: entry.id);
-      final path = ArcMapFilterIconRegistry.tryAssetPathFor(entry.iconKey);
-      if (path != null) expect(File(path).existsSync(), isTrue, reason: path);
-    }
-  });
+  test(
+    'taxonomy keys remain stable while unfinished artwork falls back safely',
+    () {
+      for (final entry in ArcMapFilterTaxonomy.all) {
+        expect(entry.iconKey.trim(), isNotEmpty, reason: entry.id);
+        final path = ArcMapFilterIconRegistry.tryAssetPathFor(entry.iconKey);
+        if (path != null) expect(File(path).existsSync(), isTrue, reason: path);
+      }
+    },
+  );
 
   test('core completed marker replacements are wired', () {
     const expected = <String, String>{
@@ -46,12 +49,16 @@ void main() {
     }
   });
 
-  test('all completed ARC enemy artwork is wired without renaming taxonomy', () {
-    for (final key in ArcMapFilterIconRegistry.rasterIconKeys
-        .where((key) => key.startsWith('arc_'))) {
-      expect(ArcMapFilterIconRegistry.canonicalIconKeys, contains(key));
-    }
-  });
+  test(
+    'all completed ARC enemy artwork is wired without renaming taxonomy',
+    () {
+      for (final key in ArcMapFilterIconRegistry.rasterIconKeys.where(
+        (key) => key.startsWith('arc_'),
+      )) {
+        expect(ArcMapFilterIconRegistry.canonicalIconKeys, contains(key));
+      }
+    },
+  );
 
   test('unknown icon keys use widget fallback rather than a missing asset', () {
     expect(ArcMapFilterIconRegistry.tryAssetPathFor('custom_signal'), isNull);

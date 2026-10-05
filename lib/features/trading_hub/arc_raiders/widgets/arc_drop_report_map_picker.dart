@@ -7,10 +7,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class ArcDropReportMapSelection {
-  const ArcDropReportMapSelection({
-    required this.point,
-    required this.layer,
-  });
+  const ArcDropReportMapSelection({required this.point, required this.layer});
 
   final ArcNormalizedPoint point;
   final ArcRaidMapLayer layer;
@@ -70,7 +67,8 @@ class _ArcDropReportMapPickerSheetState
     super.initState();
     _transform = TransformationController();
     final registration = ArcMapAssetRegistry.registrationFor(widget.mapName);
-    _available = registration?.layerAssets.entries
+    _available =
+        registration?.layerAssets.entries
             .where((entry) => entry.value.hasRenderableImage)
             .toList(growable: false) ??
         const <MapEntry<ArcRaidMapLayer, ArcRaidMapAsset>>[];
@@ -81,7 +79,8 @@ class _ArcDropReportMapPickerSheetState
     }
 
     final initialLayer = widget.initialSelection?.layer;
-    _layer = initialLayer != null &&
+    _layer =
+        initialLayer != null &&
             _available.any((entry) => entry.key == initialLayer)
         ? initialLayer
         : (_available.any((entry) => entry.key == ArcRaidMapLayer.surface)
@@ -127,7 +126,12 @@ class _ArcDropReportMapPickerSheetState
     final target = (current * factor).clamp(1.0, 14.0).toDouble();
     if ((target - current).abs() < .001) return;
     final ratio = target / current;
-    _transform.value = _transform.value.scaledByDouble(ratio, ratio, ratio, 1.0);
+    _transform.value = _transform.value.scaledByDouble(
+      ratio,
+      ratio,
+      ratio,
+      1.0,
+    );
   }
 
   @override
@@ -272,14 +276,16 @@ class _ArcDropReportMapPickerSheetState
                                 behavior: HitTestBehavior.opaque,
                                 onTapUp: (details) {
                                   final next = ArcNormalizedPoint(
-                                    x: (details.localPosition.dx /
-                                            mapSize.width)
-                                        .clamp(0.0, 1.0)
-                                        .toDouble(),
-                                    y: (details.localPosition.dy /
-                                            mapSize.height)
-                                        .clamp(0.0, 1.0)
-                                        .toDouble(),
+                                    x:
+                                        (details.localPosition.dx /
+                                                mapSize.width)
+                                            .clamp(0.0, 1.0)
+                                            .toDouble(),
+                                    y:
+                                        (details.localPosition.dy /
+                                                mapSize.height)
+                                            .clamp(0.0, 1.0)
+                                            .toDouble(),
                                   );
                                   setState(() => _point = next);
                                 },
@@ -292,8 +298,10 @@ class _ArcDropReportMapPickerSheetState
                                       ),
                                       if (_point != null)
                                         Positioned(
-                                          left: (_point!.x * mapSize.width) - 28,
-                                          top: (_point!.y * mapSize.height) - 48,
+                                          left:
+                                              (_point!.x * mapSize.width) - 28,
+                                          top:
+                                              (_point!.y * mapSize.height) - 48,
                                           child: IgnorePointer(
                                             child: _BlueprintPin(
                                               assetPath:
@@ -346,7 +354,9 @@ class _ArcDropReportMapPickerSheetState
                                 color: Colors.black.withValues(alpha: .78),
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
-                                  color: AppTheme.neonPink.withValues(alpha: .5),
+                                  color: AppTheme.neonPink.withValues(
+                                    alpha: .5,
+                                  ),
                                 ),
                               ),
                               child: Text(

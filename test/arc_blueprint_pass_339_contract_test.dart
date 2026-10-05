@@ -17,7 +17,10 @@ void main() {
     expect(classify, greaterThan(calibration));
     expect(source, contains('samples: merged.samples'));
     expect(source, contains(r'anchors=${calibrated.knownOwnedAnchors}'));
-    expect(source, contains(r'personalSuppressed=${calibrated.suppressedCandidateCount}'));
+    expect(
+      source,
+      contains(r'personalSuppressed=${calibrated.suppressedCandidateCount}'),
+    );
   });
 
   test('PASS 339 does not alter camera or merge implementation', () {

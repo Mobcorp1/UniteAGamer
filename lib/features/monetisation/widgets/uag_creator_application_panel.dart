@@ -51,7 +51,9 @@ class _UagCreatorApplicationPanelState
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Creator application submitted for review.')),
+        const SnackBar(
+          content: Text('Creator application submitted for review.'),
+        ),
       );
     } catch (_) {
       if (!mounted) return;
@@ -158,9 +160,8 @@ class _UagCreatorApplicationPanelState
                       Checkbox(
                         value: _termsAccepted,
                         activeColor: ArcUiTokens.secondaryAccent,
-                        onChanged: (value) => setState(
-                          () => _termsAccepted = value ?? false,
-                        ),
+                        onChanged: (value) =>
+                            setState(() => _termsAccepted = value ?? false),
                       ),
                       const SizedBox(width: ArcUiTokens.gapXS),
                       Expanded(

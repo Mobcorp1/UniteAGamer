@@ -11,7 +11,10 @@ void main() {
     expect(source, contains('enum _DropReportStep'));
     expect(source, contains('_buildDropReportRevolver'));
     expect(source, contains('One step at a time'));
-    expect(source, contains("poiName: isRaidReport && !isDolabra && point != null"));
+    expect(
+      source,
+      contains("poiName: isRaidReport && !isDolabra && point != null"),
+    );
     expect(source, isNot(contains('_nearestPublishedPoi')));
     expect(source, isNot(contains('Matching nearby POIs in the background')));
   });

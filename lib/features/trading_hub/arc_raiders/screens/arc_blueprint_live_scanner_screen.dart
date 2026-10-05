@@ -1570,10 +1570,7 @@ class _BlueprintScannerProcessingState extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: AppTheme.neonPink.withValues(alpha: 0.92),
                       shape: BoxShape.circle,
-                      border: Border.all(
-                        color: AppTheme.neonCyan,
-                        width: 2,
-                      ),
+                      border: Border.all(color: AppTheme.neonCyan, width: 2),
                       boxShadow: [
                         BoxShadow(
                           color: AppTheme.neonPink.withValues(alpha: 0.28),

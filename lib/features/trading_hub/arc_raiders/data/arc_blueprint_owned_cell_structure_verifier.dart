@@ -246,10 +246,8 @@ class ArcBlueprintOwnedCellStructureVerifier {
           classification != 'owned' && rawProposalEvidence >= ownedThreshold;
       if (suppressed) suppressedCount++;
 
-      final overlapCorroborated =
-          overlapGate != null && overlapGate.allPassed;
-      final diagnosticStructure =
-          overlapCorroborated && !primaryGate.allPassed
+      final overlapCorroborated = overlapGate != null && overlapGate.allPassed;
+      final diagnosticStructure = overlapCorroborated && !primaryGate.allPassed
           ? overlapStructure!
           : primaryStructure;
 

@@ -15,7 +15,10 @@ void main() {
         isNot(contains('final context = TextEditingController();')),
       );
       expect(source, contains("encounterContext: ''"));
-      expect(source, contains('final screenUsername = TextEditingController();'));
+      expect(
+        source,
+        contains('final screenUsername = TextEditingController();'),
+      );
 
       // Framework BuildContext must remain available to dialogs/snackbars.
       expect(source, contains('context: context'));

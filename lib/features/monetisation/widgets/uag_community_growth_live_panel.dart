@@ -43,16 +43,15 @@ class UagCommunityGrowthLivePanel extends StatelessWidget {
                     value: (users / nextTarget).clamp(0.0, 1.0),
                     minHeight: 7,
                     color: ArcUiTokens.secondaryAccent,
-                    backgroundColor:
-                        ArcUiTokens.secondaryAccent.withValues(alpha: 0.12),
+                    backgroundColor: ArcUiTokens.secondaryAccent.withValues(
+                      alpha: 0.12,
+                    ),
                   ),
                 ),
                 const SizedBox(height: ArcUiTokens.gapXS),
                 Text(
                   'Next community target: $nextTarget',
-                  style: ArcUiTokens.metadata(
-                    color: ArcUiTokens.textTertiary,
-                  ),
+                  style: ArcUiTokens.metadata(color: ArcUiTokens.textTertiary),
                 ),
               ],
             ],

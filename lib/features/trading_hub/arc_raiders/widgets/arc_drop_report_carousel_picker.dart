@@ -84,9 +84,9 @@ class _ArcDropReportCarouselSheetState<T>
 
   T? get _selected => _filteredItems.isEmpty
       ? null
-      : _filteredItems[
-          _selectedIndex.clamp(0, _filteredItems.length - 1).toInt()
-        ];
+      : _filteredItems[_selectedIndex
+            .clamp(0, _filteredItems.length - 1)
+            .toInt()];
 
   void _updateFilter(String query) {
     final normalized = query.trim().toLowerCase();
@@ -162,14 +162,15 @@ class _ArcDropReportCarouselSheetState<T>
                 autofocus: false,
                 style: const TextStyle(color: Colors.white),
                 onChanged: _updateFilter,
-                decoration: AppTheme.tradingInputDecoration(
-                  label: 'Search ${widget.title}',
-                ).copyWith(
-                  prefixIcon: const Icon(
-                    Icons.search_rounded,
-                    color: Colors.white70,
-                  ),
-                ),
+                decoration:
+                    AppTheme.tradingInputDecoration(
+                      label: 'Search ${widget.title}',
+                    ).copyWith(
+                      prefixIcon: const Icon(
+                        Icons.search_rounded,
+                        color: Colors.white70,
+                      ),
+                    ),
               ),
             ],
             const SizedBox(height: 10),
@@ -199,12 +200,13 @@ class _ArcDropReportCarouselSheetState<T>
                                 var distance = 0.0;
                                 if (_pageController.hasClients &&
                                     _pageController.position.haveDimensions) {
-                                  distance = ((_pageController.page ??
-                                              _selectedIndex.toDouble()) -
-                                          index)
-                                      .abs()
-                                      .clamp(0.0, 1.0)
-                                      .toDouble();
+                                  distance =
+                                      ((_pageController.page ??
+                                                  _selectedIndex.toDouble()) -
+                                              index)
+                                          .abs()
+                                          .clamp(0.0, 1.0)
+                                          .toDouble();
                                 }
                                 return Transform.scale(
                                   scale: 1 - (distance * .08),

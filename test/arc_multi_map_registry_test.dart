@@ -35,10 +35,7 @@ void main() {
     );
     expect(map.hasRenderableLayer(ArcRaidMapLayer.surface), isTrue);
     expect(map.hasCalibratedLayer(ArcRaidMapLayer.surface), isTrue);
-    expect(
-      ArcMapAssetRegistry.statusFor('buried_city'),
-      'Calibrated',
-    );
+    expect(ArcMapAssetRegistry.statusFor('buried_city'), 'Calibrated');
   });
 
   test('Stella Montis exposes both provisional map layers', () {
@@ -65,10 +62,7 @@ void main() {
     expect(map.hasRenderableLayer(ArcRaidMapLayer.underground), isTrue);
     expect(map.hasCalibratedLayer(ArcRaidMapLayer.surface), isTrue);
     expect(map.hasCalibratedLayer(ArcRaidMapLayer.underground), isTrue);
-    expect(
-      ArcMapAssetRegistry.statusFor('stella_montis'),
-      'Calibrated',
-    );
+    expect(ArcMapAssetRegistry.statusFor('stella_montis'), 'Calibrated');
   });
 
   test('Dam Battlegrounds renders its master image but remains provisional', () {
@@ -82,10 +76,7 @@ void main() {
     expect(map.availableLayers, [ArcRaidMapLayer.surface]);
     expect(map.hasRenderableLayer(ArcRaidMapLayer.surface), isTrue);
     expect(map.hasCalibratedLayer(ArcRaidMapLayer.surface), isTrue);
-    expect(
-      ArcMapAssetRegistry.statusFor('dam_battlegrounds'),
-      'Calibrated',
-    );
+    expect(ArcMapAssetRegistry.statusFor('dam_battlegrounds'), 'Calibrated');
   });
 
   test('Spaceport exposes provisional surface and Level 2 map layers', () {
@@ -125,10 +116,7 @@ void main() {
     );
     expect(map.hasRenderableLayer(ArcRaidMapLayer.surface), isTrue);
     expect(map.hasCalibratedLayer(ArcRaidMapLayer.surface), isTrue);
-    expect(
-      ArcMapAssetRegistry.statusFor('riven_tides'),
-      'Calibrated',
-    );
+    expect(ArcMapAssetRegistry.statusFor('riven_tides'), 'Calibrated');
   });
 
   test('Blue Gate remains fully calibrated', () {

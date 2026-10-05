@@ -66,5 +66,4 @@ void main() {
     expect(clusters.single.point.x, closeTo(0.91, 0.0001));
     expect(clusters.single.point.y, closeTo(0.87, 0.0001));
   });
-
 }

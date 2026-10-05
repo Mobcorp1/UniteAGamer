@@ -405,8 +405,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
         );
 
     if (blueprintJourney &&
-        personalisation.blueprintOwnership ==
-            ArcBlueprintOwnershipState.none) {
+        personalisation.blueprintOwnership == ArcBlueprintOwnershipState.none) {
       return _featureByTitle('My Loadout');
     }
 

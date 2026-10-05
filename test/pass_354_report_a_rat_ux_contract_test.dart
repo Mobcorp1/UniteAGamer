@@ -29,24 +29,30 @@ void main() {
     expect(screen, contains("Enter the Rat\\'s screen username."));
   });
 
-  test('report identity persists screen username without duplicate identity UI', () {
-    expect(
-      screen,
-      contains('final reportedScreenUsername = screenUsername.text.trim();'),
-    );
-    expect(screen, contains('targetDisplayName: reportedScreenUsername'));
-    expect(screen, contains("targetGameIdentity: ''"));
-  });
+  test(
+    'report identity persists screen username without duplicate identity UI',
+    () {
+      expect(
+        screen,
+        contains('final reportedScreenUsername = screenUsername.text.trim();'),
+      );
+      expect(screen, contains('targetDisplayName: reportedScreenUsername'));
+      expect(screen, contains("targetGameIdentity: ''"));
+    },
+  );
 
-  test('report workflow includes incident location contract and review stages', () {
-    for (final label in <String>[
-      "'TARGET'",
-      "'INCIDENT'",
-      "'LOCATION'",
-      "'CONTRACT'",
-      "'REVIEW'",
-    ]) {
-      expect(screen, contains(label));
-    }
-  });
+  test(
+    'report workflow includes incident location contract and review stages',
+    () {
+      for (final label in <String>[
+        "'TARGET'",
+        "'INCIDENT'",
+        "'LOCATION'",
+        "'CONTRACT'",
+        "'REVIEW'",
+      ]) {
+        expect(screen, contains(label));
+      }
+    },
+  );
 }

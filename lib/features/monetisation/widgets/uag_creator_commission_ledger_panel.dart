@@ -23,7 +23,8 @@ class UagCreatorCommissionLedgerPanel extends StatelessWidget {
             .fold<int>(0, (total, row) => total + row.commissionPence);
         final payable = rows
             .where(
-              (row) => row.status == UagCreatorCommissionLifecycleStatus.payable,
+              (row) =>
+                  row.status == UagCreatorCommissionLifecycleStatus.payable,
             )
             .fold<int>(0, (total, row) => total + row.commissionPence);
 

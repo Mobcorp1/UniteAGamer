@@ -63,10 +63,7 @@ void main() {
       );
 
       expect(profile.progressStage, ArcRaiderProgressStage.freshExpedition);
-      expect(
-        profile.blueprintOwnership,
-        ArcBlueprintOwnershipState.none,
-      );
+      expect(profile.blueprintOwnership, ArcBlueprintOwnershipState.none);
       expect(profile.questProgress, ArcQuestProgressState.continuing);
       expect(profile.hasProgressionContext, isTrue);
       expect(profile.toMap()['progressStage'], 'freshExpedition');

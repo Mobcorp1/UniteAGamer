@@ -83,8 +83,7 @@ class _UagCreatorCommunityArsenalPanelState
     return ArcTacticalPanel(
       icon: Icons.inventory_2_outlined,
       title: 'COMMUNITY ARSENAL',
-      subtitle:
-          'Creator giveaway inventory and validated reward redemptions.',
+      subtitle: 'Creator giveaway inventory and validated reward redemptions.',
       accent: ArcUiTokens.secondaryAccent,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -204,7 +203,8 @@ class _UagCreatorCommunityArsenalPanelState
           StreamBuilder<List<UagCreatorRedemptionClaim>>(
             stream: _repository.watchMyRedemptions(),
             builder: (context, snapshot) {
-              final claims = snapshot.data ?? const <UagCreatorRedemptionClaim>[];
+              final claims =
+                  snapshot.data ?? const <UagCreatorRedemptionClaim>[];
               if (claims.isEmpty) return const SizedBox.shrink();
               return Padding(
                 padding: const EdgeInsets.only(top: ArcUiTokens.gapM),

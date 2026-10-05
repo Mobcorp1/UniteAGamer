@@ -42,10 +42,14 @@ class _UagReferralRewardLockerPanelState
             final rewards =
                 lockerSnapshot.data ?? const <UagReferralBankedReward>[];
             final active = rewards
-                .where((reward) => reward.status == UagReferralRewardStatus.active)
+                .where(
+                  (reward) => reward.status == UagReferralRewardStatus.active,
+                )
                 .toList(growable: false);
             final banked = rewards
-                .where((reward) => reward.status == UagReferralRewardStatus.banked)
+                .where(
+                  (reward) => reward.status == UagReferralRewardStatus.banked,
+                )
                 .toList(growable: false);
 
             return ArcTacticalPanel(
@@ -77,14 +81,19 @@ class _UagReferralRewardLockerPanelState
                           );
                           if (!mounted) return;
                           messenger.showSnackBar(
-                            SnackBar(content: Text('${reward.type.label} activated.')),
+                            SnackBar(
+                              content: Text('${reward.type.label} activated.'),
+                            ),
                           );
                         } catch (error) {
                           if (!mounted) return;
                           messenger.showSnackBar(
                             SnackBar(
                               content: Text(
-                                error.toString().replaceFirst('Bad state: ', ''),
+                                error.toString().replaceFirst(
+                                  'Bad state: ',
+                                  '',
+                                ),
                               ),
                             ),
                           );

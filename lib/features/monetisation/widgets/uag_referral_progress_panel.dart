@@ -39,8 +39,9 @@ class UagReferralProgressPanel extends StatelessWidget {
                   value: progress,
                   minHeight: 7,
                   color: ArcUiTokens.primaryAccent,
-                  backgroundColor:
-                      ArcUiTokens.primaryAccent.withValues(alpha: 0.12),
+                  backgroundColor: ArcUiTokens.primaryAccent.withValues(
+                    alpha: 0.12,
+                  ),
                 ),
               ),
               const SizedBox(height: ArcUiTokens.gapS),

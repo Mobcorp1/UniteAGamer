@@ -35,8 +35,9 @@ class ScrappyTile extends StatelessWidget {
         decoration: AppTheme.tradingCardDecoration(
           radius: 12,
           borderColor: accent.withValues(alpha: owned ? 0.52 : 0.14),
-          backgroundColor:
-              owned ? AppTheme.cardBackgroundAlt : AppTheme.cardBackgroundDeep,
+          backgroundColor: owned
+              ? AppTheme.cardBackgroundAlt
+              : AppTheme.cardBackgroundDeep,
         ),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(6, 6, 6, 8),
@@ -51,9 +52,7 @@ class ScrappyTile extends StatelessWidget {
                   clipBehavior: Clip.antiAlias,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(9),
-                    border: Border.all(
-                      color: accent.withValues(alpha: 0.22),
-                    ),
+                    border: Border.all(color: accent.withValues(alpha: 0.22)),
                     gradient: const LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,

@@ -42,40 +42,41 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('carousel can open and close repeatedly without framework errors', (
-    tester,
-  ) async {
-    var opens = 0;
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: Builder(
-            builder: (context) => ElevatedButton(
-              onPressed: () async {
-                opens += 1;
-                await showArcDropReportCarouselPicker<String>(
-                  context: context,
-                  title: 'Additional Blueprint',
-                  items: const ['Osprey', 'Anvil', 'Canto'],
-                  labelBuilder: (item) => item,
-                );
-              },
-              child: const Text('Open'),
+  testWidgets(
+    'carousel can open and close repeatedly without framework errors',
+    (tester) async {
+      var opens = 0;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => ElevatedButton(
+                onPressed: () async {
+                  opens += 1;
+                  await showArcDropReportCarouselPicker<String>(
+                    context: context,
+                    title: 'Additional Blueprint',
+                    items: const ['Osprey', 'Anvil', 'Canto'],
+                    labelBuilder: (item) => item,
+                  );
+                },
+                child: const Text('Open'),
+              ),
             ),
           ),
         ),
-      ),
-    );
+      );
 
-    for (var i = 0; i < 3; i++) {
-      await tester.tap(find.text('Open'));
-      await tester.pumpAndSettle();
-      expect(find.text('Use Osprey'), findsOneWidget);
-      await tester.tap(find.text('Use Osprey'));
-      await tester.pumpAndSettle();
-      expect(tester.takeException(), isNull);
-    }
+      for (var i = 0; i < 3; i++) {
+        await tester.tap(find.text('Open'));
+        await tester.pumpAndSettle();
+        expect(find.text('Use Osprey'), findsOneWidget);
+        await tester.tap(find.text('Use Osprey'));
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+      }
 
-    expect(opens, 3);
-  });
+      expect(opens, 3);
+    },
+  );
 }

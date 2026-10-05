@@ -96,7 +96,9 @@ class _PassButton extends StatelessWidget {
           Text(price, style: ArcUiTokens.numeric(fontSize: 22, color: accent)),
           const SizedBox(height: ArcUiTokens.gapS),
           Text(
-            recommended ? 'BEST VALUE FOR A FULL WEEK' : 'FULL PREMIUM FOR 24 HOURS',
+            recommended
+                ? 'BEST VALUE FOR A FULL WEEK'
+                : 'FULL PREMIUM FOR 24 HOURS',
             style: ArcUiTokens.label(color: ArcUiTokens.textTertiary),
           ),
           const SizedBox(height: ArcUiTokens.gapM),
@@ -104,7 +106,9 @@ class _PassButton extends StatelessWidget {
             width: double.infinity,
             child: OutlinedButton(
               style: ArcUiTokens.textButtonStyle(accent: accent),
-              onPressed: enabled && onPressed != null ? () => onPressed!(type) : null,
+              onPressed: enabled && onPressed != null
+                  ? () => onPressed!(type)
+                  : null,
               child: Text(enabled ? 'SELECT PASS' : 'PREMIUM ACTIVE'),
             ),
           ),

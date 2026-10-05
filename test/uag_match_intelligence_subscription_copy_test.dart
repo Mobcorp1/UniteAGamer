@@ -102,11 +102,17 @@ void main() {
       );
       final essential = UagUserEntitlement.fromUserDoc(
         uid: 'essential',
-        data: const <String, dynamic>{'subscriptionTier': 'essential', 'subscriptionStatus': 'active'},
+        data: const <String, dynamic>{
+          'subscriptionTier': 'essential',
+          'subscriptionStatus': 'active',
+        },
       );
       final premium = UagUserEntitlement.fromUserDoc(
         uid: 'premium',
-        data: const <String, dynamic>{'subscriptionTier': 'premium', 'subscriptionStatus': 'active'},
+        data: const <String, dynamic>{
+          'subscriptionTier': 'premium',
+          'subscriptionStatus': 'active',
+        },
       );
       final admin = UagUserEntitlement.fromUserDoc(
         uid: 'admin',
