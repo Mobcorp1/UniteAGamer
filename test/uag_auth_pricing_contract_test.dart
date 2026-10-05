@@ -9,14 +9,8 @@ void main() {
     expect(source, contains("tier: 'free'"));
     expect(source, contains("tier: 'essential'"));
     expect(source, contains("tier: 'premium'"));
-    expect(
-      source,
-      contains('UagCommercialEconomy.essentialMonthlyPricePence'),
-    );
-    expect(
-      source,
-      contains('UagCommercialEconomy.premiumMonthlyPricePence'),
-    );
+    expect(source, contains('UagCommercialEconomy.essentialMonthlyPricePence'));
+    expect(source, contains('UagCommercialEconomy.premiumMonthlyPricePence'));
 
     expect(source, isNot(contains("tier: 'Operator'")));
     expect(source, isNot(contains("tier: 'Overseer'")));

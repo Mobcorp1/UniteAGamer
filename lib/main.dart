@@ -617,17 +617,15 @@ class UAGTradersHubApp extends StatefulWidget {
 
       case ArcAdminMapEditorScreen.routeName:
         return MaterialPageRoute(
-          builder: (_) => const _AdminRouteGate(
-            child: ArcAdminMapEditorScreen(),
-          ),
+          builder: (_) =>
+              const _AdminRouteGate(child: ArcAdminMapEditorScreen()),
           settings: settings,
         );
 
       case ArcMapFilterIconReviewScreen.routeName:
         return MaterialPageRoute(
-          builder: (_) => const _AdminRouteGate(
-            child: ArcMapFilterIconReviewScreen(),
-          ),
+          builder: (_) =>
+              const _AdminRouteGate(child: ArcMapFilterIconReviewScreen()),
           settings: settings,
         );
 
