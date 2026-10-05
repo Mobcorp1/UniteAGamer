@@ -79,10 +79,158 @@ jobs:
           done
           exit "$status"
 
-      - name: Validate Firestore rules compile in emulator
+      - name: Validate Firestore rules and commercial authorization
         shell: bash
         run: |
-          npx --yes firebase-tools@15.30.2 emulators:exec --only firestore --project demo-uag "node -e \"console.log('Firestore rules compile: PASS')\""
+          set -euo pipefail
+          test_dir="$RUNNER_TEMP/pass221-firestore-rules"
+          mkdir -p "$test_dir"
+          cd "$test_dir"
+          npm init -y >/dev/null
+          npm install --silent @firebase/rules-unit-testing firebase
+          cat > firestore_rules_test.cjs <<'NODE'
+          'use strict';
+
+          const assert = require('node:assert/strict');
+          const fs = require('node:fs');
+          const {
+            initializeTestEnvironment,
+            assertFails,
+            assertSucceeds,
+          } = require('@firebase/rules-unit-testing');
+          const {
+            doc,
+            getDoc,
+            setDoc,
+            updateDoc,
+          } = require('firebase/firestore');
+
+          async function main() {
+            const rules = fs.readFileSync(
+              process.env.GITHUB_WORKSPACE + '/firestore.rules',
+              'utf8',
+            );
+            const env = await initializeTestEnvironment({
+              projectId: 'demo-uag',
+              firestore: {rules},
+            });
+
+            try {
+              await env.clearFirestore();
+
+              await env.withSecurityRulesDisabled(async (context) => {
+                await setDoc(doc(context.firestore(), 'users', 'normal-user'), {
+                  displayName: 'Normal Raider',
+                  isAdmin: false,
+                  isDev: false,
+                  isModerator: false,
+                  subscriptionTier: 'free',
+                  subscriptionStatus: 'free',
+                });
+                await setDoc(doc(context.firestore(), 'users', 'admin-user'), {
+                  displayName: 'Admin Raider',
+                  isAdmin: true,
+                  isDev: false,
+                  isModerator: false,
+                  subscriptionTier: 'premium',
+                  subscriptionStatus: 'active',
+                });
+                await setDoc(
+                  doc(
+                    context.firestore(),
+                    'arc_admin_map_markers',
+                    'pass221-marker',
+                  ),
+                  {
+                    state: 'published',
+                    provisionalVisible: false,
+                    sourcePermission: 'permitted',
+                    name: 'PASS 221 marker',
+                  },
+                );
+              });
+
+              const userDb = env
+                .authenticatedContext('normal-user')
+                .firestore();
+              const userRef = doc(userDb, 'users', 'normal-user');
+
+              await assertSucceeds(
+                updateDoc(userRef, {displayName: 'Normal Raider Updated'}),
+              );
+              await assertFails(
+                updateDoc(userRef, {subscriptionTier: 'premium'}),
+              );
+              await assertFails(
+                updateDoc(userRef, {subscriptionStatus: 'active'}),
+              );
+              await assertFails(updateDoc(userRef, {foundingRaider: true}));
+              await assertFails(updateDoc(userRef, {isAdmin: true}));
+
+              const anonymousDb = env.unauthenticatedContext().firestore();
+              await assertFails(
+                updateDoc(
+                  doc(anonymousDb, 'users', 'normal-user'),
+                  {displayName: 'Spoofed'},
+                ),
+              );
+
+              const markerRef = doc(
+                userDb,
+                'arc_admin_map_markers',
+                'pass221-marker',
+              );
+              await assertSucceeds(getDoc(markerRef));
+              await assertFails(
+                updateDoc(markerRef, {name: 'Unauthorized edit'}),
+              );
+
+              const adminDb = env
+                .authenticatedContext('admin-user')
+                .firestore();
+              await assertSucceeds(
+                updateDoc(
+                  doc(
+                    adminDb,
+                    'arc_admin_map_markers',
+                    'pass221-marker',
+                  ),
+                  {name: 'Authorized admin edit'},
+                ),
+              );
+
+              await env.withSecurityRulesDisabled(async (context) => {
+                const backendRef = doc(
+                  context.firestore(),
+                  'users',
+                  'normal-user',
+                );
+                await updateDoc(backendRef, {
+                  subscriptionTier: 'premium',
+                  subscriptionStatus: 'active',
+                  foundingRaider: true,
+                });
+                const snapshot = await getDoc(backendRef);
+                assert.equal(snapshot.data().subscriptionTier, 'premium');
+                assert.equal(snapshot.data().subscriptionStatus, 'active');
+                assert.equal(snapshot.data().foundingRaider, true);
+              });
+
+              console.log(
+                'Firestore rules authorization: PASS — client spoofing rejected; legitimate user, admin, and backend writes accepted.',
+              );
+            } finally {
+              await env.cleanup();
+            }
+          }
+
+          main().catch((error) => {
+            console.error(error);
+            process.exitCode = 1;
+          });
+          NODE
+          cd "$GITHUB_WORKSPACE"
+          npx --yes firebase-tools@15.30.2 emulators:exec --only firestore --project demo-uag "node '$test_dir/firestore_rules_test.cjs'"
 
       - name: Confirm certification run left source clean
         shell: bash
