@@ -11,6 +11,7 @@ import 'package:uag_arc_raiders_hub/build/auth/uag_auth_autofill.dart';
 import 'package:uag_arc_raiders_hub/features/auth/session/uag_session_gate_controller.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/privacy_policy_screen.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/terms_of_use_screen.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_commercial_economy.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_onboarding_setup.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_mandatory_onboarding_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_account_journey_bar.dart';
@@ -838,7 +839,8 @@ class _AuthScreenState extends State<AuthScreen> {
         ),
         _tierOption(
           tier: 'essential',
-          price: '\u00A37.99/month',
+          price:
+              '\u00A3${(UagCommercialEconomy.essentialMonthlyPricePence / 100).toStringAsFixed(2)}/month',
           summary: 'More UAG access with higher limits and expanded tools.',
           detail: 'Light advertising: banner only.',
           icon: Icons.workspace_premium_outlined,
@@ -846,7 +848,8 @@ class _AuthScreenState extends State<AuthScreen> {
         ),
         _tierOption(
           tier: 'premium',
-          price: '\u00A39.99/month',
+          price:
+              '\u00A3${(UagCommercialEconomy.premiumMonthlyPricePence / 100).toStringAsFixed(2)}/month',
           summary: 'Full UAG access with unlimited premium systems.',
           detail: 'No advertising.',
           icon: Icons.military_tech_rounded,
