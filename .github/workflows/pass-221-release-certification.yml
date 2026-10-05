@@ -80,7 +80,9 @@ jobs:
           exit "$status"
 
       - name: Validate Firestore rules compile in emulator
-        run: npx --yes firebase-tools@15.30.2 emulators:exec --only firestore --project demo-uag "node -e \"console.log('Firestore rules compile: PASS')\""
+        shell: bash
+        run: |
+          npx --yes firebase-tools@15.30.2 emulators:exec --only firestore --project demo-uag "node -e \"console.log('Firestore rules compile: PASS')\""
 
       - name: Confirm certification run left source clean
         shell: bash
