@@ -79,7 +79,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
 
   String _buildName = 'Favourite Raider Build';
   ArcPlayerPlayStyle _playStyle = ArcPlayerPlayStyle.balanced;
-  String _augment = 'Survivor';
+  String _augment = '';
   String _shield = 'Medium Shield';
   String _primaryWeapon = 'Anvil';
   String _secondaryWeapon = 'Stitcher';
@@ -91,7 +91,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     'Empty Slot',
   ];
   final List<String> _quickSlots = <String>[
-    'Survivor',
+    'Empty Slot',
     'Snap Hook',
     'Vita Shot',
     'Lure Grenade',
@@ -246,7 +246,6 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     final timestamp = now ?? DateTime.now();
     final quickUse = ArcLoadoutLayoutEngine.normaliseQuickUseSlots(
       savedItems: _quickSlots,
-      legacyAugment: _augment,
     ).quickUse;
     final equipment = quickUse
         .where((slot) {
@@ -262,25 +261,12 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         })
         .where((slot) => slot != ArcLoadoutLayoutEngine.emptySlot)
         .toList(growable: false);
-    final augment = quickUse
-        .map(ArcLoadoutLayoutEngine.quickUseOptionForName)
-        .whereType<ArcLoadoutOption>()
-        .firstWhere(
-          (option) => option.type == ArcLoadoutSlotType.augment,
-          orElse: () => const ArcLoadoutOption(
-            name: '',
-            type: ArcLoadoutSlotType.augment,
-            description: '',
-          ),
-        )
-        .name;
-
     return ArcSavedLoadout(
       id: 'favourite-loadout',
       name: _buildName,
       category: ArcLoadoutCategory.saved,
       playStyle: _playStyle,
-      augment: augment,
+      augment: '',
       shield: _shield,
       primaryWeapon: _primaryWeapon,
       primaryAttachments: _normalisedAttachmentList(
@@ -305,7 +291,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     setState(() {
       _buildName = loadout.name;
       _playStyle = loadout.playStyle;
-      _augment = loadout.augment;
+      _augment = '';
       _shield = ArcLoadoutRepairCatalog.migrateLegacyShield(loadout.shield);
       _primaryWeapon = loadout.primaryWeapon;
       _secondaryWeapon = loadout.secondaryWeapon;
@@ -330,7 +316,6 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           : <String>[...loadout.equipment, ...loadout.consumables];
       final migration = ArcLoadoutLayoutEngine.normaliseQuickUseSlots(
         savedItems: savedQuickUse,
-        legacyAugment: loadout.augment,
       );
       _quickSlots
         ..clear()
@@ -450,7 +435,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       if (selected == _blankFavouriteBuildChoice) {
         _buildName = 'New Favourite Build';
         _playStyle = ArcPlayerPlayStyle.balanced;
-        _augment = 'Survivor';
+        _augment = '';
         _shield = 'Medium Shield';
         _primaryWeapon = 'Anvil';
         _secondaryWeapon = 'Stitcher';
@@ -473,7 +458,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         _quickSlots
           ..clear()
           ..addAll(const <String>[
-            'Survivor',
+            'Empty Slot',
             'Empty Slot',
             'Empty Slot',
             'Empty Slot',
@@ -488,7 +473,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           ArcLoadoutCategory.meta => ArcPlayerPlayStyle.balanced,
           _ => ArcPlayerPlayStyle.balanced,
         };
-        _augment = selected.augment;
+        _augment = '';
         _shield = selected.shield ?? 'Medium Shield';
         _primaryWeapon = selected.primaryWeapon;
         _secondaryWeapon = selected.secondaryWeapon;
@@ -513,11 +498,9 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           ..addAll(
             ArcLoadoutLayoutEngine.normaliseQuickUseSlots(
               savedItems: <String>[
-                selected.augment,
                 ...selected.equipment,
                 ...selected.consumables,
               ],
-              legacyAugment: selected.augment,
             ).quickUse,
           );
       }
