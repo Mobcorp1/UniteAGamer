@@ -617,13 +617,17 @@ class UAGTradersHubApp extends StatefulWidget {
 
       case ArcAdminMapEditorScreen.routeName:
         return MaterialPageRoute(
-          builder: (_) => const ArcAdminMapEditorScreen(),
+          builder: (_) => const _AdminRouteGate(
+            child: ArcAdminMapEditorScreen(),
+          ),
           settings: settings,
         );
 
       case ArcMapFilterIconReviewScreen.routeName:
         return MaterialPageRoute(
-          builder: (_) => const ArcMapFilterIconReviewScreen(),
+          builder: (_) => const _AdminRouteGate(
+            child: ArcMapFilterIconReviewScreen(),
+          ),
           settings: settings,
         );
 
@@ -666,6 +670,46 @@ class _DirectOnboardingRouteGate extends StatelessWidget {
         // Signed-in users always re-enter through the single production gate.
         // That gate decides onboarding -> profile -> availability -> Hub.
         return const AppEntryGate();
+      },
+    );
+  }
+}
+
+class _AdminRouteGate extends StatefulWidget {
+  const _AdminRouteGate({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_AdminRouteGate> createState() => _AdminRouteGateState();
+}
+
+class _AdminRouteGateState extends State<_AdminRouteGate> {
+  late final Future<bool> _accessCheck;
+
+  @override
+  void initState() {
+    super.initState();
+    _accessCheck = FeatureAccess.isAdminOrDev();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<bool>(
+      future: _accessCheck,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            backgroundColor: Colors.transparent,
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (snapshot.data != true) {
+          return const AppEntryGate();
+        }
+
+        return widget.child;
       },
     );
   }
