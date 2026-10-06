@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_subscription_tier.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_user_entitlement.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/services/uag_entitlement_service.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_usage_gate.dart';
 import '../widgets/arc_raid_location_picker.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_frozen_trail_preview_screen.dart';
@@ -12,14 +15,19 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_ma
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_view_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_squad_raid_planning_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_squad_raid_projection_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_map_marker.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_drop_report.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_community_intel_report.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_progression_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raider_goal_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_squad_raid_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_admin_map_editor_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_community_intel_repository.dart';
@@ -27,6 +35,12 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositorie
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_scrappy_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_raid_intelligence_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_saved_loadout_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_squad_raid_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_operations_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/data/arc_live_raid_recommendation_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/data/arc_regional_map_conditions.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/models/raid_planner_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/repositories/raid_planner_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
@@ -50,7 +64,12 @@ class ArcRaidIntelligenceScreen extends StatefulWidget {
     this.publishedMarkers,
     this.scrappyStates,
     this.progressionRecords,
+    this.operationsState,
+    this.raidPlannerTargets,
+    this.raidPlannerEntitlement,
+    this.regionalConditions,
     this.loadActiveRoute,
+    this.squadSessionId,
   });
   final Stream<Map<String, ArcBlueprintState>> Function()? blueprintStates;
   final Stream<ArcSavedLoadout?> Function()? favouriteLoadout;
@@ -60,7 +79,12 @@ class ArcRaidIntelligenceScreen extends StatefulWidget {
   final Stream<List<ArcAdminMapMarker>> Function(String)? publishedMarkers;
   final Stream<Map<String, ArcScrappyState>> Function()? scrappyStates;
   final Stream<ArcProgressionRecords> Function()? progressionRecords;
+  final Stream<ArcOperationsUserState> Function()? operationsState;
+  final Stream<List<RaidBlueprintTarget>> Function()? raidPlannerTargets;
+  final Stream<RaidPlannerEntitlement> Function()? raidPlannerEntitlement;
+  final Future<ArcRegionalMapConditionsSnapshot> Function()? regionalConditions;
   final Future<ArcRaidRoutePlan?> Function()? loadActiveRoute;
+  final String? squadSessionId;
 
   static const routeName = '/trading-hub/arc-raiders/raid-intelligence';
 
@@ -71,6 +95,12 @@ class ArcRaidIntelligenceScreen extends StatefulWidget {
 
 class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   final ArcRaidIntelligenceEngine _engine = const ArcRaidIntelligenceEngine();
+  final ArcLiveRaidRecommendationEngine _liveRecommendationEngine =
+      const ArcLiveRaidRecommendationEngine();
+  final ArcSquadRaidProjectionEngine _squadProjectionEngine =
+      const ArcSquadRaidProjectionEngine();
+  final ArcSquadRaidPlanningEngine _squadPlanningEngine =
+      const ArcSquadRaidPlanningEngine();
   final ArcMapMarkerStackResolver _stackResolver =
       const ArcMapMarkerStackResolver();
   late final ArcBlueprintRepository _blueprintRepository =
@@ -86,6 +116,14 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   late final ArcScrappyRepository _scrappyRepository = ArcScrappyRepository();
   late final ArcProgressionRepository _progressionRepository =
       ArcProgressionRepository();
+  late final ArcOperationsRepository _operationsRepository =
+      ArcOperationsRepository();
+  late final RaidPlannerRepository _raidPlannerRepository =
+      RaidPlannerRepository();
+  late final ArcSquadRaidRepository _squadRaidRepository =
+      ArcSquadRaidRepository();
+  late final UagEntitlementService _entitlementService =
+      UagEntitlementService();
   final ArcMapViewRepository _mapViewRepository = const ArcMapViewRepository();
   final TransformationController _mapController = TransformationController();
   final TextEditingController _searchController = TextEditingController();
@@ -98,6 +136,8 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   ArcRaidObjectivePriority _objectivePriority =
       ArcRaidObjectivePriority.myNeedsFirst;
   String _raidStage = 'Full';
+  int _timeBudgetMinutes = 20;
+  ArcServerRegion _serverRegion = ArcServerRegion.europe;
   ArcRaidRouteStop? _spawn;
   ArcRaidRouteStop? _extraction;
   bool _usesHatch = false;
@@ -111,6 +151,27 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   final Map<String, Stream<dynamic>> _streams = {};
   final Map<String, dynamic> _lastData = {};
   final ScrollController _panelScroll = ScrollController();
+  StreamSubscription<ArcOperationsUserState>? _operationsSubscription;
+  StreamSubscription<List<RaidBlueprintTarget>>? _raidTargetsSubscription;
+  StreamSubscription<RaidPlannerEntitlement>? _plannerEntitlementSubscription;
+  StreamSubscription<UagUserEntitlement>? _userEntitlementSubscription;
+  StreamSubscription<ArcSquadRaidBundle?>? _squadSubscription;
+  ArcOperationsUserState _operationsState = ArcOperationsUserState.empty;
+  List<RaidBlueprintTarget> _raidPlannerTargets = const <RaidBlueprintTarget>[];
+  RaidPlannerEntitlement _raidPlannerEntitlement = const RaidPlannerEntitlement(
+    tier: RaidPlannerTier.free,
+  );
+  ArcRegionalMapConditionsSnapshot? _regionalConditionsSnapshot;
+  UagUserEntitlement? _userEntitlement;
+  ArcSquadRaidBundle? _squadBundle;
+  String? _lastPublishedProjectionSignature;
+  bool _squadProjectionSyncScheduled = false;
+  String? _squadProjectionError;
+  Map<String, ArcBlueprintState> _latestBlueprintStates =
+      const <String, ArcBlueprintState>{};
+  Map<String, ArcScrappyState> _latestScrappyStates =
+      const <String, ArcScrappyState>{};
+  ArcProgressionRecords _latestProgressionRecords = ArcProgressionRecords.empty;
   Stream<T> _source<T>(String key, Stream<T> Function() factory) =>
       (_streams.putIfAbsent(key, factory)) as Stream<T>;
   T _retain<T>(String key, AsyncSnapshot<T> snapshot, T fallback) {
@@ -137,6 +198,12 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   void initState() {
     super.initState();
     _mapController.addListener(_onMapTransformChanged);
+    _listenClosureInputs();
+    final squadSessionId = widget.squadSessionId?.trim();
+    if (squadSessionId != null && squadSessionId.isNotEmpty) {
+      _listenSquadSession(squadSessionId);
+    }
+    unawaited(_loadRegionalConditions());
     unawaited(_initialiseScreen());
   }
 
@@ -144,11 +211,148 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   void dispose() {
     _panelScroll.dispose();
     _mapViewSaveTimer?.cancel();
+    unawaited(_operationsSubscription?.cancel());
+    unawaited(_raidTargetsSubscription?.cancel());
+    unawaited(_plannerEntitlementSubscription?.cancel());
+    unawaited(_userEntitlementSubscription?.cancel());
+    unawaited(_squadSubscription?.cancel());
     _mapController.removeListener(_onMapTransformChanged);
     unawaited(_persistMapView());
     _mapController.dispose();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _listenClosureInputs() {
+    _operationsSubscription =
+        (widget.operationsState?.call() ??
+                _operationsRepository.watchUserState())
+            .listen(
+              (state) {
+                if (mounted) {
+                  setState(() => _operationsState = state);
+                }
+              },
+              onError: (_) {
+                if (mounted) {
+                  setState(() => _lastData['operationsError'] = true);
+                }
+              },
+            );
+    _raidTargetsSubscription =
+        (widget.raidPlannerTargets?.call() ??
+                _raidPlannerRepository.watchTargets())
+            .listen(
+              (targets) {
+                if (mounted) {
+                  setState(() => _raidPlannerTargets = targets);
+                }
+              },
+              onError: (_) {
+                if (mounted) {
+                  setState(() => _lastData['raidTargetsError'] = true);
+                }
+              },
+            );
+    _plannerEntitlementSubscription =
+        (widget.raidPlannerEntitlement?.call() ??
+                _raidPlannerRepository.watchEntitlement())
+            .listen(
+              (entitlement) {
+                if (mounted) {
+                  setState(() => _raidPlannerEntitlement = entitlement);
+                }
+              },
+              onError: (_) {
+                if (mounted) {
+                  setState(() => _lastData['plannerEntitlementError'] = true);
+                }
+              },
+            );
+    _userEntitlementSubscription = _entitlementService
+        .watchMyEntitlement()
+        .listen(
+          (entitlement) {
+            if (mounted) {
+              setState(() => _userEntitlement = entitlement);
+            }
+          },
+          onError: (_) {
+            if (mounted)
+              setState(() => _lastData['userEntitlementError'] = true);
+          },
+        );
+  }
+
+  void _listenSquadSession(String sessionId) {
+    _squadSubscription = _squadRaidRepository
+        .watchBundle(sessionId)
+        .listen(
+          (bundle) {
+            if (!mounted) return;
+            setState(() {
+              _squadBundle = bundle;
+              if (bundle == null) {
+                return;
+              }
+              _squadMode = bundle.session.squadSize >= 3
+                  ? ArcRaidSquadMode.trio
+                  : ArcRaidSquadMode.duo;
+              _objectivePriority = switch (bundle.session.fairnessMode) {
+                ArcSquadRaidFairnessMode.balancedSquad =>
+                  ArcRaidObjectivePriority.balancedSquad,
+                ArcSquadRaidFairnessMode.leaderPriorities =>
+                  ArcRaidObjectivePriority.myNeedsFirst,
+                ArcSquadRaidFairnessMode.maximumSquadValue =>
+                  ArcRaidObjectivePriority.balancedSquad,
+              };
+
+              final sharedRoute = bundle.session.routePlan;
+              final currentUid = FirebaseAuth.instance.currentUser?.uid;
+              if (sharedRoute != null &&
+                  (!bundle.session.isLeader(currentUid) ||
+                      _routePlan == null)) {
+                final canonicalMap =
+                    ArcMapAssetRegistry.canonicalMapIdFor(sharedRoute.mapId) ??
+                    sharedRoute.mapId;
+                if (ArcRaidIntelligenceSeedData.supportedMapIds.contains(
+                  canonicalMap,
+                )) {
+                  _mapId = canonicalMap;
+                }
+                _routePlan = sharedRoute;
+                _spawn = sharedRoute.spawn;
+                _extraction = sharedRoute.extraction;
+                _routeStyle = sharedRoute.routeStyle;
+                _raidStage = sharedRoute.raidStage;
+                _timeBudgetMinutes =
+                    sharedRoute.timeBudgetMinutes ?? _timeBudgetMinutes;
+              }
+            });
+          },
+          onError: (_) {
+            if (mounted) {
+              setState(() => _lastData['squadSessionError'] = true);
+            }
+          },
+        );
+  }
+
+  Future<void> _loadRegionalConditions({bool forceRefresh = false}) async {
+    try {
+      final snapshot =
+          await (widget.regionalConditions?.call() ??
+              ArcRegionalMapConditionsService.load(forceRefresh: forceRefresh));
+      if (!mounted) return;
+      setState(() {
+        _regionalConditionsSnapshot = snapshot;
+        _lastData.remove('regionalConditionsError');
+      });
+    } catch (_) {
+      if (mounted) {
+        setState(() => _lastData['regionalConditionsError'] = true);
+      }
+    }
   }
 
   Future<void> _loadActiveRoute() async {
@@ -168,6 +372,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       _routeStyle = route.routeStyle;
       _objectivePriority = route.objectivePriority;
       _raidStage = route.raidStage;
+      _timeBudgetMinutes = route.timeBudgetMinutes ?? _timeBudgetMinutes;
       _spawn = route.spawn;
       _extraction = route.extraction;
       _usesHatch = route.usesRaiderHatch;
@@ -506,12 +711,42 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                                       snapshot.connectionState ==
                                       ConnectionState.waiting,
                                 );
+                                _latestBlueprintStates = states;
+                                _latestScrappyStates = scrappyStates;
+                                _latestProgressionRecords = progressionRecords;
+
+                                final currentMap =
+                                    ArcRaidIntelligenceSeedData.mapById(_mapId);
+                                final squadBundle = _squadBundle;
+                                final squadObjectives = squadBundle == null
+                                    ? const <ArcRaidObjective>[]
+                                    : _squadPlanningEngine.objectivesForMap(
+                                        bundle: squadBundle,
+                                        mapDisplayName: currentMap.displayName,
+                                      );
+                                final squadBlueprintStates = squadBundle == null
+                                    ? states
+                                    : _squadPlanningEngine
+                                          .blueprintStatesForBundle(
+                                            squadBundle,
+                                          );
+
                                 final intelligence = _engine.build(
                                   mapId: _mapId,
-                                  blueprintStates: states,
-                                  favouriteLoadout: loadout,
-                                  scrappyStates: scrappyStates,
-                                  progressionRecords: progressionRecords,
+                                  blueprintStates: squadBlueprintStates,
+                                  favouriteLoadout: squadBundle == null
+                                      ? loadout
+                                      : null,
+                                  operationsState: squadBundle == null
+                                      ? _operationsState
+                                      : ArcOperationsUserState.empty,
+                                  scrappyStates: squadBundle == null
+                                      ? scrappyStates
+                                      : const <String, ArcScrappyState>{},
+                                  progressionRecords: squadBundle == null
+                                      ? progressionRecords
+                                      : ArcProgressionRecords.empty,
+                                  additionalObjectives: squadObjectives,
                                   dropReports: reports,
                                   communityReports: communityReports,
                                   adminMarkers: adminMarkers,
@@ -519,6 +754,39 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                                   activeLayer: _activeLayer,
                                   activeRoute: _routePlan,
                                 );
+
+                                final soloRecommendation =
+                                    _regionalConditionsSnapshot == null
+                                    ? ArcRaidRecommendationSet.empty
+                                    : _liveRecommendationEngine.build(
+                                        storedTargets: _raidPlannerTargets,
+                                        blueprintStates: states,
+                                        entitlement: _raidPlannerEntitlement,
+                                        progressionRecords: progressionRecords,
+                                        scrappyStates: scrappyStates,
+                                        regionalSnapshot:
+                                            _regionalConditionsSnapshot!,
+                                        region: _serverRegion,
+                                      );
+                                final squadRecommendation =
+                                    squadBundle == null ||
+                                        _regionalConditionsSnapshot == null
+                                    ? ArcRaidRecommendationSet.empty
+                                    : _squadPlanningEngine.recommend(
+                                        bundle: squadBundle,
+                                        regionalSnapshot:
+                                            _regionalConditionsSnapshot!,
+                                        region: _serverRegion,
+                                      );
+                                final raidRecommendation =
+                                    squadRecommendation.bestNow != null ||
+                                        squadRecommendation.bestStandard !=
+                                            null ||
+                                        squadRecommendation.bestUpcoming != null
+                                    ? squadRecommendation
+                                    : soloRecommendation;
+
+                                _scheduleSquadProjectionSync();
                                 return Column(
                                   children: [
                                     if (showWorkspaceBar) ...[
@@ -558,6 +826,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                                       child: _buildLayout(
                                         intelligence,
                                         communityReports: communityReports,
+                                        raidRecommendation: raidRecommendation,
                                       ),
                                     ),
                                   ],
@@ -581,6 +850,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   Widget _buildLayout(
     ArcRaidIntelligenceState intelligence, {
     required List<ArcCommunityIntelReport> communityReports,
+    required ArcRaidRecommendationSet raidRecommendation,
   }) {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -593,6 +863,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
           intelligence,
           desktop: sideBySide,
           communityReports: communityReports,
+          raidRecommendation: raidRecommendation,
         );
         final map = _mapPanel(intelligence);
         if (sideBySide) {
@@ -809,6 +1080,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     ArcRaidIntelligenceState intelligence, {
     required bool desktop,
     required List<ArcCommunityIntelReport> communityReports,
+    required ArcRaidRecommendationSet raidRecommendation,
   }) {
     return Container(
       decoration: ArcUiTokens.surfaceDecoration(
@@ -844,10 +1116,20 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
           ],
           _secondaryMapControls(intelligence),
           _hero(intelligence),
+          if (_squadBundle != null) ...[
+            const SizedBox(height: 10),
+            _squadRaidStatusPanel(),
+          ],
+          const SizedBox(height: 10),
+          _bestRaidNowSection(raidRecommendation),
           const SizedBox(height: 10),
           ArcLiveMapConditionsStrip(
             mapDisplayName: intelligence.map.displayName,
+            initialRegion: _serverRegion,
             compact: true,
+            loadConditions: () async =>
+                _regionalConditionsSnapshot ??
+                ArcRegionalMapConditionsService.load(),
           ),
           const SizedBox(height: 10),
           _raidAccordion(
@@ -889,6 +1171,311 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
         ],
       ),
     );
+  }
+
+  Widget _bestRaidNowSection(ArcRaidRecommendationSet recommendations) {
+    final best =
+        recommendations.bestNow ??
+        recommendations.bestStandard ??
+        recommendations.bestUpcoming;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.panel,
+        accent: Colors.lightGreenAccent,
+        radius: ArcUiTokens.radiusM,
+        borderOpacity: 0.2,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  _squadBundle == null
+                      ? 'BEST RAID NOW'
+                      : 'SQUAD BEST RAID NOW',
+                  style: ArcUiTokens.sectionTitle(
+                    fontSize: 18,
+                    color: Colors.lightGreenAccent,
+                  ),
+                ),
+              ),
+              DropdownButton<ArcServerRegion>(
+                value: _serverRegion,
+                isDense: true,
+                dropdownColor: ArcUiTokens.surfaceOverlay,
+                style: ArcUiTokens.bodySmall(color: ArcUiTokens.textPrimary),
+                items: [
+                  for (final region in ArcServerRegion.values)
+                    DropdownMenuItem(value: region, child: Text(region.label)),
+                ],
+                onChanged: (region) {
+                  if (region != null) {
+                    setState(() => _serverRegion = region);
+                  }
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          if (_regionalConditionsSnapshot == null)
+            Text(
+              _lastData['regionalConditionsError'] == true
+                  ? 'Official regional conditions are unavailable. Standard-raid routing remains available.'
+                  : 'Loading official regional conditions...',
+              style: ArcUiTokens.bodySmall(),
+            )
+          else if (best == null)
+            Text(
+              'No verified cross-map recommendation yet. Choose a map and UAG will still optimise your tracked objectives.',
+              style: ArcUiTokens.bodySmall(),
+            )
+          else ...[
+            Text(
+              '${best.candidate.mapName} · ${best.candidate.conditionName}',
+              style: ArcUiTokens.body(
+                color: ArcUiTokens.textPrimary,
+                weight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              best.progressLabel,
+              style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
+            ),
+            if (best.reasons.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Text(
+                best.reasons.take(3).join(' · '),
+                style: ArcUiTokens.bodySmall(),
+              ),
+            ],
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    style: ArcUiTokens.textButtonStyle(primary: true),
+                    onPressed: () => unawaited(_applyRaidRecommendation(best)),
+                    icon: const Icon(Icons.bolt_rounded),
+                    label: const Text('USE THIS RAID'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  tooltip: 'Refresh official conditions',
+                  onPressed: () =>
+                      unawaited(_loadRegionalConditions(forceRefresh: true)),
+                  icon: const Icon(Icons.refresh_rounded),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Future<void> _applyRaidRecommendation(
+    ArcRaidRecommendation recommendation,
+  ) async {
+    final mapId = ArcRaidIntelligenceSeedData.normalizeMapId(
+      recommendation.candidate.mapName,
+    );
+    if (!ArcRaidIntelligenceSeedData.supportedMapIds.contains(mapId)) {
+      _showSnack('Recommended map is not available in Raid Intelligence yet.');
+      return;
+    }
+    await _changeMap(mapId);
+    if (!mounted) return;
+    setState(() => _controlPanelCollapsed = false);
+    _showSnack(
+      'Best Raid Now loaded: ${recommendation.candidate.mapName} · '
+      '${recommendation.candidate.conditionName}. Select your spawn to route it.',
+    );
+  }
+
+  String _activeConditionForMap(ArcRaidMap map) {
+    final snapshot = _regionalConditionsSnapshot;
+    if (snapshot == null) return 'No event / standard raid';
+    return _liveRecommendationEngine.activeConditionLabelForMap(
+      regionalSnapshot: snapshot,
+      region: _serverRegion,
+      mapDisplayName: map.displayName,
+    );
+  }
+
+  Widget _squadRaidStatusPanel() {
+    final bundle = _squadBundle;
+    if (bundle == null) return const SizedBox.shrink();
+    final currentUid = FirebaseAuth.instance.currentUser?.uid;
+    final isLeader = bundle.session.isLeader(currentUid);
+    final myProjection = currentUid == null
+        ? null
+        : bundle.projections[currentUid];
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.panel,
+        accent: ArcUiTokens.secondaryAccent,
+        radius: ArcUiTokens.radiusM,
+        borderOpacity: 0.22,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'SQUAD INTELLIGENCE',
+                  style: ArcUiTokens.sectionTitle(
+                    fontSize: 18,
+                    color: ArcUiTokens.secondaryAccent,
+                  ),
+                ),
+              ),
+              _pill(
+                '${bundle.syncedCount}/${bundle.session.squadSize} synced',
+                bundle.allMembersSynced
+                    ? Colors.lightGreenAccent
+                    : Colors.amberAccent,
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            '${bundle.session.fairnessMode.label} · '
+            '${bundle.totalObjectiveCount} safe squad objectives',
+            style: ArcUiTokens.bodySmall(),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Everyone gets the same physical route. Each Raider contributes only '
+            'the objective depth their own plan allows; raw inventories are not shared.',
+            style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
+          ),
+          if (myProjection != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              'My contribution: ${myProjection.objectives.length}/'
+              '${myProjection.objectiveLimit} · '
+              '${myProjection.tier.publicName}',
+              style: ArcUiTokens.bodySmall(color: Colors.lightGreenAccent),
+            ),
+          ],
+          if (_squadProjectionError != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              _squadProjectionError!,
+              style: ArcUiTokens.bodySmall(color: Colors.amberAccent),
+            ),
+          ],
+          if (!isLeader) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Shared-route controls are locked to ${bundle.session.leaderLabel}. '
+              'Your goals still feed the optimiser automatically.',
+              style: ArcUiTokens.bodySmall(),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _scheduleSquadProjectionSync() {
+    final bundle = _squadBundle;
+    final entitlement = _userEntitlement;
+    final user = FirebaseAuth.instance.currentUser;
+    if (bundle == null ||
+        entitlement == null ||
+        user == null ||
+        !bundle.session.isMember(user.uid) ||
+        _squadProjectionSyncScheduled) {
+      return;
+    }
+
+    final projection = _squadProjectionEngine.build(
+      ownerUid: user.uid,
+      ownerLabel:
+          bundle.session.memberLabels[user.uid] ??
+          user.displayName ??
+          'Squad Raider',
+      tier: entitlement.effectiveTier,
+      blueprintStates: _latestBlueprintStates,
+      raidPlannerTargets: _raidPlannerTargets,
+      scrappyStates: _latestScrappyStates,
+      progressionRecords: _latestProgressionRecords,
+    );
+    final current = bundle.projections[user.uid];
+    if (projection.contentSignature == _lastPublishedProjectionSignature ||
+        projection.contentSignature == current?.contentSignature) {
+      return;
+    }
+
+    _squadProjectionSyncScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        await _squadRaidRepository.saveMyProjection(
+          sessionId: bundle.session.id,
+          projection: projection,
+        );
+        _lastPublishedProjectionSignature = projection.contentSignature;
+        if (mounted && _squadProjectionError != null) {
+          setState(() => _squadProjectionError = null);
+        }
+      } catch (_) {
+        if (mounted) {
+          setState(() {
+            _squadProjectionError =
+                'Could not sync squad goals. Your shared route will not use '
+                'unsynced objectives.';
+          });
+        }
+      } finally {
+        _squadProjectionSyncScheduled = false;
+      }
+    });
+  }
+
+  List<ArcRaidRouteParticipant> _squadParticipants() {
+    final bundle = _squadBundle;
+    if (bundle == null) return const <ArcRaidRouteParticipant>[];
+    return bundle.session.memberUids
+        .map(
+          (uid) => ArcRaidRouteParticipant(
+            uid: uid,
+            displayName: bundle.session.memberLabels[uid] ?? 'Squad Raider',
+            objectiveSharing: bundle.projections.containsKey(uid)
+                ? ArcRaidObjectiveSharing.allChosenRaidPlanObjectives
+                : ArcRaidObjectiveSharing.broadGoals,
+          ),
+        )
+        .toList(growable: false);
+  }
+
+  bool get _canGenerateCurrentRoute {
+    final bundle = _squadBundle;
+    if (bundle == null) return true;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    return bundle.session.isLeader(uid) && bundle.allMembersSynced;
+  }
+
+  String get _routeButtonLabel {
+    final bundle = _squadBundle;
+    if (bundle == null) return 'Generate Best Loot Run';
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (!bundle.session.isLeader(uid)) {
+      return 'Squad leader controls route';
+    }
+    if (!bundle.allMembersSynced) {
+      return 'Waiting for squad goal sync';
+    }
+    return 'Generate Shared Squad Run';
   }
 
   Widget _raidAccordion({
@@ -1039,6 +1626,15 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
             onSelected: (value) => setState(() => _raidStage = value),
           ),
           const SizedBox(height: 10),
+          Text('Time budget', style: ArcUiTokens.bodySmall()),
+          const SizedBox(height: 6),
+          _chips<int>(
+            values: const [10, 15, 20, 25, 30],
+            selected: _timeBudgetMinutes,
+            label: (value) => value == 30 ? '30+ min' : '$value min',
+            onSelected: (value) => setState(() => _timeBudgetMinutes = value),
+          ),
+          const SizedBox(height: 10),
           _chips<ArcRaidRouteStyle>(
             values: ArcRaidRouteStyle.values,
             selected: _routeStyle,
@@ -1088,9 +1684,11 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
           const SizedBox(height: 10),
           ElevatedButton.icon(
             style: ArcUiTokens.textButtonStyle(primary: true),
-            onPressed: () => _generateRoute(intelligence),
+            onPressed: _canGenerateCurrentRoute
+                ? () => _generateRoute(intelligence)
+                : null,
             icon: const Icon(Icons.auto_awesome_rounded),
-            label: const Text('Generate Best Loot Run'),
+            label: Text(_routeButtonLabel),
           ),
         ],
       ),
@@ -1469,6 +2067,19 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                         '${route.metrics.estimatedMinutes} min',
                         AppTheme.neonCyan,
                       ),
+                      if (route.timeBudgetMinutes != null)
+                        _pill(
+                          '${route.timeBudgetMinutes} min budget',
+                          Colors.amberAccent,
+                        ),
+                      if (route.conditionLabel?.trim().isNotEmpty == true &&
+                          !route.conditionLabel!.toLowerCase().contains(
+                            'standard raid',
+                          ))
+                        _pill(
+                          route.conditionLabel!,
+                          ArcUiTokens.secondaryAccent,
+                        ),
                       if (route.metrics.objectiveTargetCount > 0)
                         _pill(
                           '${route.metrics.objectiveTargetCount} tracker goals',
@@ -1686,11 +2297,19 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       _showSnack('Choose a spawn region or tap the map first.');
       return;
     }
+    final activeConditionLabel = _activeConditionForMap(intelligence.map);
     extraction ??= _engine.recommendExtraction(
       map: intelligence.map,
       spawn: spawn,
       clusters: intelligence.opportunityClusters,
       usesRaiderHatch: _usesHatch,
+      routeStyle: _routeStyle,
+      raidStage: _raidStage,
+      squadMode: _squadMode,
+      objectivePriority: _objectivePriority,
+      timeBudgetMinutes: _timeBudgetMinutes,
+      activeConditionLabel: activeConditionLabel,
+      participants: _squadParticipants(),
     );
     if (extraction == null) {
       final objectiveStops = _engine.orderObjectiveStops(
@@ -1733,12 +2352,15 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       objectivePriority: _objectivePriority,
       usesRaiderHatch: _usesHatch,
       hatchKeyConfirmed: _hatchKeyConfirmed,
+      timeBudgetMinutes: _timeBudgetMinutes,
+      activeConditionLabel: activeConditionLabel,
+      participants: _squadParticipants(),
     );
     if (route == null) {
       _showSnack(
         _usesHatch && !_hatchKeyConfirmed
             ? 'Confirm Raider Hatch Key before generating this route.'
-            : 'No route can be generated from current evidence.',
+            : 'No priority stop fits the current $_timeBudgetMinutes minute budget. Increase the time budget or use a faster route style.',
       );
       return;
     }
@@ -1751,7 +2373,29 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       _routePlan = route;
       _objectiveOnlyStops = const <ArcRaidIntelCluster>[];
     });
-    if (await _saveActiveRoute(route)) {
+    final savedLocally = await _saveActiveRoute(route);
+    final squadBundle = _squadBundle;
+    var sharedSaved = false;
+    if (squadBundle != null &&
+        squadBundle.session.isLeader(FirebaseAuth.instance.currentUser?.uid)) {
+      try {
+        await _squadRaidRepository.saveSharedRoute(
+          session: squadBundle.session,
+          route: route,
+        );
+        sharedSaved = true;
+      } catch (_) {
+        sharedSaved = false;
+      }
+    }
+
+    if (squadBundle != null) {
+      _showSnack(
+        sharedSaved
+            ? 'Shared Squad Run generated and synced to the squad.'
+            : 'Squad run generated locally; shared route save failed.',
+      );
+    } else if (savedLocally) {
       _showSnack('Smart Raid Run generated and saved as active route.');
     } else {
       _showSnack('Smart Raid Run generated locally; route save failed.');

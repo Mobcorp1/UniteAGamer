@@ -68,4 +68,38 @@ void main() {
       contains(recommendation!.id),
     );
   });
+  test('persists budget and condition context on generated route', () {
+    final map = ArcRaidIntelligenceSeedData.mapById('blue_gate');
+    final spawn = engine.stopFromSpawn(map.spawnRegions.first);
+    final extraction = ArcRaidRouteStop(
+      id: 'test_exit',
+      label: 'Test Exit',
+      point: ArcNormalizedPoint(
+        x: (spawn.point.x + 0.02).clamp(0, 1).toDouble(),
+        y: (spawn.point.y + 0.02).clamp(0, 1).toDouble(),
+      ),
+      order: 2,
+      reason: 'Test extraction.',
+    );
+    final route = engine.generateRoute(
+      map: map,
+      clusters: <ArcRaidIntelCluster>[
+        cluster(
+          id: 'condition-target',
+          x: (spawn.point.x + 0.01).clamp(0, 1).toDouble(),
+          y: (spawn.point.y + 0.01).clamp(0, 1).toDouble(),
+          blueprints: const ['surge-coil'],
+        ),
+      ],
+      spawn: spawn,
+      extraction: extraction,
+      timeBudgetMinutes: 30,
+      activeConditionLabel: 'Electromagnetic Storm',
+    );
+
+    expect(route, isNotNull);
+    expect(route!.timeBudgetMinutes, 30);
+    expect(route.conditionLabel, 'Electromagnetic Storm');
+    expect(route.metrics.estimatedMinutes, lessThanOrEqualTo(30));
+  });
 }

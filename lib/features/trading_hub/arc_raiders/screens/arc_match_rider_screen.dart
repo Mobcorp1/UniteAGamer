@@ -16,6 +16,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_match_rider_profile.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_match_rider_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raid_intelligence_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_squad_raid_launcher.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -297,6 +298,8 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
                         ),
                         const SizedBox(height: AppTheme.spaceM),
                         _buildHeroCard(profile),
+                        const SizedBox(height: AppTheme.spaceM),
+                        ArcSquadRaidLauncher(myDisplayName: profile.title),
                         const SizedBox(height: AppTheme.spaceM),
                         LayoutBuilder(
                           builder: (context, constraints) {

@@ -68,6 +68,8 @@ class ArcRaidIntelligenceRepository {
       'squadMode': route.squadMode.name,
       'routeStyle': route.routeStyle.name,
       'raidStage': route.raidStage,
+      'timeBudgetMinutes': route.timeBudgetMinutes,
+      'conditionLabel': route.conditionLabel,
       'objectivePriority': route.objectivePriority.name,
       'usesRaiderHatch': route.usesRaiderHatch,
       'hatchKeyConfirmed': route.hatchKeyConfirmed,
@@ -138,6 +140,8 @@ class ArcRaidIntelligenceRepository {
       routeStyle: _routeStyle(map['routeStyle']),
       raidStage: _string(map['raidStage'], 'Full'),
       objectivePriority: _objectivePriority(map['objectivePriority']),
+      timeBudgetMinutes: (map['timeBudgetMinutes'] as num?)?.round(),
+      conditionLabel: _nullableString(map['conditionLabel']),
       spawn: _stopFromMap(
         Map<String, dynamic>.from(map['spawn'] as Map? ?? const {}),
       ),

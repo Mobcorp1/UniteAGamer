@@ -42,6 +42,7 @@ class ArcRaidIntelligenceEngine {
     ArcRaidMapFilterState filters = ArcRaidMapFilterState.defaults,
     ArcRaidMapLayer activeLayer = ArcRaidMapLayer.surface,
     ArcRaidRoutePlan? activeRoute,
+    List<ArcRaidObjective> additionalObjectives = const <ArcRaidObjective>[],
   }) {
     final seedMap = ArcRaidIntelligenceSeedData.mapById(mapId);
     final map = const ArcRaidRuntimeMapResolver().resolve(
@@ -63,11 +64,16 @@ class ArcRaidIntelligenceEngine {
       scrappyStates: scrappyStates,
       records: progressionRecords,
     );
-    final trackedObjectives = const ArcRaidObjectiveIntelligenceEngine()
+    final personalObjectives = const ArcRaidObjectiveIntelligenceEngine()
         .trackedObjectives(
           progression: progression,
           scrappyStates: scrappyStates,
         );
+    final objectivesById = <String, ArcRaidObjective>{
+      for (final objective in personalObjectives) objective.id: objective,
+      for (final objective in additionalObjectives) objective.id: objective,
+    };
+    final trackedObjectives = objectivesById.values.toList(growable: false);
     final clusters = opportunityClusters(
       map: map,
       blueprintStates: blueprintStates,
@@ -516,6 +522,8 @@ class ArcRaidIntelligenceEngine {
         ArcRaidObjectivePriority.myNeedsFirst,
     bool usesRaiderHatch = false,
     bool hatchKeyConfirmed = false,
+    int? timeBudgetMinutes,
+    String? activeConditionLabel,
     List<ArcRaidRouteParticipant> participants =
         const <ArcRaidRouteParticipant>[],
   }) {
@@ -534,6 +542,7 @@ class ArcRaidIntelligenceEngine {
           objectivePriority: objectivePriority,
           squadMode: squadMode,
           participants: participants,
+          activeConditionLabel: activeConditionLabel,
         );
         final bScore = _routeStopScore(
           map: map,
@@ -544,13 +553,31 @@ class ArcRaidIntelligenceEngine {
           objectivePriority: objectivePriority,
           squadMode: squadMode,
           participants: participants,
+          activeConditionLabel: activeConditionLabel,
         );
         final scoreCompare = bScore.compareTo(aScore);
         if (scoreCompare != 0) return scoreCompare;
         return a.label.compareTo(b.label);
       });
 
-    final selected = ranked.take(stopLimit).toList(growable: false);
+    final normalizedBudget = timeBudgetMinutes?.clamp(5, 60).toInt();
+    final selected = normalizedBudget == null
+        ? ranked.take(stopLimit).toList(growable: false)
+        : _selectClustersForBudget(
+            map: map,
+            ranked: ranked,
+            spawn: spawn,
+            extraction: extraction,
+            stopLimit: stopLimit,
+            timeBudgetMinutes: normalizedBudget,
+            routeStyle: routeStyle,
+            squadMode: squadMode,
+            objectivePriority: objectivePriority,
+            participants: participants,
+            activeConditionLabel: activeConditionLabel,
+          );
+    if (normalizedBudget != null && selected.isEmpty) return null;
+
     final ordered = _orderClustersForTravel(
       map: map,
       clusters: selected,
@@ -590,6 +617,8 @@ class ArcRaidIntelligenceEngine {
       raidStage: raidStage,
       objectivePriority: objectivePriority,
       spawn: spawn.copyWith(order: 0),
+      timeBudgetMinutes: normalizedBudget,
+      conditionLabel: activeConditionLabel,
       extraction: extraction.copyWith(order: stops.length + 1),
       stops: stops,
       usesRaiderHatch: usesRaiderHatch,
@@ -598,7 +627,7 @@ class ArcRaidIntelligenceEngine {
       metrics: metrics,
       score: metrics.efficiencyScore,
       summary:
-          '${routeStyle.label} ${squadMode.label} Smart Raid Run: ${metrics.opportunityCount} ${_plural(metrics.opportunityCount, 'stop', 'stops')}, ${metrics.objectiveTargetCount} tracked ${_plural(metrics.objectiveTargetCount, 'goal', 'goals')}, ${metrics.blueprintTargetCount} Blueprint ${_plural(metrics.blueprintTargetCount, 'target', 'targets')}, about ${metrics.estimatedMinutes} min, then ${extraction.label}.',
+          '${routeStyle.label} ${squadMode.label} Smart Raid Run: ${metrics.opportunityCount} ${_plural(metrics.opportunityCount, 'stop', 'stops')}, ${metrics.objectiveTargetCount} tracked ${_plural(metrics.objectiveTargetCount, 'goal', 'goals')}, ${metrics.blueprintTargetCount} Blueprint ${_plural(metrics.blueprintTargetCount, 'target', 'targets')}, about ${metrics.estimatedMinutes} min${normalizedBudget == null ? '' : ' inside a $normalizedBudget min budget'}${_conditionSummary(activeConditionLabel)}, then ${extraction.label}.',
       approximate: true,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
@@ -610,34 +639,138 @@ class ArcRaidIntelligenceEngine {
     required ArcRaidRouteStop spawn,
     required List<ArcRaidIntelCluster> clusters,
     bool usesRaiderHatch = false,
+    ArcRaidRouteStyle routeStyle = ArcRaidRouteStyle.balanced,
+    String raidStage = 'Full',
+    ArcRaidSquadMode squadMode = ArcRaidSquadMode.solo,
+    ArcRaidObjectivePriority objectivePriority =
+        ArcRaidObjectivePriority.myNeedsFirst,
+    int? timeBudgetMinutes,
+    String? activeConditionLabel,
+    List<ArcRaidRouteParticipant> participants =
+        const <ArcRaidRouteParticipant>[],
   }) {
-    if (usesRaiderHatch) {
-      if (map.hatches.isEmpty) return null;
-      final target = clusters.isEmpty ? spawn.point : clusters.first.point;
-      final hatch = [...map.hatches]
+    final options = usesRaiderHatch
+        ? map.hatches.map(stopFromHatch).toList(growable: false)
+        : map.extractions.map(stopFromExtraction).toList(growable: false);
+    if (options.isEmpty) return null;
+    if (clusters.isEmpty) {
+      final nearest = [...options]
         ..sort(
-          (a, b) =>
-              a.point.distanceTo(target).compareTo(b.point.distanceTo(target)),
+          (a, b) => _graphTravelCost(
+            map,
+            spawn.point,
+            a.point,
+          ).compareTo(_graphTravelCost(map, spawn.point, b.point)),
         );
-      return stopFromHatch(hatch.first);
+      return nearest.first;
     }
-    if (map.extractions.isEmpty) return null;
-    final target = clusters.isEmpty
-        ? spawn.point
-        : ArcNormalizedPoint(
-            x:
-                clusters.map((item) => item.point.x).reduce((a, b) => a + b) /
-                clusters.length,
-            y:
-                clusters.map((item) => item.point.y).reduce((a, b) => a + b) /
-                clusters.length,
+
+    final stopLimit = routeStyle.stopLimitForStage(raidStage);
+    final normalizedBudget = timeBudgetMinutes?.clamp(5, 60).toInt();
+    ArcRaidRouteStop? best;
+    var bestValue = double.negativeInfinity;
+
+    for (final extraction in options) {
+      final ranked = [...clusters]
+        ..sort((a, b) {
+          final aScore = _routeStopScore(
+            map: map,
+            cluster: a,
+            spawn: spawn.point,
+            extraction: extraction.point,
+            routeStyle: routeStyle,
+            objectivePriority: objectivePriority,
+            squadMode: squadMode,
+            participants: participants,
+            activeConditionLabel: activeConditionLabel,
           );
-    final extractions = [...map.extractions]
+          final bScore = _routeStopScore(
+            map: map,
+            cluster: b,
+            spawn: spawn.point,
+            extraction: extraction.point,
+            routeStyle: routeStyle,
+            objectivePriority: objectivePriority,
+            squadMode: squadMode,
+            participants: participants,
+            activeConditionLabel: activeConditionLabel,
+          );
+          return bScore.compareTo(aScore);
+        });
+
+      final selected = normalizedBudget == null
+          ? ranked.take(stopLimit).toList(growable: false)
+          : _selectClustersForBudget(
+              map: map,
+              ranked: ranked,
+              spawn: spawn,
+              extraction: extraction,
+              stopLimit: stopLimit,
+              timeBudgetMinutes: normalizedBudget,
+              routeStyle: routeStyle,
+              squadMode: squadMode,
+              objectivePriority: objectivePriority,
+              participants: participants,
+              activeConditionLabel: activeConditionLabel,
+            );
+      if (normalizedBudget != null && selected.isEmpty) continue;
+
+      final ordered = _orderClustersForTravel(
+        map: map,
+        clusters: selected,
+        start: spawn.point,
+        extraction: extraction.point,
+      );
+      final metrics = _buildRouteMetrics(
+        map: map,
+        spawn: spawn,
+        extraction: extraction,
+        clusters: ordered,
+        squadMode: squadMode,
+        routeStyle: routeStyle,
+      );
+      final stopValue = ordered.fold<double>(
+        0,
+        (total, cluster) =>
+            total +
+            _routeStopScore(
+              map: map,
+              cluster: cluster,
+              spawn: spawn.point,
+              extraction: extraction.point,
+              routeStyle: routeStyle,
+              objectivePriority: objectivePriority,
+              squadMode: squadMode,
+              participants: participants,
+              activeConditionLabel: activeConditionLabel,
+            ),
+      );
+      final value =
+          stopValue +
+          (metrics.efficiencyScore * 2.5) -
+          (metrics.estimatedMinutes * 1.8);
+      if (value > bestValue) {
+        bestValue = value;
+        best = extraction;
+      }
+    }
+
+    if (best != null) return best;
+
+    final target = ArcNormalizedPoint(
+      x:
+          clusters.map((item) => item.point.x).reduce((a, b) => a + b) /
+          clusters.length,
+      y:
+          clusters.map((item) => item.point.y).reduce((a, b) => a + b) /
+          clusters.length,
+    );
+    final fallback = [...options]
       ..sort(
         (a, b) =>
             a.point.distanceTo(target).compareTo(b.point.distanceTo(target)),
       );
-    return stopFromExtraction(extractions.first);
+    return fallback.first;
   }
 
   ArcRaidRoutePlan addStop(ArcRaidRoutePlan plan, ArcRaidIntelCluster cluster) {
@@ -692,6 +825,87 @@ class ArcRaidIntelligenceEngine {
     final stop = stops.removeAt(oldIndex);
     stops.insert(adjustedIndex.clamp(0, stops.length), stop);
     return _renumber(plan.copyWith(stops: stops));
+  }
+
+  static List<ArcRaidIntelCluster> _selectClustersForBudget({
+    required ArcRaidMap map,
+    required List<ArcRaidIntelCluster> ranked,
+    required ArcRaidRouteStop spawn,
+    required ArcRaidRouteStop extraction,
+    required int stopLimit,
+    required int timeBudgetMinutes,
+    required ArcRaidRouteStyle routeStyle,
+    required ArcRaidSquadMode squadMode,
+    required ArcRaidObjectivePriority objectivePriority,
+    required List<ArcRaidRouteParticipant> participants,
+    String? activeConditionLabel,
+  }) {
+    final pool = ranked.take(math.max(stopLimit * 3, stopLimit)).toList();
+    final selected = <ArcRaidIntelCluster>[];
+    var currentMinutes = _buildRouteMetrics(
+      map: map,
+      spawn: spawn,
+      extraction: extraction,
+      clusters: const <ArcRaidIntelCluster>[],
+      squadMode: squadMode,
+      routeStyle: routeStyle,
+    ).estimatedMinutes;
+
+    while (pool.isNotEmpty && selected.length < stopLimit) {
+      ArcRaidIntelCluster? best;
+      var bestValuePerMinute = double.negativeInfinity;
+      var bestMinutes = currentMinutes;
+
+      for (final candidate in pool) {
+        final trial = _orderClustersForTravel(
+          map: map,
+          clusters: <ArcRaidIntelCluster>[...selected, candidate],
+          start: spawn.point,
+          extraction: extraction.point,
+        );
+        final metrics = _buildRouteMetrics(
+          map: map,
+          spawn: spawn,
+          extraction: extraction,
+          clusters: trial,
+          squadMode: squadMode,
+          routeStyle: routeStyle,
+        );
+        if (metrics.estimatedMinutes > timeBudgetMinutes) continue;
+
+        final incrementalMinutes = math.max(
+          1,
+          metrics.estimatedMinutes - currentMinutes,
+        );
+        final candidateValue =
+            _routeStopScore(
+              map: map,
+              cluster: candidate,
+              spawn: spawn.point,
+              extraction: extraction.point,
+              routeStyle: routeStyle,
+              objectivePriority: objectivePriority,
+              squadMode: squadMode,
+              participants: participants,
+              activeConditionLabel: activeConditionLabel,
+            ) +
+            (candidate.blueprintIds.length * 12) +
+            (candidate.objectiveCount * 10);
+        final valuePerMinute = candidateValue / incrementalMinutes;
+        if (valuePerMinute > bestValuePerMinute) {
+          bestValuePerMinute = valuePerMinute;
+          best = candidate;
+          bestMinutes = metrics.estimatedMinutes;
+        }
+      }
+
+      if (best == null) break;
+      selected.add(best);
+      pool.removeWhere((candidate) => candidate.id == best!.id);
+      currentMinutes = bestMinutes;
+    }
+
+    return List<ArcRaidIntelCluster>.unmodifiable(selected);
   }
 
   static List<ArcRaidIntelCluster> _orderClustersForTravel({
@@ -1330,6 +1544,7 @@ class ArcRaidIntelligenceEngine {
     required ArcRaidObjectivePriority objectivePriority,
     required ArcRaidSquadMode squadMode,
     required List<ArcRaidRouteParticipant> participants,
+    String? activeConditionLabel,
   }) {
     final travelCost =
         _graphTravelCost(map, spawn, cluster.point) +
@@ -1341,6 +1556,9 @@ class ArcRaidIntelligenceEngine {
                 (cluster.objectiveCount * 18))
             .toDouble();
     score += cluster.objectiveScore * 0.55;
+    if (_matchesActiveCondition(cluster, activeConditionLabel)) {
+      score += 26;
+    }
     score -= distancePenalty;
     if (routeStyle == ArcRaidRouteStyle.safer) {
       score -=
@@ -1363,6 +1581,49 @@ class ArcRaidIntelligenceEngine {
       score += 10;
     }
     return score;
+  }
+
+  static bool _matchesActiveCondition(
+    ArcRaidIntelCluster cluster,
+    String? activeConditionLabel,
+  ) {
+    final active = _normalize(activeConditionLabel ?? '');
+    if (active.isEmpty ||
+        active == 'normal' ||
+        active == 'none' ||
+        active.contains('standard raid') ||
+        active.contains('no event')) {
+      return false;
+    }
+
+    final candidates = <String>[
+      cluster.conditionCorrelation,
+      ...cluster.evidence.map((item) => item.conditionId).whereType<String>(),
+    ];
+    for (final candidate in candidates) {
+      final normalized = _normalize(candidate);
+      if (normalized.isEmpty ||
+          normalized == 'any condition' ||
+          normalized == 'any') {
+        continue;
+      }
+      if (active.contains(normalized) || normalized.contains(active)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  static String _conditionSummary(String? conditionLabel) {
+    final normalized = _normalize(conditionLabel ?? '');
+    if (normalized.isEmpty ||
+        normalized == 'normal' ||
+        normalized == 'none' ||
+        normalized.contains('standard raid') ||
+        normalized.contains('no event')) {
+      return '';
+    }
+    return ' during $conditionLabel';
   }
 
   static double _graphTravelCost(

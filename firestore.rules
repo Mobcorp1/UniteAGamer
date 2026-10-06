@@ -98,6 +98,112 @@ service cloud.firestore {
         request.resource.data.recipientUid != request.auth.uid;
     }
 
+    function acceptedMatchInviteBetween(leftUid, rightUid) {
+      return leftUid is string &&
+        rightUid is string &&
+        leftUid != rightUid &&
+        (
+          (
+            exists(/databases/$(database)/documents/arc_match_rider_invites/$(leftUid + '_' + rightUid)) &&
+            get(/databases/$(database)/documents/arc_match_rider_invites/$(leftUid + '_' + rightUid)).data.status == 'accepted'
+          ) ||
+          (
+            exists(/databases/$(database)/documents/arc_match_rider_invites/$(rightUid + '_' + leftUid)) &&
+            get(/databases/$(database)/documents/arc_match_rider_invites/$(rightUid + '_' + leftUid)).data.status == 'accepted'
+          )
+        );
+    }
+
+    function userDataFor(uid) {
+      return get(/databases/$(database)/documents/users/$(uid)).data;
+    }
+
+    function squadCommercialStatus(data) {
+      return data.get(
+        'subscriptionStatus',
+        data.get('monetisation', {}).get('subscriptionStatus', 'inactive')
+      );
+    }
+
+    function squadCommercialTier(data) {
+      return data.get(
+        'subscriptionTier',
+        data.get(
+          'tier',
+          data.get(
+            'planTier',
+            data.get('monetisation', {}).get('tier', 'free')
+          )
+        )
+      );
+    }
+
+    function squadPremiumPassActive(data) {
+      return data.get('premiumPass', {}).get('expiresAt', request.time) > request.time ||
+        data.get('monetisation', {}).get('premiumPass', {}).get('expiresAt', request.time) > request.time;
+    }
+
+    function squadPlannerTier(uid) {
+      let data = userDataFor(uid);
+      let status = squadCommercialStatus(data);
+      let tier = squadCommercialTier(data);
+      return (data.get('isAdmin', false) == true ||
+          data.get('isDev', false) == true ||
+          squadPremiumPassActive(data))
+        ? 'premium'
+        : ((status == 'active' || status == 'trialing') &&
+            tier == 'premium')
+        ? 'premium'
+        : ((status == 'active' || status == 'trialing') &&
+            tier == 'essential')
+        ? 'essential'
+        : 'free';
+    }
+
+    function squadObjectiveLimit(uid) {
+      let tier = squadPlannerTier(uid);
+      return tier == 'premium' ? 24 : tier == 'essential' ? 5 : 1;
+    }
+
+    function validIncomingSquadMembers() {
+      let members = request.resource.data.memberUids;
+      return members is list &&
+        members.size() >= 2 &&
+        members.size() <= 3 &&
+        members[0] == request.auth.uid &&
+        members[1] is string &&
+        members[1] != request.auth.uid &&
+        acceptedMatchInviteBetween(request.auth.uid, members[1]) &&
+        noUserBlockBetween(request.auth.uid, members[1]) &&
+        (
+          members.size() == 2
+            ? true
+            : (
+              members[2] is string &&
+              members[2] != request.auth.uid &&
+              members[2] != members[1] &&
+              acceptedMatchInviteBetween(request.auth.uid, members[2]) &&
+              noUserBlockBetween(request.auth.uid, members[2])
+            )
+        );
+    }
+
+    function isSquadSessionMember(sessionId) {
+      return isSignedIn() &&
+        request.auth.uid in
+          get(/databases/$(database)/documents/arc_squad_raid_sessions/$(sessionId)).data.memberUids;
+    }
+
+    function ownsIncomingSquadProjection(uid) {
+      return isSignedIn() &&
+        request.auth.uid == uid &&
+        request.resource.data.ownerUid == uid &&
+        request.resource.data.tier == squadPlannerTier(uid) &&
+        request.resource.data.objectiveLimit == squadObjectiveLimit(uid) &&
+        request.resource.data.objectives is list &&
+        request.resource.data.objectives.size() <= squadObjectiveLimit(uid);
+    }
+
     function blockDocId(blockerUid, blockedUid) {
       return blockerUid + '_' + blockedUid;
     }
@@ -660,6 +766,45 @@ service cloud.firestore {
         request.resource.data.senderUid == resource.data.senderUid &&
         request.resource.data.recipientUid == resource.data.recipientUid;
       allow delete: if false;
+    }
+
+    match /arc_squad_raid_sessions/{sessionId} {
+      allow read: if isSquadSessionMember(sessionId) || isAdminOrDev();
+
+      allow create: if currentUserAgeVerified() &&
+        request.resource.data.id == sessionId &&
+        request.resource.data.leaderUid == request.auth.uid &&
+        request.resource.data.status == 'active' &&
+        request.resource.data.fairnessMode in [
+          'balancedSquad',
+          'leaderPriorities',
+          'maximumSquadValue'
+        ] &&
+        validIncomingSquadMembers();
+
+      allow update: if isAdminOrDev() || (
+        isSignedIn() &&
+        resource.data.leaderUid == request.auth.uid &&
+        request.resource.data.id == resource.data.id &&
+        request.resource.data.leaderUid == resource.data.leaderUid &&
+        request.resource.data.memberUids == resource.data.memberUids &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'fairnessMode',
+          'status',
+          'route',
+          'updatedAt'
+        ])
+      );
+
+      allow delete: if false;
+
+      match /projections/{projectionUid} {
+        allow read: if isSquadSessionMember(sessionId) || isAdminOrDev();
+        allow create, update: if
+          isSquadSessionMember(sessionId) &&
+          ownsIncomingSquadProjection(projectionUid);
+        allow delete: if isOwner(projectionUid) || isAdminOrDev();
+      }
     }
 
     match /arc_trade_listings/{listingId} {

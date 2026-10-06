@@ -79,7 +79,6 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
 
   String _buildName = 'Favourite Raider Build';
   ArcPlayerPlayStyle _playStyle = ArcPlayerPlayStyle.balanced;
-  String _augment = '';
   String _shield = 'Medium Shield';
   String _primaryWeapon = 'Anvil';
   String _secondaryWeapon = 'Stitcher';
@@ -239,7 +238,6 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     _quickSlots
       ..clear()
       ..addAll(migration.quickUse);
-    _augment = migration.augment;
   }
 
   ArcSavedLoadout _draftLoadout({DateTime? now}) {
@@ -291,7 +289,6 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     setState(() {
       _buildName = loadout.name;
       _playStyle = loadout.playStyle;
-      _augment = '';
       _shield = ArcLoadoutRepairCatalog.migrateLegacyShield(loadout.shield);
       _primaryWeapon = loadout.primaryWeapon;
       _secondaryWeapon = loadout.secondaryWeapon;
@@ -320,7 +317,6 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       _quickSlots
         ..clear()
         ..addAll(migration.quickUse);
-      _augment = migration.augment;
       _activeSmartPlan = ArcGeneratedLoadoutPlan.fromMap(
         loadout.smartBuildData,
       );
@@ -435,7 +431,6 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       if (selected == _blankFavouriteBuildChoice) {
         _buildName = 'New Favourite Build';
         _playStyle = ArcPlayerPlayStyle.balanced;
-        _augment = '';
         _shield = 'Medium Shield';
         _primaryWeapon = 'Anvil';
         _secondaryWeapon = 'Stitcher';
@@ -473,7 +468,6 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           ArcLoadoutCategory.meta => ArcPlayerPlayStyle.balanced,
           _ => ArcPlayerPlayStyle.balanced,
         };
-        _augment = '';
         _shield = selected.shield ?? 'Medium Shield';
         _primaryWeapon = selected.primaryWeapon;
         _secondaryWeapon = selected.secondaryWeapon;
@@ -1574,10 +1568,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
             key: const Key('favourite-loadout-landscape-top-grid'),
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(
-                width: 126,
-                child: _buildCompactShield(states),
-              ),
+              SizedBox(width: 126, child: _buildCompactShield(states)),
               const SizedBox(width: 8),
               Expanded(
                 flex: 7,

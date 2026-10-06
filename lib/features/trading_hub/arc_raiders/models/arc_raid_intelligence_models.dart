@@ -1193,6 +1193,8 @@ class ArcRaidRoutePlan {
     required this.raidStage,
     required this.objectivePriority,
     required this.spawn,
+    this.timeBudgetMinutes,
+    this.conditionLabel,
     required this.extraction,
     required this.stops,
     this.usesRaiderHatch = false,
@@ -1214,6 +1216,8 @@ class ArcRaidRoutePlan {
   final String raidStage;
   final ArcRaidObjectivePriority objectivePriority;
   final ArcRaidRouteStop spawn;
+  final int? timeBudgetMinutes;
+  final String? conditionLabel;
   final ArcRaidRouteStop extraction;
   final List<ArcRaidRouteStop> stops;
   final bool usesRaiderHatch;
@@ -1246,6 +1250,8 @@ class ArcRaidRoutePlan {
     ArcRaidRouteMetrics? metrics,
     int? score,
     String? summary,
+    int? timeBudgetMinutes,
+    String? conditionLabel,
   }) {
     return ArcRaidRoutePlan(
       id: id,
@@ -1258,6 +1264,8 @@ class ArcRaidRoutePlan {
       spawn: spawn ?? this.spawn,
       extraction: extraction ?? this.extraction,
       stops: stops ?? this.stops,
+      timeBudgetMinutes: timeBudgetMinutes ?? this.timeBudgetMinutes,
+      conditionLabel: conditionLabel ?? this.conditionLabel,
       usesRaiderHatch: usesRaiderHatch ?? this.usesRaiderHatch,
       hatchKeyConfirmed: hatchKeyConfirmed ?? this.hatchKeyConfirmed,
       participants: participants,
