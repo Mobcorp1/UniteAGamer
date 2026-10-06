@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   final source = File(
     'lib/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart',
-  ).readAsStringSync();
+  ).readAsStringSync().replaceAll('\r\n', '\n');
 
   test('Favourite Loadout owns ad and app nav as one bottom chrome stack', () {
     expect(source, contains('extendBody: false'));
@@ -26,7 +26,8 @@ void main() {
       source,
       contains('final imageFrameSize = compactLandscape ? 42.0 : 54.0'),
     );
-    expect(source, contains("final itemVisualSize = slotLabel == 'AUGMENT'"));
+    expect(source, contains('final itemVisualSize = imageFrameSize * 0.88;'));
+    expect(source, isNot(contains("slotLabel == 'AUGMENT'")));
     expect(source, contains('minHeight: compactLandscape ? 100.0 : 0'));
     expect(source, contains('width: double.infinity'));
   });

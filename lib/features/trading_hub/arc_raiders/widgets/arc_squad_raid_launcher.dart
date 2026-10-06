@@ -238,10 +238,12 @@ class _ArcSquadRaidLauncherState extends State<ArcSquadRaidLauncher> {
       );
       if (!mounted) return;
       _openSession(session.id);
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not create squad raid plan: $error')),
+        const SnackBar(
+          content: Text('Could not create squad raid plan. Please try again.'),
+        ),
       );
     } finally {
       if (mounted) {

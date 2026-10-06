@@ -3,7 +3,8 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  String read(String path) => File(path).readAsStringSync();
+  String read(String path) =>
+      File(path).readAsStringSync().replaceAll('\r\n', '\n');
 
   test('Blueprint Tracker opens in the five-row in-game view by default', () {
     final grid = read(

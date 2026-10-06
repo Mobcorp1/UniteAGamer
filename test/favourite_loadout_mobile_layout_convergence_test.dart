@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   final source = File(
     'lib/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart',
-  ).readAsStringSync();
+  ).readAsStringSync().replaceAll('\r\n', '\n');
 
   test('mobile loadout embeds workspace navigation in its header', () {
     final headerStart = source.indexOf('Widget _buildCompactLoadoutHeader');
@@ -27,15 +27,15 @@ void main() {
     expect(source, contains('childAspectRatio: 3.00'));
   });
 
-  test('augment and shield use identical full-width outer geometry', () {
+  test('shield keeps the locked full-width auxiliary geometry', () {
     expect(source, contains('width: double.infinity'));
     expect(
       source,
       contains('final slotHeight = compactLandscape ? 100.0 : 100.0'),
     );
-    expect(source, contains("final itemVisualSize = slotLabel == 'AUGMENT'"));
-    expect(source, contains('? imageFrameSize'));
-    expect(source, contains(': imageFrameSize * 0.88'));
+    expect(source, contains('final itemVisualSize = imageFrameSize * 0.88;'));
+    expect(source, isNot(contains("slotLabel == 'AUGMENT'")));
+    expect(source, isNot(contains("Key('favourite-loadout-augment')")));
   });
 
   test('portrait and landscape use visible 2 by 2 intelligence grids', () {

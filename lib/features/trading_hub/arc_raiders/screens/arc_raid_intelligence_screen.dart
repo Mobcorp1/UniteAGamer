@@ -194,16 +194,34 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     });
   }
 
+  bool get _hasInjectedDataSources =>
+      widget.blueprintStates != null ||
+      widget.favouriteLoadout != null ||
+      widget.dropReports != null ||
+      widget.communityReports != null ||
+      widget.publishedMarkers != null ||
+      widget.scrappyStates != null ||
+      widget.progressionRecords != null ||
+      widget.operationsState != null ||
+      widget.raidPlannerTargets != null ||
+      widget.raidPlannerEntitlement != null ||
+      widget.regionalConditions != null ||
+      widget.loadActiveRoute != null;
   @override
   void initState() {
     super.initState();
     _mapController.addListener(_onMapTransformChanged);
-    _listenClosureInputs();
+    final useRepositoryFallbacks = !_hasInjectedDataSources;
+    _listenClosureInputs(useRepositoryFallbacks: useRepositoryFallbacks);
     final squadSessionId = widget.squadSessionId?.trim();
-    if (squadSessionId != null && squadSessionId.isNotEmpty) {
+    if (useRepositoryFallbacks &&
+        squadSessionId != null &&
+        squadSessionId.isNotEmpty) {
       _listenSquadSession(squadSessionId);
     }
-    unawaited(_loadRegionalConditions());
+    if (useRepositoryFallbacks || widget.regionalConditions != null) {
+      unawaited(_loadRegionalConditions());
+    }
     unawaited(_initialiseScreen());
   }
 
@@ -223,65 +241,112 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     super.dispose();
   }
 
-  void _listenClosureInputs() {
-    _operationsSubscription =
-        (widget.operationsState?.call() ??
-                _operationsRepository.watchUserState())
-            .listen(
-              (state) {
-                if (mounted) {
-                  setState(() => _operationsState = state);
-                }
-              },
-              onError: (_) {
-                if (mounted) {
-                  setState(() => _lastData['operationsError'] = true);
-                }
-              },
-            );
-    _raidTargetsSubscription =
-        (widget.raidPlannerTargets?.call() ??
-                _raidPlannerRepository.watchTargets())
-            .listen(
-              (targets) {
-                if (mounted) {
-                  setState(() => _raidPlannerTargets = targets);
-                }
-              },
-              onError: (_) {
-                if (mounted) {
-                  setState(() => _lastData['raidTargetsError'] = true);
-                }
-              },
-            );
-    _plannerEntitlementSubscription =
-        (widget.raidPlannerEntitlement?.call() ??
-                _raidPlannerRepository.watchEntitlement())
-            .listen(
-              (entitlement) {
-                if (mounted) {
-                  setState(() => _raidPlannerEntitlement = entitlement);
-                }
-              },
-              onError: (_) {
-                if (mounted) {
-                  setState(() => _lastData['plannerEntitlementError'] = true);
-                }
-              },
-            );
-    _userEntitlementSubscription = _entitlementService
-        .watchMyEntitlement()
-        .listen(
-          (entitlement) {
-            if (mounted) {
-              setState(() => _userEntitlement = entitlement);
-            }
-          },
-          onError: (_) {
-            if (mounted)
-              setState(() => _lastData['userEntitlementError'] = true);
-          },
-        );
+  void _listenClosureInputs({required bool useRepositoryFallbacks}) {
+    final operationsSource = widget.operationsState?.call();
+    if (operationsSource != null) {
+      _operationsSubscription = operationsSource.listen(
+        (state) {
+          if (mounted) {
+            setState(() => _operationsState = state);
+          }
+        },
+        onError: (_) {
+          if (mounted) {
+            setState(() => _lastData['operationsError'] = true);
+          }
+        },
+      );
+    } else if (useRepositoryFallbacks) {
+      _operationsSubscription = _operationsRepository.watchUserState().listen(
+        (state) {
+          if (mounted) {
+            setState(() => _operationsState = state);
+          }
+        },
+        onError: (_) {
+          if (mounted) {
+            setState(() => _lastData['operationsError'] = true);
+          }
+        },
+      );
+    }
+
+    final raidTargetsSource = widget.raidPlannerTargets?.call();
+    if (raidTargetsSource != null) {
+      _raidTargetsSubscription = raidTargetsSource.listen(
+        (targets) {
+          if (mounted) {
+            setState(() => _raidPlannerTargets = targets);
+          }
+        },
+        onError: (_) {
+          if (mounted) {
+            setState(() => _lastData['raidTargetsError'] = true);
+          }
+        },
+      );
+    } else if (useRepositoryFallbacks) {
+      _raidTargetsSubscription = _raidPlannerRepository.watchTargets().listen(
+        (targets) {
+          if (mounted) {
+            setState(() => _raidPlannerTargets = targets);
+          }
+        },
+        onError: (_) {
+          if (mounted) {
+            setState(() => _lastData['raidTargetsError'] = true);
+          }
+        },
+      );
+    }
+
+    final plannerEntitlementSource = widget.raidPlannerEntitlement?.call();
+    if (plannerEntitlementSource != null) {
+      _plannerEntitlementSubscription = plannerEntitlementSource.listen(
+        (entitlement) {
+          if (mounted) {
+            setState(() => _raidPlannerEntitlement = entitlement);
+          }
+        },
+        onError: (_) {
+          if (mounted) {
+            setState(() => _lastData['plannerEntitlementError'] = true);
+          }
+        },
+      );
+    } else if (useRepositoryFallbacks) {
+      _plannerEntitlementSubscription = _raidPlannerRepository
+          .watchEntitlement()
+          .listen(
+            (entitlement) {
+              if (mounted) {
+                setState(() => _raidPlannerEntitlement = entitlement);
+              }
+            },
+            onError: (_) {
+              if (mounted) {
+                setState(() => _lastData['plannerEntitlementError'] = true);
+              }
+            },
+          );
+    }
+
+    if (useRepositoryFallbacks) {
+      _userEntitlementSubscription = _entitlementService
+          .watchMyEntitlement()
+          .listen(
+            (entitlement) {
+              if (mounted) {
+                setState(() => _userEntitlement = entitlement);
+              }
+            },
+            onError: (_) {
+              if (mounted) {
+                setState(() => _lastData['userEntitlementError'] = true);
+              }
+            },
+          );
+    }
   }
 
   void _listenSquadSession(String sessionId) {
@@ -1390,12 +1455,14 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   void _scheduleSquadProjectionSync() {
     final bundle = _squadBundle;
     final entitlement = _userEntitlement;
-    final user = FirebaseAuth.instance.currentUser;
     if (bundle == null ||
         entitlement == null ||
-        user == null ||
-        !bundle.session.isMember(user.uid) ||
         _squadProjectionSyncScheduled) {
+      return;
+    }
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null || !bundle.session.isMember(user.uid)) {
       return;
     }
 
