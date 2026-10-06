@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_intel_seed.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_map_backend.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_trade_value_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_opportunity_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_research_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_intelligence_location_resolver.dart';
@@ -220,6 +222,16 @@ class ArcRaidIntelligenceEngine {
         '${marker.evidence.length} evidence ${_plural(marker.evidence.length, 'record', 'records')}',
       if (marker.provisionalVisible) 'Provisional',
       if (marker.adminVerified) 'Verified location',
+      if (marker.hasBlueprintRoutingMetadata) marker.blueprintIntelType.label,
+      if (marker.effectiveBlueprintContainerFamily !=
+          ArcBlueprintContainerFamily.unknown)
+        marker.effectiveBlueprintContainerFamily.label,
+      if (marker.effectiveBlueprintLootTier != ArcBlueprintLootTier.standard)
+        marker.effectiveBlueprintLootTier.label,
+      if (marker.blueprintContainerDensity > 0)
+        'Container density ${marker.blueprintContainerDensity}/5',
+      for (final condition in marker.blueprintConditionIds)
+        _conditionDisplayLabel(condition),
     ];
     // Older published records contain generated provenance in their description.
     // Keep that metadata in storage/admin tools, not in the player marker card.
@@ -257,7 +269,9 @@ class ArcRaidIntelligenceEngine {
       confidence: marker.confidence,
       approximate: !marker.adminVerified,
       count: math.max(1, marker.resolvedEvidenceCount),
-      detail: resource == null ? detail : '$detail\n${resource.usageDetails}',
+      detail: resource == null
+          ? _mapMarkerDetail(marker, detail)
+          : '${_mapMarkerDetail(marker, detail)}\n${resource.usageDetails}',
       iconKey: iconKey,
       tags: tags,
       blueprintIds: marker.blueprintId == null
@@ -267,6 +281,34 @@ class ArcRaidIntelligenceEngine {
           ? const <String>[]
           : <String>[marker.blueprintId!],
     );
+  }
+
+  static String _mapMarkerDetail(ArcAdminMapMarker marker, String baseDetail) {
+    if (!marker.hasBlueprintRoutingMetadata) return baseDetail;
+    final parts = <String>[baseDetail];
+    if (marker.effectiveBlueprintContainerFamily !=
+        ArcBlueprintContainerFamily.unknown) {
+      parts.add(
+        'Blueprint source: ${marker.effectiveBlueprintContainerFamily.label}.',
+      );
+    }
+    if (marker.blueprintContainerDensity > 0) {
+      parts.add(
+        'Relevant container density: ${marker.blueprintContainerDensity}/5.',
+      );
+    }
+    if (marker.effectiveBlueprintLootTier != ArcBlueprintLootTier.standard) {
+      parts.add('${marker.effectiveBlueprintLootTier.label}.');
+    }
+    if (marker.blueprintConditionIds.isNotEmpty) {
+      parts.add(
+        'Conditions: ${marker.blueprintConditionIds.map(_conditionDisplayLabel).join(', ')}.',
+      );
+    }
+    if (marker.blueprintFallbackEligible) {
+      parts.add('Eligible for probability fallback routing.');
+    }
+    return parts.join(' ');
   }
 
   List<ArcRaidIntelCluster> opportunityClusters({
@@ -311,12 +353,30 @@ class ArcRaidIntelligenceEngine {
         blueprint.id,
         map.id,
       );
+      final markerMatches = ArcBlueprintMapBackend.matchesForBlueprint(
+        blueprint: blueprint,
+        mapId: map.id,
+        markers: canonicalMarkers,
+      );
+      final directMarkerMatches = markerMatches
+          .where((match) => !match.fallback)
+          .toList(growable: false);
 
-      if (research != null) {
-        if (!research.canAutoRoute) {
-          continue;
-        }
+      if (directMarkerMatches.isNotEmpty) {
+        _appendBlueprintMarkerMatches(
+          target: mapClusters,
+          matches: directMarkerMatches,
+          blueprint: blueprint,
+          state: state,
+          loadoutRelevant: loadoutRelevant,
+          operationsState: operationsState,
+          map: map,
+        );
+        continue;
+      }
 
+      if (research != null && research.canAutoRoute) {
+        var researchClusterAdded = false;
         for (final site in research.autoRouteSites.take(3)) {
           final resolution = const ArcIntelligenceLocationResolver().resolve(
             map: map,
@@ -379,11 +439,34 @@ class ArcRaidIntelligenceEngine {
           );
           mapClusters.add(cluster);
           _clusterScores[cluster.id] = score + (research.reportedFindCount * 8);
+          researchClusterAdded = true;
         }
 
-        // The research catalogue is authoritative for whether a baseline POI
-        // is safe to auto-route. Never fall back to an arbitrary hashed POI
-        // for a researched blueprint/map pair.
+        // A mapped research POI is preferred over a generic high-value fallback,
+        // but if legacy POI aliases cannot resolve we can still use map-backend
+        // probability markers rather than returning no route at all.
+        if (researchClusterAdded) continue;
+      }
+
+      final probabilityFallbacks = markerMatches
+          .where((match) => match.fallback)
+          .toList(growable: false);
+      if (probabilityFallbacks.isNotEmpty) {
+        _appendBlueprintMarkerMatches(
+          target: mapClusters,
+          matches: probabilityFallbacks,
+          blueprint: blueprint,
+          state: state,
+          loadoutRelevant: loadoutRelevant,
+          operationsState: operationsState,
+          map: map,
+        );
+        continue;
+      }
+
+      if (research != null) {
+        // Event-only, quest-only and unavailable pools must not silently fall
+        // through to a random POI. The catalogue is authoritative here.
         continue;
       }
 
@@ -1121,20 +1204,27 @@ class ArcRaidIntelligenceEngine {
   static List<ArcBlueprint> _missingBlueprints(
     Map<String, ArcBlueprintState> states,
   ) {
-    if (states.isEmpty) {
-      return ArcBlueprintSeedData.blueprints.take(5).toList(growable: false);
-    }
     final missing = ArcBlueprintSeedData.blueprints
         .where((blueprint) => states[blueprint.id]?.owned != true)
-        .toList(growable: false);
+        .toList(growable: true);
     missing.sort((a, b) {
-      final aRank = states[a.id]?.priorityRank ?? 999;
-      final bRank = states[b.id]?.priorityRank ?? 999;
-      final rankCompare = aRank.compareTo(bRank);
-      if (rankCompare != 0) return rankCompare;
+      final aRank = states[a.id]?.priorityRank ?? 0;
+      final bRank = states[b.id]?.priorityRank ?? 0;
+      final aPrioritised = aRank > 0;
+      final bPrioritised = bRank > 0;
+      if (aPrioritised != bPrioritised) return aPrioritised ? -1 : 1;
+      if (aPrioritised && bPrioritised) {
+        final rankCompare = aRank.compareTo(bRank);
+        if (rankCompare != 0) return rankCompare;
+      }
+      final marketCompare = ArcBlueprintTradeValueCatalog.compareBlueprints(
+        a,
+        b,
+      );
+      if (marketCompare != 0) return marketCompare;
       return a.sortOrder.compareTo(b.sortOrder);
     });
-    return missing.take(12).toList(growable: false);
+    return missing.take(states.isEmpty ? 5 : 12).toList(growable: false);
   }
 
   static Set<String> _loadoutItemNames(ArcSavedLoadout? loadout) {
@@ -1178,6 +1268,122 @@ class ArcRaidIntelligenceEngine {
     return map.pois[hash % map.pois.length];
   }
 
+  static void _appendBlueprintMarkerMatches({
+    required List<ArcRaidIntelCluster> target,
+    required List<ArcBlueprintMarkerMatch> matches,
+    required ArcBlueprint blueprint,
+    required ArcBlueprintState? state,
+    required bool loadoutRelevant,
+    required ArcOperationsUserState operationsState,
+    required ArcRaidMap map,
+  }) {
+    final baseScore = _opportunityScore(
+      blueprint: blueprint,
+      state: state,
+      confidence: matches.first.fallback
+          ? ArcRaidIntelConfidence.limited
+          : matches.first.marker.confidence,
+      loadoutRelevant: loadoutRelevant,
+      operationsState: operationsState,
+    );
+    for (final match in matches.take(4)) {
+      final marker = match.marker;
+      final confidence = match.fallback
+          ? ArcRaidIntelConfidence.limited
+          : marker.confidence;
+      final research = ArcBlueprintResearchCatalog.forBlueprintOnMap(
+        blueprint.id,
+        map.id,
+      );
+      final researchConditions = research == null
+          ? const <String>[]
+          : ArcBlueprintMapBackend.conditionIdsForResearch(research.condition);
+      final effectiveConditions = marker.blueprintConditionIds.isNotEmpty
+          ? marker.blueprintConditionIds
+          : researchConditions;
+      final condition = effectiveConditions.isEmpty
+          ? 'Any condition'
+          : effectiveConditions.map(_conditionDisplayLabel).join(', ');
+      final researchFamily = research == null
+          ? ArcBlueprintContainerFamily.unknown
+          : ArcBlueprintMapBackend.containerFamilyForResearch(
+              research.container,
+            );
+      final effectiveFamily =
+          marker.effectiveBlueprintContainerFamily !=
+              ArcBlueprintContainerFamily.unknown
+          ? marker.effectiveBlueprintContainerFamily
+          : researchFamily;
+      final source = effectiveFamily == ArcBlueprintContainerFamily.unknown
+          ? marker.effectiveKind.label
+          : effectiveFamily.label;
+      final evidence = ArcRaidIntelEvidence(
+        id: '${map.id}_${blueprint.id}_${marker.id}_map_backend',
+        blueprintId: blueprint.id,
+        mapId: map.id,
+        approximateArea: marker.name,
+        point: marker.point,
+        containerSource: source,
+        conditionId: effectiveConditions.isEmpty
+            ? null
+            : effectiveConditions.first,
+        raidStage: 'Full',
+        acquisitionSource: match.fallback
+            ? 'map_probability_fallback'
+            : 'admin_map_blueprint_intel',
+        claimSummary: match.fallback
+            ? '${blueprint.name}: probability route through ${marker.name}.'
+            : '${blueprint.name}: ${match.reason}',
+        sourceCategory: match.fallback
+            ? 'uag_map_probability_fallback'
+            : 'uag_admin_map_blueprint_intel',
+        sourceReference:
+            marker.blueprintResearchVersion ?? 'UAG map backend marker',
+        reviewedAt: marker.updatedAt,
+        direct:
+            marker.effectiveBlueprintIntelType ==
+            ArcBlueprintMapIntelType.exactFind,
+        confidence: confidence,
+        notes: match.fallback
+            ? '${match.reason} This is a probability route, not a guaranteed Blueprint spawn.'
+            : '${match.reason} Admin map intelligence; drops remain probabilistic unless marked as an exact historical find.',
+      );
+      final cluster = ArcRaidIntelCluster(
+        id: '${map.id}_${blueprint.id}_${marker.id}_map_cluster',
+        mapId: map.id,
+        label: match.fallback
+            ? '${blueprint.name} fallback — ${marker.name}'
+            : '${blueprint.name} — ${marker.name}',
+        point: marker.point,
+        layer: marker.layer,
+        blueprintIds: <String>[blueprint.id],
+        evidence: <ArcRaidIntelEvidence>[evidence],
+        confidence: confidence,
+        reportCount: marker.resolvedEvidenceCount,
+        independentReporterCount: 0,
+        freshnessLabel: marker.updatedAt == null
+            ? 'Admin map intelligence'
+            : 'Admin map intel updated ${marker.updatedAt!.year}-${marker.updatedAt!.month.toString().padLeft(2, '0')}-${marker.updatedAt!.day.toString().padLeft(2, '0')}',
+        commonSource: source,
+        conditionCorrelation: condition,
+      );
+      target.add(cluster);
+      _clusterScores[cluster.id] = baseScore + (match.score * 0.25);
+    }
+  }
+
+  static String _conditionDisplayLabel(String value) {
+    return value
+        .split('_')
+        .where((part) => part.isNotEmpty)
+        .map(
+          (part) => part.length == 1
+              ? part.toUpperCase()
+              : '${part[0].toUpperCase()}${part.substring(1)}',
+        )
+        .join(' ');
+  }
+
   static ArcRaidIntelConfidence _confidenceFromHint(
     ArcBlueprintHintData hint, {
     required bool topWanted,
@@ -1206,6 +1412,7 @@ class ArcRaidIntelligenceEngine {
     if (loadoutRelevant) score += 32;
     if (blueprint.rarity == ArcBlueprintRarity.legendary) score += 16;
     if (blueprint.rarity == ArcBlueprintRarity.epic) score += 10;
+    score += ArcBlueprintTradeValueCatalog.tradePointsFor(blueprint) * 3;
     if (operationsState.progressById.isNotEmpty) score += 4;
     return score;
   }

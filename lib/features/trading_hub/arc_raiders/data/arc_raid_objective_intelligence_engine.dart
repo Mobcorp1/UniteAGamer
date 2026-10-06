@@ -100,7 +100,6 @@ class ArcRaidObjectiveIntelligenceEngine {
       }
     }
 
-
     if (nomadicTraderTracker.trackingKnown ||
         nomadicTraderTracker.targetValue > 0) {
       var addedPurchaseRequirement = false;
@@ -134,7 +133,8 @@ class ArcRaidObjectiveIntelligenceEngine {
       // route them toward a small set of eligible value resources instead of
       // silently producing no Nomadic Trader objectives. These are alternatives,
       // not hard requirements, so each objective represents one useful pickup.
-      if (!addedPurchaseRequirement && nomadicTraderTracker.remainingValue > 0) {
+      if (!addedPurchaseRequirement &&
+          nomadicTraderTracker.remainingValue > 0) {
         final catalog = nomadicTraderTracker.highTier
             ? ArcNomadicTraderCatalog.highTierResources
             : ArcNomadicTraderCatalog.lowTierResources;
@@ -143,12 +143,16 @@ class ArcRaidObjectiveIntelligenceEngine {
             .map((resource) => resource.id)
             .toSet();
         final ranked = <ArcNomadicTraderResourceDefinition>[
-          ...catalog.where((resource) =>
-              resource.id != 'duplicate_blueprint' &&
-              trackedIds.contains(resource.id)),
-          ...catalog.where((resource) =>
-              resource.id != 'duplicate_blueprint' &&
-              !trackedIds.contains(resource.id)),
+          ...catalog.where(
+            (resource) =>
+                resource.id != 'duplicate_blueprint' &&
+                trackedIds.contains(resource.id),
+          ),
+          ...catalog.where(
+            (resource) =>
+                resource.id != 'duplicate_blueprint' &&
+                !trackedIds.contains(resource.id),
+          ),
         ];
 
         for (final resource in ranked.take(4)) {

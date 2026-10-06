@@ -5,6 +5,7 @@ import 'package:uag_arc_raiders_hub/features/notifications/models/uag_session_sc
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_session.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_duplicate_blueprints_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_trading_workspace_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
@@ -258,6 +259,7 @@ class _TradingTradeSessionsScreenState
     Future<void> Function() action, {
     required String successMessage,
     required String errorPrefix,
+    Future<void> Function()? afterSuccess,
   }) async {
     try {
       await action();
@@ -265,11 +267,53 @@ class _TradingTradeSessionsScreenState
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(successMessage)));
+      if (afterSuccess != null) {
+        await afterSuccess();
+      }
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(_safeActionError(errorPrefix))));
+    }
+  }
+
+  bool _willCompleteSession(TradingSession session) {
+    final uid = _repository.currentUid;
+    if (uid == session.traderOneUid) return session.traderTwoMarkedComplete;
+    if (uid == session.traderTwoUid) return session.traderOneMarkedComplete;
+    return false;
+  }
+
+  Future<void> _showTradeSuccessSharePrompt() async {
+    if (!mounted) return;
+    final share = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: ArcUiTokens.surfaceOverlay,
+        surfaceTintColor: Colors.transparent,
+        title: const Text('Trade complete'),
+        content: const Text(
+          'Both Raiders confirmed the trade. You earned Trader Reputation and a bonus Raid Intelligence run. Share your updated Have / Need list to find the next match.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Not now'),
+          ),
+          FilledButton.icon(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            icon: const Icon(Icons.share_rounded),
+            label: const Text('Share updated list'),
+          ),
+        ],
+      ),
+    );
+    if (share == true && mounted) {
+      await Navigator.of(
+        context,
+        rootNavigator: true,
+      ).pushNamed(ArcDuplicateBlueprintsScreen.routeName);
     }
   }
 
@@ -1329,14 +1373,22 @@ class _TradingTradeSessionsScreenState
               _actionButton(
                 label: 'Mark complete',
                 icon: Icons.task_alt_rounded,
-                onPressed: () => _runAction(
-                  () => _repository.markMySessionOutcome(
-                    session: session,
-                    outcome: TradingSessionStatus.completed,
-                  ),
-                  successMessage: 'Completion marked.',
-                  errorPrefix: 'Could not mark complete: ',
-                ),
+                onPressed: () {
+                  final completesSession = _willCompleteSession(session);
+                  _runAction(
+                    () => _repository.markMySessionOutcome(
+                      session: session,
+                      outcome: TradingSessionStatus.completed,
+                    ),
+                    successMessage: completesSession
+                        ? 'Trade completed. Reputation and Raid Intelligence reward earned.'
+                        : 'Completion marked. Waiting for the other Raider.',
+                    errorPrefix: 'Could not mark complete: ',
+                    afterSuccess: completesSession
+                        ? _showTradeSuccessSharePrompt
+                        : null,
+                  );
+                },
               ),
               _actionButton(
                 label: 'Mark no-show',

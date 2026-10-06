@@ -548,6 +548,13 @@ const _editableMarkerFields = [
   'subtypeLabel',
   'itemId',
   'blueprintId',
+  'blueprintIntelType',
+  'blueprintContainerFamily',
+  'blueprintConditionIds',
+  'blueprintLootTier',
+  'blueprintContainerDensity',
+  'blueprintFallbackEligible',
+  'blueprintResearchVersion',
   'sourceLabel',
   'confidence',
 ];

@@ -12,29 +12,22 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_ma
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_marker_stack_resolver.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_view_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_engine.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_auto_recommendation_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_map_marker.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_availability.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_drop_report.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_community_intel_report.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_nomadic_trader_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_progression_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_state.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trader_profile.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_admin_map_editor_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_community_intel_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_progression_repository.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_nomadic_trader_repository.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_trader_profile_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_scrappy_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_raid_intelligence_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_saved_loadout_repository.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/data/arc_regional_map_conditions.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
@@ -79,8 +72,6 @@ class ArcRaidIntelligenceScreen extends StatefulWidget {
 
 class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   final ArcRaidIntelligenceEngine _engine = const ArcRaidIntelligenceEngine();
-  final ArcRaidAutoRecommendationEngine _autoRecommendationEngine =
-      const ArcRaidAutoRecommendationEngine();
   final ArcMapMarkerStackResolver _stackResolver =
       const ArcMapMarkerStackResolver();
   late final ArcBlueprintRepository _blueprintRepository =
@@ -96,21 +87,11 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   late final ArcScrappyRepository _scrappyRepository = ArcScrappyRepository();
   late final ArcProgressionRepository _progressionRepository =
       ArcProgressionRepository();
-  late final ArcTraderProfileRepository _traderProfileRepository =
-      ArcTraderProfileRepository();
-  final ArcNomadicTraderRepository _nomadicTraderRepository =
-      const ArcNomadicTraderRepository();
   late final UagEntitlementService _entitlementService =
       UagEntitlementService();
   final ArcMapViewRepository _mapViewRepository = const ArcMapViewRepository();
   final TransformationController _mapController = TransformationController();
   final TextEditingController _searchController = TextEditingController();
-
-  ArcRegionalMapConditionsSnapshot? _regionalConditions;
-  ArcAvailability _savedAvailability = ArcAvailability.initial();
-  ArcTraderProfile? _traderProfile;
-  ArcNomadicTraderTrackerSnapshot _nomadicTraderTracker =
-      ArcNomadicTraderTrackerSnapshot.empty;
 
   String _mapId = ArcMapAssetRegistry.blueGateMapId;
   ArcRaidMapLayer _activeLayer = ArcRaidMapLayer.surface;
@@ -216,39 +197,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     } catch (_) {
       if (mounted) setState(() => _lastData['routeError'] = true);
     }
-    await _loadRecommendationContext();
     await _restoreLastMapView();
-  }
-
-  Future<void> _loadRecommendationContext() async {
-    final regional = await ArcRegionalMapConditionsService.load();
-    var availability = ArcAvailability.initial();
-    ArcTraderProfile? profile;
-    var nomadic = ArcNomadicTraderTrackerSnapshot.empty;
-
-    try {
-      if (_traderProfileRepository.currentUid != null) {
-        availability = await _traderProfileRepository.getAvailability();
-        profile = await _traderProfileRepository.getProfile();
-      }
-    } catch (_) {
-      // Recommendation context is additive; the core Raid Intelligence screen
-      // remains usable if profile or availability cannot be read.
-    }
-
-    try {
-      nomadic = await _nomadicTraderRepository.loadTrackerSnapshot();
-    } catch (_) {
-      nomadic = ArcNomadicTraderTrackerSnapshot.empty;
-    }
-
-    if (!mounted) return;
-    setState(() {
-      _regionalConditions = regional;
-      _savedAvailability = availability;
-      _traderProfile = profile;
-      _nomadicTraderTracker = nomadic;
-    });
   }
 
   Future<void> _restoreLastMapView() async {
@@ -585,22 +534,6 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                                   activeLayer: _activeLayer,
                                   activeRoute: _routePlan,
                                 );
-                                final snapshot = _regionalConditions;
-                                final profile = _traderProfile;
-                                final recommendation =
-                                    snapshot == null || profile == null
-                                    ? null
-                                    : _autoRecommendationEngine.recommend(
-                                        snapshot: snapshot,
-                                        availability: _savedAvailability,
-                                        profile: profile,
-                                        nomadicTraderTracker:
-                                            _nomadicTraderTracker,
-                                        blueprintStates: states,
-                                        favouriteLoadout: loadout,
-                                        trackedObjectives:
-                                            intelligence.trackedObjectives,
-                                      );
                                 return Column(
                                   children: [
                                     if (showWorkspaceBar) ...[
@@ -639,7 +572,6 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                                     Expanded(
                                       child: _buildLayout(
                                         intelligence,
-                                        autoRecommendation: recommendation,
                                         communityReports: communityReports,
                                       ),
                                     ),
@@ -663,7 +595,6 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
 
   Widget _buildLayout(
     ArcRaidIntelligenceState intelligence, {
-    required ArcRaidAutoRecommendation? autoRecommendation,
     required List<ArcCommunityIntelReport> communityReports,
   }) {
     return LayoutBuilder(
@@ -676,7 +607,6 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
         final panel = _controlPanel(
           intelligence,
           desktop: sideBySide,
-          autoRecommendation: autoRecommendation,
           communityReports: communityReports,
         );
         final map = _mapPanel(intelligence);
@@ -799,7 +729,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                     borderOpacity: 0.24,
                   ),
                   child: Text(
-                    'Clean map mode â€¢ choose your spawn, raid time and extraction, then generate a run. UAG will only reveal intel that matters to that route.',
+                    'Clean map mode • choose your spawn, raid time and extraction, then generate a run. UAG will only reveal intel that matters to that route.',
                     textAlign: TextAlign.center,
                     style: ArcUiTokens.bodySmall(
                       color: ArcUiTokens.textSecondary,
@@ -950,7 +880,6 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   Widget _controlPanel(
     ArcRaidIntelligenceState intelligence, {
     required bool desktop,
-    required ArcRaidAutoRecommendation? autoRecommendation,
     required List<ArcCommunityIntelReport> communityReports,
   }) {
     return Container(
@@ -987,10 +916,6 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
           ],
           _secondaryMapControls(intelligence),
           _hero(intelligence),
-          if (autoRecommendation != null) ...[
-            const SizedBox(height: 10),
-            _autoRecommendationCard(autoRecommendation),
-          ],
           const SizedBox(height: 10),
           ArcLiveMapConditionsStrip(
             mapDisplayName: intelligence.map.displayName,
@@ -1100,61 +1025,6 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     );
   }
 
-  Widget _autoRecommendationCard(ArcRaidAutoRecommendation recommendation) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(12),
-      decoration: ArcUiTokens.surfaceDecoration(
-        role: ArcSurfaceRole.raised,
-        accent: Colors.amberAccent,
-        radius: ArcUiTokens.radiusM,
-        borderOpacity: 0.34,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'RECOMMENDED RAID - ${recommendation.statusLabel}',
-            style: ArcUiTokens.label(color: Colors.amberAccent),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            recommendation.mapName,
-            style: ArcUiTokens.sectionTitle(
-              fontSize: 18,
-              color: ArcUiTokens.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '${recommendation.conditionName} - ${recommendation.targetLabel}',
-            style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            recommendation.live
-                ? 'Official condition is live now and falls inside your saved play window.'
-                : 'Best upcoming official condition inside your saved play window.',
-            style: ArcUiTokens.bodySmall(color: ArcUiTokens.textTertiary),
-          ),
-          const SizedBox(height: 10),
-          OutlinedButton.icon(
-            style: ArcUiTokens.textButtonStyle(primary: true),
-            onPressed: () async {
-              if (recommendation.mapId != _mapId) {
-                await _changeMap(recommendation.mapId);
-              }
-              if (!mounted) return;
-              setState(() => _controlPanelCollapsed = false);
-            },
-            icon: const Icon(Icons.radar_rounded),
-            label: const Text('USE RECOMMENDED RAID'),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _hero(ArcRaidIntelligenceState intelligence) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1239,7 +1109,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
             selected: _raidStage,
             label: (value) {
               final budget = ArcRaidTimeBudget.forStage(value);
-              return '${budget.label} Â· ~${budget.totalMinutes}m';
+              return '${budget.label} · ~${budget.totalMinutes}m';
             },
             onSelected: (value) => setState(() => _raidStage = value),
           ),
@@ -1295,7 +1165,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
             style: ArcUiTokens.textButtonStyle(primary: true),
             onPressed: () => _generateRoute(intelligence),
             icon: const Icon(Icons.auto_awesome_rounded),
-            label: const Text('BUILD MY RAID'),
+            label: const Text('Generate Best Loot Run'),
           ),
         ],
       ),
@@ -1845,7 +1715,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                 ChoiceChip(
                   selected: option.routeStyle == activeRoute.routeStyle,
                   label: Text(
-                    '${option.routeStyle.label} Â· ${option.metrics.estimatedMinutes}m Â· ${option.metrics.efficiencyScore}%',
+                    '${option.routeStyle.label} · ${option.metrics.estimatedMinutes}m · ${option.metrics.efficiencyScore}%',
                   ),
                   onSelected: (_) => _selectRouteAlternative(option),
                   selectedColor: accent.withValues(alpha: 0.20),
