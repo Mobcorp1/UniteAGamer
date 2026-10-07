@@ -1,3 +1,4 @@
+import '../data/arc_raid_endpoint_resolver.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -10,10 +11,13 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_ad
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_admin_marker_visual_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_asset_registry.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_coordinate_projection.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_filter_icon_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_marker_alignment_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_marker_import_adapters.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_marker_import_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_quest_catalogue.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_quest_map_binding.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_world_intel_population_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_map_marker.dart';
@@ -23,6 +27,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_world_intel_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_admin_map_editor_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_map_filter_icon.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_precision_map_pin.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_admin_workspace_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
@@ -220,6 +225,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
   final _worldIntelEngine = const ArcWorldIntelPopulationEngine();
   final _transformationController = TransformationController();
   final _mapCanvasKey = GlobalKey();
+  final _mapViewportKey = GlobalKey();
   final _searchController = TextEditingController();
   final _undoStack = <List<ArcAdminMapMarker>>[];
 
@@ -253,6 +259,8 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
   bool _showExceptionsOnly = false;
   ArcMapMarkerImportSummary? _lastImportSummary;
   ArcWorldIntelPopulationResult? _lastWorldPopulation;
+  int _zoomPercent = 100;
+  Size? _lastMapViewportSize;
 
   ArcRaidMap get _map => ArcRaidIntelligenceSeedData.mapById(_mapId);
 
@@ -268,11 +276,13 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
     _layer = ArcMapAssetRegistry.resolveLayer(
       maps.first.availableLayers.first.name,
     );
+    _transformationController.addListener(_handleTransformChanged);
     unawaited(_load());
   }
 
   @override
   void dispose() {
+    _transformationController.removeListener(_handleTransformChanged);
     _transformationController.dispose();
     _searchController.dispose();
     super.dispose();
@@ -311,6 +321,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
         _saveStatus = 'Saved';
         _saveError = '';
         _loading = false;
+        _lastMapViewportSize = null;
         _transformationController.value = Matrix4.identity();
       });
     } catch (error, stackTrace) {
@@ -500,10 +511,11 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
   }
 
   ArcNormalizedPoint _pointFromLocalPosition(Offset localPosition, Size size) {
-    return ArcNormalizedPoint(
-      x: localPosition.dx / size.width,
-      y: localPosition.dy / size.height,
-    ).clamp();
+    return ArcMapCoordinateProjection.canvasToCanonical(
+      localPosition: localPosition,
+      mapSize: size,
+      calibration: _map.calibrationForLayer(_layer),
+    );
   }
 
   void _handleMapTap(Offset localPosition, Size size) {
@@ -522,16 +534,55 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
   }
 
   Size _fittedMapSize(ArcRaidMapAsset asset, Size viewportSize) {
-    final width = asset.width?.toDouble();
-    final height = asset.height?.toDouble();
-    final aspectRatio = width != null && height != null && height > 0
-        ? width / height
-        : 1.25;
-    final viewportRatio = viewportSize.width / viewportSize.height;
-    if (viewportRatio > aspectRatio) {
-      return Size(viewportSize.height * aspectRatio, viewportSize.height);
+    return ArcMapCoordinateProjection.containSize(
+      viewport: viewportSize,
+      sourceWidth: asset.width?.toDouble(),
+      sourceHeight: asset.height?.toDouble(),
+    );
+  }
+
+  void _handleTransformChanged() {
+    final next = (_transformationController.value.getMaxScaleOnAxis() * 100)
+        .round();
+    if (!mounted || next == _zoomPercent) return;
+    setState(() => _zoomPercent = next);
+  }
+
+  void _fitMap() {
+    _transformationController.value = Matrix4.identity();
+  }
+
+  void _zoomMap(double factor) {
+    final currentScale = _transformationController.value.getMaxScaleOnAxis();
+    final targetScale = (currentScale * factor).clamp(0.5, 8.0);
+    if ((targetScale - currentScale).abs() < 0.001) return;
+    final renderObject = _mapViewportKey.currentContext?.findRenderObject();
+    final focalPoint = renderObject is RenderBox
+        ? renderObject.size.center(Offset.zero)
+        : Offset.zero;
+    final scenePoint = _transformationController.toScene(focalPoint);
+    _transformationController.value = Matrix4.identity()
+      ..translateByDouble(focalPoint.dx, focalPoint.dy, 0, 1)
+      ..scaleByDouble(targetScale, targetScale, targetScale, 1)
+      ..translateByDouble(-scenePoint.dx, -scenePoint.dy, 0, 1);
+  }
+
+  void _refitAfterMeaningfulViewportChange(Size viewportSize) {
+    final previous = _lastMapViewportSize;
+    _lastMapViewportSize = viewportSize;
+    if (previous == null) return;
+    final widthDelta = (previous.width - viewportSize.width).abs();
+    final heightDelta = (previous.height - viewportSize.height).abs();
+    final previousRatio = previous.width / previous.height;
+    final nextRatio = viewportSize.width / viewportSize.height;
+    if (widthDelta < 120 &&
+        heightDelta < 120 &&
+        (previousRatio - nextRatio).abs() < 0.15) {
+      return;
     }
-    return Size(viewportSize.width, viewportSize.width / aspectRatio);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _fitMap();
+    });
   }
 
   Future<void> _saveDrafts() async {
@@ -896,6 +947,10 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
         actionLabel: 'Place on Map',
         mapName: _map.displayName,
         initialKind: ArcAdminMapMarkerKind.poi,
+        existingNames: _markers
+            .where((m) => m.mapId == _mapId && m.layer == _layer)
+            .map((m) => m.name)
+            .toList(),
         includeSeedKinds: true,
         initialSourceLabel: 'UAG Manual Location',
       ),
@@ -973,6 +1028,10 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
             actionLabel: 'Create Draft',
             mapName: _map.displayName,
             initialKind: initialKind,
+            existingNames: _markers
+                .where((m) => m.mapId == _mapId && m.layer == _layer)
+                .map((m) => m.name)
+                .toList(),
             includeSeedKinds: true,
             requireBlueprint: requireBlueprint,
             initialSourceLabel: sourceLabel,
@@ -993,7 +1052,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
           marker.layer == _layer &&
           marker.name.trim().toLowerCase() == result.name.toLowerCase(),
     );
-    if (duplicateName) {
+    if (duplicateName && result.kind != ArcAdminMapMarkerKind.questLocation) {
       _message('A marker with this name already exists on this layer.');
     }
 
@@ -1010,6 +1069,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
       subtypeId: result.subtypeId,
       subtypeLabel: result.subtypeLabel,
       itemId: result.itemId,
+      questId: result.questId,
       blueprintId: result.blueprintId,
       sourceLabel: result.sourceLabel,
       confidence: result.confidence,
@@ -1055,6 +1115,8 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
       clearSubtypeLabel: result.subtypeLabel == null,
       itemId: result.itemId,
       clearItemId: result.itemId == null,
+      questId: result.questId,
+      clearQuestId: result.questId == null,
       blueprintId: result.blueprintId,
       clearBlueprintId: result.blueprintId == null,
       sourceLabel: result.sourceLabel,
@@ -1339,74 +1401,79 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
                       style: TextStyle(color: Colors.white70),
                     ),
                   )
-                : InteractiveViewer(
-                    transformationController: _transformationController,
-                    minScale: 0.5,
-                    maxScale: 8,
-                    boundaryMargin: const EdgeInsets.all(240),
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final viewportSize = Size(
-                          constraints.maxWidth,
-                          constraints.maxHeight,
-                        );
-                        final mapSize = _fittedMapSize(asset, viewportSize);
-                        return Center(
-                          child: GestureDetector(
-                            behavior: HitTestBehavior.opaque,
-                            onTapUp: (details) =>
-                                _handleMapTap(details.localPosition, mapSize),
-                            child: SizedBox(
-                              key: _mapCanvasKey,
-                              width: mapSize.width,
-                              height: mapSize.height,
-                              child: Stack(
-                                clipBehavior: Clip.none,
-                                children: [
-                                  Positioned.fill(
-                                    child: Image.asset(
-                                      assetPath,
-                                      fit: BoxFit.fill,
-                                      filterQuality: FilterQuality.high,
-                                      errorBuilder: (_, _, _) => Center(
-                                        child: Container(
-                                          width: 180,
-                                          height: 120,
-                                          alignment: Alignment.center,
-                                          decoration:
-                                              ArcUiTokens.surfaceDecoration(
-                                                role: ArcSurfaceRole.raised,
-                                                accent:
-                                                    ArcUiTokens.primaryAccent,
-                                                borderOpacity: 0.28,
-                                              ),
-                                          child: const Icon(
-                                            Icons.map_outlined,
-                                            color: ArcUiTokens.primaryAccent,
-                                            size: 42,
+                : SizedBox(
+                    key: _mapViewportKey,
+                    child: InteractiveViewer(
+                      transformationController: _transformationController,
+                      minScale: 0.5,
+                      maxScale: 8,
+                      boundaryMargin: const EdgeInsets.all(240),
+                      trackpadScrollCausesScale: true,
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final viewportSize = Size(
+                            constraints.maxWidth,
+                            constraints.maxHeight,
+                          );
+                          _refitAfterMeaningfulViewportChange(viewportSize);
+                          final mapSize = _fittedMapSize(asset, viewportSize);
+                          return Center(
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTapUp: (details) =>
+                                  _handleMapTap(details.localPosition, mapSize),
+                              child: SizedBox(
+                                key: _mapCanvasKey,
+                                width: mapSize.width,
+                                height: mapSize.height,
+                                child: Stack(
+                                  clipBehavior: Clip.none,
+                                  children: [
+                                    Positioned.fill(
+                                      child: Image.asset(
+                                        assetPath,
+                                        fit: BoxFit.fill,
+                                        filterQuality: FilterQuality.high,
+                                        errorBuilder: (_, _, _) => Center(
+                                          child: Container(
+                                            width: 180,
+                                            height: 120,
+                                            alignment: Alignment.center,
+                                            decoration:
+                                                ArcUiTokens.surfaceDecoration(
+                                                  role: ArcSurfaceRole.raised,
+                                                  accent:
+                                                      ArcUiTokens.primaryAccent,
+                                                  borderOpacity: 0.28,
+                                                ),
+                                            child: const Icon(
+                                              Icons.map_outlined,
+                                              color: ArcUiTokens.primaryAccent,
+                                              size: 42,
+                                            ),
                                           ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                  if (_showReferenceGrid)
-                                    const Positioned.fill(
-                                      child: IgnorePointer(
-                                        child: CustomPaint(
-                                          painter:
-                                              _ArcAdminMapReferenceGridPainter(),
+                                    if (_showReferenceGrid)
+                                      const Positioned.fill(
+                                        child: IgnorePointer(
+                                          child: CustomPaint(
+                                            painter:
+                                                _ArcAdminMapReferenceGridPainter(),
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  if (_showPlacedItems)
-                                    for (final marker in _mapCanvasMarkers)
-                                      _markerWidget(marker, mapSize),
-                                ],
+                                    if (_showPlacedItems)
+                                      for (final marker in _mapCanvasMarkers)
+                                        _markerWidget(marker, mapSize),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     ),
                   ),
           ),
@@ -1500,8 +1567,36 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
         icon: const Icon(Icons.undo_rounded),
       ),
       IconButton(
-        tooltip: 'Reset zoom',
-        onPressed: () => _transformationController.value = Matrix4.identity(),
+        key: const Key('admin-map-zoom-out'),
+        tooltip: 'Zoom out',
+        onPressed: () => _zoomMap(0.82),
+        icon: const Icon(Icons.remove_rounded),
+      ),
+      Container(
+        key: const Key('admin-map-zoom-percent'),
+        constraints: const BoxConstraints(minWidth: 48),
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.36),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.white12),
+        ),
+        child: Text(
+          '$_zoomPercent%',
+          style: const TextStyle(color: Colors.white70, fontSize: 11),
+        ),
+      ),
+      IconButton(
+        key: const Key('admin-map-zoom-in'),
+        tooltip: 'Zoom in',
+        onPressed: () => _zoomMap(1.22),
+        icon: const Icon(Icons.add_rounded),
+      ),
+      IconButton(
+        key: const Key('admin-map-fit'),
+        tooltip: 'Fit map',
+        onPressed: _fitMap,
         icon: const Icon(Icons.center_focus_strong_rounded),
       ),
     ];
@@ -1580,17 +1675,44 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
 
   Widget _markerWidget(ArcAdminMapMarker marker, Size size) {
     final selected = _selected?.id == marker.id;
-    final hitSize = selected ? 40.0 : 32.0;
-    final visibleSize = selected ? 24.0 : 18.0;
-    final left = (marker.point.x * size.width) - (hitSize / 2);
-    final top = (marker.point.y * size.height) - (hitSize / 2);
+    final calibration = _map.calibrationForLayer(_layer);
+    final anchor = ArcMapCoordinateProjection.canonicalToCanvas(
+      point: marker.point,
+      mapSize: size,
+      calibration: calibration,
+    );
+    final pinWidth = ArcPrecisionMapPin.widthFor(selected);
+    final pinHeight = ArcPrecisionMapPin.heightFor(selected);
+    final assetPath = _assetPathForMarker(marker);
+    final accent = _kindColor(marker.kind);
+
+    Widget head = ArcMapFilterIcon(
+      iconKey: ArcMapFilterIconRegistry.iconKeyForAdminMarker(marker),
+      size: selected ? 20 : 16,
+      color: accent,
+      semanticLabel: marker.subtypeLabel ?? marker.name,
+    );
+    if (assetPath != null) {
+      head = Image.asset(
+        assetPath,
+        width: selected ? 20 : 16,
+        height: selected ? 20 : 16,
+        fit: BoxFit.cover,
+        filterQuality: FilterQuality.high,
+        errorBuilder: (_, _, _) => ArcMapFilterIcon(
+          iconKey: ArcMapFilterIconRegistry.iconKeyForAdminMarker(marker),
+          size: selected ? 20 : 16,
+          color: accent,
+        ),
+      );
+    }
 
     return Positioned(
-      left: left,
-      top: top,
+      left: anchor.dx - (pinWidth / 2),
+      top: anchor.dy - pinHeight,
       child: GestureDetector(
         key: ValueKey<String>('admin-map-marker-${marker.id}'),
-        onTap: () => setState(() => _selected = marker),
+        behavior: HitTestBehavior.translucent,
         onPanStart: (_) {
           if (_selected?.id != marker.id) {
             setState(() => _selected = marker);
@@ -1603,10 +1725,11 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
             return;
           }
           final localPosition = mapBox.globalToLocal(details.globalPosition);
-          final next = ArcNormalizedPoint(
-            x: localPosition.dx / size.width,
-            y: localPosition.dy / size.height,
-          ).clamp();
+          final next = ArcMapCoordinateProjection.canvasToCanonical(
+            localPosition: localPosition,
+            mapSize: size,
+            calibration: calibration,
+          );
           final current = _markers.firstWhere((item) => item.id == marker.id);
           final updated = current.copyWith(point: next);
           setState(() {
@@ -1621,42 +1744,42 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
         child: Tooltip(
           message:
               '${marker.name}\nX ${marker.point.x.toStringAsFixed(4)} • Y ${marker.point.y.toStringAsFixed(4)}',
-          child: SizedBox(
-            width: hitSize,
-            height: hitSize,
-            child: Center(
-              child: AnimatedContainer(
-                duration: AppTheme.fastAnimation,
-                width: visibleSize,
-                height: visibleSize,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.black.withValues(alpha: 0.88),
-                  border: Border.all(
-                    color: selected ? Colors.white : _kindColor(marker.kind),
-                    width: selected ? 2.2 : 1.4,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: _kindColor(marker.kind).withValues(alpha: 0.38),
-                      blurRadius: selected ? 14 : 7,
-                    ),
-                  ],
-                ),
-                child: ArcMapFilterIcon(
-                  iconKey: ArcMapFilterIconRegistry.iconKeyForAdminMarker(
-                    marker,
-                  ),
-                  size: selected ? 19 : 16,
-                  color: _kindColor(marker.kind),
-                  semanticLabel: marker.subtypeLabel ?? marker.name,
-                ),
-              ),
-            ),
+          child: ArcPrecisionMapPin(
+            selected: selected,
+            accent: accent,
+            head: head,
+            label: marker.name,
+            detail: marker.subtypeLabel ?? marker.kind.label,
+            coordinateText:
+                'X ${marker.point.x.toStringAsFixed(4)} • Y ${marker.point.y.toStringAsFixed(4)}',
+            onTap: () => setState(() => _selected = marker),
           ),
         ),
       ),
     );
+  }
+
+  String? _assetPathForMarker(ArcAdminMapMarker marker) {
+    if (marker.blueprintId?.trim().isNotEmpty == true) {
+      for (final blueprint in ArcBlueprintSeedData.blueprints) {
+        if (blueprint.id == marker.blueprintId) {
+          final path = blueprint.imageAssetPath?.trim();
+          if (path != null && path.isNotEmpty) return path;
+          break;
+        }
+      }
+    }
+    final direct = ArcAdminMarkerVisualRegistry.assetPathForSubtype(
+      marker.subtypeId,
+    );
+    if (direct != null) return direct;
+    return switch (marker.kind) {
+      ArcAdminMapMarkerKind.extraction =>
+        ArcAdminMarkerVisualRegistry.assetPathForSubtype('extraction'),
+      ArcAdminMapMarkerKind.raiderHatch =>
+        ArcAdminMarkerVisualRegistry.assetPathForSubtype('raider_hatch'),
+      _ => null,
+    };
   }
 
   Widget _buildSidePanel() {
@@ -2652,6 +2775,7 @@ class _NewMarkerResult {
     this.subtypeId,
     this.subtypeLabel,
     this.itemId,
+    this.questId,
     this.blueprintId,
     this.layer,
   });
@@ -2666,6 +2790,7 @@ class _NewMarkerResult {
   final String? subtypeId;
   final String? subtypeLabel;
   final String? itemId;
+  final String? questId;
   final String? blueprintId;
 }
 
@@ -2680,6 +2805,7 @@ class _NewMarkerDialog extends StatefulWidget {
     this.requireBlueprint = false,
     this.initialSourceLabel = 'Mike / Admin Intel',
     this.supportedLayers = const [],
+    this.existingNames = const [],
   });
 
   final String title;
@@ -2691,6 +2817,7 @@ class _NewMarkerDialog extends StatefulWidget {
   final bool requireBlueprint;
   final String initialSourceLabel;
   final List<ArcRaidMapLayer> supportedLayers;
+  final List<String> existingNames;
 
   @override
   State<_NewMarkerDialog> createState() => _NewMarkerDialogState();
@@ -2706,6 +2833,7 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
   String? _subtypeId;
   bool _customSubtypeEnabled = false;
   ArcRaidIntelConfidence _confidence = ArcRaidIntelConfidence.confirmed;
+  String? _questId;
   String? _blueprintId;
   ArcRaidMapLayer? _markerLayer;
 
@@ -2724,6 +2852,7 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
       _subtypeId = initial.upgradeResource?.subtypeId ?? initial.subtypeId;
       _customSubtype.text = initial.subtypeLabel ?? '';
       _confidence = initial.confidence;
+      _questId = initial.questId;
       _blueprintId = initial.blueprintId;
     }
   }
@@ -2741,6 +2870,30 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
   @override
   Widget build(BuildContext context) {
     final blueprints = ArcBlueprintSeedData.blueprints;
+    final questOptions = _kind == ArcAdminMapMarkerKind.questLocation
+        ? ArcQuestMapBinding.questsForMap(widget.mapName).toList(growable: true)
+        : <ArcQuestCatalogueNode>[];
+    final selectedQuest = _questId == null
+        ? null
+        : ArcQuestCatalogue.byId[_questId!];
+    if (selectedQuest != null &&
+        !questOptions.any((quest) => quest.id == selectedQuest.id)) {
+      questOptions.add(selectedQuest);
+      questOptions.sort(
+        (left, right) => left.canonicalOrder.compareTo(right.canonicalOrder),
+      );
+    }
+    final hasUnknownQuest =
+        _questId != null && !ArcQuestCatalogue.byId.containsKey(_questId);
+    final selectedQuestMapped =
+        selectedQuest == null ||
+        ArcQuestMapBinding.questSupportsMap(selectedQuest.id, widget.mapName);
+    final questSelectionValid =
+        _kind != ArcAdminMapMarkerKind.questLocation ||
+        (_questId != null &&
+            ArcQuestCatalogue.byId.containsKey(_questId) &&
+            ArcQuestMapBinding.questSupportsMap(_questId!, widget.mapName));
+
     final subtypeOptions = ArcAdminMapMarkerSubtypeCatalog.forKind(
       _kind,
       mapName: widget.mapName,
@@ -2782,11 +2935,62 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
                 ],
                 onChanged: (value) => setState(() {
                   _kind = value ?? _kind;
+                  if (_kind != ArcAdminMapMarkerKind.questLocation) {
+                    _questId = null;
+                  }
                   _subtypeId = null;
                   _customSubtypeEnabled = false;
                   _customSubtype.clear();
                 }),
               ),
+              if (_kind == ArcAdminMapMarkerKind.questLocation) ...[
+                const SizedBox(height: 10),
+                DropdownButtonFormField<String?>(
+                  key: ValueKey<String?>('quest:${widget.mapName}:$_questId'),
+                  isExpanded: true,
+                  initialValue: _questId,
+                  decoration: InputDecoration(
+                    labelText: 'Linked Quest (required)',
+                    helperText: hasUnknownQuest
+                        ? 'This legacy Quest ID is not in the canonical catalogue. Choose a verified Quest before publishing.'
+                        : !selectedQuestMapped
+                        ? 'This Quest is not mapped to the current map in the canonical catalogue. Choose the correct Quest before publishing.'
+                        : questOptions.isEmpty
+                        ? 'No canonical Quests are currently mapped to this map.'
+                        : 'Only canonical Quests relevant to ${widget.mapName ?? 'this map'} are shown.',
+                    helperMaxLines: 4,
+                  ),
+                  items: <DropdownMenuItem<String?>>[
+                    const DropdownMenuItem<String?>(
+                      value: null,
+                      child: Text('Select Quest'),
+                    ),
+                    if (hasUnknownQuest)
+                      DropdownMenuItem<String?>(
+                        value: _questId,
+                        child: Text('Legacy Quest link — $_questId'),
+                      ),
+                    for (final quest in questOptions)
+                      DropdownMenuItem<String?>(
+                        value: quest.id,
+                        child: Text(ArcQuestMapBinding.labelFor(quest)),
+                      ),
+                  ],
+                  onChanged: (value) => setState(() {
+                    _questId = value;
+                    final quest = value == null
+                        ? null
+                        : ArcQuestCatalogue.byId[value];
+                    if (quest != null &&
+                        widget.initialMarker == null &&
+                        (_name.text.trim().isEmpty ||
+                            _name.text.trim().toLowerCase() ==
+                                'quest location')) {
+                      _name.text = quest.displayName;
+                    }
+                  }),
+                ),
+              ],
               if (subtypeOptions.isNotEmpty) ...[
                 const SizedBox(height: 10),
                 DropdownButtonFormField<String?>(
@@ -2837,7 +3041,13 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
                     if (subtype != null &&
                         (_name.text.trim().isEmpty ||
                             _name.text == selectedSubtype?.label)) {
-                      _name.text = subtype.label;
+                      _name.text =
+                          widget.initialMarker == null &&
+                              value == 'player_spawn'
+                          ? ArcRaidEndpointResolver.nextPlayerSpawnName(
+                              widget.existingNames,
+                            )
+                          : subtype.label;
                     }
                   }),
                 ),
@@ -2939,9 +3149,10 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
         ),
         ElevatedButton(
           onPressed:
-              _kind == ArcAdminMapMarkerKind.upgrade &&
-                  selectedSubtype?.upgradeResource == null &&
-                  !hasUnknownExistingSubtype
+              (_kind == ArcAdminMapMarkerKind.upgrade &&
+                      selectedSubtype?.upgradeResource == null &&
+                      !hasUnknownExistingSubtype) ||
+                  !questSelectionValid
               ? null
               : () {
                   final name = _name.text.trim();
@@ -3009,6 +3220,9 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
                           ? 'Admin Intel'
                           : _source.text.trim(),
                       confidence: _confidence,
+                      questId: _kind == ArcAdminMapMarkerKind.questLocation
+                          ? _questId
+                          : null,
                       blueprintId: _blueprintId,
                       itemId:
                           subtype?.upgradeResource?.itemId ??

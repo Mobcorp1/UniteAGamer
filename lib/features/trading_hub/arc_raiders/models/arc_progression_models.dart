@@ -229,22 +229,36 @@ class ArcQuestProgressionSnapshot {
   final bool trackingKnown;
   final Set<String> trackedQuestIds;
 
-  ArcQuestProgressionEntry? get activeQuest {
-    for (final entry in entries) {
-      if (trackedQuestIds.contains(entry.questId) &&
-          (entry.status == ArcProgressionStatus.ready ||
-              entry.status == ArcProgressionStatus.active)) {
-        return entry;
-      }
+  List<ArcQuestProgressionEntry> get activeQuests {
+    final tracked = entries
+        .where(
+          (entry) =>
+              trackedQuestIds.contains(entry.questId) &&
+              (entry.status == ArcProgressionStatus.ready ||
+                  entry.status == ArcProgressionStatus.active),
+        )
+        .toList(growable: false);
+    if (tracked.isNotEmpty) {
+      return List<ArcQuestProgressionEntry>.unmodifiable(tracked);
     }
+
     for (final entry in entries) {
       if (entry.status == ArcProgressionStatus.ready ||
           entry.status == ArcProgressionStatus.active) {
-        return entry;
+        return List<ArcQuestProgressionEntry>.unmodifiable(
+          <ArcQuestProgressionEntry>[entry],
+        );
       }
     }
-    return entries.isEmpty ? null : entries.first;
+    return entries.isEmpty
+        ? const <ArcQuestProgressionEntry>[]
+        : List<ArcQuestProgressionEntry>.unmodifiable(
+            <ArcQuestProgressionEntry>[entries.first],
+          );
   }
+
+  ArcQuestProgressionEntry? get activeQuest =>
+      activeQuests.isEmpty ? null : activeQuests.first;
 
   int get completedCount => completedQuestIds.length;
   int get totalCount => entries.length;

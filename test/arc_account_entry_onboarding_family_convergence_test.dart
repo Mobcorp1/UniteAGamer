@@ -47,7 +47,8 @@ void main() {
     );
     expect(onboarding, isNot(contains('_completionDestination')));
     expect(agreement, contains('Navigator.of(context).pop(true)'));
-    expect(profile, contains('await _repository.saveProfile(profile);'));
+    expect(profile, contains('await _repository.saveProfile('));
+    expect(profile, contains('confirmProfileSetup: _requiresCompletionFields'));
     expect(profile, contains('Navigator.of(context).pop(true)'));
 
     expect(bar, isNot(contains('Navigator.')));

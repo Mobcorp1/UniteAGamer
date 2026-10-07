@@ -2,9 +2,11 @@ import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_coordinate_projection.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_blueprint_opportunity_marker.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_map_filter_icon.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_precision_map_pin.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
@@ -13,6 +15,7 @@ class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
     required this.state,
     required this.controller,
     this.selectedMarkerId,
+    this.highlightedMarkerIds = const <String>{},
     this.onMarkerSelected,
     this.onMapTapped,
     this.onIntelReportRequested,
@@ -23,6 +26,7 @@ class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
   final ArcRaidIntelligenceState state;
   final TransformationController controller;
   final String? selectedMarkerId;
+  final Set<String> highlightedMarkerIds;
   final ValueChanged<ArcRaidMapMarker>? onMarkerSelected;
   final ValueChanged<ArcNormalizedPoint>? onMapTapped;
   final ValueChanged<ArcNormalizedPoint>? onIntelReportRequested;
@@ -100,6 +104,7 @@ class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
                         child: SizedBox.fromSize(
                           size: mapSize,
                           child: Stack(
+                            clipBehavior: Clip.none,
                             children: [
                               Positioned.fill(child: _mapBackground()),
                               Positioned.fill(
@@ -135,12 +140,11 @@ class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
   }
 
   ArcNormalizedPoint _canonicalPoint(Offset localPosition, Size mapSize) {
-    final imagePoint = ArcNormalizedPoint(
-      x: localPosition.dx / mapSize.width,
-      y: localPosition.dy / mapSize.height,
-    ).clamp();
-    final calibration = state.map.calibrationForLayer(state.activeLayer);
-    return calibration?.imageToCanonical(imagePoint) ?? imagePoint;
+    return ArcMapCoordinateProjection.canvasToCanonical(
+      localPosition: localPosition,
+      mapSize: mapSize,
+      calibration: state.map.calibrationForLayer(state.activeLayer),
+    );
   }
 
   Widget _mapBackground() {
@@ -215,95 +219,119 @@ class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
   }
 
   Widget _markerButton(ArcRaidMapMarker marker, Size mapSize) {
-    final selected = marker.id == selectedMarkerId;
+    final selected =
+        marker.id == selectedMarkerId ||
+        highlightedMarkerIds.contains(marker.id);
     final calibration = state.map.calibrationForLayer(state.activeLayer);
-    final point =
-        calibration?.canonicalToImage(marker.point) ?? marker.point.clamp();
+    final anchor = ArcMapCoordinateProjection.canonicalToCanvas(
+      point: marker.point,
+      mapSize: mapSize,
+      calibration: calibration,
+    );
     final color = _markerColor(marker.category, marker.confidence);
-    final size = marker.isBlueprintOpportunity
-        ? (marker.blueprintIds.length > 1 ? 60.0 : 54.0)
+    final pinWidth = ArcPrecisionMapPin.widthFor(selected);
+    final pinHeight = ArcPrecisionMapPin.heightFor(selected);
+    final detail = marker.detail.trim().isNotEmpty
+        ? marker.detail
+        : marker.category.label;
+    final head = marker.isBlueprintOpportunity
+        ? _blueprintPinHead(marker, color, selected)
         : marker.isCluster
-        ? 38.0
-        : 28.0;
-    return Positioned(
-      left: (point.x * mapSize.width) - (size / 2),
-      top: (point.y * mapSize.height) - (size / 2),
-      child: marker.isBlueprintOpportunity
-          ? ArcBlueprintOpportunityMarker(
-              marker: marker,
-              selected: selected,
-              onTap: () => onMarkerSelected?.call(marker),
-            )
-          : Semantics(
-              button: true,
-              label: marker.semanticLabel,
-              child: Tooltip(
-                message: marker.semanticLabel,
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(999),
-                    onTap: () => onMarkerSelected?.call(marker),
-                    child: AnimatedContainer(
-                      duration: AppTheme.fastAnimation,
-                      width: size,
-                      height: size,
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(
-                          alpha: selected ? 0.90 : 0.72,
-                        ),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: selected ? Colors.white : color,
-                          width: selected ? 2.2 : 1.4,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: color.withValues(
-                              alpha: selected ? 0.48 : 0.22,
-                            ),
-                            blurRadius: selected ? 20 : 12,
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: marker.isCluster
-                            ? Text(
-                                marker.count.toString(),
-                                style: AppTheme.bodyTextStyle(
-                                  fontSize: 12,
-                                  color: Colors.white,
-                                  isBold: true,
-                                ),
-                              )
-                            : ArcMapFilterIcon(
-                                iconKey: marker.iconKey,
-                                category: marker.category,
-                                color: color,
-                                size: 17,
-                              ),
-                      ),
-                    ),
-                  ),
-                ),
+        ? Center(
+            child: Text(
+              marker.count.toString(),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
               ),
             ),
+          )
+        : ArcMapFilterIcon(
+            iconKey: marker.iconKey,
+            category: marker.category,
+            color: color,
+            size: selected ? 20 : 16,
+          );
+
+    return Positioned(
+      left: anchor.dx - (pinWidth / 2),
+      top: anchor.dy - pinHeight,
+      child: Tooltip(
+        message: marker.semanticLabel,
+        child: ArcPrecisionMapPin(
+          selected: selected,
+          accent: color,
+          head: head,
+          label: marker.label,
+          detail: detail,
+          coordinateText:
+              'X ${marker.point.x.toStringAsFixed(4)} • Y ${marker.point.y.toStringAsFixed(4)}',
+          onTap: () => onMarkerSelected?.call(marker),
+        ),
+      ),
+    );
+  }
+
+  Widget _blueprintPinHead(
+    ArcRaidMapMarker marker,
+    Color color,
+    bool selected,
+  ) {
+    final byId = {
+      for (final blueprint in ArcBlueprintSeedData.blueprints)
+        blueprint.id: blueprint,
+    };
+    final blueprint = marker.blueprintIds.isEmpty
+        ? null
+        : byId[marker.blueprintIds.first];
+    final path = blueprint?.imageAssetPath?.trim();
+    final fallbackIcon = blueprint?.icon ?? Icons.extension_rounded;
+    final image = path == null || path.isEmpty
+        ? Icon(fallbackIcon, color: color, size: selected ? 20 : 16)
+        : Image.asset(
+            path,
+            fit: BoxFit.cover,
+            filterQuality: FilterQuality.medium,
+            errorBuilder: (_, _, _) =>
+                Icon(fallbackIcon, color: color, size: selected ? 20 : 16),
+          );
+
+    if (marker.blueprintIds.length <= 1) return image;
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        image,
+        Align(
+          alignment: Alignment.bottomRight,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 2),
+            decoration: BoxDecoration(
+              color: Colors.black87,
+              borderRadius: BorderRadius.circular(5),
+              border: Border.all(color: color, width: 0.8),
+            ),
+            child: Text(
+              '${marker.blueprintIds.length}',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 7,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
   Size _fittedMapSize(Size viewportSize) {
     final asset = state.map.assetForLayer(state.activeLayer);
-    final width = asset?.width?.toDouble();
-    final height = asset?.height?.toDouble();
-    final aspectRatio = width != null && height != null && height > 0
-        ? width / height
-        : 1.25;
-
-    // Width-first fit: the map always uses the available screen width while
-    // preserving the image's native aspect ratio. On short landscape screens
-    // the excess height is clipped by the viewport rather than distorting the
-    // image, and markers/routes remain on the exact same map-sized canvas.
-    return Size(viewportSize.width, viewportSize.width / aspectRatio);
+    return ArcMapCoordinateProjection.containSize(
+      viewport: viewportSize,
+      sourceWidth: asset?.width?.toDouble(),
+      sourceHeight: asset?.height?.toDouble(),
+    );
   }
 
   void _handlePointerSignal(PointerSignalEvent event) {
@@ -463,9 +491,11 @@ class _ArcRaidSchematicPainter extends CustomPainter {
   }
 
   Offset _offset(ArcNormalizedPoint point, Size size) {
-    final calibration = state.map.calibrationForLayer(state.activeLayer);
-    final calibrated = calibration?.canonicalToImage(point) ?? point.clamp();
-    return Offset(calibrated.x * size.width, calibrated.y * size.height);
+    return ArcMapCoordinateProjection.canonicalToCanvas(
+      point: point,
+      mapSize: size,
+      calibration: state.map.calibrationForLayer(state.activeLayer),
+    );
   }
 
   @override

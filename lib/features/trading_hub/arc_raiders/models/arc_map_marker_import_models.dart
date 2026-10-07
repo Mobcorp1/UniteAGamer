@@ -81,6 +81,7 @@ class ArcExternalMapMarkerRecord {
     this.description = '',
     this.subtypeId,
     this.subtypeLabel,
+    this.questId,
     this.blueprintId,
     this.confidence = ArcRaidIntelConfidence.limited,
     this.coordinateSpace = ArcMapMarkerCoordinateSpace.normalized,
@@ -98,6 +99,7 @@ class ArcExternalMapMarkerRecord {
   final String description;
   final String? subtypeId;
   final String? subtypeLabel;
+  final String? questId;
   final ArcNormalizedPoint point;
   final String? blueprintId;
   final ArcRaidIntelConfidence confidence;

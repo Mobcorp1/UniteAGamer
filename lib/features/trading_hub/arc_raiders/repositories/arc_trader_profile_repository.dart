@@ -726,7 +726,10 @@ class ArcTraderProfileRepository {
     });
   }
 
-  Future<void> saveProfile(ArcTraderProfile profile) async {
+  Future<void> saveProfile(
+    ArcTraderProfile profile, {
+    bool confirmProfileSetup = false,
+  }) async {
     final serverNow = FieldValue.serverTimestamp();
     final referralCode = profile.referralCode.trim().isEmpty
         ? await _ensureReferralCodeForUid(profile.uid)
@@ -748,6 +751,12 @@ class ArcTraderProfileRepository {
       normalisedProfile,
       serverNow: serverNow,
     );
+    if (confirmProfileSetup) {
+      profileMap
+        ..['profileSetupConfirmed'] = true
+        ..['profileSetupVersion'] = 1
+        ..['profileSetupConfirmedAt'] = serverNow;
+    }
 
     await profileDoc(profile.uid).set(profileMap, SetOptions(merge: true));
     await _syncPublicProfile(normalisedProfile, serverNow: serverNow);
@@ -983,6 +992,9 @@ class ArcTraderProfileRepository {
     final now = FieldValue.serverTimestamp();
     final completionMap = <String, dynamic>{
       'complete': result.complete,
+      'completedFieldCount': result.completedFieldCount,
+      'requiredFieldCount': result.requiredFieldCount,
+      'completionPercent': result.completionPercent,
       'missingFieldIds': result.missingFieldIds,
       'missingFieldLabels': result.missingFieldLabels,
       'resumeRouteName': result.resumeRouteName,

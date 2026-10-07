@@ -30,7 +30,7 @@ void main() {
   });
 
   test(
-    'onboarding persists progression context before mandatory profile setup',
+    'onboarding persists progression context before mandatory Raider Setup',
     () {
       final source = File(
         'lib/features/trading_hub/arc_raiders/screens/arc_mandatory_onboarding_screen.dart',
@@ -40,10 +40,7 @@ void main() {
       expect(source, contains('blueprintOwnership: blueprintOwnership'));
       expect(source, contains('questProgress: questProgress'));
       expect(source, contains('_personalisationRepository.markComplete'));
-      expect(
-        source,
-        contains('const ArcProfileSetupScreen(firstRunFlow: true)'),
-      );
+      expect(source, contains('const AppEntryGate()'));
       expect(source, isNot(contains('_completionDestination')));
     },
   );

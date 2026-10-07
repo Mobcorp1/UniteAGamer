@@ -165,6 +165,7 @@ class ArcAdminMapMarker {
     this.subtypeId,
     this.subtypeLabel,
     this.itemId,
+    this.questId,
     this.blueprintId,
     this.sourceLabel = 'Admin Intel',
     this.confidence = ArcRaidIntelConfidence.confirmed,
@@ -205,6 +206,9 @@ class ArcAdminMapMarker {
 
   /// Canonical upgrade resource ID; absent on existing non-resource records.
   final String? itemId;
+
+  /// Canonical ArcQuestCatalogue ID for Quest-location markers.
+  final String? questId;
   final ArcNormalizedPoint point;
   final String? blueprintId;
   final String sourceLabel;
@@ -273,6 +277,8 @@ class ArcAdminMapMarker {
     bool clearSubtypeLabel = false,
     String? itemId,
     bool clearItemId = false,
+    String? questId,
+    bool clearQuestId = false,
     ArcNormalizedPoint? point,
     String? blueprintId,
     bool clearBlueprintId = false,
@@ -328,6 +334,7 @@ class ArcAdminMapMarker {
           : (subtypeLabel ?? this.subtypeLabel),
       point: point ?? this.point,
       itemId: clearItemId ? null : (itemId ?? this.itemId),
+      questId: clearQuestId ? null : (questId ?? this.questId),
       blueprintId: clearBlueprintId ? null : (blueprintId ?? this.blueprintId),
       sourceLabel: sourceLabel ?? this.sourceLabel,
       confidence: confidence ?? this.confidence,
@@ -389,6 +396,7 @@ class ArcAdminMapMarker {
       'subtypeId': subtypeId,
       'subtypeLabel': subtypeLabel,
       'itemId': itemId,
+      'questId': questId,
       'point': point.toMap(),
       'blueprintId': blueprintId,
       'sourceLabel': sourceLabel,
@@ -452,6 +460,7 @@ class ArcAdminMapMarker {
       subtypeId: map['subtypeId']?.toString(),
       subtypeLabel: map['subtypeLabel']?.toString(),
       itemId: map['itemId']?.toString(),
+      questId: map['questId']?.toString(),
       point: ArcNormalizedPoint.fromMap(
         map['point'] is Map
             ? Map<String, dynamic>.from(map['point'] as Map)

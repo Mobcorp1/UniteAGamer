@@ -20,21 +20,25 @@ void main() {
     );
   });
 
-  test(
-    'ONB02 production gate enforces profile completion after onboarding',
-    () {
-      final gate = File(
-        'lib/screens/build/app_entry_gate.dart',
-      ).readAsStringSync();
+  test('ONB02 production gate enforces profile completion after onboarding', () {
+    final gate = File(
+      'lib/screens/build/app_entry_gate.dart',
+    ).readAsStringSync();
 
-      expect(gate, contains('Future<bool> _needsProfileSetup(String uid)'));
-      expect(gate, contains('_profileRepository.getProfileCompletion()'));
-      expect(gate, contains('const ArcProfileSetupScreen(firstRunFlow: true)'));
-      expect(gate, contains("prefs.setBool('hasCompletedProfileSetup'"));
-    },
-  );
+    final setup = File(
+      'lib/features/trading_hub/arc_raiders/screens/arc_raider_setup_screen.dart',
+    ).readAsStringSync();
+    final evaluator = File(
+      'lib/features/trading_hub/arc_raiders/data/arc_raider_setup_evaluator.dart',
+    ).readAsStringSync();
+    expect(gate, contains('return ArcRaiderSetupGate('));
+    expect(setup, contains('snapshot.data!.status.needsSetup'));
+    expect(evaluator, contains('if (profile.identityComplete)'));
+    expect(evaluator, contains('version < ArcRaiderSetupEvaluator.version'));
+    expect(gate, isNot(contains("prefs.getBool('hasCompletedProfileSetup')")));
+  });
 
-  test('ONB02 onboarding always hands off to Profile & Reputation', () {
+  test('ONB02 onboarding hands off through required profile setup', () {
     final onboarding = File(
       'lib/features/trading_hub/arc_raiders/screens/'
       'arc_mandatory_onboarding_screen.dart',
@@ -59,10 +63,7 @@ void main() {
 
     expect(profile, contains('this.firstRunFlow = false'));
     expect(profile, contains("v) => _required(v, 'Embark ID')"));
-    expect(
-      profile,
-      contains("pushNamed('/trading-hub/arc-raiders/profile/availability')"),
-    );
+    expect(profile, contains('ArcAvailabilityScreen(firstRunFlow: true)'));
     expect(profile, contains('_repository.refreshProfileCompletion()'));
     expect(
       profile,

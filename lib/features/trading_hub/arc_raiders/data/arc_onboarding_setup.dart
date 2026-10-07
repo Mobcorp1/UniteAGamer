@@ -152,7 +152,14 @@ Map<String, dynamic> buildArcOnboardingAccountProfilePayload({
       'version': 7,
       'accountCreatedDuringOnboarding': true,
       'platforms': normalizedPlatforms,
-      'flow': <String>['account', 'legal', 'primaryGoal', 'progression'],
+      'flow': <String>[
+        'account',
+        'legal',
+        'primaryGoal',
+        'progression',
+        'profile',
+        'availability',
+      ],
     },
   };
 }
@@ -208,7 +215,10 @@ Map<String, dynamic> buildArcOnboardingCompletionPayload({
         'legal',
         'primaryGoal',
         'progression',
+        'profile',
+        'availability',
       ],
+      'nextRequiredSetup': <String>['profileDetails', 'availability'],
       'accountCreatedDuringOnboarding': accountCreatedDuringOnboarding,
       'riderName': normalizedName,
       'platforms': normalizedPlatforms,
@@ -220,13 +230,7 @@ Map<String, dynamic> buildArcOnboardingCompletionPayload({
       'recommendedFirstSystem': recommendedFirstSystem,
       'progressiveSetupEnabled': true,
       'legalAccepted': legalAccepted,
-      'deferredSetup': <String>[
-        'profileDetails',
-        'availability',
-        'communicationStyle',
-        'tradePreferences',
-        'notificationPreferences',
-      ],
+      'deferredSetup': <String>['tradePreferences', 'notificationPreferences'],
     },
   };
 }

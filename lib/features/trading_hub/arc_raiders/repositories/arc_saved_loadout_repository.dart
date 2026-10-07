@@ -64,6 +64,16 @@ class ArcSavedLoadoutRepository {
     return ArcSavedLoadout.fromMap(snapshot.id, data);
   }
 
+  /// Checks persisted choices before model defaults are applied.
+  Future<bool> hasConfiguredFavouriteLoadout() async {
+    final collection = _collection;
+    if (collection == null) return false;
+    final data = (await collection.doc('favourite-loadout').get()).data();
+    return data != null &&
+        (data['primaryWeapon']?.toString().trim().isNotEmpty ?? false) &&
+        (data['updatedAt'] != null || data['createdAt'] != null);
+  }
+
   Future<void> saveLoadout(ArcSavedLoadout loadout) async {
     final collection = _collection;
     if (collection == null) {

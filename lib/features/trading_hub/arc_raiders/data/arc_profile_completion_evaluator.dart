@@ -1,5 +1,6 @@
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_game_platform_catalog.dart';
+﻿import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_game_platform_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_player_archetype_catalog.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_player_session_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_availability.dart';
 
 class ArcProfileCompletionMissingField {
@@ -33,6 +34,19 @@ class ArcProfileCompletionResult {
   List<String> get missingFieldLabels =>
       missingFields.map((field) => field.label).toList(growable: false);
 
+  int get requiredFieldCount =>
+      ArcProfileCompletionEvaluator.requiredFieldCount;
+
+  int get completedFieldCount =>
+      (requiredFieldCount - missingFieldIds.toSet().length)
+          .clamp(0, requiredFieldCount)
+          .toInt();
+
+  double get completionFraction =>
+      requiredFieldCount == 0 ? 1 : completedFieldCount / requiredFieldCount;
+
+  int get completionPercent => (completionFraction * 100).round();
+
   String? get resumeRouteName =>
       missingFields.isEmpty ? null : missingFields.first.routeName;
 
@@ -60,6 +74,19 @@ class ArcProfileCompletionResult {
 class ArcProfileCompletionEvaluator {
   const ArcProfileCompletionEvaluator();
 
+  static const requiredFieldIds = <String>[
+    'embarkId',
+    'platform',
+    'archetypes',
+    'communicationStyle',
+    'squadIntent',
+    'socialSessionState',
+    'availability',
+    'onboarding',
+    'legal',
+  ];
+  static const int requiredFieldCount = 9;
+
   static const profileSetupRouteName = '/trading-hub/arc-raiders/profile/setup';
   static const availabilityRouteName =
       '/trading-hub/arc-raiders/profile/availability';
@@ -74,6 +101,10 @@ class ArcProfileCompletionEvaluator {
     final basicProfile = _map(userData['basicProfile']);
     final traderProfile = _map(userData['traderProfile']);
     final arcOnboarding = _map(userData['arcOnboarding']);
+    final profileSetupConfirmed =
+        profileData['profileSetupConfirmed'] == true ||
+        traderProfile['profileSetupConfirmed'] == true ||
+        userData['profileSetupConfirmed'] == true;
     final missing = <ArcProfileCompletionMissingField>[];
 
     final embarkId = _firstString(<dynamic>[
@@ -128,7 +159,24 @@ class ArcProfileCompletionEvaluator {
       basicProfile['playStyle'],
       arcOnboarding['playStyle'],
     ], includeDefaultWhenEmpty: false);
-    if (archetypes.isEmpty) {
+    final rawArchetypeLabels = <String>[
+      ..._stringList(profileData['archetypes']),
+      ..._stringList(traderProfile['archetypes']),
+      ..._stringList(basicProfile['archetypes']),
+      ..._stringList(arcOnboarding['archetypes']),
+    ];
+    final seededArchetypeDefaults =
+        !profileSetupConfirmed &&
+        rawArchetypeLabels.length == 1 &&
+        rawArchetypeLabels.single == 'Balanced Raider' &&
+        _firstString(<dynamic>[
+              profileData['playStyle'],
+              traderProfile['playStyle'],
+              basicProfile['playStyle'],
+              arcOnboarding['playStyle'],
+            ]) ==
+            'PvE defensive';
+    if (archetypes.isEmpty || seededArchetypeDefaults) {
       missing.add(
         const ArcProfileCompletionMissingField(
           id: 'archetypes',
@@ -139,13 +187,13 @@ class ArcProfileCompletionEvaluator {
       );
     }
 
-    if (!_hasText(
-      _firstString(<dynamic>[
-        profileData['communicationStyle'],
-        traderProfile['communicationStyle'],
-        basicProfile['communicationStyle'],
-      ]),
-    )) {
+    final communicationStyle = _firstString(<dynamic>[
+      profileData['communicationStyle'],
+      traderProfile['communicationStyle'],
+      basicProfile['communicationStyle'],
+    ]);
+    if (!_hasText(communicationStyle) ||
+        (!profileSetupConfirmed && communicationStyle == 'Flexible')) {
       missing.add(
         const ArcProfileCompletionMissingField(
           id: 'communicationStyle',
@@ -156,14 +204,14 @@ class ArcProfileCompletionEvaluator {
       );
     }
 
-    if (!_hasText(
-      _firstString(<dynamic>[
-        profileData['squadIntent'],
-        traderProfile['squadIntent'],
-        basicProfile['squadIntent'],
-        arcOnboarding['squadIntent'],
-      ]),
-    )) {
+    final squadIntent = _firstString(<dynamic>[
+      profileData['squadIntent'],
+      traderProfile['squadIntent'],
+      basicProfile['squadIntent'],
+      arcOnboarding['squadIntent'],
+    ]);
+    if (!_hasText(squadIntent) ||
+        (!profileSetupConfirmed && squadIntent == 'Flexible')) {
       missing.add(
         const ArcProfileCompletionMissingField(
           id: 'squadIntent',
@@ -186,7 +234,13 @@ class ArcProfileCompletionEvaluator {
       basicProfile['sessionIntent'],
       arcOnboarding['sessionIntent'],
     ]);
-    if (!_hasText(socialEnergy) || !_hasText(sessionIntent)) {
+    final seededSocialSessionDefaults =
+        !profileSetupConfirmed &&
+        socialEnergy == 'Depends on the day' &&
+        sessionIntent == ArcPlayerSessionCatalog.defaultIntent;
+    if (!_hasText(socialEnergy) ||
+        !_hasText(sessionIntent) ||
+        seededSocialSessionDefaults) {
       missing.add(
         const ArcProfileCompletionMissingField(
           id: 'socialSessionState',

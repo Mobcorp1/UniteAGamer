@@ -69,6 +69,8 @@ void main() {
         'legal',
         'primaryGoal',
         'progression',
+        'profile',
+        'availability',
       ]);
     });
 
@@ -226,6 +228,16 @@ void main() {
         'legal',
         'primaryGoal',
         'progression',
+        'profile',
+        'availability',
+      ]);
+      expect(onboarding['nextRequiredSetup'], [
+        'profileDetails',
+        'availability',
+      ]);
+      expect(onboarding['deferredSetup'], [
+        'tradePreferences',
+        'notificationPreferences',
       ]);
       expect(onboarding['riderName'], 'Mike');
       expect(onboarding['platforms'], <String>['PlayStation', 'Xbox']);

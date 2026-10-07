@@ -1,3 +1,4 @@
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raider_setup_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_events_screen.dart';
 import 'dart:async';
 
@@ -140,6 +141,38 @@ class UAGTradersHubApp extends StatefulWidget {
   State<UAGTradersHubApp> createState() => _UAGTradersHubAppState();
 
   Route<dynamic> _buildRoute(RouteSettings settings) {
+    final route = _buildFeatureRoute(settings);
+    final name = settings.name ?? '';
+    final setupEditor =
+        identical(settings.arguments, ArcRaiderSetupEditorAccess.token) &&
+        ArcRaiderSetupEditorAccess.routes.contains(name);
+    final accountRoute =
+        name == ArcMandatoryOnboardingScreen.routeName ||
+        name == '/onboarding-basic-profile';
+    final playerRoute = !<String>{
+      AuthLandingScreen.routeName,
+      AuthScreen.routeName,
+      AppEntryGate.routeName,
+      HomeScreen.routeName,
+      LegalHubScreen.routeName,
+      UagPrivacyDataScreen.routeName,
+      MonetisationScreen.routeName,
+      '/monetisation/plans',
+    }.contains(name);
+    if (!testMode &&
+        playerRoute &&
+        !setupEditor &&
+        !accountRoute &&
+        route is MaterialPageRoute) {
+      return MaterialPageRoute(
+        settings: settings,
+        builder: (_) => AppEntryGate(destinationBuilder: route.builder),
+      );
+    }
+    return route;
+  }
+
+  Route<dynamic> _buildFeatureRoute(RouteSettings settings) {
     switch (settings.name) {
       case AuthLandingScreen.routeName:
         return MaterialPageRoute(
@@ -310,7 +343,8 @@ class UAGTradersHubApp extends StatefulWidget {
 
       case ArcProfileSetupScreen.routeName:
         return MaterialPageRoute(
-          builder: (_) => const ArcProfileSetupScreen(),
+          builder: (_) =>
+              const ArcProfileSetupScreen(requireCompletionFields: true),
           settings: settings,
         );
 

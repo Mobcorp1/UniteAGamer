@@ -68,6 +68,8 @@ class ArcRaidIntelligenceRepository {
       'squadMode': route.squadMode.name,
       'routeStyle': route.routeStyle.name,
       'raidStage': route.raidStage,
+      'layer': route.layer.name,
+      'remainingMinutes': route.remainingMinutes,
       'objectivePriority': route.objectivePriority.name,
       'usesRaiderHatch': route.usesRaiderHatch,
       'hatchKeyConfirmed': route.hatchKeyConfirmed,
@@ -137,6 +139,11 @@ class ArcRaidIntelligenceRepository {
       squadMode: _squadMode(map['squadMode']),
       routeStyle: _routeStyle(map['routeStyle']),
       raidStage: _string(map['raidStage'], 'Full'),
+      layer: ArcRaidMapLayer.values.firstWhere(
+        (layer) => layer.name == map['layer'],
+        orElse: () => ArcRaidMapLayer.surface,
+      ),
+      remainingMinutes: (map['remainingMinutes'] as num?)?.toInt(),
       objectivePriority: _objectivePriority(map['objectivePriority']),
       spawn: _stopFromMap(
         Map<String, dynamic>.from(map['spawn'] as Map? ?? const {}),

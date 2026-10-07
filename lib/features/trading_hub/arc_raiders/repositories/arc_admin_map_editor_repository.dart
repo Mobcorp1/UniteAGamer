@@ -547,6 +547,7 @@ const _editableMarkerFields = [
   'subtypeId',
   'subtypeLabel',
   'itemId',
+  'questId',
   'blueprintId',
   'sourceLabel',
   'confidence',

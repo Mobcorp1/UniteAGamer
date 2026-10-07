@@ -54,21 +54,22 @@ void main() {
     await tester.pump(const Duration(milliseconds: 250));
 
     expect(tester.takeException(), isNull);
-    expect(find.text('OPS SNAPSHOT'), findsOneWidget);
-    expect(find.text('PRIORITY MOVES'), findsOneWidget);
+    expect(find.text('RAIDER BRIEFING'), findsOneWidget);
+    expect(find.text('NEXT RAID'), findsOneWidget);
+    expect(find.text('PROGRESSION'), findsOneWidget);
 
     await tester.scrollUntilVisible(
-      find.text('ARC SYSTEMS'),
+      find.text('EXPLORE'),
       500,
       scrollable: find.byType(Scrollable).first,
     );
     await tester.pump(const Duration(milliseconds: 250));
 
     expect(tester.takeException(), isNull);
-    expect(find.text('ARC SYSTEMS'), findsOneWidget);
-    expect(find.text('FEATURES'), findsNothing);
+    expect(find.text('EXPLORE'), findsOneWidget);
+    expect(find.text('SYSTEM INTELLIGENCE'), findsNothing);
 
-    await tester.tap(find.text('ARC SYSTEMS'));
+    await tester.tap(find.text('EXPLORE'));
     await tester.pump(const Duration(milliseconds: 250));
 
     expect(tester.takeException(), isNull);

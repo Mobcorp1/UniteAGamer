@@ -1,3 +1,6 @@
+import '../data/arc_raid_endpoint_resolver.dart';
+import '../data/arc_quest_map_binding.dart';
+import '../data/arc_raid_time_budget.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -10,23 +13,30 @@ import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_asset_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_marker_stack_resolver.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_view_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_auto_recommendation_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_map_marker.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_availability.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_drop_report.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_community_intel_report.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_nomadic_trader_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_progression_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trader_profile.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_admin_map_editor_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_community_intel_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_nomadic_trader_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_progression_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_scrappy_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_raid_intelligence_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_saved_loadout_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_trader_profile_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/data/arc_regional_map_conditions.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
@@ -51,6 +61,10 @@ class ArcRaidIntelligenceScreen extends StatefulWidget {
     this.scrappyStates,
     this.progressionRecords,
     this.loadActiveRoute,
+    this.availabilityLoader,
+    this.nomadicTraderTrackerLoader,
+    this.profileLoader,
+    this.regionalConditionsLoader,
   });
   final Stream<Map<String, ArcBlueprintState>> Function()? blueprintStates;
   final Stream<ArcSavedLoadout?> Function()? favouriteLoadout;
@@ -61,6 +75,12 @@ class ArcRaidIntelligenceScreen extends StatefulWidget {
   final Stream<Map<String, ArcScrappyState>> Function()? scrappyStates;
   final Stream<ArcProgressionRecords> Function()? progressionRecords;
   final Future<ArcRaidRoutePlan?> Function()? loadActiveRoute;
+  final Future<ArcAvailability> Function()? availabilityLoader;
+  final Future<ArcNomadicTraderTrackerSnapshot> Function()?
+  nomadicTraderTrackerLoader;
+  final Future<ArcTraderProfile> Function()? profileLoader;
+  final Future<ArcRegionalMapConditionsSnapshot> Function()?
+  regionalConditionsLoader;
 
   static const routeName = '/trading-hub/arc-raiders/raid-intelligence';
 
@@ -71,6 +91,8 @@ class ArcRaidIntelligenceScreen extends StatefulWidget {
 
 class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   final ArcRaidIntelligenceEngine _engine = const ArcRaidIntelligenceEngine();
+  final ArcRaidAutoRecommendationEngine _autoRecommendationEngine =
+      const ArcRaidAutoRecommendationEngine();
   final ArcMapMarkerStackResolver _stackResolver =
       const ArcMapMarkerStackResolver();
   late final ArcBlueprintRepository _blueprintRepository =
@@ -86,6 +108,10 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   late final ArcScrappyRepository _scrappyRepository = ArcScrappyRepository();
   late final ArcProgressionRepository _progressionRepository =
       ArcProgressionRepository();
+  late final ArcNomadicTraderRepository _nomadicTraderRepository =
+      const ArcNomadicTraderRepository();
+  late final ArcTraderProfileRepository _profileRepository =
+      ArcTraderProfileRepository();
   final ArcMapViewRepository _mapViewRepository = const ArcMapViewRepository();
   final TransformationController _mapController = TransformationController();
   final TextEditingController _searchController = TextEditingController();
@@ -98,6 +124,14 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   ArcRaidObjectivePriority _objectivePriority =
       ArcRaidObjectivePriority.myNeedsFirst;
   String _raidStage = 'Full';
+  static const _timeBudget = ArcRaidTimeBudget();
+  final _remainingController = TextEditingController(text: '30');
+  int? _remainingMinutes = 30;
+  ArcRaidEndpoints? _endpoints;
+  bool _endpointsReady = false;
+  bool _extractionConfirmed = false;
+  bool _showAdvancedMarkers = false;
+  String? _endpointNotice;
   ArcRaidRouteStop? _spawn;
   ArcRaidRouteStop? _extraction;
   bool _usesHatch = false;
@@ -108,6 +142,16 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   Timer? _mapViewSaveTimer;
   bool _restoringMapView = false;
   bool _controlPanelCollapsed = true;
+  ArcAvailability _availability = ArcAvailability.initial();
+  ArcNomadicTraderTrackerSnapshot _nomadicTraderTracker =
+      ArcNomadicTraderTrackerSnapshot.empty;
+  ArcTraderProfile _profile = ArcTraderProfile.empty('');
+  ArcRegionalMapConditionsSnapshot? _regionalConditions;
+  ArcRaidAutoRecommendation? _autoRecommendation;
+  String? _goalRecommendedMapId;
+  String? _recommendationSignature;
+  bool _recommendationContextLoaded = false;
+  bool _mapManuallySelected = false;
   final Map<String, Stream<dynamic>> _streams = {};
   final Map<String, dynamic> _lastData = {};
   final ScrollController _panelScroll = ScrollController();
@@ -148,6 +192,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     unawaited(_persistMapView());
     _mapController.dispose();
     _searchController.dispose();
+    _remainingController.dispose();
     super.dispose();
   }
 
@@ -168,6 +213,11 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       _routeStyle = route.routeStyle;
       _objectivePriority = route.objectivePriority;
       _raidStage = route.raidStage;
+      _activeLayer = route.layer;
+      _remainingMinutes =
+          route.remainingMinutes ?? _timeBudget.preset(route.raidStage);
+      _remainingController.text = '$_remainingMinutes';
+      _extractionConfirmed = true;
       _spawn = route.spawn;
       _extraction = route.extraction;
       _usesHatch = route.usesRaiderHatch;
@@ -183,9 +233,152 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       if (mounted) setState(() => _lastData['routeError'] = true);
     }
     await _restoreLastMapView();
+    unawaited(_loadRecommendationContext());
+  }
+
+  Future<void> _loadRecommendationContext() async {
+    var availability = _availability;
+    var trader = _nomadicTraderTracker;
+    var profile = _profile;
+    ArcRegionalMapConditionsSnapshot? regional;
+
+    try {
+      availability =
+          await (widget.availabilityLoader?.call() ??
+              _profileRepository.getAvailability());
+    } catch (_) {}
+    try {
+      trader =
+          await (widget.nomadicTraderTrackerLoader?.call() ??
+              _nomadicTraderRepository.loadTrackerSnapshot());
+    } catch (_) {}
+    try {
+      profile =
+          await (widget.profileLoader?.call() ??
+              _profileRepository.getProfile());
+    } catch (_) {}
+    try {
+      regional =
+          await (widget.regionalConditionsLoader?.call() ??
+              ArcRegionalMapConditionsService.load());
+    } catch (_) {}
+
+    if (!mounted) return;
+    setState(() {
+      _availability = availability;
+      _nomadicTraderTracker = trader;
+      _profile = profile;
+      _regionalConditions = regional;
+      _recommendationContextLoaded = true;
+    });
+  }
+
+  void _scheduleAutoRecommendation(
+    Map<String, ArcBlueprintState> states,
+    List<ArcRaidObjective> trackedObjectives,
+    ArcSavedLoadout? favouriteLoadout,
+    List<ArcBlueprintDropReport> reports,
+  ) {
+    if (!_recommendationContextLoaded) return;
+    final snapshot = _regionalConditions;
+    final next = snapshot == null
+        ? null
+        : _autoRecommendationEngine.recommend(
+            snapshot: snapshot,
+            availability: _availability,
+            profile: _profile,
+            nomadicTraderTracker: _nomadicTraderTracker,
+            blueprintStates: states,
+            favouriteLoadout: favouriteLoadout,
+            trackedObjectives: trackedObjectives,
+          );
+    final goalMapId = next == null
+        ? _bestGoalMap(
+            states: states,
+            favouriteLoadout: favouriteLoadout,
+            trackedObjectives: trackedObjectives,
+            reports: reports,
+          )
+        : null;
+    final signature = next?.signature ?? 'goal:${goalMapId ?? 'none'}';
+    if (_recommendationSignature == signature) return;
+    _recommendationSignature = signature;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() {
+        _autoRecommendation = next;
+        _goalRecommendedMapId = goalMapId;
+      });
+      final recommendedMapId = next?.mapId ?? goalMapId;
+      if (recommendedMapId != null &&
+          _routePlan == null &&
+          _spawn == null &&
+          _extraction == null &&
+          _selectedMarker == null &&
+          !_mapManuallySelected &&
+          recommendedMapId != _mapId) {
+        unawaited(_changeMap(recommendedMapId, fromRecommendation: true));
+      }
+    });
+  }
+
+  String? _bestGoalMap({
+    required Map<String, ArcBlueprintState> states,
+    required ArcSavedLoadout? favouriteLoadout,
+    required List<ArcRaidObjective> trackedObjectives,
+    required List<ArcBlueprintDropReport> reports,
+  }) {
+    String? bestMapId;
+    var bestScore = 0.0;
+    for (final map in ArcRaidIntelligenceSeedData.maps) {
+      var questMapScore = 0.0;
+      for (final objective in trackedObjectives) {
+        final questId = objective.questId;
+        if (questId == null ||
+            !ArcQuestMapBinding.questSupportsMap(questId, map.id)) {
+          continue;
+        }
+        questMapScore += objective.questLocationOnly ? 180 : 35;
+      }
+
+      final clusters = _engine.opportunityClusters(
+        map: map,
+        blueprintStates: states,
+        favouriteLoadout: favouriteLoadout,
+        dropReports: reports,
+        trackedObjectives: trackedObjectives,
+      );
+      if (clusters.isEmpty && questMapScore <= 0) continue;
+      final scores =
+          clusters
+              .map((cluster) {
+                var score =
+                    cluster.objectiveScore +
+                    (cluster.objectiveCount * 80) +
+                    (cluster.blueprintIds.length * 35);
+                for (final blueprintId in cluster.blueprintIds) {
+                  if (states[blueprintId]?.isPrioritized == true) score += 120;
+                }
+                return score;
+              })
+              .toList(growable: false)
+            ..sort((left, right) => right.compareTo(left));
+      final score =
+          questMapScore +
+          scores.take(5).fold<double>(0, (total, value) => total + value);
+      if (score > bestScore) {
+        bestScore = score;
+        bestMapId = map.id;
+      }
+    }
+    return bestMapId;
   }
 
   Future<void> _restoreLastMapView() async {
+    if (_routePlan != null) {
+      await _restoreLayerView(mapId: _mapId, layer: _routePlan!.layer);
+      return;
+    }
     final snapshot = await _mapViewRepository.loadLast();
     if (!mounted || snapshot == null) return;
     final canonicalSnapshotMapId =
@@ -246,7 +439,10 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     );
   }
 
-  Future<void> _changeMap(String mapId) async {
+  Future<void> _changeMap(
+    String mapId, {
+    bool fromRecommendation = false,
+  }) async {
     final canonicalMapId =
         ArcMapAssetRegistry.canonicalMapIdFor(mapId) ?? mapId;
     final nextMap = ArcRaidIntelligenceSeedData.mapById(canonicalMapId);
@@ -256,10 +452,14 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
               ? ArcRaidMapLayer.surface
               : nextMap.availableLayers.first);
     setState(() {
+      if (!fromRecommendation) _mapManuallySelected = true;
       _mapId = canonicalMapId;
       _activeLayer = nextLayer;
       _spawn = null;
       _extraction = null;
+      _extractionConfirmed = false;
+      _endpointsReady = false;
+      _endpointNotice = null;
       _routePlan = null;
       _objectiveOnlyStops = const <ArcRaidIntelCluster>[];
       _selectedMarker = null;
@@ -487,6 +687,21 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                                   adminSnapshot,
                                   const <ArcAdminMapMarker>[],
                                 );
+                                _endpointsReady =
+                                    adminSnapshot.hasData &&
+                                    !adminSnapshot.hasError &&
+                                    adminSnapshot.connectionState !=
+                                        ConnectionState.waiting;
+                                _endpoints = const ArcRaidEndpointResolver()
+                                    .resolve(
+                                      seedMap:
+                                          ArcRaidIntelligenceSeedData.mapById(
+                                            _mapId,
+                                          ),
+                                      layer: _activeLayer,
+                                      markers: adminMarkers,
+                                    );
+                                if (_endpointsReady) _reconcileEndpoints();
                                 final snapshots = <AsyncSnapshot<dynamic>>[
                                   scrappySnapshot,
                                   progressionSnapshot,
@@ -510,6 +725,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                                   mapId: _mapId,
                                   blueprintStates: states,
                                   favouriteLoadout: loadout,
+                                  nomadicTraderTracker: _nomadicTraderTracker,
                                   scrappyStates: scrappyStates,
                                   progressionRecords: progressionRecords,
                                   dropReports: reports,
@@ -518,6 +734,12 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                                   filters: _filters,
                                   activeLayer: _activeLayer,
                                   activeRoute: _routePlan,
+                                );
+                                _scheduleAutoRecommendation(
+                                  states,
+                                  intelligence.trackedObjectives,
+                                  loadout,
+                                  reports,
                                 );
                                 return Column(
                                   children: [
@@ -655,18 +877,24 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
             child: Padding(
               padding: const EdgeInsets.all(8),
               child: ArcRaidIntelligenceMapRenderer(
-                state: intelligence,
+                state: _endpointMapState(intelligence),
                 playerFacingLabels: true,
                 controller: _mapController,
                 selectedMarkerId: _selectedMarker?.id,
-                onMarkerSelected: _selectMarker,
-                onMapTapped: _setFreeformSpawn,
+                highlightedMarkerIds: {
+                  if (_spawn != null) 'endpoint_spawn_${_spawn!.id}',
+                  if (_extraction != null) 'endpoint_exit_${_extraction!.id}',
+                },
+                onMarkerSelected: (marker) =>
+                    _selectEndpointMarker(marker, intelligence),
+                onMapTapped: (point) => _setFreeformSpawn(point, intelligence),
                 onIntelReportRequested: (point) =>
                     _openCommunityIntelReport(intelligence.map, point),
               ),
             ),
           ),
           Positioned(right: 8, top: 8, child: _mapControls(intelligence)),
+          Positioned(left: 8, bottom: 8, child: _blueprintIntelNotice()),
           if (intelligence.map.availableLayers.length > 1)
             Positioned(
               left: 8,
@@ -678,6 +906,40 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _blueprintIntelNotice() {
+    return Tooltip(
+      message:
+          'Blueprint locations are known or reported spawn areas. Drops are not guaranteed; the route is designed to improve your chances.',
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 330),
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+        decoration: ArcUiTokens.chipDecoration(
+          color: ArcUiTokens.primaryAccent,
+          selected: true,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.info_outline_rounded,
+              size: 14,
+              color: ArcUiTokens.primaryAccent,
+            ),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                'Blueprint intel improves your odds - drops are not guaranteed.',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -786,6 +1048,12 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     setState(() {
       _activeLayer = layer;
       _selectedMarker = null;
+      _spawn = null;
+      _extraction = null;
+      _extractionConfirmed = false;
+      _routePlan = null;
+      _objectiveOnlyStops = const [];
+      _endpointNotice = 'Choose endpoints on this layer.';
     });
     await _restoreLayerView(mapId: _mapId, layer: layer);
   }
@@ -844,11 +1112,6 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
           ],
           _secondaryMapControls(intelligence),
           _hero(intelligence),
-          const SizedBox(height: 10),
-          ArcLiveMapConditionsStrip(
-            mapDisplayName: intelligence.map.displayName,
-            compact: true,
-          ),
           const SizedBox(height: 10),
           _raidAccordion(
             title: 'RAID SETUP',
@@ -954,11 +1217,22 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   }
 
   Widget _hero(ArcRaidIntelligenceState intelligence) {
+    final recommendation = _mapManuallySelected ? null : _autoRecommendation;
+    final goalMapId = _mapManuallySelected ? null : _goalRecommendedMapId;
+    final goalMap = goalMapId == null
+        ? null
+        : ArcRaidIntelligenceSeedData.mapById(goalMapId);
+    final route = intelligence.routePlan;
+    final mapLabel = recommendation != null
+        ? '${recommendation.mapName} - ${recommendation.conditionName}'
+        : goalMap != null
+        ? '${goalMap.displayName} - BEST FIT'
+        : intelligence.map.displayName;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'GENERATE SMART RAID RUN',
+          'RECOMMENDED RAID',
           style: ArcUiTokens.sectionTitle(
             fontSize: 24,
             color: ArcUiTokens.primaryAccent,
@@ -966,7 +1240,17 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
         ),
         const SizedBox(height: 6),
         Text(
-          '${intelligence.map.displayName} - ${intelligence.statusLabel} - ${intelligence.activeConditionLabel}',
+          mapLabel,
+          style: ArcUiTokens.body(
+            color: ArcUiTokens.textPrimary,
+            weight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          route == null
+              ? 'Choose raid length, mark your spawn and confirm the exfil. UAG will build the run.'
+              : 'Route ready. Follow the lettered stops to extraction.',
           style: ArcUiTokens.bodySmall(),
         ),
         const SizedBox(height: 10),
@@ -974,25 +1258,21 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
           spacing: 8,
           runSpacing: 8,
           children: [
-            _pill(
-              '${intelligence.opportunityClusters.length} smart stops',
-              ArcUiTokens.secondaryAccent,
-            ),
-            _pill(
-              '${intelligence.trackedObjectives.length} tracker goals',
-              Colors.lightGreenAccent,
-            ),
-            _pill(
-              '${intelligence.visibleMarkers.length} markers',
-              ArcUiTokens.primaryAccent,
-            ),
-            _pill(
-              intelligence.map.hasCalibratedLayer(intelligence.activeLayer)
-                  ? 'Map available'
-                  : 'Schematic',
-              Colors.lightGreenAccent,
-            ),
-            _pill(intelligence.activeLayer.label, Colors.amberAccent),
+            _pill('$_raidStage raid', ArcUiTokens.secondaryAccent),
+            if (recommendation != null)
+              _pill(
+                recommendation.statusLabel,
+                recommendation.live
+                    ? Colors.lightGreenAccent
+                    : Colors.amberAccent,
+              )
+            else if (goalMap != null)
+              _pill('BEST FIT', Colors.lightGreenAccent),
+            if (route != null)
+              _pill(
+                '${route.stops.length} route stops',
+                ArcUiTokens.primaryAccent,
+              ),
           ],
         ),
       ],
@@ -1000,133 +1280,422 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   }
 
   Widget _setupSection(ArcRaidIntelligenceState intelligence) {
+    final recommendation = _mapManuallySelected ? null : _autoRecommendation;
+    final goalMapId = _mapManuallySelected ? null : _goalRecommendedMapId;
+    final goalMap = goalMapId == null
+        ? null
+        : ArcRaidIntelligenceSeedData.mapById(goalMapId);
     return _section(
-      title: 'Start Of Raid',
+      title: 'Recommended Raid',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          DropdownButtonFormField<String>(
-            initialValue: _mapId,
-            isExpanded: true,
-            dropdownColor: ArcUiTokens.surfaceOverlay,
-            style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
-            iconEnabledColor: ArcUiTokens.primaryAccent,
-            decoration: ArcUiTokens.inputDecoration(labelText: 'Map'),
-            items: [
-              for (final map in ArcRaidIntelligenceSeedData.maps)
-                DropdownMenuItem(
-                  value: map.id,
-                  child: Text(map.displayName, overflow: TextOverflow.ellipsis),
-                ),
-            ],
-            onChanged: (value) {
-              if (value == null) return;
-              unawaited(_changeMap(value));
-            },
+          if (recommendation != null || goalMap != null) ...[
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(10),
+              decoration: ArcUiTokens.surfaceDecoration(
+                role: ArcSurfaceRole.interactive,
+                accent: ArcUiTokens.primaryAccent,
+                borderOpacity: 0.22,
+                radius: ArcUiTokens.radiusM,
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.auto_awesome_rounded,
+                    color: ArcUiTokens.primaryAccent,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      recommendation != null
+                          ? '${recommendation.statusLabel}: ${recommendation.mapName} - ${recommendation.conditionName}'
+                          : 'BEST FIT: ${goalMap!.displayName}',
+                      style: ArcUiTokens.body(
+                        color: ArcUiTokens.textPrimary,
+                        weight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
+          Text(
+            'TIME REMAINING',
+            style: ArcUiTokens.label(color: ArcUiTokens.textSecondary),
           ),
-          const SizedBox(height: 10),
-          _chips<ArcRaidSquadMode>(
-            values: ArcRaidSquadMode.values,
-            selected: _squadMode,
-            label: (value) => value.label,
-            onSelected: (value) => setState(() => _squadMode = value),
-          ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 6),
           _chips<String>(
             values: const ['Full', 'Mid', 'Late'],
             selected: _raidStage,
             label: (value) => value,
-            onSelected: (value) => setState(() => _raidStage = value),
-          ),
-          const SizedBox(height: 10),
-          _chips<ArcRaidRouteStyle>(
-            values: ArcRaidRouteStyle.values,
-            selected: _routeStyle,
-            label: (value) => value.label,
-            onSelected: (value) => setState(() => _routeStyle = value),
-          ),
-          const SizedBox(height: 10),
-          _chips<ArcRaidObjectivePriority>(
-            values: ArcRaidObjectivePriority.values,
-            selected: _objectivePriority,
-            label: _objectivePriorityLabel,
-            onSelected: (value) => setState(() => _objectivePriority = value),
-          ),
-          const SizedBox(height: 10),
-          _spawnExtractionPickers(intelligence.map),
-          const SizedBox(height: 10),
-          SwitchListTile.adaptive(
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            value: _usesHatch,
-            onChanged: (value) => setState(() {
-              _usesHatch = value;
-              _hatchKeyConfirmed = false;
-              _extraction = null;
+            onSelected: (value) => setState(() {
+              _raidStage = value;
+              _remainingMinutes = _timeBudget.preset(value);
+              _remainingController.text = '$_remainingMinutes';
+              _routePlan = null;
             }),
-            title: const Text(
-              'Use Raider Hatch',
-              style: TextStyle(color: ArcUiTokens.textPrimary),
-            ),
-            subtitle: const Text(
-              'Requires player-confirmed hatch key.',
-              style: TextStyle(color: ArcUiTokens.textTertiary),
-            ),
           ),
-          if (_usesHatch)
-            CheckboxListTile(
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              value: _hatchKeyConfirmed,
-              onChanged: (value) =>
-                  setState(() => _hatchKeyConfirmed = value ?? false),
-              title: const Text(
-                'Raider Hatch Key confirmed',
-                style: TextStyle(color: ArcUiTokens.textPrimary),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _remainingController,
+            key: const Key('raid-remaining-minutes'),
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              labelText: 'Minutes remaining',
+              helperText:
+                  'Use the in-game timer. Presets are planning estimates.',
+              errorText: _remainingMinutes == null
+                  ? 'Enter a positive number of minutes'
+                  : null,
+            ),
+            onChanged: (value) => setState(() {
+              final minutes = int.tryParse(value);
+              _remainingMinutes = minutes != null && minutes > 0
+                  ? minutes
+                  : null;
+              _routePlan = null;
+            }),
+          ),
+          if (_endpointNotice != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                _endpointNotice!,
+                style: const TextStyle(color: Colors.amber),
               ),
             ),
-          const SizedBox(height: 10),
-          ElevatedButton.icon(
-            style: ArcUiTokens.textButtonStyle(primary: true),
-            onPressed: () => _generateRoute(intelligence),
-            icon: const Icon(Icons.auto_awesome_rounded),
-            label: const Text('Generate Best Loot Run'),
+          const SizedBox(height: 12),
+          Text(
+            'PLAYER SPAWN / PLANNED EXTRACTION',
+            style: ArcUiTokens.label(color: ArcUiTokens.textSecondary),
+          ),
+          const SizedBox(height: 6),
+          _spawnExtractionPickers(intelligence),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              style: ArcUiTokens.textButtonStyle(primary: true),
+              onPressed: !_endpointsReady || _remainingMinutes == null
+                  ? null
+                  : () => _generateRoute(intelligence),
+              icon: const Icon(Icons.route_rounded),
+              label: const Text('BUILD MY RAID'),
+            ),
+          ),
+          const SizedBox(height: 8),
+          ExpansionTile(
+            tilePadding: EdgeInsets.zero,
+            childrenPadding: EdgeInsets.zero,
+            title: Text(
+              'Advanced options',
+              style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
+            ),
+            children: [
+              DropdownButtonFormField<String>(
+                initialValue: _mapId,
+                isExpanded: true,
+                dropdownColor: ArcUiTokens.surfaceOverlay,
+                style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+                iconEnabledColor: ArcUiTokens.primaryAccent,
+                decoration: ArcUiTokens.inputDecoration(
+                  labelText: 'Map override',
+                ),
+                items: [
+                  for (final map in ArcRaidIntelligenceSeedData.maps)
+                    DropdownMenuItem(
+                      value: map.id,
+                      child: Text(
+                        map.displayName,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                ],
+                onChanged: (value) {
+                  if (value == null) return;
+                  unawaited(_changeMap(value));
+                },
+              ),
+              const SizedBox(height: 10),
+              _chips<ArcRaidSquadMode>(
+                values: ArcRaidSquadMode.values,
+                selected: _squadMode,
+                label: (value) => value.label,
+                onSelected: (value) => setState(() => _squadMode = value),
+              ),
+              const SizedBox(height: 10),
+              _chips<ArcRaidRouteStyle>(
+                values: ArcRaidRouteStyle.values,
+                selected: _routeStyle,
+                label: (value) => value.label,
+                onSelected: (value) => setState(() => _routeStyle = value),
+              ),
+              const SizedBox(height: 10),
+              _chips<ArcRaidObjectivePriority>(
+                values: ArcRaidObjectivePriority.values,
+                selected: _objectivePriority,
+                label: _objectivePriorityLabel,
+                onSelected: (value) =>
+                    setState(() => _objectivePriority = value),
+              ),
+              const SizedBox(height: 8),
+              SwitchListTile.adaptive(
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                value: _usesHatch,
+                onChanged: (value) => setState(() {
+                  _usesHatch = value;
+                  _hatchKeyConfirmed = false;
+                  _extraction = null;
+                  _extractionConfirmed = false;
+                  _routePlan = null;
+                }),
+                title: const Text(
+                  'Use Raider Hatch',
+                  style: TextStyle(color: ArcUiTokens.textPrimary),
+                ),
+                subtitle: const Text(
+                  'Requires player-confirmed hatch key.',
+                  style: TextStyle(color: ArcUiTokens.textTertiary),
+                ),
+              ),
+              if (_usesHatch)
+                CheckboxListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  value: _hatchKeyConfirmed,
+                  onChanged: (value) =>
+                      setState(() => _hatchKeyConfirmed = value ?? false),
+                  title: const Text(
+                    'Raider Hatch Key confirmed',
+                    style: TextStyle(color: ArcUiTokens.textPrimary),
+                  ),
+                ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  List<ArcRaidRouteStop> _extractionOptions(ArcRaidMap map) => _usesHatch
-      ? map.hatches.map(_engine.stopFromHatch).toList()
-      : map.extractions.map(_engine.stopFromExtraction).toList();
+  List<ArcRaidRouteStop> _extractionOptions(ArcRaidMap map) =>
+      (_usesHatch ? _endpoints?.hatches : _endpoints?.extractions) ?? const [];
 
-  Widget _spawnExtractionPickers(ArcRaidMap map) {
+  Widget _spawnExtractionPickers(ArcRaidIntelligenceState intelligence) {
     return Column(
       children: [
         ArcRaidLocationPicker(
-          label: 'Spawn Region or tap map',
+          label: 'Player Spawn',
           options: [
-            ...map.spawnRegions.map(_engine.stopFromSpawn),
-            if (_spawn?.id == 'freeform_spawn') _spawn!,
+            ...?_endpoints?.spawns,
+            if (_spawn?.id == 'freeform_spawn' &&
+                _endpoints?.authoritativeSpawns != true)
+              _spawn!,
           ],
           selected: _spawn,
           onChanged: (spawn) {
-            setState(() => _spawn = spawn);
+            _setSpawnAndRecommendExtraction(spawn, intelligence);
             _jumpTo(spawn.point);
           },
         ),
         const SizedBox(height: 10),
         ArcRaidLocationPicker(
-          label: _usesHatch ? 'Raider Hatch' : 'Standard Extraction',
-          options: _extractionOptions(map),
+          label: _usesHatch ? 'Planned Raider Hatch' : 'Planned Extraction',
+          options: _extractionOptions(intelligence.map),
           selected: _extraction,
           onChanged: (extraction) {
-            setState(() => _extraction = extraction);
+            setState(() {
+              _extraction = extraction;
+              _extractionConfirmed = true;
+              _routePlan = null;
+              _endpointNotice = null;
+            });
             _jumpTo(extraction.point);
           },
         ),
+        if (_extraction != null && !_extractionConfirmed)
+          TextButton(
+            onPressed: () => setState(() => _extractionConfirmed = true),
+            child: Text(
+              'Confirm recommended extraction: ${_extraction!.label}',
+            ),
+          ),
+        if (_extraction != null && _extractionConfirmed)
+          const Text('Extraction confirmed'),
       ],
+    );
+  }
+
+  void _reconcileEndpoints() {
+    final endpoints = _endpoints;
+    if (endpoints == null) return;
+
+    final currentSpawn = _spawn;
+    final currentExit = _extraction;
+
+    bool changed(ArcRaidRouteStop? old, ArcRaidRouteStop? current) =>
+        old?.id != current?.id ||
+        old?.point.x != current?.point.x ||
+        old?.point.y != current?.point.y ||
+        old?.label != current?.label;
+
+    final resolvedSpawn = currentSpawn == null
+        ? null
+        : endpoints.resolveSpawn(currentSpawn);
+    final resolvedExit = currentExit == null
+        ? null
+        : endpoints.resolveExtraction(currentExit, hatch: _usesHatch);
+
+    if (!changed(currentSpawn, resolvedSpawn) &&
+        !changed(currentExit, resolvedExit)) {
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_endpointsReady) return;
+
+      final latest = _endpoints;
+      if (latest == null) return;
+
+      // Re-read the CURRENT selections here. A rebuild between scheduling this
+      // callback and executing it may legitimately replace route-stop objects
+      // with equivalent instances. Object identity must never cancel endpoint
+      // invalidation.
+      final currentSpawn = _spawn;
+      final currentExit = _extraction;
+      final latestSpawn = currentSpawn == null
+          ? null
+          : latest.resolveSpawn(currentSpawn);
+      final latestExit = currentExit == null
+          ? null
+          : latest.resolveExtraction(currentExit, hatch: _usesHatch);
+
+      if (!changed(currentSpawn, latestSpawn) &&
+          !changed(currentExit, latestExit)) {
+        return;
+      }
+
+      final lostSpawn = currentSpawn != null && latestSpawn == null;
+      final lostExit = currentExit != null && latestExit == null;
+
+      setState(() {
+        _spawn = latestSpawn;
+        _extraction = latestExit;
+
+        if (lostSpawn || lostExit) {
+          _endpointNotice =
+              'A saved endpoint is no longer published on this map/layer. Choose again.';
+          _routePlan = null;
+          _extractionConfirmed = false;
+          _objectiveOnlyStops = const [];
+        } else if (_routePlan != null &&
+            latestSpawn != null &&
+            latestExit != null) {
+          _routePlan = _routePlan!.copyWith(
+            spawn: latestSpawn.copyWith(order: 0),
+            extraction: latestExit.copyWith(
+              order: _routePlan!.stops.length + 1,
+            ),
+          );
+        }
+      });
+    });
+  }
+
+  void _selectEndpointMarker(
+    ArcRaidMapMarker marker,
+    ArcRaidIntelligenceState intelligence,
+  ) {
+    if (!_endpointsReady) {
+      if (!marker.id.startsWith('endpoint_')) _selectMarker(marker);
+      return;
+    }
+    for (final spawn in _endpoints?.spawns ?? <ArcRaidRouteStop>[]) {
+      if (marker.id == 'endpoint_spawn_${spawn.id}') {
+        _setSpawnAndRecommendExtraction(spawn, intelligence);
+        return;
+      }
+    }
+    for (final exit in _extractionOptions(intelligence.map)) {
+      if (marker.id == 'endpoint_exit_${exit.id}') {
+        setState(() {
+          _controlPanelCollapsed = false;
+          _extraction = exit;
+          _extractionConfirmed = true;
+          _routePlan = null;
+          _endpointNotice = null;
+        });
+        return;
+      }
+    }
+    _selectMarker(marker);
+  }
+
+  ArcRaidIntelligenceState _endpointMapState(ArcRaidIntelligenceState state) {
+    final endpointCategories = {
+      ArcRaidMapMarkerCategory.spawn,
+      ArcRaidMapMarkerCategory.spawnRegion,
+      ArcRaidMapMarkerCategory.standardExtraction,
+      ArcRaidMapMarkerCategory.raiderHatch,
+    };
+    final visible = state.visibleMarkers
+        .where(
+          (m) =>
+              !endpointCategories.contains(m.category) &&
+              (_routePlan == null ||
+                  _showAdvancedMarkers ||
+                  m.category == ArcRaidMapMarkerCategory.routeWaypoint),
+        )
+        .toList();
+    void add(ArcRaidRouteStop stop, bool spawn) => visible.add(
+      ArcRaidMapMarker(
+        id: 'endpoint_${spawn ? 'spawn' : 'exit'}_${stop.id}',
+        mapId: _mapId,
+        layer: _activeLayer,
+        label: stop.label,
+        point: stop.point,
+        payloadId: stop.id,
+        category: spawn
+            ? ArcRaidMapMarkerCategory.spawn
+            : _usesHatch
+            ? ArcRaidMapMarkerCategory.raiderHatch
+            : ArcRaidMapMarkerCategory.standardExtraction,
+        approximate: spawn
+            ? _endpoints?.authoritativeSpawns != true
+            : !_usesHatch && _endpoints?.authoritativeExtractions != true,
+      ),
+    );
+    for (final spawn in _endpoints?.spawns ?? <ArcRaidRouteStop>[]) {
+      if (_routePlan == null ||
+          _showAdvancedMarkers ||
+          spawn.id == _spawn?.id) {
+        add(spawn, true);
+      }
+    }
+    if (_spawn?.id == 'freeform_spawn') add(_spawn!, true);
+    for (final exit in _extractionOptions(state.map)) {
+      if (_routePlan == null ||
+          _showAdvancedMarkers ||
+          exit.id == _extraction?.id) {
+        add(exit, false);
+      }
+    }
+    return ArcRaidIntelligenceState(
+      map: state.map,
+      activeLayer: state.activeLayer,
+      filters: state.filters,
+      visibleMarkers: visible,
+      opportunityClusters: state.opportunityClusters,
+      routePlan: state.routePlan,
+      activeConditionLabel: state.activeConditionLabel,
+      statusLabel: state.statusLabel,
+      recommendation: state.recommendation,
+      trackedObjectives: state.trackedObjectives,
     );
   }
 
@@ -1139,6 +1708,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
         onChanged: (filters) {
           setState(() {
             _filters = filters;
+            _showAdvancedMarkers = true;
             if (_selectedMarker != null && !_filters.allows(_selectedMarker!)) {
               _selectedMarker = null;
             }
@@ -1413,7 +1983,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'No synced extraction is required to start planning. These are the highest-value objective stops from your selected spawn. Add/sync an extraction later to calculate the complete run.',
+                        'Best available stops from your spawn. Confirm an exfil to complete the route.',
                         style: ArcUiTokens.bodySmall(),
                       ),
                       const SizedBox(height: 8),
@@ -1430,7 +2000,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                               alpha: 0.16,
                             ),
                             child: Text(
-                              '${index + 1}',
+                              _routeLetter(index),
                               style: ArcUiTokens.body(
                                 color: ArcUiTokens.textPrimary,
                                 weight: FontWeight.w700,
@@ -1458,35 +2028,17 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(route.summary, style: ArcUiTokens.body()),
-                if (route.metrics.hasData) ...[
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      _pill(
-                        '${route.metrics.estimatedMinutes} min',
-                        AppTheme.neonCyan,
-                      ),
-                      if (route.metrics.objectiveTargetCount > 0)
-                        _pill(
-                          '${route.metrics.objectiveTargetCount} tracker goals',
-                          Colors.lightGreenAccent,
-                        ),
-                      if (route.metrics.blueprintTargetCount > 0)
-                        _pill(
-                          '${route.metrics.blueprintTargetCount} Blueprints',
-                          ArcUiTokens.secondaryAccent,
-                        ),
-                      _pill(
-                        '${route.metrics.efficiencyScore}% efficiency',
-                        Colors.lightGreenAccent,
-                      ),
-                      _pill(route.metrics.riskLabel, Colors.amberAccent),
-                    ],
+                Text(
+                  '${route.mapName} - ${route.raidStage} raid${route.remainingMinutes != null
+                      ? ' - ${route.remainingMinutes} min remaining'
+                      : route.metrics.estimatedMinutes > 0
+                      ? ' - about ${route.metrics.estimatedMinutes} min (estimate)'
+                      : ''}',
+                  style: ArcUiTokens.body(
+                    color: ArcUiTokens.textPrimary,
+                    weight: FontWeight.w800,
                   ),
-                ],
+                ),
                 const SizedBox(height: 8),
                 for (final stop in route.orderedStops)
                   ListTile(
@@ -1497,7 +2049,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                         alpha: 0.18,
                       ),
                       child: Text(
-                        '${stop.order + 1}',
+                        _routeLetter(stop.order - 1),
                         style: ArcUiTokens.body(
                           color: ArcUiTokens.textPrimary,
                           weight: FontWeight.w700,
@@ -1511,7 +2063,6 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                         weight: FontWeight.w700,
                       ),
                     ),
-                    subtitle: Text(stop.reason, style: ArcUiTokens.bodySmall()),
                     trailing: stop.clusterId == null
                         ? null
                         : PopupMenuButton<String>(
@@ -1627,6 +2178,11 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     );
   }
 
+  String _routeLetter(int order) {
+    final safe = order.clamp(0, 25).toInt();
+    return String.fromCharCode(65 + safe);
+  }
+
   Widget _smallButton(String label, IconData icon, VoidCallback onPressed) {
     return OutlinedButton.icon(
       style: ArcUiTokens.textButtonStyle(),
@@ -1647,86 +2203,80 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     }
   }
 
-  void _setFreeformSpawn(ArcNormalizedPoint point) {
+  void _setFreeformSpawn(
+    ArcNormalizedPoint point,
+    ArcRaidIntelligenceState intelligence,
+  ) {
+    if (!_endpointsReady || _endpoints?.authoritativeSpawns == true) {
+      _showSnack('Choose a published Player Spawn marker or use the selector.');
+      return;
+    }
+    final spawn = ArcRaidRouteStop(
+      id: 'freeform_spawn',
+      label: 'Approximate Spawn',
+      point: point,
+      order: 0,
+      reason: 'Approximate spawn tapped by player; no GPS used.',
+    );
+    _setSpawnAndRecommendExtraction(spawn, intelligence);
+  }
+
+  void _setSpawnAndRecommendExtraction(
+    ArcRaidRouteStop spawn,
+    ArcRaidIntelligenceState intelligence,
+  ) {
+    final extraction =
+        _extraction ??
+        _engine.recommendExtraction(
+          endpoints: _extractionOptions(intelligence.map),
+          map: intelligence.map,
+          spawn: spawn,
+          clusters: intelligence.opportunityClusters,
+          usesRaiderHatch: _usesHatch,
+        );
     setState(() {
-      _spawn = ArcRaidRouteStop(
-        id: 'freeform_spawn',
-        label: 'Approximate Spawn',
-        point: point,
-        order: 0,
-        reason: 'Approximate spawn tapped by player; no GPS used.',
-      );
+      _spawn = spawn;
+      _controlPanelCollapsed = false;
+      if (_extraction == null) _extractionConfirmed = false;
+      _extraction = extraction;
+      _endpointNotice = null;
+      _routePlan = null;
+      _objectiveOnlyStops = const <ArcRaidIntelCluster>[];
     });
   }
 
   Future<void> _generateRoute(ArcRaidIntelligenceState intelligence) async {
-    final spawn = _spawn;
-    var extraction = _extraction;
-    if (extraction != null) {
-      final current = _extractionOptions(
-        intelligence.map,
-      ).where((option) => option.id == extraction!.id);
-      if (current.isEmpty) {
-        _showSnack(
-          'Saved extraction is unavailable. Choose another extraction.',
-        );
-        return;
-      }
-      extraction = current.first;
-    }
-    if (spawn != null &&
-        spawn.id != 'freeform_spawn' &&
-        !intelligence.map.spawnRegions.any((option) => option.id == spawn.id)) {
-      _showSnack(
-        'Saved spawn is unavailable. Choose a spawn region or tap the map.',
-      );
+    if (!_endpointsReady || _remainingMinutes == null) {
+      _showSnack('Wait for live endpoints and enter the time remaining.');
       return;
     }
+    final savedSpawn = _spawn;
+    final spawn = savedSpawn == null
+        ? null
+        : _endpoints!.resolveSpawn(savedSpawn);
     if (spawn == null) {
-      _showSnack('Choose a spawn region or tap the map first.');
+      _showSnack('Choose an available Player Spawn first.');
       return;
     }
-    extraction ??= _engine.recommendExtraction(
-      map: intelligence.map,
-      spawn: spawn,
-      clusters: intelligence.opportunityClusters,
-      usesRaiderHatch: _usesHatch,
-    );
-    if (extraction == null) {
-      final objectiveStops = _engine.orderObjectiveStops(
-        map: intelligence.map,
-        clusters: intelligence.opportunityClusters,
-        spawn: spawn,
-        routeStyle: _routeStyle,
-        raidStage: _raidStage,
-      );
-      if (objectiveStops.isEmpty) {
-        _showSnack('No current objective stops are available for this map.');
-        return;
-      }
-      final allowed = await UagUsageGate.consumeOrShowUpgrade(
-        context,
-        action: UagBillableAction.premiumIntelUnlock,
-      );
-      if (!allowed || !mounted) return;
-      setState(() {
-        _routePlan = null;
-        _objectiveOnlyStops = objectiveStops;
-      });
-      _showSnack(
-        'Objective stop order ready. Sync/select an extraction when available to complete the run.',
-      );
+    final savedExit = _extraction;
+    final resolvedExtraction = savedExit == null
+        ? null
+        : _endpoints!.resolveExtraction(savedExit, hatch: _usesHatch);
+    if (resolvedExtraction == null) {
+      _showSnack('Choose your planned extraction.');
       return;
     }
-    final resolvedExtraction = extraction;
-    if (_extraction == null) {
-      setState(() => _extraction = resolvedExtraction);
+    if (!_extractionConfirmed) {
+      _showSnack('Confirm the recommended extraction, or choose another one.');
+      return;
     }
     final route = _engine.generateRoute(
       map: intelligence.map,
       clusters: intelligence.opportunityClusters,
       spawn: spawn,
       extraction: resolvedExtraction,
+      remainingMinutes: _remainingMinutes,
+      layer: _activeLayer,
       routeStyle: _routeStyle,
       raidStage: _raidStage,
       squadMode: _squadMode,
@@ -1747,6 +2297,26 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       action: UagBillableAction.premiumIntelUnlock,
     );
     if (!allowed || !mounted) return;
+    final latestSpawn = _endpoints?.resolveSpawn(spawn);
+    final latestExit = _endpoints?.resolveExtraction(
+      resolvedExtraction,
+      hatch: _usesHatch,
+    );
+    if (!_endpointsReady ||
+        _spawn?.id != savedSpawn?.id ||
+        _extraction?.id != savedExit?.id ||
+        _mapId != route.mapId ||
+        _activeLayer != route.layer ||
+        _remainingMinutes != route.remainingMinutes ||
+        latestSpawn?.point.x != spawn.point.x ||
+        latestSpawn?.point.y != spawn.point.y ||
+        latestExit?.point.x != resolvedExtraction.point.x ||
+        latestExit?.point.y != resolvedExtraction.point.y) {
+      _showSnack(
+        'Raid endpoints changed. Review your choices before building again.',
+      );
+      return;
+    }
     setState(() {
       _routePlan = route;
       _objectiveOnlyStops = const <ArcRaidIntelCluster>[];

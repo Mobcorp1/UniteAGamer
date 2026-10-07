@@ -89,7 +89,10 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
 
       if (!profile.hasCoreDetails) {
         await Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const ArcProfileSetupScreen()),
+          MaterialPageRoute(
+            builder: (_) =>
+                const ArcProfileSetupScreen(requireCompletionFields: true),
+          ),
         );
         if (!mounted) return;
         setState(() {});
@@ -118,6 +121,47 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
     ).push(MaterialPageRoute(builder: (_) => const ArcProfileEditScreen()));
     if (!mounted) return;
     setState(() {});
+  }
+
+  Future<void> _openProfileCompletionField(
+    ArcProfileCompletionMissingField field,
+  ) async {
+    try {
+      if (field.routeName ==
+          ArcProfileCompletionEvaluator.profileSetupRouteName) {
+        await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) =>
+                const ArcProfileSetupScreen(requireCompletionFields: true),
+          ),
+        );
+      } else if (field.routeName ==
+          ArcProfileCompletionEvaluator.availabilityRouteName) {
+        await Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const ArcAvailabilityScreen()),
+        );
+      } else {
+        await Navigator.of(context).pushNamed(
+          field.routeName,
+          arguments: <String, dynamic>{if (field.section == 'legal') 'step': 1},
+        );
+      }
+
+      await _repository.refreshProfileCompletion();
+      if (!mounted) return;
+      setState(() {});
+    } catch (error, stackTrace) {
+      debugPrint(
+        'TradingProfileScreen._openProfileCompletionField failed: $error',
+      );
+      debugPrintStack(stackTrace: stackTrace);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not open that profile step. Try again.'),
+        ),
+      );
+    }
   }
 
   Future<void> _openAvatarLocker(ArcTraderProfile profile) async {
@@ -280,8 +324,12 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
 
               return StreamBuilder<ArcProfileCompletionResult>(
                 stream: _profileCompletionStream,
-                initialData: ArcProfileCompletionResult.completeResult,
                 builder: (context, completionSnapshot) {
+                  if (completionSnapshot.connectionState ==
+                          ConnectionState.waiting &&
+                      !completionSnapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
                   final profileCompletion =
                       completionSnapshot.data ??
                       ArcProfileCompletionResult.completeResult;
@@ -439,10 +487,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
   ) {
     switch (_selectedProfileTab) {
       case 1:
-        final completionPercent =
-            ((1 - (profileCompletion.missingFieldIds.length / 8)) * 100)
-                .clamp(0, 100)
-                .round();
+        final completionPercent = profileCompletion.completionPercent;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -589,6 +634,8 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            _profileCompletionPanel(profileCompletion),
+            SizedBox(height: gap),
             _overviewReadiness(profile, profileCompletion),
             SizedBox(height: gap),
             _overviewReputation(profile, operationsState),
@@ -679,12 +726,142 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
     );
   }
 
+  Widget _profileCompletionPanel(ArcProfileCompletionResult profileCompletion) {
+    final complete = profileCompletion.complete;
+    final percent = profileCompletion.completionPercent;
+
+    return _profilePanel(
+      accent: complete ? Colors.lightGreenAccent : AppTheme.neonPink,
+      title: 'Profile Completion',
+      icon: complete ? Icons.verified_rounded : Icons.fact_check_rounded,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: 72,
+                height: 72,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      value: profileCompletion.completionFraction,
+                      strokeWidth: 7,
+                      backgroundColor: Colors.white10,
+                      color: complete
+                          ? Colors.lightGreenAccent
+                          : AppTheme.neonPink,
+                    ),
+                    Text(
+                      '$percent%',
+                      style: TextStyle(
+                        color: complete
+                            ? Colors.lightGreenAccent
+                            : AppTheme.neonPink,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 17,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppTheme.spaceM),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      complete
+                          ? 'RAIDER PROFILE COMPLETE'
+                          : '${profileCompletion.completedFieldCount} OF ${profileCompletion.requiredFieldCount} COMPLETE',
+                      style: ArcUiTokens.sectionTitle(
+                        fontSize: 16,
+                        color: complete
+                            ? Colors.lightGreenAccent
+                            : ArcUiTokens.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      complete
+                          ? 'Your identity, availability and account setup are ready.'
+                          : 'Finish the missing items below. Each button opens the exact setup step you need.',
+                      style: ArcUiTokens.bodySmall(
+                        color: ArcUiTokens.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (!complete) ...[
+            const SizedBox(height: AppTheme.spaceM),
+            ...profileCompletion.missingFields.map(
+              (field) => Container(
+                margin: const EdgeInsets.only(bottom: AppTheme.spaceS),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.spaceS,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: AppTheme.cardBackgroundAlt.withValues(alpha: 0.72),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppTheme.neonPink.withValues(alpha: 0.16),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.radio_button_unchecked_rounded,
+                      color: AppTheme.neonPink,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            field.label,
+                            style: ArcUiTokens.cardTitle(
+                              fontSize: 14,
+                              color: ArcUiTokens.textPrimary,
+                            ),
+                          ),
+                          Text(
+                            field.section.toUpperCase(),
+                            style: ArcUiTokens.label(
+                              color: ArcUiTokens.textTertiary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: () => _openProfileCompletionField(field),
+                      icon: const Icon(Icons.arrow_forward_rounded, size: 16),
+                      label: const Text('Complete'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _overviewReadiness(
     ArcTraderProfile profile,
     ArcProfileCompletionResult profileCompletion,
   ) {
-    final missing = profileCompletion.missingFieldIds.length;
-    final readiness = (100 - (missing * 12)).clamp(0, 100);
+    final missing = profileCompletion.missingFieldIds.toSet();
+    final readiness = profileCompletion.completionPercent;
     return _profilePanel(
       accent: AppTheme.neonCyan,
       title: 'Match Readiness',
@@ -706,24 +883,36 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
             _overviewStat(
               icon: Icons.flag_rounded,
               label: "Today's goal",
-              value: profile.squadIntent,
-              detail: _squadIntentCopy(profile.squadIntent),
+              value: missing.contains('squadIntent')
+                  ? 'Not set'
+                  : profile.squadIntent,
+              detail: missing.contains('squadIntent')
+                  ? 'Complete your Raider profile'
+                  : _squadIntentCopy(profile.squadIntent),
               accent: AppTheme.neonPink,
             ),
             _overviewStat(
               icon: Icons.shield_rounded,
               label: 'Playstyle',
-              value: profile.playStyles.isEmpty
+              value: missing.contains('archetypes')
+                  ? 'Not set'
+                  : profile.playStyles.isEmpty
                   ? 'Flexible'
                   : profile.playStyles.first,
-              detail: profile.archetypes.take(2).join(_separator()),
+              detail: missing.contains('archetypes')
+                  ? 'Choose at least one archetype'
+                  : profile.archetypes.take(2).join(_separator()),
               accent: Colors.lightGreenAccent,
             ),
             _overviewStat(
               icon: Icons.record_voice_over_rounded,
               label: 'Communication',
-              value: profile.communicationStyle,
-              detail: profile.socialEnergy,
+              value: missing.contains('communicationStyle')
+                  ? 'Not set'
+                  : profile.communicationStyle,
+              detail: missing.contains('socialSessionState')
+                  ? 'Session state still required'
+                  : profile.socialEnergy,
               accent: Colors.amberAccent,
             ),
           ];
@@ -926,8 +1115,8 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
       (label: 'Onboarding', complete: !missing.contains('onboarding')),
       (label: 'Legal', complete: !missing.contains('legal')),
     ];
-    final completed = sections.where((section) => section.complete).length;
-    final progress = completed / sections.length;
+    final completed = profileCompletion.completedFieldCount;
+    final progress = profileCompletion.completionFraction;
 
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -960,9 +1149,9 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
             const SizedBox(width: AppTheme.spaceM),
             Expanded(
               child: Text(
-                completed == sections.length
-                    ? 'Your identity is match-ready.'
-                    : '${sections.length - completed} profile areas still need attention.',
+                profileCompletion.complete
+                    ? 'Your Raider profile is complete.'
+                    : '$completed of ${profileCompletion.requiredFieldCount} profile requirements complete.',
                 style: const TextStyle(color: Colors.white70, height: 1.35),
               ),
             ),

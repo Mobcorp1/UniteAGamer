@@ -4,18 +4,14 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('UAG beta readiness static contracts', () {
-    test('normal entry routes land on Discover instead of Command Centre', () {
+    test('normal entry routes land on Command Centre after required setup', () {
       final appEntryGate = File(
         'lib/build/app_entry_gate.dart',
       ).readAsStringSync();
       final legacyEntryGate = File(
         'lib/screens/build/app_entry_gate.dart',
       ).readAsStringSync();
-      final homeScreen = File('lib/build/home_screen.dart').readAsStringSync();
       final main = File('lib/main.dart').readAsStringSync();
-      final hub = File(
-        'lib/features/trading_hub/arc_raiders/screens/arc_raiders_hub_screen.dart',
-      ).readAsStringSync();
 
       expect(
         appEntryGate,
@@ -25,15 +21,15 @@ void main() {
       );
       expect(appEntryGate, isNot(contains('class AppEntryGate')));
       expect(legacyEntryGate, contains('class AppEntryGate'));
-      expect(legacyEntryGate, contains('return const ArcRaidersHubScreen();'));
-      expect(homeScreen, contains('ArcRaidersHubScreen.routeName'));
+      expect(legacyEntryGate, contains('return ArcRaiderSetupGate('));
+      expect(
+        legacyEntryGate,
+        contains('return widget.destinationBuilder?.call(context) ??'),
+      );
+      expect(legacyEntryGate, contains('const ArcCommandCentreScreen();'));
+      expect(legacyEntryGate, isNot(contains('const ArcRaidersHubScreen();')));
       expect(main, contains('case ArcRaidersHubScreen.routeName:'));
-
-      final firstCommand = hub.indexOf("title: 'Command Centre'");
-      final firstBlueprint = hub.indexOf("title: 'Blueprint Tracker'");
-      expect(firstCommand, greaterThan(0));
-      expect(firstCommand, lessThan(firstBlueprint));
-      expect(hub, contains("activeLabel: 'discover'"));
+      expect(main, contains('case ArcCommandCentreScreen.routeName:'));
     });
 
     test('major beta routes remain registered in the route dispatcher', () {

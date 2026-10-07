@@ -2,11 +2,12 @@ import 'dart:math' as math;
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_poi_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_map_marker.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_nomadic_trader_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_progression_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_state.dart';
 
-/// Turns live Quest / Scrappy / Bench tracker progress into cautious map
+/// Turns live Quest / Scrappy / Bench / Nomadic Trader progress into cautious map
 /// opportunities. This engine never claims a resource is guaranteed at a POI.
 /// It only scores published/seeded locations whose known loot classification or
 /// explicit admin marker metadata matches the tracker's current source guidance.
@@ -20,28 +21,49 @@ class ArcRaidObjectiveIntelligenceEngine {
   List<ArcRaidObjective> trackedObjectives({
     required ArcProgressionSnapshotBundle progression,
     required Map<String, ArcScrappyState> scrappyStates,
+    ArcNomadicTraderTrackerSnapshot nomadicTraderTracker =
+        ArcNomadicTraderTrackerSnapshot.empty,
   }) {
     final objectives = <ArcRaidObjective>[];
 
-    final activeQuest = progression.quest.activeQuest;
-    if (progression.quest.trackingKnown &&
-        activeQuest != null &&
-        !activeQuest.completed &&
-        !activeQuest.locked) {
-      for (final objective in activeQuest.objectives) {
-        if (objective.complete || objective.missingCount <= 0) continue;
+    if (progression.quest.trackingKnown) {
+      for (final activeQuest in progression.quest.activeQuests) {
+        if (activeQuest.completed || activeQuest.locked) continue;
+
+        for (final objective in activeQuest.objectives) {
+          if (objective.complete || objective.missingCount <= 0) continue;
+          objectives.add(
+            ArcRaidObjective(
+              id: 'quest:${activeQuest.questId}:${objective.id}',
+              label: '${activeQuest.questLabel}: ${objective.label}',
+              reason:
+                  '${activeQuest.questLabel} needs ${objective.label} x${objective.missingCount}.',
+              category: ArcRaidMapMarkerCategory.questObjective,
+              system: 'Quest',
+              itemName: objective.label,
+              missingCount: objective.missingCount,
+              sourceHint: objective.sourceHint,
+              questId: activeQuest.questId,
+              weight: 1.35,
+            ),
+          );
+        }
+
+        // Every explicitly tracked Quest also gets one spatial objective. It
+        // only becomes routable when an authoritative Quest-location marker
+        // exists, so ordinary POIs cannot gain an extra Quest objective.
         objectives.add(
           ArcRaidObjective(
-            id: 'quest:${activeQuest.questId}:${objective.id}',
-            label: '${activeQuest.questLabel}: ${objective.label}',
+            id: 'quest-location:${activeQuest.questId}',
+            label: '${activeQuest.questLabel}: Quest location',
             reason:
-                '${activeQuest.questLabel} needs ${objective.label} x${objective.missingCount}.',
+                '${activeQuest.questLabel} is currently tracked; route only to a published location linked to this Quest.',
             category: ArcRaidMapMarkerCategory.questObjective,
             system: 'Quest',
-            itemName: objective.label,
-            missingCount: objective.missingCount,
-            sourceHint: objective.sourceHint,
-            weight: 1.35,
+            sourceHint: activeQuest.questLabel,
+            questId: activeQuest.questId,
+            questLocationOnly: true,
+            weight: 1.5,
           ),
         );
       }
@@ -97,6 +119,61 @@ class ArcRaidObjectiveIntelligenceEngine {
       }
     }
 
+    if (nomadicTraderTracker.trackingKnown) {
+      var purchaseIndex = 0;
+      var explicitRequirementCount = 0;
+      for (final purchase in nomadicTraderTracker.purchases) {
+        if (purchase.alreadyPurchased) continue;
+        for (final requirement in purchase.requirements) {
+          if (requirement.remainingQty <= 0) continue;
+          explicitRequirementCount += 1;
+          objectives.add(
+            ArcRaidObjective(
+              id: 'nomadic:${purchase.id}:${requirement.id}',
+              label: '${purchase.name}: ${requirement.name}',
+              reason:
+                  'Nomadic Trader target ${purchase.name} needs ${requirement.name} x${requirement.remainingQty}.',
+              category: ArcRaidMapMarkerCategory.tradePreparationRequirement,
+              system: 'Nomadic Trader',
+              itemName: requirement.name,
+              missingCount: requirement.remainingQty,
+              sourceHint: 'Nomadic Trader tracked purchase requirement.',
+              weight: (1.30 - (purchaseIndex * 0.05))
+                  .clamp(1.0, 1.30)
+                  .toDouble(),
+            ),
+          );
+        }
+        purchaseIndex += 1;
+      }
+
+      if (explicitRequirementCount == 0 &&
+          nomadicTraderTracker.remainingValue > 0) {
+        final resources = nomadicTraderTracker.highTier
+            ? ArcNomadicTraderCatalog.highTierResources
+            : ArcNomadicTraderCatalog.lowTierResources;
+        for (final resource in resources) {
+          if (resource.id == 'duplicate_blueprint') continue;
+          objectives.add(
+            ArcRaidObjective(
+              id: 'nomadic:value:${resource.id}',
+              label: 'Nomadic Trader: ${resource.name}',
+              reason:
+                  '${nomadicTraderTracker.remainingValue} trader value remains; ${resource.name} is tracked by the Nomadic Trader resource catalogue.',
+              category: ArcRaidMapMarkerCategory.tradePreparationRequirement,
+              system: 'Nomadic Trader',
+              itemName: resource.name,
+              sourceHint:
+                  "Nomadic Trader ${nomadicTraderTracker.highTier ? 'high-tier' : 'low-tier'} trade-value resource.",
+              weight: (0.72 + (resource.value / 60000))
+                  .clamp(0.72, 0.90)
+                  .toDouble(),
+            ),
+          );
+        }
+      }
+    }
+
     return List<ArcRaidObjective>.unmodifiable(objectives);
   }
 
@@ -105,10 +182,11 @@ class ArcRaidObjectiveIntelligenceEngine {
     required List<ArcRaidObjective> objectives,
     List<ArcAdminMapMarker> adminMarkers = const <ArcAdminMapMarker>[],
     int maxClusters = defaultMaxClusters,
+    ArcRaidMapLayer? activeLayer,
   }) {
     if (objectives.isEmpty) return const <ArcRaidIntelCluster>[];
 
-    final sites = _candidateSites(map, adminMarkers);
+    final sites = _candidateSites(map, adminMarkers, activeLayer);
     if (sites.isEmpty) return const <ArcRaidIntelCluster>[];
 
     final accumulators = <String, _ObjectiveSiteAccumulator>{};
@@ -166,6 +244,8 @@ class ArcRaidObjectiveIntelligenceEngine {
     final systems = objectives.map((objective) => objective.system).toSet();
     final category = objectives.any((objective) => objective.system == 'Quest')
         ? ArcRaidMapMarkerCategory.questObjective
+        : objectives.any((objective) => objective.system == 'Nomadic Trader')
+        ? ArcRaidMapMarkerCategory.tradePreparationRequirement
         : ArcRaidMapMarkerCategory.operationObjective;
     final confidence =
         accumulator.bestScore >= 82 &&
@@ -197,10 +277,14 @@ class ArcRaidObjectiveIntelligenceEngine {
   List<_ObjectiveSite> _candidateSites(
     ArcRaidMap map,
     List<ArcAdminMapMarker> adminMarkers,
+    ArcRaidMapLayer? activeLayer,
   ) {
     final result = <String, _ObjectiveSite>{};
 
     for (final poi in map.pois) {
+      if (activeLayer != null && activeLayer != ArcRaidMapLayer.surface) {
+        continue;
+      }
       final site = _ObjectiveSite(
         identity: 'poi:${poi.id}',
         mapId: map.id,
@@ -217,6 +301,7 @@ class ArcRaidObjectiveIntelligenceEngine {
     }
 
     for (final marker in map.markers) {
+      if (activeLayer != null && marker.layer != activeLayer) continue;
       if (!_seedMarkerCanSupportObjectives(marker.category)) continue;
       final identity = marker.payloadId?.trim().isNotEmpty == true
           ? 'seed:${marker.payloadId}'
@@ -241,6 +326,7 @@ class ArcRaidObjectiveIntelligenceEngine {
 
     for (final marker in adminMarkers) {
       if (marker.mapId != map.id ||
+          (activeLayer != null && marker.layer != activeLayer) ||
           !marker.isPublished ||
           !_adminMarkerCanSupportObjectives(marker.kind)) {
         continue;
@@ -266,6 +352,7 @@ class ArcRaidObjectiveIntelligenceEngine {
         },
         confidence: marker.confidence,
         adminKind: marker.kind,
+        questId: marker.questId,
       );
     }
 
@@ -279,6 +366,36 @@ class ArcRaidObjectiveIntelligenceEngine {
     final name = _normalize(site.name);
     final siteText = _normalize('${site.name} ${site.tags.join(' ')}');
     final intentTags = _intentTags(source);
+
+    if (objective.questLocationOnly) {
+      if (site.adminKind != ArcAdminMapMarkerKind.questLocation) return 0;
+
+      final objectiveQuestId = objective.questId?.trim();
+      final siteQuestId = site.questId?.trim();
+      if (objectiveQuestId != null && objectiveQuestId.isNotEmpty) {
+        if (siteQuestId != null && siteQuestId.isNotEmpty) {
+          return siteQuestId == objectiveQuestId ? 240 : 0;
+        }
+
+        // Legacy Quest markers without questId remain usable only through an
+        // explicit text relationship to the tracked Quest. Canonical IDs win
+        // as soon as the marker has been migrated.
+        final legacyQuestText = _normalize(
+          objective.sourceHint ?? objective.label,
+        );
+        final legacySiteText = _normalize(
+          '${site.name} ${site.tags.join(' ')}',
+        );
+        final terms = legacyQuestText
+            .split(' ')
+            .where((term) => term.length >= 4)
+            .toSet();
+        final overlap = terms.where(legacySiteText.contains).length;
+        return overlap >= 2 ? 96 : 0;
+      }
+      return 0;
+    }
+
     var score = 0;
 
     if (name.length >= 4 && source.contains(name)) score += 90;
@@ -307,6 +424,15 @@ class ArcRaidObjectiveIntelligenceEngine {
     final kind = site.adminKind;
     if (kind != null) {
       if (kind == ArcAdminMapMarkerKind.questLocation) {
+        final objectiveQuestId = objective.questId?.trim();
+        final siteQuestId = site.questId?.trim();
+        if (objectiveQuestId != null &&
+            objectiveQuestId.isNotEmpty &&
+            siteQuestId != null &&
+            siteQuestId.isNotEmpty &&
+            objectiveQuestId != siteQuestId) {
+          return 0;
+        }
         if (hasSemanticMatch && objective.system == 'Quest') score += 48;
       } else if (kind == ArcAdminMapMarkerKind.resourceNode) {
         if (hasSemanticMatch) score += 42;
@@ -487,6 +613,11 @@ class ArcRaidObjectiveIntelligenceEngine {
       'sentinel',
       'bastion',
       'bombardier',
+      'queen',
+      'matriarch',
+      'assessor',
+      'shredder',
+      'firefly',
     ]);
 
     return tags;
@@ -541,6 +672,9 @@ class ArcRaidObjectiveIntelligenceEngine {
         .join(' ')
         .toLowerCase();
     if (hints.contains('lush blooms')) return 'Lush Blooms improves this run';
+    if (objectives.any((objective) => objective.system == 'Nomadic Trader')) {
+      return 'Nomadic Trader target';
+    }
     return 'Current tracker objectives';
   }
 
@@ -581,6 +715,7 @@ class _ObjectiveSite {
     required this.confidence,
     this.poiId,
     this.adminKind,
+    this.questId,
     this.markerCategory,
   });
 
@@ -593,5 +728,6 @@ class _ObjectiveSite {
   final Set<String> tags;
   final ArcRaidIntelConfidence confidence;
   final ArcAdminMapMarkerKind? adminKind;
+  final String? questId;
   final ArcRaidMapMarkerCategory? markerCategory;
 }

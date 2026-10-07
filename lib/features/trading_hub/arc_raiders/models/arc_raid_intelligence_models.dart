@@ -454,9 +454,31 @@ class ArcRaidMapCalibration {
   }
 
   ArcNormalizedPoint imageToCanonical(ArcNormalizedPoint point) {
+    final imagePoint = point.clamp();
+    final unrotated = rotationDegrees == 0
+        ? imagePoint
+        : (() {
+            final radians = -rotationDegrees * math.pi / 180;
+            final centeredX = imagePoint.x - 0.5;
+            final centeredY = imagePoint.y - 0.5;
+            return ArcNormalizedPoint(
+              x:
+                  0.5 +
+                  (centeredX * math.cos(radians)) -
+                  (centeredY * math.sin(radians)),
+              y:
+                  0.5 +
+                  (centeredX * math.sin(radians)) +
+                  (centeredY * math.cos(radians)),
+            );
+          })();
     final uncropped = ArcNormalizedPoint(
-      x: cropSize.x == 0 ? point.x : (point.x - cropOrigin.x) / cropSize.x,
-      y: cropSize.y == 0 ? point.y : (point.y - cropOrigin.y) / cropSize.y,
+      x: cropSize.x == 0
+          ? unrotated.x
+          : (unrotated.x - cropOrigin.x) / cropSize.x,
+      y: cropSize.y == 0
+          ? unrotated.y
+          : (unrotated.y - cropOrigin.y) / cropSize.y,
     );
     return uncropped.clamp();
   }
@@ -1074,6 +1096,8 @@ class ArcRaidObjective {
     this.missingCount = 0,
     this.sourceHint,
     this.blueprintId,
+    this.questId,
+    this.questLocationOnly = false,
     this.weight = 1,
     this.private = true,
   });
@@ -1087,6 +1111,8 @@ class ArcRaidObjective {
   final int missingCount;
   final String? sourceHint;
   final String? blueprintId;
+  final String? questId;
+  final bool questLocationOnly;
   final double weight;
   final bool private;
 
@@ -1195,6 +1221,8 @@ class ArcRaidRoutePlan {
     required this.spawn,
     required this.extraction,
     required this.stops,
+    this.layer = ArcRaidMapLayer.surface,
+    this.remainingMinutes,
     this.usesRaiderHatch = false,
     this.hatchKeyConfirmed = false,
     this.participants = const <ArcRaidRouteParticipant>[],
@@ -1212,6 +1240,8 @@ class ArcRaidRoutePlan {
   final ArcRaidSquadMode squadMode;
   final ArcRaidRouteStyle routeStyle;
   final String raidStage;
+  final ArcRaidMapLayer layer;
+  final int? remainingMinutes;
   final ArcRaidObjectivePriority objectivePriority;
   final ArcRaidRouteStop spawn;
   final ArcRaidRouteStop extraction;
@@ -1254,6 +1284,8 @@ class ArcRaidRoutePlan {
       squadMode: squadMode,
       routeStyle: routeStyle,
       raidStage: raidStage,
+      layer: layer,
+      remainingMinutes: remainingMinutes,
       objectivePriority: objectivePriority,
       spawn: spawn ?? this.spawn,
       extraction: extraction ?? this.extraction,

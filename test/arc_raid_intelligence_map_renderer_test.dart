@@ -69,7 +69,7 @@ void main() {
   });
 
   testWidgets(
-    'wide landscape keeps map image and marker canvas on the same aspect ratio',
+    'wide landscape contain-fits the full map and marker canvas together',
     (tester) async {
       final controller = TransformationController();
       addTearDown(controller.dispose);
@@ -107,8 +107,14 @@ void main() {
         reason:
             'The game map must keep its native aspect ratio instead of stretching across a wide landscape viewport.',
       );
-      expect(imageSize.width, closeTo(viewerRect.width, 0.5));
-      expect(imageSize.height, greaterThan(viewerRect.height));
+      expect(imageSize.height, closeTo(viewerRect.height, 0.5));
+      expect(
+        imageSize.width,
+        closeTo(viewerRect.height * (2048 / 1740), 0.5),
+        reason:
+            'A short landscape viewport should contain the full map instead of cropping it vertically.',
+      );
+      expect(imageSize.width, lessThan(viewerRect.width));
 
       final imageRect = tester.getRect(mapImage);
       expect(imageRect.center.dx, closeTo(viewerRect.center.dx, 0.5));

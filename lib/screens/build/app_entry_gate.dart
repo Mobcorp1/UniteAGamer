@@ -4,10 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uag_arc_raiders_hub/features/auth/session/uag_session_gate_controller.dart';
 import 'package:uag_arc_raiders_hub/features/legal/services/legal_gate.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_trader_profile_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_mandatory_onboarding_screen.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_profile_setup_screen.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raiders_hub_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raider_setup_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_command_centre_screen.dart';
 import 'package:uag_arc_raiders_hub/screens/build/auth/auth_landing_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/uag_cinematic_loading_screen.dart';
 
@@ -101,15 +100,15 @@ bool arcNeedsProgressiveOnboarding(Map<String, dynamic> data) =>
 class AppEntryGate extends StatefulWidget {
   static const routeName = '/app-entry-gate';
 
-  const AppEntryGate({super.key});
+  const AppEntryGate({super.key, this.destinationBuilder});
+
+  final WidgetBuilder? destinationBuilder;
 
   @override
   State<AppEntryGate> createState() => _AppEntryGateState();
 }
 
 class _AppEntryGateState extends State<AppEntryGate> {
-  final ArcTraderProfileRepository _profileRepository =
-      ArcTraderProfileRepository();
   bool _fanDisclaimerChecked = false;
 
   Future<void> _migrateLegacyOnboardingCompletion(
@@ -162,43 +161,6 @@ class _AppEntryGateState extends State<AppEntryGate> {
       // account back into setup on the same device.
       final prefs = await SharedPreferences.getInstance();
       return prefs.getBool('hasCompletedOnboarding') != true;
-    }
-  }
-
-  Future<bool> _needsProfileSetup(String uid) async {
-    try {
-      final userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(uid)
-          .get();
-      final data = userDoc.data() ?? <String, dynamic>{};
-
-      // Admin/dev accounts retain the existing preview and tooling behaviour.
-      if (data['isAdmin'] == true || data['isDev'] == true) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setBool('hasCompletedProfileSetup', true);
-        return false;
-      }
-
-      final profileCompletion = data['profileCompletion'];
-      if (profileCompletion is Map && profileCompletion['complete'] == true) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setBool('hasCompletedProfileSetup', true);
-        return false;
-      }
-
-      final completion = await _profileRepository.getProfileCompletion();
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('hasCompletedProfileSetup', completion.complete);
-      return !completion.complete;
-    } catch (error, stackTrace) {
-      debugPrint('AppEntryGate profile completion lookup failed: $error');
-      debugPrintStack(stackTrace: stackTrace);
-
-      // A transient lookup failure must not throw a profile that this device
-      // already completed back into first-run setup.
-      final prefs = await SharedPreferences.getInstance();
-      return prefs.getBool('hasCompletedProfileSetup') != true;
     }
   }
 
@@ -259,27 +221,17 @@ class _AppEntryGateState extends State<AppEntryGate> {
                   return const ArcMandatoryOnboardingScreen();
                 }
 
-                return FutureBuilder<bool>(
-                  future: _needsProfileSetup(user.uid),
-                  builder: (context, profileSnapshot) {
-                    if (profileSnapshot.connectionState ==
-                        ConnectionState.waiting) {
-                      return const _GateLoadingScaffold();
-                    }
-
-                    final needsProfileSetup = profileSnapshot.data ?? true;
-                    if (needsProfileSetup) {
-                      _fanDisclaimerChecked = false;
-                      return const ArcProfileSetupScreen(firstRunFlow: true);
-                    }
-
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      if (!mounted) return;
-                      _runLegalGateOnce();
-                    });
-
-                    return const ArcRaidersHubScreen();
-                  },
+                return ArcRaiderSetupGate(
+                  key: ValueKey(user.uid),
+                  child: Builder(
+                    builder: (context) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (mounted) _runLegalGateOnce();
+                      });
+                      return widget.destinationBuilder?.call(context) ??
+                          const ArcCommandCentreScreen();
+                    },
+                  ),
                 );
               },
             );

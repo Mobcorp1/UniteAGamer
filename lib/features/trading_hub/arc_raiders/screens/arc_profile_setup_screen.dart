@@ -5,12 +5,14 @@ import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 import '../data/arc_game_platform_catalog.dart';
+import '../data/arc_profile_completion_evaluator.dart';
 import '../data/uag_avatar_catalog.dart';
 import '../data/arc_player_archetype_catalog.dart';
 import '../data/arc_player_session_catalog.dart';
 import '../models/arc_profile_social_models.dart';
 import '../models/arc_trader_profile.dart';
 import '../repositories/arc_trader_profile_repository.dart';
+import '../screens/arc_availability_screen.dart';
 import '../widgets/arc_account_journey_bar.dart';
 import '../widgets/arc_game_platform_selector.dart';
 import '../widgets/arc_raiders_screen_shell.dart';
@@ -23,9 +25,14 @@ import '../widgets/foundation/arc_ui_tokens.dart';
 class ArcProfileSetupScreen extends StatefulWidget {
   static const routeName = '/trading-hub/arc-raiders/profile/setup';
 
-  const ArcProfileSetupScreen({super.key, this.firstRunFlow = false});
+  const ArcProfileSetupScreen({
+    super.key,
+    this.firstRunFlow = false,
+    this.requireCompletionFields = false,
+  });
 
   final bool firstRunFlow;
+  final bool requireCompletionFields;
 
   @override
   State<ArcProfileSetupScreen> createState() => _ArcProfileSetupScreenState();
@@ -61,6 +68,9 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
   String _currentPriority = ArcPlayerSessionCatalog.defaultPriority;
   String _payoutMethod = 'Bank Transfer';
   List<ArcProfileSocialLink> _socialLinks = const <ArcProfileSocialLink>[];
+
+  bool get _requiresCompletionFields =>
+      widget.firstRunFlow || widget.requireCompletionFields;
 
   static final List<String> _archetypeOptions =
       ArcPlayerArchetypeCatalog.labels;
@@ -128,7 +138,11 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
   Future<void> _loadProfile() async {
     try {
       final profile = await _repository.getProfile();
+      final completion = _requiresCompletionFields
+          ? await _repository.getProfileCompletion()
+          : ArcProfileCompletionResult.completeResult;
       if (!mounted) return;
+      final missing = completion.missingFieldIds.toSet();
 
       _uagIdController.text = profile.uagId;
       _uagNameController.text = profile.uagName;
@@ -150,7 +164,9 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
       _archetypes
         ..clear()
         ..addAll(
-          profile.archetypes.isEmpty
+          _requiresCompletionFields && missing.contains('archetypes')
+              ? const <String>[]
+              : profile.archetypes.isEmpty
               ? const ['Balanced Raider']
               : profile.archetypes,
         );
@@ -162,18 +178,27 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
               : profile.playStyles,
         );
       _communicationStyle =
-          _communicationOptions.contains(profile.communicationStyle)
+          _requiresCompletionFields && missing.contains('communicationStyle')
+          ? ''
+          : _communicationOptions.contains(profile.communicationStyle)
           ? profile.communicationStyle
           : 'Flexible';
-      _squadIntent = _squadIntentOptions.contains(profile.squadIntent)
+      _squadIntent =
+          _requiresCompletionFields && missing.contains('squadIntent')
+          ? ''
+          : _squadIntentOptions.contains(profile.squadIntent)
           ? profile.squadIntent
           : 'Flexible';
-      _socialEnergy = _socialEnergyOptions.contains(profile.socialEnergy)
+      final socialSessionMissing =
+          _requiresCompletionFields && missing.contains('socialSessionState');
+      _socialEnergy = socialSessionMissing
+          ? ''
+          : _socialEnergyOptions.contains(profile.socialEnergy)
           ? profile.socialEnergy
           : 'Depends on the day';
-      _sessionIntent = ArcPlayerSessionCatalog.normalizeIntent(
-        profile.sessionIntent,
-      );
+      _sessionIntent = socialSessionMissing
+          ? ''
+          : ArcPlayerSessionCatalog.normalizeIntent(profile.sessionIntent);
       _currentPriority = ArcPlayerSessionCatalog.normalizePriority(
         profile.currentPriority,
       );
@@ -196,6 +221,16 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
       _platformError = platformValid ? null : 'Choose at least one platform.';
     });
     if (!formValid || !platformValid) return;
+    if (_requiresCompletionFields && !_requiredFirstRunChoicesComplete) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Choose your archetype, communication, squad intent and session state.',
+          ),
+        ),
+      );
+      return;
+    }
 
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
@@ -234,7 +269,10 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
     );
 
     try {
-      await _repository.saveProfile(profile);
+      await _repository.saveProfile(
+        profile,
+        confirmProfileSetup: _requiresCompletionFields,
+      );
       if (!mounted) return;
 
       if (!widget.firstRunFlow) {
@@ -242,9 +280,11 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
         return;
       }
 
-      await Navigator.of(
-        context,
-      ).pushNamed('/trading-hub/arc-raiders/profile/availability');
+      await Navigator.of(context).push<bool>(
+        MaterialPageRoute<bool>(
+          builder: (_) => const ArcAvailabilityScreen(firstRunFlow: true),
+        ),
+      );
       if (!mounted) return;
 
       final completion = await _repository.refreshProfileCompletion();
@@ -296,6 +336,13 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
       ),
     );
   }
+
+  bool get _requiredFirstRunChoicesComplete =>
+      _archetypes.isNotEmpty &&
+      _communicationStyle.trim().isNotEmpty &&
+      _squadIntent.trim().isNotEmpty &&
+      _socialEnergy.trim().isNotEmpty &&
+      _sessionIntent.trim().isNotEmpty;
 
   String? _required(String? value, String label) {
     if (value == null || value.trim().isEmpty) {
@@ -393,7 +440,7 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
             ? 'Complete Raider Profile'
             : 'Set Up Raider Profile',
         subtitle: widget.firstRunFlow
-            ? 'Profile & Reputation is required before entering the Hub.'
+            ? 'Profile & Reputation is required before entering Command Centre.'
             : 'Create the identity UAG uses across matching and community.',
         showLogout: false,
       ),
@@ -440,7 +487,7 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
                     _field(
                       _embarkIdController,
                       'Embark ID',
-                      validator: widget.firstRunFlow
+                      validator: _requiresCompletionFields
                           ? (v) => _required(v, 'Embark ID')
                           : null,
                     ),

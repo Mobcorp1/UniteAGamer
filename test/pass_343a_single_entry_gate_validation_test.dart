@@ -30,11 +30,13 @@ void main() {
       gateSource,
       contains('return const ArcMandatoryOnboardingScreen();'),
     );
-    expect(gateSource, contains('return const ArcRaidersHubScreen();'));
+    expect(gateSource, contains('return ArcRaiderSetupGate('));
     expect(
       gateSource,
-      isNot(contains('return const ArcCommandCentreScreen();')),
+      contains('return widget.destinationBuilder?.call(context) ??'),
     );
+    expect(gateSource, contains('const ArcCommandCentreScreen();'));
+    expect(gateSource, isNot(contains('const ArcRaidersHubScreen();')));
   });
 
   test(

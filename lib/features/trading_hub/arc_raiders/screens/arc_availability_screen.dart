@@ -7,11 +7,14 @@ import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 import '../models/arc_availability.dart';
 import '../repositories/arc_trader_profile_repository.dart';
+import '../widgets/arc_account_journey_bar.dart';
 
 class ArcAvailabilityScreen extends StatefulWidget {
   static const routeName = '/trading-hub/arc-raiders/profile/availability';
 
-  const ArcAvailabilityScreen({super.key});
+  const ArcAvailabilityScreen({super.key, this.firstRunFlow = false});
+
+  final bool firstRunFlow;
 
   @override
   State<ArcAvailabilityScreen> createState() => _ArcAvailabilityScreenState();
@@ -160,6 +163,13 @@ class _ArcAvailabilityScreenState extends State<ArcAvailabilityScreen> {
             : SafeArea(
                 child: ArcFormScrollView(
                   children: [
+                    if (widget.firstRunFlow) ...[
+                      const ArcAccountJourneyBar(
+                        stage: ArcAccountJourneyStage.profile,
+                        compact: true,
+                      ),
+                      const SizedBox(height: 12),
+                    ],
                     const ArcFormPageLead(
                       icon: Icons.schedule_rounded,
                       title: 'Play Windows',

@@ -137,7 +137,7 @@ class _ArcMandatoryOnboardingScreenState
   @override
   void initState() {
     super.initState();
-    _step = widget.adminPreview ? widget.initialStep.clamp(0, 3) : 0;
+    _step = widget.initialStep.clamp(0, 3);
     if (_step > 0) {
       _pageController.dispose();
       _pageController = PageController(initialPage: _step);

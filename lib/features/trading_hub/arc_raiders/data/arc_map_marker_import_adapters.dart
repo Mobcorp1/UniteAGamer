@@ -63,6 +63,7 @@ class ArcPermittedJsonMapMarkerImportAdapter {
               '',
           subtypeId: subtype?.id,
           subtypeLabel: subtype?.label,
+          questId: _optionalString(map['questId']),
           point: point,
           blueprintId: map['blueprintId']?.toString(),
           confidence: ArcRaidIntelConfidenceX.fromStorage(
@@ -241,6 +242,11 @@ class ArcPermittedJsonMapMarkerImportAdapter {
           .toList(growable: false);
     }
     return const <String>[];
+  }
+
+  static String? _optionalString(dynamic value) {
+    final text = value?.toString().trim();
+    return text == null || text.isEmpty ? null : text;
   }
 
   static double? _doubleFrom(dynamic value) {
