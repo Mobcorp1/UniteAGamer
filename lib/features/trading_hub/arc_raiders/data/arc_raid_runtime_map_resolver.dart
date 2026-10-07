@@ -38,6 +38,7 @@ class ArcRaidRuntimeMapResolver {
     final pois = [
       for (final poi in seedMap.pois) _resolvedPoi(seedMap, poi, mapMarkers),
     ];
+    final spawnRegions = _resolvedSpawnRegions(seedMap, mapMarkers);
     final extractions = _resolvedExtractions(seedMap, mapMarkers);
     final hatches = _resolvedHatches(seedMap, mapMarkers);
     final routeNodes = [
@@ -51,7 +52,7 @@ class ArcRaidRuntimeMapResolver {
       bounds: seedMap.bounds,
       regions: seedMap.regions,
       pois: pois,
-      spawnRegions: seedMap.spawnRegions,
+      spawnRegions: spawnRegions,
       extractions: extractions,
       hatches: hatches,
       routeNodes: routeNodes,
@@ -93,6 +94,40 @@ class ArcRaidRuntimeMapResolver {
       approximate: resolution.approximate,
       lootTags: poi.lootTags,
     );
+  }
+
+  List<ArcRaidSpawnRegion> _resolvedSpawnRegions(
+    ArcRaidMap map,
+    List<ArcAdminMapMarker> markers,
+  ) {
+    final physical = markers
+        .where(
+          (marker) =>
+              marker.kind == ArcAdminMapMarkerKind.poi &&
+              (marker.subtypeId ?? '').trim().toLowerCase() == 'player_spawn',
+        )
+        .toList(growable: false);
+
+    if (physical.isEmpty) return map.spawnRegions;
+
+    final seen = <String>{};
+    final result = <ArcRaidSpawnRegion>[];
+    for (final marker in physical) {
+      final id = _runtimeId(marker, 'spawn');
+      if (!seen.add(id)) continue;
+      result.add(
+        ArcRaidSpawnRegion(
+          id: id,
+          mapId: map.id,
+          name: marker.name.trim().isEmpty
+              ? 'Player Spawn'
+              : marker.name.trim(),
+          center: marker.point,
+          radius: 0.025,
+        ),
+      );
+    }
+    return List<ArcRaidSpawnRegion>.unmodifiable(result);
   }
 
   List<ArcRaidExtraction> _resolvedExtractions(

@@ -7,7 +7,6 @@ import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_subscriptio
 import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_user_entitlement.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/services/uag_entitlement_service.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_usage_gate.dart';
-import '../widgets/arc_raid_location_picker.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_frozen_trail_preview_screen.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_asset_registry.dart';
@@ -53,6 +52,8 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+
+enum _RaidMapSetupStep { spawn, raidStage, extraction, route }
 
 class ArcRaidIntelligenceScreen extends StatefulWidget {
   const ArcRaidIntelligenceScreen({
@@ -137,6 +138,9 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       ArcRaidObjectivePriority.myNeedsFirst;
   String _raidStage = 'Full';
   int _timeBudgetMinutes = 20;
+  bool _raidStageConfirmed = false;
+  bool _routeGenerationInProgress = false;
+  String? _guidedMarkerId;
   ArcServerRegion _serverRegion = ArcServerRegion.europe;
   ArcRaidRouteStop? _spawn;
   ArcRaidRouteStop? _extraction;
@@ -390,6 +394,8 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                 _extraction = sharedRoute.extraction;
                 _routeStyle = sharedRoute.routeStyle;
                 _raidStage = sharedRoute.raidStage;
+                _raidStageConfirmed = true;
+                _guidedMarkerId = null;
                 _timeBudgetMinutes =
                     sharedRoute.timeBudgetMinutes ?? _timeBudgetMinutes;
               }
@@ -437,6 +443,8 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       _routeStyle = route.routeStyle;
       _objectivePriority = route.objectivePriority;
       _raidStage = route.raidStage;
+      _raidStageConfirmed = true;
+      _guidedMarkerId = null;
       _timeBudgetMinutes = route.timeBudgetMinutes ?? _timeBudgetMinutes;
       _spawn = route.spawn;
       _extraction = route.extraction;
@@ -533,6 +541,11 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       _routePlan = null;
       _objectiveOnlyStops = const <ArcRaidIntelCluster>[];
       _selectedMarker = null;
+      _raidStageConfirmed = false;
+      _routeGenerationInProgress = false;
+      _guidedMarkerId = null;
+      _usesHatch = false;
+      _hatchKeyConfirmed = false;
     });
     await _restoreLayerView(mapId: canonicalMapId, layer: nextLayer);
   }
@@ -974,7 +987,325 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     );
   }
 
+  _RaidMapSetupStep get _mapSetupStep {
+    if (_routePlan != null) return _RaidMapSetupStep.route;
+    if (_spawn == null) return _RaidMapSetupStep.spawn;
+    if (!_raidStageConfirmed) return _RaidMapSetupStep.raidStage;
+    return _RaidMapSetupStep.extraction;
+  }
+
+  ArcRaidIntelligenceState _guidedMapState(
+    ArcRaidIntelligenceState intelligence,
+  ) {
+    final step = _mapSetupStep;
+    if (step == _RaidMapSetupStep.route) return intelligence;
+
+    final markers = switch (step) {
+      _RaidMapSetupStep.spawn => _spawnSelectionMarkers(intelligence.map),
+      _RaidMapSetupStep.raidStage => _spawnSelectionMarkers(
+        intelligence.map,
+      ).where((marker) => marker.payloadId == _spawn?.id).toList(),
+      _RaidMapSetupStep.extraction => _extractionSelectionMarkers(
+        intelligence.map,
+      ),
+      _RaidMapSetupStep.route => intelligence.visibleMarkers,
+    };
+
+    return ArcRaidIntelligenceState(
+      map: intelligence.map,
+      activeLayer: intelligence.activeLayer,
+      filters: intelligence.filters,
+      visibleMarkers: markers
+          .where((marker) => marker.layer == intelligence.activeLayer)
+          .toList(growable: false),
+      opportunityClusters: intelligence.opportunityClusters,
+      routePlan: null,
+      activeConditionLabel: intelligence.activeConditionLabel,
+      statusLabel: intelligence.statusLabel,
+      recommendation: intelligence.recommendation,
+      trackedObjectives: intelligence.trackedObjectives,
+    );
+  }
+
+  List<ArcRaidMapMarker> _spawnSelectionMarkers(ArcRaidMap map) {
+    return map.spawnRegions
+        .map(
+          (spawn) => ArcRaidMapMarker(
+            id: 'raid_setup_spawn_${spawn.id}',
+            mapId: map.id,
+            category: ArcRaidMapMarkerCategory.spawn,
+            label: spawn.name,
+            point: spawn.center,
+            payloadId: spawn.id,
+            confidence: spawn.radius <= 0.03
+                ? ArcRaidIntelConfidence.confirmed
+                : ArcRaidIntelConfidence.moderate,
+            approximate: spawn.radius > 0.03,
+            detail: spawn.radius <= 0.03
+                ? 'Tap this physical player spawn to start your raid.'
+                : 'Fallback spawn area. Publish Player Spawn pins in Map Editor for exact selection.',
+            iconKey: 'infra_player_spawn',
+          ),
+        )
+        .toList(growable: false);
+  }
+
+  List<ArcRaidMapMarker> _extractionSelectionMarkers(ArcRaidMap map) {
+    final markers = <ArcRaidMapMarker>[];
+
+    for (final extraction in map.extractions) {
+      markers.add(
+        ArcRaidMapMarker(
+          id: 'raid_setup_extract_${extraction.id}',
+          mapId: map.id,
+          category: ArcRaidMapMarkerCategory.standardExtraction,
+          label: extraction.name,
+          point: extraction.point,
+          payloadId: extraction.id,
+          confidence: ArcRaidIntelConfidence.confirmed,
+          approximate: false,
+          detail: extraction.notes,
+          iconKey: _extractionIconKey(extraction),
+        ),
+      );
+    }
+
+    for (final hatch in map.hatches) {
+      markers.add(
+        ArcRaidMapMarker(
+          id: 'raid_setup_extract_${hatch.id}',
+          mapId: map.id,
+          category: ArcRaidMapMarkerCategory.raiderHatch,
+          label: hatch.name,
+          point: hatch.point,
+          payloadId: hatch.id,
+          confidence: ArcRaidIntelConfidence.confirmed,
+          approximate: false,
+          detail:
+              'Raider Hatch. Selecting it confirms this is your planned extraction method.',
+          iconKey: 'extract_raider_hatch',
+        ),
+      );
+    }
+
+    return List<ArcRaidMapMarker>.unmodifiable(markers);
+  }
+
+  String _extractionIconKey(ArcRaidExtraction extraction) {
+    final text = '${extraction.name} ${extraction.notes}'.trim().toLowerCase();
+    if (text.contains('metro')) return 'extract_metro_station';
+    if (text.contains('cargo') && text.contains('elevator')) {
+      return 'extract_cargo_elevator';
+    }
+    if (text.contains('airshaft') || text.contains('air shaft')) {
+      return 'extract_airshaft';
+    }
+    return 'extract_standard';
+  }
+
+  void _handleGuidedMapMarker(
+    ArcRaidIntelligenceState intelligence,
+    ArcRaidMapMarker marker,
+  ) {
+    switch (_mapSetupStep) {
+      case _RaidMapSetupStep.spawn:
+        ArcRaidSpawnRegion? spawn;
+        for (final candidate in intelligence.map.spawnRegions) {
+          if (candidate.id == marker.payloadId) {
+            spawn = candidate;
+            break;
+          }
+        }
+        if (spawn == null) return;
+
+        setState(() {
+          _spawn = _engine.stopFromSpawn(spawn!);
+          _extraction = null;
+          _routePlan = null;
+          _objectiveOnlyStops = const <ArcRaidIntelCluster>[];
+          _raidStageConfirmed = false;
+          _usesHatch = false;
+          _hatchKeyConfirmed = false;
+          _guidedMarkerId = marker.id;
+        });
+        _jumpTo(spawn.center);
+        return;
+
+      case _RaidMapSetupStep.raidStage:
+        return;
+
+      case _RaidMapSetupStep.extraction:
+        if (_routeGenerationInProgress) return;
+        if (!_canGenerateCurrentRoute) {
+          _showSnack(_routeButtonLabel);
+          return;
+        }
+
+        ArcRaidRouteStop? extraction;
+        var isHatch = false;
+
+        for (final hatch in intelligence.map.hatches) {
+          if (hatch.id == marker.payloadId) {
+            extraction = _engine.stopFromHatch(hatch);
+            isHatch = true;
+            break;
+          }
+        }
+        if (extraction == null) {
+          for (final exit in intelligence.map.extractions) {
+            if (exit.id == marker.payloadId) {
+              extraction = _engine.stopFromExtraction(exit);
+              break;
+            }
+          }
+        }
+        if (extraction == null) return;
+
+        setState(() {
+          _extraction = extraction;
+          _usesHatch = isHatch;
+          _hatchKeyConfirmed = isHatch;
+          _guidedMarkerId = marker.id;
+          _routeGenerationInProgress = true;
+        });
+
+        unawaited(
+          _generateRoute(intelligence).whenComplete(() {
+            if (mounted) {
+              setState(() => _routeGenerationInProgress = false);
+            }
+          }),
+        );
+        return;
+
+      case _RaidMapSetupStep.route:
+        _selectMarker(marker);
+        return;
+    }
+  }
+
+  void _confirmRaidStage(String stage, int timeBudgetMinutes) {
+    setState(() {
+      _raidStage = stage;
+      _timeBudgetMinutes = timeBudgetMinutes;
+      _raidStageConfirmed = true;
+      _extraction = null;
+      _routePlan = null;
+      _objectiveOnlyStops = const <ArcRaidIntelCluster>[];
+      _guidedMarkerId = null;
+    });
+  }
+
+  void _restartMapSetup() {
+    setState(() {
+      _spawn = null;
+      _extraction = null;
+      _routePlan = null;
+      _objectiveOnlyStops = const <ArcRaidIntelCluster>[];
+      _raidStageConfirmed = false;
+      _routeGenerationInProgress = false;
+      _guidedMarkerId = null;
+      _usesHatch = false;
+      _hatchKeyConfirmed = false;
+      _selectedMarker = null;
+      _controlPanelCollapsed = true;
+    });
+    _resetMap();
+  }
+
+  Widget _mapSetupPrompt() {
+    final step = _mapSetupStep;
+    if (step == _RaidMapSetupStep.route) {
+      return const SizedBox.shrink();
+    }
+
+    final title = switch (step) {
+      _RaidMapSetupStep.spawn => 'STEP 1 OF 3 · SELECT YOUR SPAWN',
+      _RaidMapSetupStep.raidStage => 'STEP 2 OF 3 · RAID TIME',
+      _RaidMapSetupStep.extraction => 'STEP 3 OF 3 · SELECT EXTRACTION',
+      _RaidMapSetupStep.route => '',
+    };
+    final subtitle = switch (step) {
+      _RaidMapSetupStep.spawn =>
+        'Tap the physical player-spawn pin where you entered the raid.',
+      _RaidMapSetupStep.raidStage =>
+        'How far through the raid are you? This changes route depth and detours.',
+      _RaidMapSetupStep.extraction =>
+        _routeGenerationInProgress
+            ? 'Plotting your best route and ordered pickup/objective stops…'
+            : 'Tap the extraction you plan to use — Metro, Hatch, Airshaft, Cargo Elevator or standard exit.',
+      _RaidMapSetupStep.route => '',
+    };
+
+    return Container(
+      key: Key('raid-map-step-${step.name}'),
+      constraints: const BoxConstraints(maxWidth: 620),
+      padding: const EdgeInsets.all(12),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: step == _RaidMapSetupStep.extraction
+            ? ArcUiTokens.secondaryAccent
+            : ArcUiTokens.primaryAccent,
+        radius: ArcUiTokens.radiusL,
+        backgroundColor: ArcUiTokens.surfaceOverlay.withValues(alpha: 0.96),
+        borderOpacity: 0.54,
+        glow: true,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: ArcUiTokens.sectionTitle(
+              fontSize: 18,
+              color: step == _RaidMapSetupStep.extraction
+                  ? ArcUiTokens.secondaryAccent
+                  : ArcUiTokens.primaryAccent,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(subtitle, style: ArcUiTokens.bodySmall()),
+          if (step == _RaidMapSetupStep.raidStage) ...[
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                ElevatedButton(
+                  key: const Key('raid-stage-full'),
+                  style: ArcUiTokens.textButtonStyle(primary: true),
+                  onPressed: () => _confirmRaidStage('Full', 30),
+                  child: const Text('FULL RAID'),
+                ),
+                ElevatedButton(
+                  key: const Key('raid-stage-mid'),
+                  style: ArcUiTokens.textButtonStyle(primary: true),
+                  onPressed: () => _confirmRaidStage('Mid', 15),
+                  child: const Text('MID-RAID'),
+                ),
+                ElevatedButton(
+                  key: const Key('raid-stage-near-end'),
+                  style: ArcUiTokens.textButtonStyle(primary: true),
+                  onPressed: () => _confirmRaidStage('Late', 10),
+                  child: const Text('NEAR END'),
+                ),
+              ],
+            ),
+          ],
+          if (_routeGenerationInProgress) ...[
+            const SizedBox(height: 10),
+            const LinearProgressIndicator(),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _mapPanel(ArcRaidIntelligenceState intelligence) {
+    final mapState = _guidedMapState(intelligence);
+    final guided = _mapSetupStep != _RaidMapSetupStep.route;
+
     return Container(
       key: const Key('raid-map-viewport'),
       decoration: ArcUiTokens.surfaceDecoration(
@@ -991,14 +1322,19 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
             child: Padding(
               padding: const EdgeInsets.all(8),
               child: ArcRaidIntelligenceMapRenderer(
-                state: intelligence,
+                state: mapState,
                 playerFacingLabels: true,
                 controller: _mapController,
-                selectedMarkerId: _selectedMarker?.id,
-                onMarkerSelected: _selectMarker,
-                onMapTapped: _setFreeformSpawn,
-                onIntelReportRequested: (point) =>
-                    _openCommunityIntelReport(intelligence.map, point),
+                selectedMarkerId: guided
+                    ? _guidedMarkerId
+                    : _selectedMarker?.id,
+                onMarkerSelected: (marker) =>
+                    _handleGuidedMapMarker(intelligence, marker),
+                onMapTapped: null,
+                onIntelReportRequested: guided
+                    ? null
+                    : (point) =>
+                          _openCommunityIntelReport(intelligence.map, point),
               ),
             ),
           ),
@@ -1011,6 +1347,16 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
               child: Align(
                 alignment: Alignment.topCenter,
                 child: _layerSelector(intelligence.map),
+              ),
+            ),
+          if (guided)
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: 16,
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: _mapSetupPrompt(),
               ),
             ),
         ],
@@ -1686,22 +2032,6 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
             onSelected: (value) => setState(() => _squadMode = value),
           ),
           const SizedBox(height: 10),
-          _chips<String>(
-            values: const ['Full', 'Mid', 'Late'],
-            selected: _raidStage,
-            label: (value) => value,
-            onSelected: (value) => setState(() => _raidStage = value),
-          ),
-          const SizedBox(height: 10),
-          Text('Time budget', style: ArcUiTokens.bodySmall()),
-          const SizedBox(height: 6),
-          _chips<int>(
-            values: const [10, 15, 20, 25, 30],
-            selected: _timeBudgetMinutes,
-            label: (value) => value == 30 ? '30+ min' : '$value min',
-            onSelected: (value) => setState(() => _timeBudgetMinutes = value),
-          ),
-          const SizedBox(height: 10),
           _chips<ArcRaidRouteStyle>(
             values: ArcRaidRouteStyle.values,
             selected: _routeStyle,
@@ -1715,47 +2045,24 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
             label: _objectivePriorityLabel,
             onSelected: (value) => setState(() => _objectivePriority = value),
           ),
+          const SizedBox(height: 12),
+          _guidedSelectionSummary(),
           const SizedBox(height: 10),
-          _spawnExtractionPickers(intelligence.map),
-          const SizedBox(height: 10),
-          SwitchListTile.adaptive(
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            value: _usesHatch,
-            onChanged: (value) => setState(() {
-              _usesHatch = value;
-              _hatchKeyConfirmed = false;
-              _extraction = null;
-            }),
-            title: const Text(
-              'Use Raider Hatch',
-              style: TextStyle(color: ArcUiTokens.textPrimary),
-            ),
-            subtitle: const Text(
-              'Requires player-confirmed hatch key.',
-              style: TextStyle(color: ArcUiTokens.textTertiary),
-            ),
-          ),
-          if (_usesHatch)
-            CheckboxListTile(
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              value: _hatchKeyConfirmed,
-              onChanged: (value) =>
-                  setState(() => _hatchKeyConfirmed = value ?? false),
-              title: const Text(
-                'Raider Hatch Key confirmed',
-                style: TextStyle(color: ArcUiTokens.textPrimary),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              key: const Key('raid-restart-map-setup'),
+              onPressed: _restartMapSetup,
+              icon: const Icon(Icons.restart_alt_rounded),
+              label: Text(
+                _routePlan == null ? 'Restart Map Setup' : 'Start New Raid',
               ),
             ),
-          const SizedBox(height: 10),
-          ElevatedButton.icon(
-            style: ArcUiTokens.textButtonStyle(primary: true),
-            onPressed: _canGenerateCurrentRoute
-                ? () => _generateRoute(intelligence)
-                : null,
-            icon: const Icon(Icons.auto_awesome_rounded),
-            label: Text(_routeButtonLabel),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Spawn and extraction are selected physically on the map. The route generates automatically after the extraction is chosen.',
+            style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
           ),
         ],
       ),
@@ -1766,32 +2073,48 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       ? map.hatches.map(_engine.stopFromHatch).toList()
       : map.extractions.map(_engine.stopFromExtraction).toList();
 
-  Widget _spawnExtractionPickers(ArcRaidMap map) {
-    return Column(
-      children: [
-        ArcRaidLocationPicker(
-          label: 'Spawn Region or tap map',
-          options: [
-            ...map.spawnRegions.map(_engine.stopFromSpawn),
-            if (_spawn?.id == 'freeform_spawn') _spawn!,
-          ],
-          selected: _spawn,
-          onChanged: (spawn) {
-            setState(() => _spawn = spawn);
-            _jumpTo(spawn.point);
-          },
-        ),
-        const SizedBox(height: 10),
-        ArcRaidLocationPicker(
-          label: _usesHatch ? 'Raider Hatch' : 'Standard Extraction',
-          options: _extractionOptions(map),
-          selected: _extraction,
-          onChanged: (extraction) {
-            setState(() => _extraction = extraction);
-            _jumpTo(extraction.point);
-          },
-        ),
-      ],
+  Widget _guidedSelectionSummary() {
+    final stageLabel = switch (_raidStage) {
+      'Mid' => 'Mid-Raid',
+      'Late' => 'Near End',
+      _ => 'Full Raid',
+    };
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(10),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        accent: ArcUiTokens.primaryAccent,
+        radius: ArcUiTokens.radiusM,
+        borderOpacity: 0.16,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'MAP-GUIDED RAID SETUP',
+            style: ArcUiTokens.label(color: ArcUiTokens.primaryAccent),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            _spawn == null ? 'Spawn: not selected' : 'Spawn: ${_spawn!.label}',
+            style: ArcUiTokens.bodySmall(),
+          ),
+          Text(
+            _raidStageConfirmed
+                ? 'Raid stage: $stageLabel'
+                : 'Raid stage: not recorded',
+            style: ArcUiTokens.bodySmall(),
+          ),
+          Text(
+            _extraction == null
+                ? 'Extraction: not selected'
+                : 'Extraction: ${_extraction!.label}',
+            style: ArcUiTokens.bodySmall(),
+          ),
+        ],
+      ),
     );
   }
 
@@ -2323,18 +2646,6 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       case ArcRaidObjectivePriority.helpTeammate:
         return 'Help teammate';
     }
-  }
-
-  void _setFreeformSpawn(ArcNormalizedPoint point) {
-    setState(() {
-      _spawn = ArcRaidRouteStop(
-        id: 'freeform_spawn',
-        label: 'Approximate Spawn',
-        point: point,
-        order: 0,
-        reason: 'Approximate spawn tapped by player; no GPS used.',
-      );
-    });
   }
 
   Future<void> _generateRoute(ArcRaidIntelligenceState intelligence) async {

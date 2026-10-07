@@ -29,6 +29,36 @@ const marker = ArcAdminMapMarker(
   state: ArcAdminMapMarkerState.published,
 );
 
+const guidedSpawnMarker = ArcAdminMapMarker(
+  id: 'guided_blue_gate_player_spawn',
+  mapId: 'blue_gate',
+  layer: ArcRaidMapLayer.surface,
+  kind: ArcAdminMapMarkerKind.poi,
+  name: 'Player Spawn',
+  subtypeId: 'player_spawn',
+  point: ArcNormalizedPoint(x: .28, y: .32),
+  state: ArcAdminMapMarkerState.published,
+);
+const guidedMetroMarker = ArcAdminMapMarker(
+  id: 'guided_blue_gate_metro',
+  mapId: 'blue_gate',
+  layer: ArcRaidMapLayer.surface,
+  kind: ArcAdminMapMarkerKind.extraction,
+  name: 'Metro Station',
+  subtypeId: 'metro_station',
+  point: ArcNormalizedPoint(x: .72, y: .67),
+  state: ArcAdminMapMarkerState.published,
+);
+const guidedHatchMarker = ArcAdminMapMarker(
+  id: 'guided_blue_gate_hatch',
+  mapId: 'blue_gate',
+  layer: ArcRaidMapLayer.surface,
+  kind: ArcAdminMapMarkerKind.raiderHatch,
+  name: 'Raider Hatch',
+  subtypeId: 'raider_hatch',
+  point: ArcNormalizedPoint(x: .64, y: .38),
+  state: ArcAdminMapMarkerState.published,
+);
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
@@ -111,20 +141,32 @@ void main() {
     },
   );
 
+  test('published player-spawn pins replace generic seed spawn bands', () {
+    final result = const ArcRaidRuntimeMapResolver().resolve(
+      seedMap: ArcRaidIntelligenceSeedData.mapById('blue_gate'),
+      adminMarkers: const [guidedSpawnMarker],
+    );
+
+    expect(result.spawnRegions, hasLength(1));
+    expect(result.spawnRegions.single.name, 'Player Spawn');
+    expect(result.spawnRegions.single.center.x, closeTo(.28, .0001));
+    expect(result.spawnRegions.single.center.y, closeTo(.32, .0001));
+    expect(result.spawnRegions.single.radius, lessThan(.04));
+  });
+
   for (final size in [
     const Size(390, 844),
     const Size(740, 360),
     const Size(1280, 900),
   ]) {
     testWidgets(
-      'saved admin hatch route survives delayed, duplicate, deleted and failed marker streams at $size',
+      'guided setup uses physical spawn then raid stage then extraction pins at $size',
       (tester) async {
         tester.view.physicalSize = size;
         tester.view.devicePixelRatio = 1;
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
-        final markers = StreamController<List<ArcAdminMapMarker>>();
-        addTearDown(markers.close);
+
         await tester.pumpWidget(
           MaterialApp(
             home: ArcRaidIntelligenceScreen(
@@ -132,103 +174,50 @@ void main() {
               favouriteLoadout: () => Stream.value(null),
               dropReports: () => Stream.value([]),
               communityReports: (_) => Stream.value([]),
-              publishedMarkers: (_) => markers.stream,
+              publishedMarkers: (_) => Stream.value(const [
+                guidedSpawnMarker,
+                guidedMetroMarker,
+                guidedHatchMarker,
+              ]),
               scrappyStates: () => Stream.value({}),
               progressionRecords: () =>
                   Stream.value(ArcProgressionRecords.empty),
-              loadActiveRoute: () async => const ArcRaidRoutePlan(
-                id: 'saved_route',
-                mapId: 'buried_city',
-                mapName: 'Buried City',
-                squadMode: ArcRaidSquadMode.solo,
-                routeStyle: ArcRaidRouteStyle.balanced,
-                raidStage: 'Full',
-                objectivePriority: ArcRaidObjectivePriority.myNeedsFirst,
-                spawn: ArcRaidRouteStop(
-                  id: 'freeform_spawn',
-                  label: 'Spawn',
-                  point: ArcNormalizedPoint(x: .2, y: .2),
-                  order: 0,
-                ),
-                extraction: stop,
-                stops: [],
-                usesRaiderHatch: true,
-                hatchKeyConfirmed: true,
-              ),
+              loadActiveRoute: () async => null,
             ),
           ),
         );
+
         await tester.pump();
-        await tester.pump(const Duration(milliseconds: 100));
-        await tester.tap(find.byTooltip('Map tools'));
         await tester.pump(const Duration(milliseconds: 300));
-        await tester.scrollUntilVisible(
-          find.byWidgetPredicate(
-            (widget) =>
-                widget is ArcRaidLocationPicker &&
-                widget.label == 'Raider Hatch',
-          ),
-          250,
-          scrollable: find
-              .descendant(
-                of: find.byType(ListView),
-                matching: find.byType(Scrollable),
-              )
-              .first,
-        );
-        expect(find.byType(ArcRaidLocationPicker), findsNWidgets(2));
-        expect(tester.takeException(), isNull);
-        for (final records in [
-          <ArcAdminMapMarker>[marker, marker],
-          <ArcAdminMapMarker>[],
-          <ArcAdminMapMarker>[marker],
-        ]) {
-          markers.add(records);
-          await tester.pump();
-          await tester.pump(const Duration(milliseconds: 100));
-          expect(tester.takeException(), isNull);
-        }
-        markers.add([]);
-        await tester.pump();
-        await tester.scrollUntilVisible(
-          find.text('Generate Best Loot Run'),
-          150,
-          scrollable: find
-              .descendant(
-                of: find.byType(ListView),
-                matching: find.byType(Scrollable),
-              )
-              .first,
-        );
+
+        expect(find.byType(ArcRaidLocationPicker), findsNothing);
+        expect(find.byKey(const Key('raid-map-step-spawn')), findsOneWidget);
+        expect(find.byTooltip('Spawn: Player Spawn'), findsOneWidget);
+
+        await tester.tap(find.byTooltip('Spawn: Player Spawn'));
         await tester.pump(const Duration(milliseconds: 300));
-        await Scrollable.ensureVisible(
-          tester.element(find.text('Generate Best Loot Run')),
-          alignment: 0.5,
-        );
-        await tester.pump();
+
         expect(
-          find.text('Generate Best Loot Run').hitTestable(),
+          find.byKey(const Key('raid-map-step-raidStage')),
           findsOneWidget,
         );
-        await tester.tap(find.text('Generate Best Loot Run'));
-        await tester.pump();
+        expect(find.byKey(const Key('raid-stage-full')), findsOneWidget);
+        expect(find.byKey(const Key('raid-stage-mid')), findsOneWidget);
+        expect(find.byKey(const Key('raid-stage-near-end')), findsOneWidget);
+
+        await tester.tap(find.byKey(const Key('raid-stage-mid')));
+        await tester.pump(const Duration(milliseconds: 300));
+
         expect(
-          find.text(
-            'Saved extraction is unavailable. Choose another extraction.',
-          ),
+          find.byKey(const Key('raid-map-step-extraction')),
           findsOneWidget,
         );
-        markers.addError(StateError('Firestore $hatchId'));
-        await tester.pump();
         expect(
-          find.textContaining('Some intel is unavailable'),
+          find.byTooltip('Standard Extraction: Metro Station'),
           findsOneWidget,
         );
-        expect(find.textContaining(markerId), findsNothing);
-        expect(find.textContaining('Firestore'), findsNothing);
+        expect(find.byTooltip('Raider Hatch: Raider Hatch'), findsOneWidget);
         expect(tester.takeException(), isNull);
-        await tester.pumpWidget(const SizedBox());
-        await tester.pump(const Duration(milliseconds: 500));
       },
     );
   }

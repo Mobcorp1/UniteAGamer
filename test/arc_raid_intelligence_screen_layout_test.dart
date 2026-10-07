@@ -58,23 +58,13 @@ void main() {
       final renderer = tester.widget<ArcRaidIntelligenceMapRenderer>(
         find.byType(ArcRaidIntelligenceMapRenderer),
       );
-      renderer.onMarkerSelected!(
-        const ArcRaidMapMarker(
-          id: 'fixture',
-          mapId: 'blue_gate',
-          category: ArcRaidMapMarkerCategory.poi,
-          label: 'Selected location fixture',
-          point: ArcNormalizedPoint(x: .5, y: .5),
-          detail: 'Useful location context',
-        ),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-      expect(find.text('Selected location fixture'), findsOneWidget);
-      expect(find.text('Useful location context'), findsOneWidget);
+      expect(find.byKey(const Key('raid-map-step-spawn')), findsOneWidget);
+      expect(renderer.state.visibleMarkers, isNotEmpty);
       expect(
-        find.text('Selected location fixture').hitTestable(),
-        findsOneWidget,
+        renderer.state.visibleMarkers.every(
+          (marker) => marker.category == ArcRaidMapMarkerCategory.spawn,
+        ),
+        isTrue,
       );
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());

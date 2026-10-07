@@ -104,6 +104,8 @@ class ArcRaidIntelligenceEngine {
                 payloadId: stop.id,
                 confidence: ArcRaidIntelConfidence.moderate,
                 approximate: true,
+                detail: stop.reason,
+                tags: <String>[...stop.blueprintIds, ...stop.objectiveIds],
               ),
             )
             .toList(growable: false) ??
@@ -130,7 +132,10 @@ class ArcRaidIntelligenceEngine {
               ...routeMarkers,
             ])
             .where((marker) => marker.layer == resolvedLayer)
-            .where(filters.allows)
+            .where(
+              (marker) =>
+                  marker.id.startsWith('route_') || filters.allows(marker),
+            )
             .toList(growable: false)
           ..sort(_markerSort);
     final visibleMarkers = const ArcMapMarkerClusterEngine().cluster(
@@ -1044,7 +1049,7 @@ class ArcRaidIntelligenceEngine {
       point: spawn.center,
       order: 0,
       markerId: spawn.id,
-      reason: 'Approximate spawn selected by player.',
+      reason: 'Player spawn selected directly on the raid map.',
     );
   }
 
@@ -1528,11 +1533,36 @@ class ArcRaidIntelligenceEngine {
   }
 
   static String _routeStopReason(ArcRaidIntelCluster cluster) {
-    if (!cluster.hasTrackedObjectives) return cluster.cautiousSummary;
+    final blueprintNames = cluster.blueprintIds
+        .map(_blueprintNameForRoute)
+        .take(3)
+        .toList(growable: false);
+    final blueprintSummary = blueprintNames.isEmpty
+        ? ''
+        : ' Look for: ${blueprintNames.join(', ')}.';
+
+    if (!cluster.hasTrackedObjectives) {
+      return '${cluster.cautiousSummary}.$blueprintSummary';
+    }
     if (cluster.blueprintIds.isEmpty) {
       return '${cluster.objectiveSummary}. Tracker-guided POI match; drops are not guaranteed.';
     }
-    return '${cluster.cautiousSummary}. Also supports ${cluster.objectiveCount} tracked ${_plural(cluster.objectiveCount, 'goal', 'goals')}: ${cluster.objectiveSummary}.';
+    return '${cluster.cautiousSummary}. Also supports ${cluster.objectiveCount} tracked ${_plural(cluster.objectiveCount, 'goal', 'goals')}: ${cluster.objectiveSummary}.$blueprintSummary';
+  }
+
+  static String _blueprintNameForRoute(String id) {
+    for (final blueprint in ArcBlueprintSeedData.blueprints) {
+      if (blueprint.id == id) return blueprint.name;
+    }
+    return id
+        .split('-')
+        .where((part) => part.isNotEmpty)
+        .map(
+          (part) => part.length == 1
+              ? part.toUpperCase()
+              : '${part[0].toUpperCase()}${part.substring(1)}',
+        )
+        .join(' ');
   }
 
   static double _routeStopScore({
