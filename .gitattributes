@@ -1,0 +1,2 @@
+# Keep Dart source and source-contract tests deterministic across Windows, macOS and Linux.
+*.dart text eol=lf

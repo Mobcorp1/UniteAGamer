@@ -190,6 +190,7 @@ void main() {
         }
         markers.add([]);
         await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
         await tester.scrollUntilVisible(
           find.text('BUILD MY RAID'),
           150,

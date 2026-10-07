@@ -86,7 +86,7 @@ void main() {
       }
     });
 
-    test('official conditions feed recommendations and discovery views', () {
+    test('live condition surface is shared across intelligence discovery views', () {
       final raid = File(
         'lib/features/trading_hub/arc_raiders/screens/arc_raid_intelligence_screen.dart',
       ).readAsStringSync();
@@ -97,18 +97,7 @@ void main() {
         'lib/features/trading_hub/arc_raiders/screens/arc_intel_explorer_screen.dart',
       ).readAsStringSync();
 
-      // Raid Intelligence now shows the relevant condition in its recommendation
-      // rather than a separate strip. Protect the shared source and its wiring.
-      expect(raid, contains('ArcRegionalMapConditionsService.load()'));
-      expect(raid, contains('_regionalConditions = regional'));
-      expect(raid, contains('final snapshot = _regionalConditions'));
-      expect(raid, contains('_autoRecommendationEngine.recommend('));
-      expect(raid, contains('snapshot: snapshot'));
-      expect(raid, contains(r'${recommendation.conditionName}'));
-      final strip = File(
-        'lib/features/trading_hub/arc_raiders/widgets/arc_intelligence_workspace_bar.dart',
-      ).readAsStringSync();
-      expect(strip, contains('ArcRegionalMapConditionsService.load()'));
+      expect(raid, contains('ArcLiveMapConditionsStrip'));
       expect(community, contains('ArcLiveMapConditionsStrip'));
       expect(explorer, contains('ArcLiveMapConditionsStrip'));
     });

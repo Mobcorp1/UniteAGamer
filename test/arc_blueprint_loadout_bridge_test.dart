@@ -126,9 +126,19 @@ void main() {
 
     test('full quick-use bars expose replacement destinations', () {
       final wolfpack = _blueprint('Wolfpack');
-      final full = ArcBlueprintLoadoutBridge.applyDestination(
+      final filledFirst = ArcBlueprintLoadoutBridge.applyDestination(
         blueprint: wolfpack,
         loadout: ArcBlueprintLoadoutBridge.baseLoadout(null),
+        destination: const ArcBlueprintLoadoutDestination(
+          type: ArcBlueprintLoadoutDestinationType.quickUse,
+          label: 'Quick Use 1',
+          index: 0,
+          currentItem: ArcLoadoutLayoutEngine.emptySlot,
+        ),
+      );
+      final filledFifth = ArcBlueprintLoadoutBridge.applyDestination(
+        blueprint: wolfpack,
+        loadout: filledFirst,
         destination: const ArcBlueprintLoadoutDestination(
           type: ArcBlueprintLoadoutDestinationType.quickUse,
           label: 'Quick Use 5',
@@ -138,7 +148,7 @@ void main() {
       );
       final filled = ArcBlueprintLoadoutBridge.applyDestination(
         blueprint: _blueprint('Pulse Mine'),
-        loadout: full,
+        loadout: filledFifth,
         destination: const ArcBlueprintLoadoutDestination(
           type: ArcBlueprintLoadoutDestinationType.quickUse,
           label: 'Quick Use 6',

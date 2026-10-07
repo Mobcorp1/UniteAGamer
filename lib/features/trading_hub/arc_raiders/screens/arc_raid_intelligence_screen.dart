@@ -799,7 +799,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                     borderOpacity: 0.24,
                   ),
                   child: Text(
-                    'Clean map mode â€¢ choose your spawn, raid time and extraction, then generate a run. UAG will only reveal intel that matters to that route.',
+                    'Clean map mode • choose your spawn, raid time and extraction, then generate a run. UAG will only reveal intel that matters to that route.',
                     textAlign: TextAlign.center,
                     style: ArcUiTokens.bodySmall(
                       color: ArcUiTokens.textSecondary,
@@ -1239,7 +1239,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
             selected: _raidStage,
             label: (value) {
               final budget = ArcRaidTimeBudget.forStage(value);
-              return '${budget.label} Â· ~${budget.totalMinutes}m';
+              return '${budget.label} · ~${budget.totalMinutes}m';
             },
             onSelected: (value) => setState(() => _raidStage = value),
           ),
@@ -1845,7 +1845,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                 ChoiceChip(
                   selected: option.routeStyle == activeRoute.routeStyle,
                   label: Text(
-                    '${option.routeStyle.label} Â· ${option.metrics.estimatedMinutes}m Â· ${option.metrics.efficiencyScore}%',
+                    '${option.routeStyle.label} · ${option.metrics.estimatedMinutes}m · ${option.metrics.efficiencyScore}%',
                   ),
                   onSelected: (_) => _selectRouteAlternative(option),
                   selectedColor: accent.withValues(alpha: 0.20),

@@ -26,7 +26,8 @@ void main() {
       source,
       contains('final imageFrameSize = compactLandscape ? 42.0 : 54.0'),
     );
-    expect(source, contains("final itemVisualSize = slotLabel == 'AUGMENT'"));
+    expect(source, contains('final itemVisualSize = imageFrameSize * 0.88'));
+    expect(source, isNot(contains('_buildCompactAugment')));
     expect(source, contains('minHeight: compactLandscape ? 100.0 : 0'));
     expect(source, contains('width: double.infinity'));
   });

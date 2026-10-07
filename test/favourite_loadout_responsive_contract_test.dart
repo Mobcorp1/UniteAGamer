@@ -13,14 +13,14 @@ void main() {
     expect(source, contains('Orientation.portrait'));
     expect(source, contains('_buildPortraitInGameBoard'));
     expect(source, contains('_buildCompactMobileBoard'));
-    expect(source, contains('_buildCompactAugment'));
+    expect(source, isNot(contains('_buildCompactAugment')));
     expect(source, contains('_buildCompactShield'));
     expect(source, contains('_buildCompactWeaponRow(true, states)'));
     expect(source, contains('_buildCompactWeaponRow(false, states)'));
     expect(source, contains('_buildWantedBlueprintGrid'));
     expect(source, contains('crossAxisCount: 2'));
     expect(source, contains('crossAxisCount: 5'));
-    expect(source, contains("Key('favourite-loadout-augment')"));
+    expect(source, isNot(contains("Key('favourite-loadout-augment')")));
     expect(source, contains("Key('favourite-loadout-shield')"));
     expect(source, contains("'favourite-loadout-weapon-1'"));
     expect(source, contains("'favourite-loadout-weapon-2'"));

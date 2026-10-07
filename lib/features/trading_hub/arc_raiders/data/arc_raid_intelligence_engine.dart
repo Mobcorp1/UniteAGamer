@@ -554,14 +554,14 @@ class ArcRaidIntelligenceEngine {
         return a.label.compareTo(b.label);
       });
 
-    var selected = ranked.take(stopLimit).toList(growable: true);
-    var ordered = _orderClustersForTravel(
+    final selected = ranked.take(stopLimit).toList(growable: false);
+    final ordered = _orderClustersForTravel(
       map: map,
       clusters: selected,
       start: spawn.point,
       extraction: extraction.point,
     );
-    var metrics = _buildRouteMetrics(
+    final metrics = _buildRouteMetrics(
       map: map,
       spawn: spawn,
       extraction: extraction,
@@ -571,52 +571,6 @@ class ArcRaidIntelligenceEngine {
       raidStage: raidStage,
       usesRaiderHatch: usesRaiderHatch,
     );
-
-    // Time remaining is a hard route constraint. Remove the lowest-value stop
-    // until the run fits the Full/Mid/Late budget, while preserving at least
-    // one meaningful objective when evidence exists.
-    while (selected.length > 1 && !metrics.fitsTimeBudget) {
-      selected.sort((a, b) {
-        final aScore = _routeStopScore(
-          map: map,
-          cluster: a,
-          spawn: spawn.point,
-          extraction: extraction.point,
-          routeStyle: routeStyle,
-          objectivePriority: objectivePriority,
-          squadMode: squadMode,
-          participants: participants,
-        );
-        final bScore = _routeStopScore(
-          map: map,
-          cluster: b,
-          spawn: spawn.point,
-          extraction: extraction.point,
-          routeStyle: routeStyle,
-          objectivePriority: objectivePriority,
-          squadMode: squadMode,
-          participants: participants,
-        );
-        return aScore.compareTo(bScore);
-      });
-      selected.removeAt(0);
-      ordered = _orderClustersForTravel(
-        map: map,
-        clusters: selected,
-        start: spawn.point,
-        extraction: extraction.point,
-      );
-      metrics = _buildRouteMetrics(
-        map: map,
-        spawn: spawn,
-        extraction: extraction,
-        clusters: ordered,
-        squadMode: squadMode,
-        routeStyle: routeStyle,
-        raidStage: raidStage,
-        usesRaiderHatch: usesRaiderHatch,
-      );
-    }
 
     final stops = <ArcRaidRouteStop>[
       for (var index = 0; index < ordered.length; index++)

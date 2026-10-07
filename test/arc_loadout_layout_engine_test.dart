@@ -154,34 +154,36 @@ void main() {
       );
     });
 
-    test('augment is allowed in Quick Use', () {
+    test('augment is excluded from Quick Use', () {
+      expect(ArcLoadoutLayoutEngine.quickUseOptionForName('Survivor'), isNull);
       expect(
-        ArcLoadoutLayoutEngine.quickUseOptionForName('Survivor')?.type,
-        ArcLoadoutSlotType.augment,
+        ArcLoadoutLayoutEngine.quickUseOptionForName('Combat Augment'),
+        isNull,
       );
     });
 
-    test('only one augment is allowed', () {
+    test('legacy augment items are discarded without shrinking Quick Use', () {
       final migration = ArcLoadoutLayoutEngine.normaliseQuickUseSlots(
         savedItems: ['Survivor', 'Combat Augment', 'Vita Shot'],
       );
-      final augmentCount = migration.quickUse
-          .map(ArcLoadoutLayoutEngine.quickUseOptionForName)
-          .whereType<ArcLoadoutOption>()
-          .where((option) => option.type == ArcLoadoutSlotType.augment)
-          .length;
 
-      expect(augmentCount, 1);
+      expect(migration.quickUse, hasLength(6));
+      expect(migration.quickUse[0], ArcLoadoutLayoutEngine.emptySlot);
+      expect(migration.quickUse[1], ArcLoadoutLayoutEngine.emptySlot);
+      expect(migration.quickUse[2], 'Vita Shot');
+      expect(migration.augment, isEmpty);
     });
 
-    test('legacy augment migrates into first available Quick Use slot', () {
+    test('legacy augment parameter does not repopulate Quick Use', () {
       final migration = ArcLoadoutLayoutEngine.normaliseQuickUseSlots(
         savedItems: ['Snap Hook', 'Vita Shot'],
         legacyAugment: 'Combat Augment',
       );
 
-      expect(migration.quickUse[2], 'Combat Augment');
-      expect(migration.augment, 'Combat Augment');
+      expect(migration.quickUse[0], 'Snap Hook');
+      expect(migration.quickUse[1], 'Vita Shot');
+      expect(migration.quickUse[2], ArcLoadoutLayoutEngine.emptySlot);
+      expect(migration.augment, isEmpty);
     });
 
     test('legacy augment does not overwrite six valid Quick Use items', () {
