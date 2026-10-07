@@ -296,6 +296,10 @@ class TradingListingDetailScreen extends StatelessWidget {
                                         listing.riskLabel,
                                         listing.riskColor(),
                                       ),
+                                      _chip(
+                                        listing.reputationLabel,
+                                        AppTheme.neonPink,
+                                      ),
                                       _chip(listing.region, AppTheme.neonCyan),
                                       _chip(
                                         listing.playWindow,

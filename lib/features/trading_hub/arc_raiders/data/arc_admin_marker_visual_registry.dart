@@ -74,6 +74,10 @@ class ArcAdminMarkerVisualRegistry {
     'roots': '${_scrappyBase}roots.webp',
   };
 
+  static Set<String> get dedicatedSubtypeIds => _exactAssets.keys.toSet();
+
+  static Set<String> get dedicatedAssetPaths => _exactAssets.values.toSet();
+
   static String? assetPathForSubtype(String? subtypeId) {
     final id = (subtypeId ?? '').trim().toLowerCase();
     if (id.isEmpty) return null;

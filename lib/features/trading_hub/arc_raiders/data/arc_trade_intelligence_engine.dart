@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_trade_value_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_trade_bundle_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/unified_item_index.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
@@ -8,6 +9,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_bundle_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_network_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_value.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
 
@@ -273,7 +275,10 @@ class ArcTradeIntelligenceEngine {
     for (final blueprint in missingBlueprints.values) {
       if (_listingOffersBlueprint(listing, blueprint)) {
         offeredMatches.add(blueprint.name);
-        score += blueprint.rarity == ArcBlueprintRarity.legendary ? 38 : 28;
+        final marketPoints = ArcBlueprintTradeValueCatalog.tradePointsFor(
+          blueprint,
+        );
+        score += 18 + math.min(36, marketPoints * 2);
         score += _priorityBonus(blueprintStates[blueprint.id]);
       }
     }
@@ -282,7 +287,14 @@ class ArcTradeIntelligenceEngine {
       final blueprint = entry.value;
       if (_listingWantsBlueprint(listing, blueprint)) {
         wantedMatches.add(blueprint.name);
-        score += 24 + math.min(12, entry.key.dupesOwned * 3);
+        final marketPoints = ArcBlueprintTradeValueCatalog.tradePointsFor(
+          blueprint,
+        );
+        score +=
+            (14 +
+                    math.min(26, marketPoints * 2) +
+                    math.min(10, entry.key.dupesOwned * 2))
+                .toInt();
       }
     }
 
@@ -365,9 +377,13 @@ class ArcTradeIntelligenceEngine {
       final demand = tokenDemand + idDemand;
       final supply = tokenSupply + idSupply;
       final priority = _priorityBonus(state);
+      final marketPoints = ArcBlueprintTradeValueCatalog.tradePointsFor(
+        blueprint,
+      );
       final score =
-          (35 +
-                  _rarityScore(blueprint.rarity) * 7 +
+          (30 +
+                  _rarityScore(blueprint.rarity) * 5 +
+                  marketPoints +
                   priority +
                   demand * 4 +
                   math.min(12, supply * 3))
@@ -412,10 +428,14 @@ class ArcTradeIntelligenceEngine {
       final demand =
           (listingDemand[_normalise(blueprint.name)] ?? 0) +
           (listingDemand[_normalise(blueprint.id)] ?? 0);
+      final marketProfile = ArcBlueprintTradeValueCatalog.forBlueprint(
+        blueprint,
+      );
       final score =
-          (30 +
+          (24 +
                   math.min(18, state.dupesOwned * 4) +
-                  _rarityScore(blueprint.rarity) * 6 +
+                  _rarityScore(blueprint.rarity) * 4 +
+                  marketProfile.tradePoints * 2 +
                   demand * 8)
               .clamp(0, 100)
               .toInt();
@@ -426,8 +446,8 @@ class ArcTradeIntelligenceEngine {
           label: blueprint.name,
           score: score,
           reason: demand > 0
-              ? '$demand active listing ${demand == 1 ? 'wants' : 'want'} this duplicate.'
-              : '${state.dupesOwned} duplicate ${state.dupesOwned == 1 ? 'copy' : 'copies'} available for listing drafts.',
+              ? '${marketProfile.tradeTier.label} market tier • $demand active listing ${demand == 1 ? 'wants' : 'want'} this duplicate.'
+              : '${marketProfile.tradeTier.label} market tier • ${state.dupesOwned} duplicate ${state.dupesOwned == 1 ? 'copy' : 'copies'} available for listing drafts.',
         ),
       );
     }
@@ -479,8 +499,43 @@ class ArcTradeIntelligenceEngine {
       if (includesResources) resourceText,
     ]);
     final directMatches = offeredTokens.intersection(wantedTokens);
+    final sellerBlueprintValue = _blueprintTradeValueForNames(
+      listing.offeredBlueprintNames,
+    );
+    final buyerBlueprintValue = _blueprintTradeValueForNames(
+      offeredBlueprintNames,
+    );
     final hints = <String>[];
     var score = 12;
+
+    if (sellerBlueprintValue > 0 && buyerBlueprintValue > 0) {
+      final gap = buyerBlueprintValue - sellerBlueprintValue;
+      final absoluteGap = gap.abs();
+      if (absoluteGap == 0) {
+        score += 20;
+        hints.add(
+          'UAG Blueprint value is balanced: $buyerBlueprintValue ↔ $sellerBlueprintValue.',
+        );
+      } else {
+        final tolerance = math.max(2, (sellerBlueprintValue * 0.25).round());
+        if (absoluteGap <= tolerance) {
+          score += 12;
+          hints.add(
+            'UAG Blueprint value is close: $buyerBlueprintValue ↔ $sellerBlueprintValue.',
+          );
+        } else if (gap < 0) {
+          score -= math.min(20, absoluteGap * 2);
+          hints.add(
+            'UAG Blueprint value is $absoluteGap point${absoluteGap == 1 ? '' : 's'} short ($buyerBlueprintValue ↔ $sellerBlueprintValue).',
+          );
+        } else {
+          score += 5;
+          hints.add(
+            'Your Blueprint side is $absoluteGap UAG value point${absoluteGap == 1 ? '' : 's'} higher ($buyerBlueprintValue ↔ $sellerBlueprintValue).',
+          );
+        }
+      }
+    }
 
     if (directMatches.isNotEmpty) {
       score += 48;
@@ -523,6 +578,26 @@ class ArcTradeIntelligenceEngine {
             ]
           : hints.toList(growable: false),
     );
+  }
+
+  int _blueprintTradeValueForNames(Iterable<String> names) {
+    var total = 0;
+    final counted = <String>{};
+    for (final raw in names) {
+      final token = _normalise(raw);
+      if (token.isEmpty) continue;
+      for (final blueprint in ArcBlueprintSeedData.blueprints) {
+        if (counted.contains(blueprint.id)) continue;
+        if (_normalise(blueprint.id) != token &&
+            _normalise(blueprint.name) != token) {
+          continue;
+        }
+        total += ArcBlueprintTradeValueCatalog.tradePointsFor(blueprint);
+        counted.add(blueprint.id);
+        break;
+      }
+    }
+    return total;
   }
 
   ArcOfferValueScore? _scoreExactBundleOffer({

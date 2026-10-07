@@ -7,6 +7,7 @@ class ArcRaidRecommendationEngine {
     required List<ArcRaiderGoal> goals,
     required List<ArcRaidCandidate> candidates,
     DateTime? nowUtc,
+    bool requireEventCondition = false,
   }) {
     final now = (nowUtc ?? DateTime.now()).toUtc();
     final routableGoals = goals
@@ -23,7 +24,11 @@ class ArcRaidRecommendationEngine {
 
     final ranked = <ArcRaidRecommendation>[];
     for (final candidate in deduped.values) {
-      final recommendation = _score(candidate, routableGoals);
+      final recommendation = _score(
+        candidate,
+        routableGoals,
+        requireEventCondition: requireEventCondition,
+      );
       if (recommendation.score > 0 && recommendation.matchedGoals.isNotEmpty) {
         ranked.add(recommendation);
       }
@@ -90,8 +95,9 @@ class ArcRaidRecommendationEngine {
 
   ArcRaidRecommendation _score(
     ArcRaidCandidate candidate,
-    List<ArcRaiderGoal> goals,
-  ) {
+    List<ArcRaiderGoal> goals, {
+    bool requireEventCondition = false,
+  }) {
     final matched = <ArcRaiderGoal>[];
     var score = 0;
     var questCount = 0;
@@ -108,6 +114,15 @@ class ArcRaidRecommendationEngine {
         goal.conditionNames,
         candidate.conditionName,
       );
+      if (requireEventCondition &&
+          (candidate.isStandard ||
+              !goal.conditionNames.any(
+                (name) =>
+                    _normalize(name) == _normalize(candidate.conditionName),
+              ) ||
+              goal.conditionFit == ArcRaiderGoalConditionFit.none)) {
+        continue;
+      }
       if (goal.conditionFit == ArcRaiderGoalConditionFit.required &&
           !conditionMatch) {
         continue;

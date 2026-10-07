@@ -22,6 +22,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_community_intel_report.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_nomadic_trader_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_progression_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raider_goal_models.dart';
@@ -31,6 +32,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_admin_map_editor_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_community_intel_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_nomadic_trader_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_progression_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_scrappy_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_raid_intelligence_repository.dart';
@@ -113,6 +115,8 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       ArcCommunityIntelRepository();
   late final ArcAdminMapEditorRepository _adminMapRepository =
       ArcAdminMapEditorRepository();
+  final ArcNomadicTraderRepository _nomadicTraderRepository =
+      const ArcNomadicTraderRepository();
   late final ArcScrappyRepository _scrappyRepository = ArcScrappyRepository();
   late final ArcProgressionRepository _progressionRepository =
       ArcProgressionRepository();
@@ -172,6 +176,8 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   Map<String, ArcScrappyState> _latestScrappyStates =
       const <String, ArcScrappyState>{};
   ArcProgressionRecords _latestProgressionRecords = ArcProgressionRecords.empty;
+  ArcNomadicTraderTrackerSnapshot _nomadicTraderTracker =
+      ArcNomadicTraderTrackerSnapshot.empty;
   Stream<T> _source<T>(String key, Stream<T> Function() factory) =>
       (_streams.putIfAbsent(key, factory)) as Stream<T>;
   T _retain<T>(String key, AsyncSnapshot<T> snapshot, T fallback) {
@@ -207,6 +213,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       widget.raidPlannerEntitlement != null ||
       widget.regionalConditions != null ||
       widget.loadActiveRoute != null;
+
   @override
   void initState() {
     super.initState();
@@ -357,9 +364,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
             if (!mounted) return;
             setState(() {
               _squadBundle = bundle;
-              if (bundle == null) {
-                return;
-              }
+              if (bundle == null) return;
               _squadMode = bundle.session.squadSize >= 3
                   ? ArcRaidSquadMode.trio
                   : ArcRaidSquadMode.duo;
@@ -396,9 +401,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
             });
           },
           onError: (_) {
-            if (mounted) {
-              setState(() => _lastData['squadSessionError'] = true);
-            }
+            if (mounted) setState(() => _lastData['squadSessionError'] = true);
           },
         );
   }
@@ -447,6 +450,18 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   }
 
   Future<void> _initialiseScreen() async {
+    if (!_hasInjectedDataSources) {
+      try {
+        final tracker = await _nomadicTraderRepository.loadTrackerSnapshot();
+        if (mounted) {
+          setState(() => _nomadicTraderTracker = tracker);
+        }
+      } catch (_) {
+        if (mounted) {
+          setState(() => _lastData['nomadicTraderError'] = true);
+        }
+      }
+    }
     try {
       await _loadActiveRoute();
     } catch (_) {
@@ -811,6 +826,9 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                                   progressionRecords: squadBundle == null
                                       ? progressionRecords
                                       : ArcProgressionRecords.empty,
+                                  nomadicTraderTracker: squadBundle == null
+                                      ? _nomadicTraderTracker
+                                      : ArcNomadicTraderTrackerSnapshot.empty,
                                   additionalObjectives: squadObjectives,
                                   dropReports: reports,
                                   communityReports: communityReports,

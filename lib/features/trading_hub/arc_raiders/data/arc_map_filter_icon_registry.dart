@@ -1,3 +1,4 @@
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_admin_marker_visual_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_filter_taxonomy.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_upgrade_resource_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
@@ -99,10 +100,33 @@ class ArcMapFilterIconRegistry {
 
   static String? tryAssetPathFor(String iconKey) {
     final normalized = _normalize(iconKey);
+    if (normalized.isEmpty) return null;
+
     final resource = ArcMapUpgradeResourceCatalog.bySubtypeId(normalized);
     if (resource != null) return resource.imageAsset;
+
     final filename = _rasterAssets[normalized];
-    return filename == null ? null : '$assetDirectory/$filename';
+    if (filename != null) return '$assetDirectory/$filename';
+
+    // Admin authoring can store either a subtype id (for example
+    // `weapon_cache`) or the taxonomy icon key (for example
+    // `loot_weapon_cache`). The subtype visual registry already contains the
+    // authoritative asset aliases for artwork that is shared between marker
+    // types, so use it as the fallback rather than silently dropping to a
+    // generic Material pin.
+    final directSubtypeAsset =
+        ArcAdminMarkerVisualRegistry.assetPathForSubtype(normalized);
+    if (directSubtypeAsset != null) return directSubtypeAsset;
+
+    for (final entry in ArcMapFilterTaxonomy.all) {
+      if (_normalize(entry.iconKey) != normalized) continue;
+      final subtypeAsset =
+          ArcAdminMarkerVisualRegistry.assetPathForSubtype(entry.id);
+      if (subtypeAsset != null) return subtypeAsset;
+      break;
+    }
+
+    return null;
   }
 
   static String assetPathFor(String iconKey) {
@@ -110,9 +134,23 @@ class ArcMapFilterIconRegistry {
   }
 
   static String? iconKeyForSubtype(String? subtypeId) {
-    final resource = ArcMapUpgradeResourceCatalog.bySubtypeId(subtypeId);
+    final normalized = subtypeId?.trim().toLowerCase();
+    if (normalized == null || normalized.isEmpty) return null;
+
+    final resource = ArcMapUpgradeResourceCatalog.bySubtypeId(normalized);
     if (resource != null) return resource.subtypeId;
-    return ArcMapFilterTaxonomy.iconKeyFor(subtypeId);
+
+    final taxonomyKey = ArcMapFilterTaxonomy.iconKeyFor(normalized);
+    if (taxonomyKey != null) return taxonomyKey;
+
+    // Some admin-only subtypes intentionally sit outside the public filter
+    // taxonomy but still have dedicated artwork. Returning the subtype id
+    // lets tryAssetPathFor resolve those through the visual registry.
+    if (ArcAdminMarkerVisualRegistry.hasDedicatedAsset(normalized)) {
+      return normalized;
+    }
+
+    return null;
   }
 
   static String? iconKeyForAdminMarker(ArcAdminMapMarker marker) =>

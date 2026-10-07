@@ -8,11 +8,17 @@ void main() {
       'lib/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart',
     ).readAsStringSync();
 
-    expect(source, contains('Regional Blueprint Opportunities'));
+    final today = File(
+      'lib/features/trading_hub/arc_raiders/raid_planner/widgets/raid_planner_today_intel.dart',
+    ).readAsStringSync();
+    expect(today, contains("TODAY'S RAID INTEL"));
+    expect(source, isNot(contains('Regional Blueprint Opportunities')));
+    expect(source, isNot(contains('OUTSIDE PLAYTIME')));
+    expect(source, isNot(contains('horizonDays: 7')));
     expect(source, contains('Condition Item Finder'));
-    expect(source, contains('Regional Condition Finder'));
+    expect(source, contains("title: 'Event Finder'"));
     expect(source, contains('Your ARC server region'));
-    expect(source, contains('Switch ARC server to'));
+    expect(today, contains('Switch ARC server to'));
     expect(source, contains('ArcRegionalMapConditionsService.load'));
     expect(source, contains('watchMyBlueprintStates'));
     expect(source, contains('watchAvailability'));

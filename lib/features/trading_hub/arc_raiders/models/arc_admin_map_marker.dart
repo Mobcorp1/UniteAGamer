@@ -107,6 +107,72 @@ extension ArcAdminMapMarkerKindX on ArcAdminMapMarkerKind {
 
 enum ArcAdminMapMarkerState { draft, published, archived }
 
+enum ArcBlueprintMapIntelType {
+  none,
+  exactFind,
+  containerOpportunity,
+  lootZoneFallback,
+}
+
+extension ArcBlueprintMapIntelTypeX on ArcBlueprintMapIntelType {
+  String get label => switch (this) {
+    ArcBlueprintMapIntelType.none => 'No Blueprint routing',
+    ArcBlueprintMapIntelType.exactFind => 'Exact / historical find',
+    ArcBlueprintMapIntelType.containerOpportunity => 'Container opportunity',
+    ArcBlueprintMapIntelType.lootZoneFallback => 'Loot-zone fallback',
+  };
+}
+
+enum ArcBlueprintContainerFamily {
+  unknown,
+  anywhere,
+  raider,
+  residential,
+  security,
+  medical,
+  securityMedical,
+  industrial,
+  electrical,
+  firstWaveCache,
+  assessor,
+  harvester,
+}
+
+extension ArcBlueprintContainerFamilyX on ArcBlueprintContainerFamily {
+  String get label => switch (this) {
+    ArcBlueprintContainerFamily.unknown => 'Unknown / not set',
+    ArcBlueprintContainerFamily.anywhere => 'Anywhere / general loot',
+    ArcBlueprintContainerFamily.raider => 'Raider containers',
+    ArcBlueprintContainerFamily.residential => 'Residential containers',
+    ArcBlueprintContainerFamily.security => 'Security containers',
+    ArcBlueprintContainerFamily.medical => 'Medical containers',
+    ArcBlueprintContainerFamily.securityMedical => 'Security + Medical',
+    ArcBlueprintContainerFamily.industrial => 'Industrial containers',
+    ArcBlueprintContainerFamily.electrical => 'Electrical containers',
+    ArcBlueprintContainerFamily.firstWaveCache => 'First Wave Cache',
+    ArcBlueprintContainerFamily.assessor => 'ARC Assessor',
+    ArcBlueprintContainerFamily.harvester => 'Harvester',
+  };
+}
+
+enum ArcBlueprintLootTier {
+  standard,
+  highValue,
+  lockedRoom,
+  epicLockedRoom,
+  dynamicHotZone,
+}
+
+extension ArcBlueprintLootTierX on ArcBlueprintLootTier {
+  String get label => switch (this) {
+    ArcBlueprintLootTier.standard => 'Standard loot',
+    ArcBlueprintLootTier.highValue => 'High-value / red-yellow loot',
+    ArcBlueprintLootTier.lockedRoom => 'Locked room',
+    ArcBlueprintLootTier.epicLockedRoom => 'Epic locked room',
+    ArcBlueprintLootTier.dynamicHotZone => 'Dynamic hot zone',
+  };
+}
+
 enum ArcAdminMapMarkerSourcePermission {
   permitted,
   restricted,
@@ -166,6 +232,13 @@ class ArcAdminMapMarker {
     this.subtypeLabel,
     this.itemId,
     this.blueprintId,
+    this.blueprintIntelType = ArcBlueprintMapIntelType.none,
+    this.blueprintContainerFamily = ArcBlueprintContainerFamily.unknown,
+    this.blueprintConditionIds = const <String>[],
+    this.blueprintLootTier = ArcBlueprintLootTier.standard,
+    this.blueprintContainerDensity = 0,
+    this.blueprintFallbackEligible = false,
+    this.blueprintResearchVersion,
     this.sourceLabel = 'Admin Intel',
     this.confidence = ArcRaidIntelConfidence.confirmed,
     this.state = ArcAdminMapMarkerState.draft,
@@ -207,6 +280,13 @@ class ArcAdminMapMarker {
   final String? itemId;
   final ArcNormalizedPoint point;
   final String? blueprintId;
+  final ArcBlueprintMapIntelType blueprintIntelType;
+  final ArcBlueprintContainerFamily blueprintContainerFamily;
+  final List<String> blueprintConditionIds;
+  final ArcBlueprintLootTier blueprintLootTier;
+  final int blueprintContainerDensity;
+  final bool blueprintFallbackEligible;
+  final String? blueprintResearchVersion;
   final String sourceLabel;
   final ArcRaidIntelConfidence confidence;
   final ArcAdminMapMarkerState state;
@@ -246,6 +326,78 @@ class ArcAdminMapMarker {
       ? ArcAdminMapMarkerKind.upgrade
       : kind;
 
+  ArcBlueprintMapIntelType get effectiveBlueprintIntelType {
+    if (blueprintIntelType != ArcBlueprintMapIntelType.none) {
+      return blueprintIntelType;
+    }
+    return switch (kind) {
+      ArcAdminMapMarkerKind.blueprint => ArcBlueprintMapIntelType.exactFind,
+      ArcAdminMapMarkerKind.highValueLoot ||
+      ArcAdminMapMarkerKind.lockedRoom ||
+      ArcAdminMapMarkerKind.securityRoom ||
+      ArcAdminMapMarkerKind.keyRequiredLocation =>
+        ArcBlueprintMapIntelType.lootZoneFallback,
+      ArcAdminMapMarkerKind.firstWaveCache ||
+      ArcAdminMapMarkerKind.raiderCache ||
+      ArcAdminMapMarkerKind.weaponCase ||
+      ArcAdminMapMarkerKind.weaponCache ||
+      ArcAdminMapMarkerKind.fieldCrate ||
+      ArcAdminMapMarkerKind.lootContainer ||
+      ArcAdminMapMarkerKind.containerCluster =>
+        ArcBlueprintMapIntelType.containerOpportunity,
+      _ => ArcBlueprintMapIntelType.none,
+    };
+  }
+
+  ArcBlueprintContainerFamily get effectiveBlueprintContainerFamily {
+    if (blueprintContainerFamily != ArcBlueprintContainerFamily.unknown) {
+      return blueprintContainerFamily;
+    }
+    return switch (kind) {
+      ArcAdminMapMarkerKind.firstWaveCache =>
+        ArcBlueprintContainerFamily.firstWaveCache,
+      ArcAdminMapMarkerKind.raiderCache ||
+      ArcAdminMapMarkerKind.weaponCase ||
+      ArcAdminMapMarkerKind.weaponCache ||
+      ArcAdminMapMarkerKind.fieldCrate => ArcBlueprintContainerFamily.raider,
+      ArcAdminMapMarkerKind.securityRoom =>
+        ArcBlueprintContainerFamily.security,
+      _ => ArcBlueprintContainerFamily.unknown,
+    };
+  }
+
+  ArcBlueprintLootTier get effectiveBlueprintLootTier {
+    if (blueprintLootTier != ArcBlueprintLootTier.standard) {
+      return blueprintLootTier;
+    }
+    return switch (kind) {
+      ArcAdminMapMarkerKind.highValueLoot => ArcBlueprintLootTier.highValue,
+      ArcAdminMapMarkerKind.lockedRoom ||
+      ArcAdminMapMarkerKind.securityRoom ||
+      ArcAdminMapMarkerKind.keyRequiredLocation =>
+        ArcBlueprintLootTier.lockedRoom,
+      _ => ArcBlueprintLootTier.standard,
+    };
+  }
+
+  bool get hasBlueprintRoutingMetadata =>
+      blueprintId?.trim().isNotEmpty == true ||
+      effectiveBlueprintIntelType != ArcBlueprintMapIntelType.none ||
+      effectiveBlueprintContainerFamily !=
+          ArcBlueprintContainerFamily.unknown ||
+      blueprintConditionIds.isNotEmpty ||
+      effectiveBlueprintLootTier != ArcBlueprintLootTier.standard ||
+      blueprintFallbackEligible;
+
+  bool get supportsBlueprintFallback =>
+      blueprintFallbackEligible ||
+      kind == ArcAdminMapMarkerKind.highValueLoot ||
+      kind == ArcAdminMapMarkerKind.lockedRoom ||
+      kind == ArcAdminMapMarkerKind.securityRoom ||
+      kind == ArcAdminMapMarkerKind.keyRequiredLocation ||
+      kind == ArcAdminMapMarkerKind.containerCluster ||
+      kind == ArcAdminMapMarkerKind.firstWaveCache;
+
   bool get isPublished => state == ArcAdminMapMarkerState.published;
 
   bool get isLive =>
@@ -276,6 +428,14 @@ class ArcAdminMapMarker {
     ArcNormalizedPoint? point,
     String? blueprintId,
     bool clearBlueprintId = false,
+    ArcBlueprintMapIntelType? blueprintIntelType,
+    ArcBlueprintContainerFamily? blueprintContainerFamily,
+    List<String>? blueprintConditionIds,
+    ArcBlueprintLootTier? blueprintLootTier,
+    int? blueprintContainerDensity,
+    bool? blueprintFallbackEligible,
+    String? blueprintResearchVersion,
+    bool clearBlueprintResearchVersion = false,
     String? sourceLabel,
     ArcRaidIntelConfidence? confidence,
     ArcAdminMapMarkerState? state,
@@ -329,6 +489,19 @@ class ArcAdminMapMarker {
       point: point ?? this.point,
       itemId: clearItemId ? null : (itemId ?? this.itemId),
       blueprintId: clearBlueprintId ? null : (blueprintId ?? this.blueprintId),
+      blueprintIntelType: blueprintIntelType ?? this.blueprintIntelType,
+      blueprintContainerFamily:
+          blueprintContainerFamily ?? this.blueprintContainerFamily,
+      blueprintConditionIds:
+          blueprintConditionIds ?? this.blueprintConditionIds,
+      blueprintLootTier: blueprintLootTier ?? this.blueprintLootTier,
+      blueprintContainerDensity:
+          blueprintContainerDensity ?? this.blueprintContainerDensity,
+      blueprintFallbackEligible:
+          blueprintFallbackEligible ?? this.blueprintFallbackEligible,
+      blueprintResearchVersion: clearBlueprintResearchVersion
+          ? null
+          : (blueprintResearchVersion ?? this.blueprintResearchVersion),
       sourceLabel: sourceLabel ?? this.sourceLabel,
       confidence: confidence ?? this.confidence,
       state: state ?? this.state,
@@ -391,6 +564,13 @@ class ArcAdminMapMarker {
       'itemId': itemId,
       'point': point.toMap(),
       'blueprintId': blueprintId,
+      'blueprintIntelType': blueprintIntelType.name,
+      'blueprintContainerFamily': blueprintContainerFamily.name,
+      'blueprintConditionIds': blueprintConditionIds,
+      'blueprintLootTier': blueprintLootTier.name,
+      'blueprintContainerDensity': blueprintContainerDensity,
+      'blueprintFallbackEligible': blueprintFallbackEligible,
+      'blueprintResearchVersion': blueprintResearchVersion,
       'sourceLabel': sourceLabel,
       'confidence': confidence.name,
       'state': state.name,
@@ -458,6 +638,23 @@ class ArcAdminMapMarker {
             : null,
       ),
       blueprintId: map['blueprintId']?.toString(),
+      blueprintIntelType: ArcBlueprintMapIntelType.values.firstWhere(
+        (value) => value.name == map['blueprintIntelType'],
+        orElse: () =>
+            map['blueprintId']?.toString().trim().isNotEmpty == true ||
+                map['kind']?.toString() == ArcAdminMapMarkerKind.blueprint.name
+            ? ArcBlueprintMapIntelType.exactFind
+            : ArcBlueprintMapIntelType.none,
+      ),
+      blueprintContainerFamily: _blueprintContainerFamilyFromMap(map),
+      blueprintConditionIds: _stringListFrom(map['blueprintConditionIds']),
+      blueprintLootTier: _blueprintLootTierFromMap(map),
+      blueprintContainerDensity: _intFrom(
+        map['blueprintContainerDensity'],
+        fallback: 0,
+      ).clamp(0, 5).toInt(),
+      blueprintFallbackEligible: map['blueprintFallbackEligible'] == true,
+      blueprintResearchVersion: map['blueprintResearchVersion']?.toString(),
       sourceLabel: map['sourceLabel']?.toString() ?? 'Admin Intel',
       confidence: ArcRaidIntelConfidence.values.firstWhere(
         (value) => value.name == map['confidence'],
@@ -496,6 +693,35 @@ class ArcAdminMapMarker {
       createdAt: _dateFrom(map['createdAt']),
       updatedAt: _dateFrom(map['updatedAt']),
     );
+  }
+
+  static ArcBlueprintContainerFamily _blueprintContainerFamilyFromMap(
+    Map<String, dynamic> map,
+  ) {
+    final stored = map['blueprintContainerFamily']?.toString();
+    for (final value in ArcBlueprintContainerFamily.values) {
+      if (value.name == stored) return value;
+    }
+    return switch (map['kind']?.toString()) {
+      'firstWaveCache' => ArcBlueprintContainerFamily.firstWaveCache,
+      'raiderCache' => ArcBlueprintContainerFamily.raider,
+      'securityRoom' => ArcBlueprintContainerFamily.security,
+      _ => ArcBlueprintContainerFamily.unknown,
+    };
+  }
+
+  static ArcBlueprintLootTier _blueprintLootTierFromMap(
+    Map<String, dynamic> map,
+  ) {
+    final stored = map['blueprintLootTier']?.toString();
+    for (final value in ArcBlueprintLootTier.values) {
+      if (value.name == stored) return value;
+    }
+    return switch (map['kind']?.toString()) {
+      'highValueLoot' => ArcBlueprintLootTier.highValue,
+      'lockedRoom' || 'securityRoom' => ArcBlueprintLootTier.lockedRoom,
+      _ => ArcBlueprintLootTier.standard,
+    };
   }
 
   static DateTime? _dateFrom(dynamic value) {

@@ -1,4 +1,12 @@
 import 'dart:async';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_progression_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_progression_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_progression_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_availability_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/data/arc_live_raid_recommendation_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/widgets/raid_planner_today_intel.dart';
 
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_subscription_tier.dart';
@@ -40,12 +48,21 @@ class RaidPlannerScreen extends StatefulWidget {
     this.statesSource,
     this.availabilitySource,
     this.regionalSource,
+    this.progressionSource,
+    this.myListingsSource,
+    this.currentUidSource,
+    this.nowSource,
   });
   final Stream<RaidPlannerEntitlement> Function()? entitlementSource;
   final Stream<List<RaidBlueprintTarget>> Function()? targetsSource;
   final Stream<Map<String, ArcBlueprintState>> Function()? statesSource;
   final Stream<ArcAvailability> Function()? availabilitySource;
   final Future<ArcRegionalMapConditionsSnapshot> Function()? regionalSource;
+
+  final Stream<ArcProgressionRecords> Function()? progressionSource;
+  final Stream<List<TradingListing>> Function()? myListingsSource;
+  final String? Function()? currentUidSource;
+  final DateTime Function()? nowSource;
 
   @override
   State<RaidPlannerScreen> createState() => _RaidPlannerScreenState();
@@ -60,6 +77,9 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
   late final UagEntitlementService _entitlements = UagEntitlementService();
   late final ArcOperationsRepository _operationsRepository =
       ArcOperationsRepository();
+  late final ArcProgressionRepository _progressionRepository =
+      ArcProgressionRepository();
+  late final TradingRepository _tradingRepository = TradingRepository();
   late final TextEditingController _eventFinderController;
   String _eventFinderQuery = '';
   ArcServerRegion _selectedServerRegion = ArcServerRegion.europe;
@@ -93,7 +113,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
   Widget _regionalFailure() => Column(
     children: [
       const Text(
-        'Regional conditions unavailable. The saved target timeline is still available.',
+        'Regional conditions unavailable. Retry to check today’s opportunities.',
       ),
       TextButton(
         onPressed: () => setState(
@@ -111,7 +131,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
   @override
   void initState() {
     super.initState();
-    _plannerNowUtc = DateTime.now().toUtc();
+    _plannerNowUtc = (widget.nowSource?.call() ?? DateTime.now()).toUtc();
     _regionalConditionsFuture =
         widget.regionalSource?.call() ?? ArcRegionalMapConditionsService.load();
     _eventFinderController = TextEditingController();
@@ -119,7 +139,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
     _plannerClockTimer = Timer.periodic(const Duration(seconds: 15), (_) {
       if (!mounted) return;
       setState(() {
-        _plannerNowUtc = DateTime.now().toUtc();
+        _plannerNowUtc = (widget.nowSource?.call() ?? DateTime.now()).toUtc();
       });
     });
   }
@@ -145,14 +165,6 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
     final minute = local.minute.toString().padLeft(2, '0');
     final zone = local.timeZoneName.isNotEmpty ? local.timeZoneName : 'local';
     return '$hour:$minute $zone';
-  }
-
-  String _durationLabel(Duration duration) {
-    if (duration.isNegative) return 'now';
-    final hours = duration.inHours;
-    final minutes = duration.inMinutes.remainder(60);
-    if (hours <= 0) return '${minutes}m';
-    return '${hours}h ${minutes}m';
   }
 
   Color _tierColor(RaidTargetTier tier) {
@@ -453,11 +465,13 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
                 color: onTap == null ? Colors.white38 : color,
               ),
               const SizedBox(width: 6),
-              Text(
-                label,
-                style: AppTheme.buttonTextStyle(
-                  color: onTap == null ? Colors.white38 : color,
-                  fontSize: 12,
+              Flexible(
+                child: Text(
+                  label,
+                  style: AppTheme.buttonTextStyle(
+                    color: onTap == null ? Colors.white38 : color,
+                    fontSize: 12,
+                  ),
                 ),
               ),
             ],
@@ -621,66 +635,6 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
     );
   }
 
-  Widget _opportunityCard(RaidPlannerOpportunity opportunity, DateTime utcNow) {
-    final live = opportunity.isLive;
-    final timeText = live
-        ? 'Ends in ${_durationLabel(opportunity.timeRemaining(utcNow))}'
-        : 'Starts in ${_durationLabel(opportunity.timeUntil(utcNow))}';
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(10),
-      decoration: ArcUiTokens.surfaceDecoration(
-        role: ArcSurfaceRole.interactive,
-        accent: live ? AppTheme.neonPink : AppTheme.neonCyan,
-        radius: ArcUiTokens.radiusM,
-        borderOpacity: live ? 0.34 : 0.20,
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            live ? Icons.flash_on_rounded : Icons.schedule_rounded,
-            color: live ? AppTheme.neonPink : AppTheme.neonCyan,
-            size: 18,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${opportunity.rule.blueprintName} - ${opportunity.slot.eventName}${opportunity.rule.isExactEventRule ? '' : ' boost'}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTheme.tradingHeading(fontSize: 14),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${opportunity.slot.mapName} - ${opportunity.slot.lane} - ${_clock(opportunity.startUtc)}-${_clock(opportunity.endUtc)}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTheme.bodyTextStyle(
-                    fontSize: 11,
-                    color: AppTheme.tradingMutedText,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  timeText,
-                  style: AppTheme.bodyTextStyle(
-                    color: live ? AppTheme.neonPink : AppTheme.neonCyan,
-                    isBold: true,
-                    fontSize: 11,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Future<void> _refreshRegionalConditions() async {
     final allowed = await UagUsageGate.consumeOrShowUpgrade(
       context,
@@ -709,290 +663,41 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
     }
   }
 
-  String _regionalStatusText(
-    ArcRegionalOpportunity opportunity,
-    DateTime utcNow,
-  ) {
-    if (opportunity.live) {
-      final remaining = opportunity.window.endUtc.difference(utcNow);
-      return 'LIVE - ${_durationLabel(remaining)} remaining';
-    }
-    final until = opportunity.window.startUtc.difference(utcNow);
-    return 'Starts in ${_durationLabel(until)}';
-  }
-
-  Widget _regionalOpportunityTile(
-    ArcRegionalOpportunity opportunity,
-    DateTime utcNow,
-  ) {
-    final switchText = opportunity.shouldSwitchRegion
-        ? 'Switch ARC server to ${opportunity.region.label}'
-        : 'Stay on ${opportunity.region.label}';
-    final playtimeText = opportunity.insideSavedPlaytime
-        ? 'Matches your saved playtime'
-        : 'Outside your usual playtime';
-
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(10),
-      decoration: ArcUiTokens.surfaceDecoration(
-        role: ArcSurfaceRole.interactive,
-        accent: opportunity.insideSavedPlaytime
-            ? AppTheme.neonCyan
-            : AppTheme.neonPink,
-        radius: ArcUiTokens.radiusM,
-        borderOpacity: opportunity.insideSavedPlaytime ? 0.30 : 0.22,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  opportunity.target.label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTheme.tradingHeading(fontSize: 14),
-                ),
-              ),
-              if (opportunity.target.verifiedConditionLink)
-                const Icon(
-                  Icons.verified_rounded,
-                  color: AppTheme.neonCyan,
-                  size: 17,
-                ),
-            ],
-          ),
-          const SizedBox(height: 5),
-          Text(
-            '${opportunity.condition.conditionName} - ${opportunity.condition.mapDisplayName}',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppTheme.bodyTextStyle(
-              fontSize: 12,
-              color: AppTheme.tradingMutedText,
-              isBold: true,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '${_clock(opportunity.window.startUtc)}-${_clock(opportunity.window.endUtc)} - ${opportunity.region.label}',
-            style: AppTheme.bodyTextStyle(
-              fontSize: 12,
-              color: AppTheme.neonCyan,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '${_regionalStatusText(opportunity, utcNow)} - $playtimeText',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppTheme.bodyTextStyle(
-              fontSize: 11,
-              color: opportunity.insideSavedPlaytime
-                  ? AppTheme.neonCyan
-                  : AppTheme.tradingMutedText,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            switchText,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppTheme.bodyTextStyle(
-              fontSize: 11,
-              color: opportunity.shouldSwitchRegion
-                  ? AppTheme.neonPink
-                  : Colors.white70,
-              isBold: true,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _regionalBlueprintPlannerCard({
-    required Map<String, ArcBlueprintState> states,
-    required ArcAvailability availability,
-    required DateTime utcNow,
-  }) {
-    return CollapsibleSectionCard(
-      title: 'Regional Blueprint Opportunities',
-      titleColor: AppTheme.neonCyan,
-      initiallyExpanded: true,
-      child: FutureBuilder<ArcRegionalMapConditionsSnapshot>(
-        future: _regionalConditionsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.hasError) return _regionalFailure();
-          final data = snapshot.data;
-          if (data == null) {
-            return const Padding(
-              padding: EdgeInsets.symmetric(vertical: 18),
-              child: Center(child: CircularProgressIndicator()),
-            );
-          }
-
-          final recommendations =
-              ArcRegionalOpportunityEngine.blueprintRecommendations(
-                snapshot: data,
-                states: states,
-                availability: availability,
-                homeRegion: _selectedServerRegion,
-                nowUtc: utcNow,
-                limit: 8,
-              );
-
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Missing blueprints matched against regional windows and saved playtime.',
-                style: AppTheme.bodyTextStyle(
-                  fontSize: 12,
-                  color: AppTheme.tradingMutedText,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: DropdownButtonFormField<ArcServerRegion>(
-                      initialValue: _selectedServerRegion,
-                      decoration: const InputDecoration(
-                        labelText: 'Your ARC server region',
-                      ),
-                      items: [
-                        for (final region in ArcServerRegion.values)
-                          DropdownMenuItem(
-                            value: region,
-                            child: Text(region.label),
-                          ),
-                      ],
-                      onChanged: (value) {
-                        if (value == null) return;
-                        setState(() => _selectedServerRegion = value);
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  IconButton(
-                    tooltip: 'Refresh regional schedule',
-                    onPressed: _refreshRegionalConditions,
-                    icon: const Icon(Icons.refresh_rounded),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Text(
-                data.sourceLabel,
-                style: AppTheme.bodyTextStyle(
-                  fontSize: 11,
-                  color: data.isOfficialLive
-                      ? AppTheme.neonCyan
-                      : Colors.orangeAccent,
-                  isBold: true,
-                ),
-              ),
-              if (!data.isOfficialLive) ...[
-                const SizedBox(height: 4),
-                Text(
-                  'Schedule update unavailable. Saved times may be out of date.',
-                  style: AppTheme.bodyTextStyle(
-                    fontSize: 11,
-                    color: AppTheme.tradingMutedText,
-                  ),
-                ),
-              ],
-              const SizedBox(height: 14),
-              if (recommendations.isEmpty)
-                Text(
-                  'No matching blueprint windows in the loaded schedule.',
-                  style: AppTheme.bodyTextStyle(
-                    fontSize: 12,
-                    color: AppTheme.tradingMutedText,
-                  ),
-                )
-              else
-                ...recommendations.map(
-                  (item) => _regionalOpportunityTile(item, utcNow),
-                ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _regionalItemPlannerCard({
-    required ArcAvailability availability,
-    required DateTime utcNow,
-  }) {
+  Widget _itemObjectiveCard() {
     return CollapsibleSectionCard(
       title: 'Condition Item Finder',
       titleColor: AppTheme.neonPink,
-      initiallyExpanded: false,
-      child: FutureBuilder<ArcRegionalMapConditionsSnapshot>(
-        future: _regionalConditionsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.hasError) return _regionalFailure();
-          final data = snapshot.data;
-          final selected = _selectedItemTargetId;
-          final recommendations = data == null || selected == null
-              ? const <ArcRegionalOpportunity>[]
-              : ArcRegionalOpportunityEngine.itemRecommendations(
-                  snapshot: data,
-                  itemId: selected,
-                  availability: availability,
-                  homeRegion: _selectedServerRegion,
-                  nowUtc: utcNow,
-                  limit: 6,
-                );
-
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Pick an objective to resolve map windows and server timing.',
-                style: AppTheme.bodyTextStyle(
-                  fontSize: 12,
-                  color: AppTheme.tradingMutedText,
-                ),
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                initialValue: selected,
-                decoration: const InputDecoration(
-                  labelText: 'Item / ARC objective',
-                ),
-                items: [
-                  for (final rule in ArcRegionalOpportunityEngine.itemRules)
-                    DropdownMenuItem(value: rule.id, child: Text(rule.label)),
-                ],
-                onChanged: (value) {
-                  setState(() => _selectedItemTargetId = value);
-                },
-              ),
-              const SizedBox(height: 14),
-              if (selected != null && data == null)
-                const Center(child: CircularProgressIndicator())
-              else if (selected != null && recommendations.isEmpty)
-                Text(
-                  'No matching condition in the loaded schedule.',
-                  style: AppTheme.bodyTextStyle(
-                    fontSize: 12,
-                    color: AppTheme.tradingMutedText,
-                  ),
-                )
-              else
-                ...recommendations.map(
-                  (item) => _regionalOpportunityTile(item, utcNow),
+      initiallyExpanded: _page == 3,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text("Choose an item objective for today's Raid Intel."),
+          const SizedBox(height: 10),
+          DropdownButtonFormField<String>(
+            key: ValueKey(_selectedItemTargetId),
+            initialValue: _selectedItemTargetId,
+            isExpanded: true,
+            decoration: const InputDecoration(
+              labelText: 'Item / ARC objective',
+            ),
+            items: [
+              for (final rule in ArcRegionalOpportunityEngine.itemRules)
+                DropdownMenuItem(
+                  value: rule.id,
+                  child: Text(rule.label, overflow: TextOverflow.ellipsis),
                 ),
             ],
-          );
-        },
+            onChanged: (value) => setState(() {
+              _selectedItemTargetId = value;
+              _page = 0;
+            }),
+          ),
+          if (_selectedItemTargetId != null)
+            TextButton(
+              onPressed: () => setState(() => _selectedItemTargetId = null),
+              child: const Text('Clear item objective'),
+            ),
+        ],
       ),
     );
   }
@@ -1001,7 +706,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
     final normalized = _eventFinderQuery.trim();
 
     return CollapsibleSectionCard(
-      title: 'Regional Condition Finder',
+      title: 'Event Finder',
       titleColor: AppTheme.neonCyan,
       initiallyExpanded: false,
       child: FutureBuilder<ArcRegionalMapConditionsSnapshot>(
@@ -1102,7 +807,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '${row.region.label} - ${_clock(row.window.startUtc)}-${_clock(row.window.endUtc)}',
+                          '${row.region.label} - ${_dateLabel(row.window.startUtc.toLocal())} ${_clock(row.window.startUtc)}-${_clock(row.window.endUtc)}',
                           style: AppTheme.bodyTextStyle(
                             fontSize: 12,
                             color: AppTheme.neonCyan,
@@ -1132,179 +837,6 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
             ],
           );
         },
-      ),
-    );
-  }
-
-  bool _overlaps(
-    DateTime startA,
-    DateTime endA,
-    DateTime startB,
-    DateTime endB,
-  ) {
-    return startA.isBefore(endB) && endA.isAfter(startB);
-  }
-
-  int _weekdayIndexToDart(String dayKey) {
-    switch (dayKey) {
-      case 'mon':
-        return DateTime.monday;
-      case 'tue':
-        return DateTime.tuesday;
-      case 'wed':
-        return DateTime.wednesday;
-      case 'thu':
-        return DateTime.thursday;
-      case 'fri':
-        return DateTime.friday;
-      case 'sat':
-        return DateTime.saturday;
-      case 'sun':
-        return DateTime.sunday;
-      default:
-        return DateTime.monday;
-    }
-  }
-
-  DateTime? _localDateTimeForSlot(DateTime localDay, String time) {
-    final parts = time.split(':');
-    if (parts.length < 2) return null;
-    final hour = int.tryParse(parts[0]);
-    final minute = int.tryParse(parts[1]);
-    if (hour == null || minute == null) return null;
-    return DateTime(localDay.year, localDay.month, localDay.day, hour, minute);
-  }
-
-  List<_AvailabilityWindow> _availabilityWindows(
-    ArcAvailability availability,
-    DateTime utcNow,
-  ) {
-    final localNow = utcNow.toLocal();
-    final baseLocalDay = DateTime(localNow.year, localNow.month, localNow.day);
-    final windows = <_AvailabilityWindow>[];
-    final weeks = availability.weeks.isEmpty
-        ? ArcAvailability.initial().weeks
-        : availability.weeks;
-    final week = weeks.first;
-
-    for (var dayOffset = 0; dayOffset < 7; dayOffset++) {
-      final localDay = baseLocalDay.add(Duration(days: dayOffset));
-      for (final slot in week.slots.where((slot) => slot.enabled)) {
-        if (_weekdayIndexToDart(slot.dayKey) != localDay.weekday) continue;
-        final localStart = _localDateTimeForSlot(localDay, slot.fromTime);
-        var localEnd = _localDateTimeForSlot(localDay, slot.toTime);
-        if (localStart == null || localEnd == null) continue;
-        if (!localEnd.isAfter(localStart)) {
-          localEnd = localEnd.add(const Duration(days: 1));
-        }
-        if (localEnd.toUtc().isBefore(utcNow)) continue;
-        windows.add(
-          _AvailabilityWindow(
-            startUtc: localStart.toUtc(),
-            endUtc: localEnd.toUtc(),
-          ),
-        );
-      }
-    }
-
-    windows.sort((a, b) => a.startUtc.compareTo(b.startUtc));
-    return windows;
-  }
-
-  Widget _availabilityPlannerCard({
-    required List<RaidPlannerOpportunity> allOpportunities,
-    required ArcAvailability availability,
-    required DateTime utcNow,
-  }) {
-    final windows = _availabilityWindows(availability, utcNow);
-    final inPlaytime = allOpportunities
-        .where((opportunity) {
-          return windows.any(
-            (window) => _overlaps(
-              opportunity.startUtc,
-              opportunity.endUtc,
-              window.startUtc,
-              window.endUtc,
-            ),
-          );
-        })
-        .take(3)
-        .toList(growable: false);
-
-    final outsidePlaytime = allOpportunities
-        .where((opportunity) {
-          if (opportunity.isLive) return false;
-          return !windows.any(
-            (window) => _overlaps(
-              opportunity.startUtc,
-              opportunity.endUtc,
-              window.startUtc,
-              window.endUtc,
-            ),
-          );
-        })
-        .take(3)
-        .toList(growable: false);
-
-    return CollapsibleSectionCard(
-      title: 'Playtime Match',
-      titleColor: AppTheme.neonPink,
-      initiallyExpanded: true,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            windows.isEmpty
-                ? 'Set availability in Profile to unlock playtime planning.'
-                : 'Target windows matched to your saved playtime.',
-            style: AppTheme.bodyTextStyle(
-              fontSize: 12,
-              color: AppTheme.tradingMutedText,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'IN YOUR PLAYTIME',
-            style: AppTheme.tradingHeading(
-              fontSize: 14,
-              color: AppTheme.neonCyan,
-            ),
-          ),
-          const SizedBox(height: 8),
-          if (inPlaytime.isEmpty)
-            Text(
-              'No active target windows match this week.',
-              style: AppTheme.bodyTextStyle(
-                fontSize: 12,
-                color: AppTheme.tradingMutedText,
-              ),
-            )
-          else
-            ...inPlaytime.map(
-              (opportunity) => _opportunityCard(opportunity, utcNow),
-            ),
-          const SizedBox(height: 10),
-          Text(
-            'OUTSIDE PLAYTIME',
-            style: AppTheme.tradingHeading(
-              fontSize: 14,
-              color: AppTheme.neonPink,
-            ),
-          ),
-          const SizedBox(height: 8),
-          if (outsidePlaytime.isEmpty)
-            Text(
-              'No missed priority windows.',
-              style: AppTheme.bodyTextStyle(
-                fontSize: 12,
-                color: AppTheme.tradingMutedText,
-              ),
-            )
-          else
-            ...outsidePlaytime.map(
-              (opportunity) => _opportunityCard(opportunity, utcNow),
-            ),
-        ],
       ),
     );
   }
@@ -1470,179 +1002,189 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
     );
   }
 
-  Widget _scheduleTimelineCard({
-    required List<RaidPlannerOpportunity> opportunities,
-    required DateTime utcNow,
-  }) {
-    final visible = opportunities.take(5).toList();
-
-    return Container(
-      padding: ArcUiTokens.compactPanelPadding,
-      decoration: ArcUiTokens.surfaceDecoration(
-        role: ArcSurfaceRole.panel,
-        radius: ArcUiTokens.radiusM,
-        accent: ArcUiTokens.primaryAccent,
-        borderOpacity: 0.20,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _todayIntelCard({
+    required List<RaidBlueprintTarget> effectiveTargets,
+    required ArcAvailability availability,
+    required ArcProgressionRecords progressionRecords,
+    required List<TradingListing> myListings,
+    required String? currentUid,
+  }) => FutureBuilder<ArcRegionalMapConditionsSnapshot>(
+    future: _regionalConditionsFuture,
+    builder: (context, snapshot) {
+      if (snapshot.hasError) return _regionalFailure();
+      final data = snapshot.data;
+      if (data == null) {
+        return const Column(
+          children: [
+            Text("TODAY'S RAID INTEL"),
+            Text('Loading regional conditions...'),
+            LinearProgressIndicator(),
+          ],
+        );
+      }
+      final quest = const ArcProgressionEngine()
+          .build(scrappyStates: const {}, records: progressionRecords)
+          .quest;
+      final intel = const ArcLiveRaidRecommendationEngine()
+          .buildTodayRecommendations(
+            effectiveTargets: effectiveTargets,
+            availability: availability,
+            regionalSnapshot: data,
+            homeRegion: _selectedServerRegion,
+            itemTargetIds: [?_selectedItemTargetId],
+            myListings: myListings,
+            currentUid: currentUid,
+            questSnapshot: quest,
+            nowUtc: _plannerNowUtc,
+          );
+      final selectedRule = ArcRegionalOpportunityEngine.itemRules
+          .where((rule) => rule.id == _selectedItemTargetId)
+          .firstOrNull;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          RaidPlannerTodayIntel(
+            intel: intel,
+            now: _plannerNowUtc,
+            scheduleStale:
+                !data.isOfficialLive ||
+                _plannerNowUtc.difference(data.loadedAtUtc) >
+                    const Duration(minutes: 15),
+            onSetPlaytime: () => Navigator.of(
+              context,
+            ).pushNamed(ArcAvailabilityScreen.routeName),
+            onSelectGoals: () => setState(() => _page = 3),
+            onOpenFinder: () => setState(() => _page = 1),
+          ),
+          if (selectedRule != null &&
+              data.isOfficialLive &&
+              intel.status != ArcTodayRaidIntelStatus.noAvailability &&
+              !intel.matchedGoalIds.contains('item:${selectedRule.id}'))
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Text(
+                '${selectedRule.label}: No ${selectedRule.conditions.join(' / ')} window overlaps your remaining saved playtime today.',
+                style: ArcUiTokens.bodySmall(),
+              ),
+            ),
+          const SizedBox(height: 8),
           Row(
             children: [
-              const Icon(
-                Icons.timeline_rounded,
-                color: ArcUiTokens.primaryAccent,
-                size: 18,
-              ),
-              const SizedBox(width: 8),
               Expanded(
-                child: Text(
-                  'Timeline',
-                  style: ArcUiTokens.sectionTitle(
-                    color: ArcUiTokens.primaryAccent,
+                child: DropdownButtonFormField<ArcServerRegion>(
+                  initialValue: _selectedServerRegion,
+                  isExpanded: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Your ARC server region',
                   ),
+                  items: [
+                    for (final region in ArcServerRegion.values)
+                      DropdownMenuItem(
+                        value: region,
+                        child: Text(region.label),
+                      ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() => _selectedServerRegion = value);
+                    }
+                  },
                 ),
               ),
-              Text(
-                _dateLabel(DateTime.now()),
-                style: ArcUiTokens.metadata(color: ArcUiTokens.textSecondary),
+              IconButton(
+                tooltip: 'Refresh regional schedule',
+                onPressed: _refreshRegionalConditions,
+                icon: const Icon(Icons.refresh_rounded),
               ),
             ],
           ),
-          const Text('Saved target schedule'),
-          const SizedBox(height: 12),
-          if (visible.isEmpty)
-            Text(
-              'No target windows in the next 7 days.',
-              style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
-            )
-          else
-            ...visible.map(
-              (opportunity) => _timelineOpportunityTile(
-                opportunity: opportunity,
-                utcNow: utcNow,
-              ),
-            ),
         ],
-      ),
-    );
-  }
-
-  Widget _timelineOpportunityTile({
-    required RaidPlannerOpportunity opportunity,
-    required DateTime utcNow,
-  }) {
-    final accent = opportunity.isLive
-        ? ArcUiTokens.success
-        : ArcUiTokens.primaryAccent;
-    final status = opportunity.isLive
-        ? 'LIVE'
-        : _durationLabel(opportunity.timeUntil(utcNow));
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 46,
-            child: Text(
-              _timeLabel(opportunity.startUtc),
-              style: ArcUiTokens.label(color: ArcUiTokens.textSecondary),
-            ),
-          ),
-          Column(
-            children: [
-              Container(
-                width: 9,
-                height: 9,
-                decoration: BoxDecoration(
-                  color: accent,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              Container(
-                width: 1,
-                height: 48,
-                color: ArcUiTokens.borderMedium.withValues(alpha: 0.70),
-              ),
-            ],
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Container(
-              padding: ArcUiTokens.densePanelPadding,
-              decoration: ArcUiTokens.surfaceDecoration(
-                role: ArcSurfaceRole.interactive,
-                radius: ArcUiTokens.radiusS,
-                accent: accent,
-                borderOpacity: opportunity.isLive ? 0.30 : 0.16,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          opportunity.rule.blueprintName,
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                          style: ArcUiTokens.cardTitle(fontSize: 13),
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 7,
-                          vertical: 3,
-                        ),
-                        decoration: ArcUiTokens.chipDecoration(
-                          color: accent,
-                          selected: opportunity.isLive,
-                        ),
-                        child: Text(
-                          status,
-                          style: ArcUiTokens.label(
-                            color: accent,
-                          ).copyWith(fontSize: 9),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    '${opportunity.slot.mapName} - ${opportunity.slot.eventName}',
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                    style: ArcUiTokens.metadata(
-                      color: ArcUiTokens.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    '${_timeLabel(opportunity.startUtc)}-${_timeLabel(opportunity.endUtc)} local',
-                    style: ArcUiTokens.metadata(
-                      color: ArcUiTokens.textTertiary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _timeLabel(DateTime utc) {
-    final local = utc.toLocal();
-    final hour = local.hour.toString().padLeft(2, '0');
-    final minute = local.minute.toString().padLeft(2, '0');
-    return '$hour:$minute';
-  }
+      );
+    },
+  );
 
   String _dateLabel(DateTime local) {
     return '${local.day}/${local.month}';
+  }
+
+  Widget _goalAwareContent({
+    required List<RaidBlueprintTarget> targets,
+    required RaidPlannerEntitlement entitlement,
+    required Map<String, ArcBlueprintState> states,
+    required ArcAvailability availability,
+  }) {
+    final injected = widget.statesSource != null;
+    return StreamBuilder<ArcProgressionRecords>(
+      stream: _source(
+        'progression',
+        widget.progressionSource ??
+            (injected
+                ? () => Stream.value(ArcProgressionRecords.empty)
+                : _progressionRepository.watchProgressionRecords),
+      ),
+      builder: (context, progressionSnapshot) =>
+          StreamBuilder<List<TradingListing>>(
+            stream: _source(
+              'my-listings',
+              widget.myListingsSource ??
+                  (injected
+                      ? () => Stream.value(const <TradingListing>[])
+                      : _tradingRepository.watchMyListings),
+            ),
+            builder: (context, listingSnapshot) {
+              final progression = _retain(
+                'progression',
+                progressionSnapshot,
+                ArcProgressionRecords.empty,
+              );
+              final listings = _retain(
+                'my-listings',
+                listingSnapshot,
+                const <TradingListing>[],
+              );
+              final failed =
+                  progressionSnapshot.hasError || listingSnapshot.hasError;
+              if (!_lastData.containsKey('progression') ||
+                  !_lastData.containsKey('my-listings')) {
+                if (failed) return _sourceFailure();
+                return const Center(
+                  child: Text('Loading current objectives...'),
+                );
+              }
+              return Column(
+                children: [
+                  if (failed)
+                    Row(
+                      children: [
+                        const Expanded(
+                          child: Text(
+                            'Objective sync unavailable. Showing saved objectives.',
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => setState(() => _streams.clear()),
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  Expanded(
+                    child: _buildContent(
+                      targets: targets,
+                      entitlement: entitlement,
+                      states: states,
+                      availability: availability,
+                      progressionRecords: progression,
+                      myListings: listings,
+                      currentUid:
+                          widget.currentUidSource?.call() ??
+                          (injected ? null : _tradingRepository.currentUid),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+    );
   }
 
   Widget _buildContent({
@@ -1650,6 +1192,9 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
     required RaidPlannerEntitlement entitlement,
     required Map<String, ArcBlueprintState> states,
     required ArcAvailability availability,
+    required ArcProgressionRecords progressionRecords,
+    required List<TradingListing> myListings,
+    required String? currentUid,
   }) {
     final syncedTargets = _targetsWithBlueprintPriorities(
       storedTargets: targets,
@@ -1661,12 +1206,6 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
       entitlement: entitlement,
     );
     final utcNow = _plannerNowUtc;
-    final allOpportunities = RaidPlannerEngine.allOpportunities(
-      effectiveTargets: effectiveTargets,
-      nowUtc: utcNow,
-      horizonDays: 7,
-    );
-
     final activeTargets = _targetsForTier(
       effectiveTargets,
       RaidTargetTier.activeHunt,
@@ -1681,33 +1220,23 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
       RaidTargetTier.later,
     );
 
-    final timeline = _scheduleTimelineCard(
-      opportunities: allOpportunities,
-      utcNow: utcNow,
+    final timeline = _todayIntelCard(
+      effectiveTargets: effectiveTargets,
+      availability: availability,
+      progressionRecords: progressionRecords,
+      myListings: myListings,
+      currentUid: currentUid,
     );
-    final regional = <Widget>[
-      const Text('Regional map conditions'),
-      _regionalBlueprintPlannerCard(
-        states: states,
-        availability: availability,
-        utcNow: utcNow,
-      ),
-      _regionalItemPlannerCard(availability: availability, utcNow: utcNow),
-      _availabilityPlannerCard(
-        allOpportunities: allOpportunities,
-        availability: availability,
-        utcNow: utcNow,
-      ),
-    ];
     final targetLists = [activeTargets, nextTargets, laterTargets];
     Widget support() => ListView(
       key: ValueKey('planner-page-$_page'),
       padding: const EdgeInsets.all(12),
       children: [
-        if (_page == 0) ...regional,
+        if (_page == 0) _itemObjectiveCard(),
         if (_page == 1) _eventFinderCard(utcNow),
         if (_page == 2) _communityIntelCard(intelTargets),
         if (_page >= 3) ...[
+          if (_page == 3) _itemObjectiveCard(),
           Text(
             '${entitlement.tier.label} - ${entitlement.activeHuntSlots.clamp(1, 5)} Active Hunt slots',
           ),
@@ -1741,10 +1270,10 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
             child: Row(
               children: [
                 for (final entry in [
-                  'Timeline',
+                  'Today',
                   'Event Finder',
                   'Community Intel',
-                  'Active Hunt',
+                  'Objectives',
                   'Next Up',
                   'Later',
                 ].asMap().entries)
@@ -1784,7 +1313,11 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
               return ListView(
                 key: const Key('planner-timeline-page'),
                 padding: const EdgeInsets.all(12),
-                children: [timeline, const SizedBox(height: 12), ...regional],
+                children: [
+                  timeline,
+                  const SizedBox(height: 12),
+                  _itemObjectiveCard(),
+                ],
               );
             },
           ),
@@ -1893,7 +1426,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
                             child: CircularProgressIndicator(),
                           );
                         }
-                        final content = _buildContent(
+                        final content = _goalAwareContent(
                           targets: targets,
                           entitlement: entitlement,
                           states: states,
@@ -2104,11 +1637,4 @@ class _BlueprintSearchSheetState extends State<_BlueprintSearchSheet> {
       ),
     );
   }
-}
-
-class _AvailabilityWindow {
-  const _AvailabilityWindow({required this.startUtc, required this.endUtc});
-
-  final DateTime startUtc;
-  final DateTime endUtc;
 }

@@ -10,6 +10,7 @@ class TradingProfile {
   final String gamerTag;
   final String preferredPlatform;
   final int completedTrades;
+  final int reputationPoints;
   final int noShows;
   final int betrayalFlags;
   final int cancelledTrades;
@@ -29,6 +30,7 @@ class TradingProfile {
     required this.gamerTag,
     required this.preferredPlatform,
     required this.completedTrades,
+    required this.reputationPoints,
     required this.noShows,
     required this.betrayalFlags,
     required this.cancelledTrades,
@@ -50,6 +52,7 @@ class TradingProfile {
       gamerTag: '',
       preferredPlatform: '',
       completedTrades: 0,
+      reputationPoints: 0,
       noShows: 0,
       betrayalFlags: 0,
       cancelledTrades: 0,
@@ -83,6 +86,20 @@ class TradingProfile {
     }
   }
 
+  String get reputationLabel {
+    if (reputationPoints >= 1500 || completedTrades >= 50) {
+      return 'Legendary Trader';
+    }
+    if (reputationPoints >= 750 || completedTrades >= 25) return 'Elite Trader';
+    if (reputationPoints >= 300 || completedTrades >= 10) {
+      return 'Trusted Trader';
+    }
+    if (reputationPoints >= 100 || completedTrades >= 4) {
+      return 'Verified Trader';
+    }
+    return 'New Trader';
+  }
+
   Map<String, dynamic> toMap() {
     return {
       'uid': uid,
@@ -93,6 +110,7 @@ class TradingProfile {
       'gamerTag': gamerTag,
       'preferredPlatform': preferredPlatform,
       'completedTrades': completedTrades,
+      'reputationPoints': reputationPoints,
       'noShows': noShows,
       'betrayalFlags': betrayalFlags,
       'cancelledTrades': cancelledTrades,
@@ -114,7 +132,8 @@ class TradingProfile {
       profileImageUrl: (map['profileImageUrl'] ?? '') as String,
       gamerTag: (map['gamerTag'] ?? '') as String,
       preferredPlatform: (map['preferredPlatform'] ?? '') as String,
-      completedTrades: (map['completedTrades'] ?? 0) as int,
+      completedTrades: (map['completedTrades'] as num?)?.toInt() ?? 0,
+      reputationPoints: (map['reputationPoints'] as num?)?.toInt() ?? 0,
       noShows: (map['noShows'] ?? 0) as int,
       betrayalFlags: (map['betrayalFlags'] ?? 0) as int,
       cancelledTrades: (map['cancelledTrades'] ?? 0) as int,
@@ -136,6 +155,7 @@ class TradingProfile {
     String? gamerTag,
     String? preferredPlatform,
     int? completedTrades,
+    int? reputationPoints,
     int? noShows,
     int? betrayalFlags,
     int? cancelledTrades,
@@ -155,6 +175,7 @@ class TradingProfile {
       gamerTag: gamerTag ?? this.gamerTag,
       preferredPlatform: preferredPlatform ?? this.preferredPlatform,
       completedTrades: completedTrades ?? this.completedTrades,
+      reputationPoints: reputationPoints ?? this.reputationPoints,
       noShows: noShows ?? this.noShows,
       betrayalFlags: betrayalFlags ?? this.betrayalFlags,
       cancelledTrades: cancelledTrades ?? this.cancelledTrades,

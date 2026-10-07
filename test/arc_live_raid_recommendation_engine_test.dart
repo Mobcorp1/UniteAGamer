@@ -63,6 +63,49 @@ void main() {
     },
   );
 
+
+  test(
+    'unprioritised missing Blueprint still contributes a market-weighted fallback goal',
+    () {
+      final now = DateTime.utc(2026, 10, 6, 18);
+      final result = engine.build(
+        storedTargets: const <RaidBlueprintTarget>[],
+        blueprintStates: <String, ArcBlueprintState>{
+          'wolfpack': ArcBlueprintState(
+            blueprintId: 'wolfpack',
+            owned: false,
+            dupesOwned: 0,
+            priorityRank: 0,
+            updatedAt: now,
+          ),
+        },
+        entitlement: const RaidPlannerEntitlement(tier: RaidPlannerTier.free),
+        progressionRecords: ArcProgressionRecords.empty,
+        scrappyStates: const {},
+        regionalSnapshot: snapshot(
+          now: now,
+          entries: <ArcRegionalMapConditionEntry>[
+            ArcRegionalMapConditionEntry(
+              conditionName: 'Night Raid',
+              mapDisplayName: 'The Blue Gate',
+              duration: const Duration(hours: 1),
+              regionWindows: <ArcServerRegion, ArcRegionalConditionWindow>{
+                ArcServerRegion.europe: ArcRegionalConditionWindow(
+                  startUtc: now.subtract(const Duration(minutes: 10)),
+                  endUtc: now.add(const Duration(minutes: 50)),
+                ),
+              },
+            ),
+          ],
+        ),
+        nowUtc: now,
+      );
+
+      expect(result.bestNow, isNotNull);
+      expect(result.bestNow!.candidate.conditionName, 'Night Raid');
+    },
+  );
+
   test('active condition lookup is regional and map-specific', () {
     final now = DateTime.utc(2026, 10, 5, 18);
     final data = snapshot(

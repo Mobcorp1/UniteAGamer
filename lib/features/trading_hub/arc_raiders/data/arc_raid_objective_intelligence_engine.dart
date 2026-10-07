@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_poi_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_map_marker.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_nomadic_trader_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_progression_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_state.dart';
@@ -20,6 +21,8 @@ class ArcRaidObjectiveIntelligenceEngine {
   List<ArcRaidObjective> trackedObjectives({
     required ArcProgressionSnapshotBundle progression,
     required Map<String, ArcScrappyState> scrappyStates,
+    ArcNomadicTraderTrackerSnapshot nomadicTraderTracker =
+        ArcNomadicTraderTrackerSnapshot.empty,
   }) {
     final objectives = <ArcRaidObjective>[];
 
@@ -94,6 +97,85 @@ class ArcRaidObjectiveIntelligenceEngine {
             weight: 1.0,
           ),
         );
+      }
+    }
+
+    if (nomadicTraderTracker.trackingKnown ||
+        nomadicTraderTracker.targetValue > 0) {
+      var addedPurchaseRequirement = false;
+
+      for (final purchase in nomadicTraderTracker.purchases) {
+        if (purchase.alreadyPurchased) continue;
+
+        for (final requirement in purchase.requirements) {
+          final missing = requirement.remainingQty;
+          if (missing <= 0) continue;
+          addedPurchaseRequirement = true;
+          objectives.add(
+            ArcRaidObjective(
+              id: 'nomadic:${purchase.id}:${requirement.id}',
+              label: '${purchase.name}: ${requirement.name}',
+              reason:
+                  '${purchase.name} needs ${requirement.name} x$missing for the Nomadic Trader.',
+              category: ArcRaidMapMarkerCategory.operationObjective,
+              system: 'Nomadic Trader',
+              itemName: requirement.name,
+              missingCount: missing,
+              sourceHint: 'Nomadic Trader purchase requirement',
+              weight: purchase.isGalleryProject ? 1.2 : 1.1,
+            ),
+          );
+        }
+      }
+
+      // A player can track only a Nomadic Trader value target without adding a
+      // specific purchase. That still needs to contribute useful raid signals:
+      // route them toward a small set of eligible value resources instead of
+      // silently producing no Nomadic Trader objectives. These are alternatives,
+      // not hard requirements, so each objective represents one useful pickup.
+      if (!addedPurchaseRequirement &&
+          nomadicTraderTracker.remainingValue > 0) {
+        final catalog = nomadicTraderTracker.highTier
+            ? ArcNomadicTraderCatalog.highTierResources
+            : ArcNomadicTraderCatalog.lowTierResources;
+        final trackedIds = nomadicTraderTracker.resources
+            .where((resource) => resource.tracked)
+            .map((resource) => resource.id)
+            .toSet();
+        final ranked = <ArcNomadicTraderResourceDefinition>[
+          ...catalog.where(
+            (resource) =>
+                resource.id != 'duplicate_blueprint' &&
+                trackedIds.contains(resource.id),
+          ),
+          ...catalog.where(
+            (resource) =>
+                resource.id != 'duplicate_blueprint' &&
+                !trackedIds.contains(resource.id),
+          ),
+        ];
+
+        for (final resource in ranked.take(4)) {
+          final remainingValue = nomadicTraderTracker.remainingValue;
+          final equivalentCount =
+              (remainingValue + resource.value - 1) ~/ resource.value;
+          objectives.add(
+            ArcRaidObjective(
+              id: 'nomadic:value:${resource.id}',
+              label: '${nomadicTraderTracker.goalName}: ${resource.name}',
+              reason:
+                  '${nomadicTraderTracker.goalName} is $remainingValue value short. ${resource.name} is an eligible Nomadic Trader value resource (about $equivalentCount at this value if used alone).',
+              category: ArcRaidMapMarkerCategory.operationObjective,
+              system: 'Nomadic Trader',
+              itemName: resource.name,
+              missingCount: 1,
+              sourceHint: nomadicTraderTracker.highTier
+                  ? 'High-value ARC salvage for Nomadic Trader value goal'
+                  : 'ARC salvage for Nomadic Trader value goal',
+              weight: nomadicTraderTracker.highTier ? 1.0 : 0.9,
+            ),
+          );
+        }
       }
     }
 
@@ -414,6 +496,8 @@ class ArcRaidObjectiveIntelligenceEngine {
       'wicker basket',
       'lush blooms',
       'mushroom',
+      'great mullein',
+      'mullein',
       'apricot',
       'lemon',
       'olive',

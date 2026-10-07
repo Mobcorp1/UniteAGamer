@@ -349,8 +349,16 @@ class TradingListing {
     return parts.join(' - ');
   }
 
+  String get reputationLabel {
+    if (completedTrades >= 50) return 'Legendary Trader';
+    if (completedTrades >= 25) return 'Elite Trader';
+    if (completedTrades >= 10) return 'Trusted Trader';
+    if (completedTrades >= 4) return 'Verified Trader';
+    return 'New Trader';
+  }
+
   String get reputationSummary =>
-      'Trades: $completedTrades - No-shows: $noShows - Betrayal flags: $betrayalFlags';
+      '$reputationLabel - Trades: $completedTrades - No-shows: $noShows - Betrayal flags: $betrayalFlags';
 
   List<String> get allOfferedItems {
     final items = <String>[];

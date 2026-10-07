@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_duplicate_blueprints_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_activity_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_create_listing_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_listings_screen.dart';
@@ -231,6 +232,14 @@ class _TraderHubScreenState extends State<TraderHubScreen> {
               title: _titles[_currentIndex],
               subtitle: _subtitles[_currentIndex],
               actions: [
+                IconButton(
+                  tooltip: 'Have Need Trade',
+                  icon: const Icon(Icons.inventory_2_rounded),
+                  onPressed: () => Navigator.of(
+                    context,
+                    rootNavigator: true,
+                  ).pushNamed(ArcDuplicateBlueprintsScreen.routeName),
+                ),
                 Builder(
                   builder: (context) => IconButton(
                     tooltip: 'Menu',

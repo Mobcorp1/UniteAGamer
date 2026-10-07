@@ -5,6 +5,8 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_qu
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_progression_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raider_goal_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/data/arc_regional_opportunity_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/data/raid_planner_blueprint_rules.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/data/raid_planner_event_schedule.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/models/raid_planner_models.dart';
@@ -29,6 +31,104 @@ class ArcQuestRouteHint {
 
 class ArcRaiderGoalBridge {
   const ArcRaiderGoalBridge._();
+
+  static List<ArcRaiderGoal> activeEventBlueprintGoals(
+    List<RaidBlueprintTarget> effectiveTargets,
+  ) {
+    final active = effectiveTargets
+        .where((t) => t.tier == RaidTargetTier.activeHunt)
+        .toList();
+    final rules = {
+      for (final rule in ArcRegionalOpportunityEngine.blueprintRules(
+        active.map((t) => t.blueprintId),
+      ))
+        rule.id: rule,
+    };
+    return [
+      for (final goal in blueprintGoals(active))
+        if (rules[goal.id.substring('blueprint:'.length)] case final rule?)
+          ArcRaiderGoal(
+            id: goal.id,
+            label: goal.label,
+            source: goal.source,
+            cooperation: goal.cooperation,
+            priority: goal.priority,
+            mapNames: rule.maps.isEmpty ? const ['All maps'] : rule.maps,
+            conditionNames: rule.conditions,
+            conditionFit: rule.verifiedConditionLink
+                ? ArcRaiderGoalConditionFit.required
+                : ArcRaiderGoalConditionFit.preferred,
+            routeConfidence: rule.verifiedConditionLink
+                ? ArcRaiderGoalRouteConfidence.verified
+                : goal.routeConfidence,
+            reason: goal.reason,
+          ),
+    ];
+  }
+
+  static List<ArcRaiderGoal> conditionItemGoals(
+    Iterable<String> ids, {
+    ArcRaiderGoalSource source = ArcRaiderGoalSource.huntTarget,
+  }) => [
+    for (final rule in ArcRegionalOpportunityEngine.itemRules)
+      if (ids.contains(rule.id))
+        ArcRaiderGoal(
+          id: 'item:${rule.id}',
+          label: rule.label,
+          source: source,
+          cooperation: ArcRaiderGoalCooperation.personal,
+          priority: 5,
+          mapNames: rule.maps.isEmpty ? const ['All maps'] : rule.maps,
+          conditionNames: rule.conditions,
+          conditionFit: ArcRaiderGoalConditionFit.required,
+          routeConfidence: ArcRaiderGoalRouteConfidence.verified,
+          reason: source == ArcRaiderGoalSource.trade
+              ? 'Wanted in your active trade listing. ${rule.reason}'
+              : rule.reason,
+        ),
+  ];
+
+  /// Only structured wanted items on the player's active, unexpired listings.
+  /// Offers, broad resource preferences, notes and other players' stock are not goals.
+  static List<ArcRaiderGoal> tradeAcquisitionGoals({
+    required List<TradingListing> listings,
+    required String? currentUid,
+    required DateTime now,
+  }) {
+    if (currentUid == null || currentUid.isEmpty) return const [];
+    String normalize(String value) => value
+        .trim()
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), ' ')
+        .trim();
+    final wanted = <String>{};
+    for (final listing in listings) {
+      if (listing.ownerUid != currentUid ||
+          !listing.active ||
+          !listing.expiresAt.isAfter(now) ||
+          listing.wantsNothing ||
+          listing.listingType != TradingListingType.specificWant) {
+        continue;
+      }
+      wanted.addAll(
+        [
+          ...listing.wantedTradeItemIds,
+          ...listing.wantedTradeItemNames,
+          ...listing.wantedAssetNames,
+        ].map(normalize),
+      );
+    }
+    final ids = <String>{};
+    for (final rule in ArcRegionalOpportunityEngine.itemRules) {
+      final names = {
+        normalize(rule.id),
+        normalize(rule.label),
+        ...rule.label.split('/').map(normalize),
+      };
+      if (names.any(wanted.contains)) ids.add(rule.id);
+    }
+    return conditionItemGoals(ids, source: ArcRaiderGoalSource.trade);
+  }
 
   static List<ArcRaiderGoal> blueprintGoals(List<RaidBlueprintTarget> targets) {
     final output = <ArcRaiderGoal>[];

@@ -1,6 +1,7 @@
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_intel_seed.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_availability.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_availability_window_resolver.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/data/arc_regional_map_conditions.dart';
 
@@ -232,10 +233,17 @@ class ArcRegionalOpportunityEngine {
 
   static List<ArcConditionTargetRule> missingBlueprintRules(
     Map<String, ArcBlueprintState> states,
-  ) {
+  ) => blueprintRules(
+    ArcBlueprintSeedData.blueprints
+        .where((blueprint) => states[blueprint.id]?.owned != true)
+        .map((blueprint) => blueprint.id),
+  );
+
+  static List<ArcConditionTargetRule> blueprintRules(Iterable<String> ids) {
+    final selected = ids.toSet();
     final result = <ArcConditionTargetRule>[];
     for (final blueprint in ArcBlueprintSeedData.blueprints) {
-      if (states[blueprint.id]?.owned ?? false) continue;
+      if (!selected.contains(blueprint.id)) continue;
 
       final verified = _verifiedBlueprintRules[blueprint.id];
       if (verified != null) {
@@ -273,11 +281,17 @@ class ArcRegionalOpportunityEngine {
     required ArcAvailability availability,
     required ArcServerRegion homeRegion,
     DateTime? nowUtc,
-    int limit = 12,
+    int limit = 3,
+    Iterable<String> activeBlueprintIds = const <String>[],
   }) {
     return recommendationsForTargets(
       snapshot: snapshot,
-      targets: missingBlueprintRules(states),
+      targets: blueprintRules({
+        ...activeBlueprintIds.where((id) => states[id]?.owned != true),
+        ...states.values
+            .where((s) => !s.owned && s.priorityRank > 0)
+            .map((s) => s.blueprintId),
+      }),
       availability: availability,
       homeRegion: homeRegion,
       nowUtc: nowUtc,
@@ -291,7 +305,7 @@ class ArcRegionalOpportunityEngine {
     required ArcAvailability availability,
     required ArcServerRegion homeRegion,
     DateTime? nowUtc,
-    int limit = 8,
+    int limit = 3,
   }) {
     final targets = itemRules.where((item) => item.id == itemId).toList();
     return recommendationsForTargets(
@@ -310,10 +324,14 @@ class ArcRegionalOpportunityEngine {
     required ArcAvailability availability,
     required ArcServerRegion homeRegion,
     DateTime? nowUtc,
-    int limit = 12,
+    int limit = 3,
+    ArcAvailabilityWindowResolver resolver =
+        const ArcAvailabilityWindowResolver(),
   }) {
     final now = nowUtc ?? DateTime.now().toUtc();
     final results = <ArcRegionalOpportunity>[];
+    final playtime = resolver.todayWindows(availability, now: now);
+    if (playtime.isEmpty || limit <= 0) return results;
 
     for (final target in targets) {
       for (final entry in snapshot.entries) {
@@ -326,6 +344,12 @@ class ArcRegionalOpportunityEngine {
         for (final region in ArcServerRegion.values) {
           final window = entry.windowFor(region);
           if (window == null || !window.endUtc.isAfter(now)) continue;
+          if (!playtime.any(
+            (session) =>
+                session.overlaps(window.startUtc, window.endUtc, now: now),
+          )) {
+            continue;
+          }
 
           results.add(
             ArcRegionalOpportunity(
@@ -333,12 +357,11 @@ class ArcRegionalOpportunityEngine {
               condition: entry,
               region: region,
               window: window,
-              insideSavedPlaytime: _overlapsSavedAvailability(
-                window,
-                availability,
-              ),
+              insideSavedPlaytime: true,
               homeRegion: region == homeRegion,
-              live: window.isActiveAt(now),
+              live:
+                  window.isActiveAt(now) &&
+                  playtime.any((w) => w.contains(now)),
             ),
           );
         }
@@ -429,90 +452,5 @@ class ArcRegionalOpportunityEngine {
         .replaceAll(RegExp(r'[^a-z0-9]+'), ' ')
         .replaceAll(RegExp(r'\s+'), ' ')
         .trim();
-  }
-
-  static bool _overlapsSavedAvailability(
-    ArcRegionalConditionWindow condition,
-    ArcAvailability availability,
-  ) {
-    final localStart = condition.startUtc.toLocal();
-    final localEnd = condition.endUtc.toLocal();
-
-    for (var dayOffset = -1; dayOffset <= 1; dayOffset++) {
-      final localDay = DateTime(
-        localStart.year,
-        localStart.month,
-        localStart.day + dayOffset,
-      );
-      final slot = _slotForDate(availability, localDay);
-      if (slot == null || !slot.enabled) continue;
-
-      final start = _dateTime(localDay, slot.fromTime);
-      var end = _dateTime(localDay, slot.toTime);
-      if (start == null || end == null) continue;
-      if (!end.isAfter(start)) {
-        end = end.add(const Duration(days: 1));
-      }
-
-      if (localStart.isBefore(end) && localEnd.isAfter(start)) return true;
-    }
-    return false;
-  }
-
-  static ArcAvailabilitySlot? _slotForDate(
-    ArcAvailability availability,
-    DateTime localDate,
-  ) {
-    if (availability.weeks.isEmpty) return null;
-    final dayKey = _dayKey(localDate.weekday);
-
-    ArcAvailabilityWeek week;
-    if (availability.useEveryWeek || availability.weeks.length == 1) {
-      week = availability.weeks.first;
-    } else {
-      final anchor = DateTime(2026, 1, 5);
-      final day = DateTime(localDate.year, localDate.month, localDate.day);
-      final weeksSinceAnchor = day.difference(anchor).inDays ~/ 7;
-      final index =
-          ((weeksSinceAnchor % availability.weeks.length) +
-              availability.weeks.length) %
-          availability.weeks.length;
-      week = availability.weeks[index];
-    }
-
-    for (final slot in week.slots) {
-      if (slot.dayKey == dayKey) return slot;
-    }
-    return null;
-  }
-
-  static String _dayKey(int weekday) {
-    switch (weekday) {
-      case DateTime.monday:
-        return 'mon';
-      case DateTime.tuesday:
-        return 'tue';
-      case DateTime.wednesday:
-        return 'wed';
-      case DateTime.thursday:
-        return 'thu';
-      case DateTime.friday:
-        return 'fri';
-      case DateTime.saturday:
-        return 'sat';
-      case DateTime.sunday:
-        return 'sun';
-      default:
-        return 'mon';
-    }
-  }
-
-  static DateTime? _dateTime(DateTime day, String time) {
-    final parts = time.split(':');
-    if (parts.length < 2) return null;
-    final hour = int.tryParse(parts[0]);
-    final minute = int.tryParse(parts[1]);
-    if (hour == null || minute == null) return null;
-    return DateTime(day.year, day.month, day.day, hour, minute);
   }
 }

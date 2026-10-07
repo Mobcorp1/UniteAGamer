@@ -1,8 +1,12 @@
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_intel_seed.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_trade_value_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_conditions.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_progression_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_recommendation_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_availability_window_resolver.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_availability.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_progression_models.dart';
@@ -18,6 +22,160 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planne
 /// recommendation engine used by Raid Intelligence.
 class ArcLiveRaidRecommendationEngine {
   const ArcLiveRaidRecommendationEngine();
+
+  /// Personal event intelligence is bounded by today's local sessions before
+  /// scoring. The existing map/standard-raid recommender below stays available
+  /// to Raid Intelligence and squad routing.
+  ArcTodayRaidIntel buildTodayRecommendations({
+    required List<RaidBlueprintTarget> effectiveTargets,
+    required ArcAvailability availability,
+    required ArcRegionalMapConditionsSnapshot regionalSnapshot,
+    ArcServerRegion homeRegion = ArcServerRegion.europe,
+    Iterable<String> itemTargetIds = const [],
+    List<TradingListing> myListings = const [],
+    String? currentUid,
+    ArcQuestProgressionSnapshot questSnapshot =
+        ArcQuestProgressionSnapshot.empty,
+    Map<String, ArcQuestRouteHint> questRouteHints = const {},
+    DateTime? nowUtc,
+    ArcAvailabilityWindowResolver resolver =
+        const ArcAvailabilityWindowResolver(),
+  }) {
+    // The personal calendar belongs to the device, not the schedule server.
+    final now = (nowUtc ?? DateTime.now()).toUtc();
+    final sessions = resolver.todayWindows(availability, now: now);
+    final activeTargets = effectiveTargets
+        .where((t) => t.tier == RaidTargetTier.activeHunt)
+        .toList();
+    final questGoals =
+        ArcRaiderGoalBridge.questGoals(
+              questSnapshot,
+              routeHints: questRouteHints,
+            )
+            .where(
+              (goal) => questSnapshot.trackedQuestIds.contains(
+                goal.id.substring('quest:'.length),
+              ),
+            )
+            .toList(growable: false);
+    final goals = <String, ArcRaiderGoal>{
+      for (final goal in ArcRaiderGoalBridge.activeEventBlueprintGoals(
+        activeTargets,
+      ))
+        goal.id: goal,
+      for (final goal in questGoals)
+        if (goal.routeConfidence == ArcRaiderGoalRouteConfidence.verified)
+          goal.id: goal,
+      for (final goal in ArcRaiderGoalBridge.tradeAcquisitionGoals(
+        listings: myListings,
+        currentUid: currentUid,
+        now: now,
+      ))
+        goal.id: goal,
+      for (final goal in ArcRaiderGoalBridge.conditionItemGoals(itemTargetIds))
+        goal.id: goal,
+    }.values.toList(growable: false);
+
+    ArcTodayRaidIntel result(
+      ArcTodayRaidIntelStatus status, [
+      List<ArcTodayRaidRecommendation> recommendations = const [],
+      Set<String> matchedGoalIds = const {},
+    ]) => ArcTodayRaidIntel(
+      status: status,
+      playtime: sessions,
+      recommendations: recommendations,
+      matchedGoalIds: matchedGoalIds,
+    );
+    if (!resolver.hasUsableAvailability(availability)) {
+      return result(ArcTodayRaidIntelStatus.noAvailability);
+    }
+    if (activeTargets.isEmpty && questGoals.isEmpty && goals.isEmpty) {
+      return result(ArcTodayRaidIntelStatus.noGoals);
+    }
+    if (sessions.isEmpty) return result(ArcTodayRaidIntelStatus.noPlaytime);
+
+    final ranked = <ArcTodayRaidRecommendation>[];
+    for (final region in ArcServerRegion.values) {
+      final candidates = <ArcRaidCandidate>[];
+      final matchingSessions = <String, ArcPlaytimeWindow>{};
+      for (final entry in regionalSnapshot.entries) {
+        final window = entry.windowFor(region);
+        if (window == null || !window.endUtc.isAfter(window.startUtc)) continue;
+        ArcPlaytimeWindow? matchedSession;
+        for (final session in sessions) {
+          if (session.overlaps(window.startUtc, window.endUtc, now: now)) {
+            matchedSession = session;
+            break;
+          }
+        }
+        if (matchedSession == null) continue;
+        final candidate = ArcRaidCandidate(
+          mapName: entry.mapDisplayName,
+          conditionName: entry.conditionName,
+          startUtc: window.startUtc,
+          endUtc: window.endUtc,
+          isLive: window.isActiveAt(now) && matchedSession.contains(now),
+        );
+        if (candidate.isStandard) continue;
+        candidates.add(candidate);
+        matchingSessions[candidate.key] = matchedSession;
+      }
+      final scored = const ArcRaidRecommendationEngine().build(
+        goals: goals,
+        candidates: candidates,
+        nowUtc: now,
+        requireEventCondition: true,
+      );
+      for (final recommendation in scored.ranked) {
+        final session = matchingSessions[recommendation.candidate.key]!;
+        ranked.add(
+          ArcTodayRaidRecommendation(
+            recommendation: recommendation,
+            region: region,
+            homeRegion: region == homeRegion,
+            session: session,
+            sessionPriority: recommendation.candidate.isLive
+                ? 0
+                : session.contains(now)
+                ? 1
+                : 2,
+          ),
+        );
+      }
+    }
+    ranked.sort((a, b) {
+      final session = a.sessionPriority.compareTo(b.sessionPriority);
+      if (session != 0) return session;
+      final score = b.recommendation.score.compareTo(a.recommendation.score);
+      if (score != 0) return score;
+      if (a.homeRegion != b.homeRegion) return a.homeRegion ? -1 : 1;
+      final start = a.playableStartUtc.compareTo(b.playableStartUtc);
+      if (start != 0) return start;
+      final key = a.recommendation.candidate.key.compareTo(
+        b.recommendation.candidate.key,
+      );
+      return key != 0 ? key : a.region.index.compareTo(b.region.index);
+    });
+    final seen = <String>{};
+    final recommendations = <ArcTodayRaidRecommendation>[];
+    final matchedGoalIds = <String>{};
+    for (final item in ranked) {
+      matchedGoalIds.addAll(item.recommendation.matchedGoals.map((g) => g.id));
+      // Identical region windows offer no reason to switch servers.
+      final candidate = item.recommendation.candidate;
+      final key = '${candidate.key}|${candidate.endUtc?.toIso8601String()}';
+      if (seen.add(key) && recommendations.length < 3) {
+        recommendations.add(item);
+      }
+    }
+    return result(
+      recommendations.isEmpty
+          ? ArcTodayRaidIntelStatus.noMatches
+          : ArcTodayRaidIntelStatus.ready,
+      List.unmodifiable(recommendations),
+      Set.unmodifiable(matchedGoalIds),
+    );
+  }
 
   ArcRaidRecommendationSet build({
     required List<RaidBlueprintTarget> storedTargets,
@@ -114,23 +272,37 @@ class ArcLiveRaidRecommendationEngine {
     Map<String, ArcBlueprintState> states, {
     required Set<String> excludedIds,
   }) {
-    final prioritized =
+    final missing =
         states.values
             .where(
               (state) =>
-                  !state.owned &&
-                  state.priorityRank > 0 &&
-                  !excludedIds.contains(state.blueprintId),
+                  !state.owned && !excludedIds.contains(state.blueprintId),
             )
             .toList(growable: false)
           ..sort((a, b) {
-            final rankCompare = a.priorityRank.compareTo(b.priorityRank);
-            if (rankCompare != 0) return rankCompare;
+            final aPriority = a.priorityRank > 0;
+            final bPriority = b.priorityRank > 0;
+            if (aPriority != bPriority) return aPriority ? -1 : 1;
+            if (aPriority && bPriority) {
+              final rankCompare = a.priorityRank.compareTo(b.priorityRank);
+              if (rankCompare != 0) return rankCompare;
+            }
+
+            final aBlueprint = _blueprintById(a.blueprintId);
+            final bBlueprint = _blueprintById(b.blueprintId);
+            if (aBlueprint != null && bBlueprint != null) {
+              final marketCompare =
+                  ArcBlueprintTradeValueCatalog.compareBlueprints(
+                    aBlueprint,
+                    bBlueprint,
+                  );
+              if (marketCompare != 0) return marketCompare;
+            }
             return a.blueprintId.compareTo(b.blueprintId);
           });
 
     final goals = <ArcRaiderGoal>[];
-    for (final state in prioritized.take(8)) {
+    for (final state in missing.take(8)) {
       final blueprint = _blueprintById(state.blueprintId);
       if (blueprint == null) continue;
       final hint = ArcBlueprintIntelLibrary.resolve(blueprint);
@@ -139,13 +311,24 @@ class ArcLiveRaidRecommendationEngine {
         hint.bestConditions,
       ).toList(growable: false);
       final mapSpecific = !ArcBlueprintIntelLibrary.isAllMaps(hint.likelyMaps);
+      final marketPoints = ArcBlueprintTradeValueCatalog.tradePointsFor(
+        blueprint,
+      );
+      final explicitPriority = state.priorityRank > 0;
+      final goalPriority = explicitPriority
+          ? (4 - state.priorityRank).clamp(2, 4).toInt()
+          : marketPoints >= 8
+          ? 3
+          : 2;
       goals.add(
         ArcRaiderGoal(
-          id: 'priority-blueprint:${blueprint.id}',
+          id: explicitPriority
+              ? 'priority-blueprint:${blueprint.id}'
+              : 'missing-blueprint:${blueprint.id}',
           label: blueprint.name,
           source: ArcRaiderGoalSource.blueprint,
           cooperation: ArcRaiderGoalCooperation.scarceSharedLoot,
-          priority: (4 - state.priorityRank).clamp(2, 4).toInt(),
+          priority: goalPriority,
           mapNames: List<String>.unmodifiable(hint.likelyMaps),
           conditionNames: conditions,
           conditionFit: conditions.isEmpty
@@ -154,7 +337,9 @@ class ArcLiveRaidRecommendationEngine {
           routeConfidence: mapSpecific || conditions.isNotEmpty
               ? ArcRaiderGoalRouteConfidence.strong
               : ArcRaiderGoalRouteConfidence.provisional,
-          reason: hint.tip,
+          reason: explicitPriority
+              ? hint.tip
+              : '${hint.tip} UAG market value $marketPoints points; used as a fallback missing-Blueprint priority.',
         ),
       );
     }
@@ -195,4 +380,48 @@ class ArcLiveRaidRecommendationEngine {
     ArcMapConditions.stellaMontisMap,
     ArcMapConditions.rivenTidesMap,
   ];
+}
+
+enum ArcTodayRaidIntelStatus {
+  noAvailability,
+  noGoals,
+  noPlaytime,
+  noMatches,
+  ready,
+}
+
+class ArcTodayRaidIntel {
+  const ArcTodayRaidIntel({
+    required this.status,
+    required this.playtime,
+    required this.recommendations,
+    this.matchedGoalIds = const {},
+  });
+  final ArcTodayRaidIntelStatus status;
+  final List<ArcPlaytimeWindow> playtime;
+  final List<ArcTodayRaidRecommendation> recommendations;
+  final Set<String> matchedGoalIds;
+}
+
+class ArcTodayRaidRecommendation {
+  const ArcTodayRaidRecommendation({
+    required this.recommendation,
+    required this.region,
+    required this.homeRegion,
+    required this.session,
+    required this.sessionPriority,
+  });
+  final ArcRaidRecommendation recommendation;
+  final ArcServerRegion region;
+  final bool homeRegion;
+  final ArcPlaytimeWindow session;
+  final int sessionPriority;
+  DateTime get playableStartUtc =>
+      recommendation.candidate.startUtc!.isAfter(session.startUtc)
+      ? recommendation.candidate.startUtc!
+      : session.startUtc;
+  DateTime get playableEndUtc =>
+      recommendation.candidate.endUtc!.isBefore(session.endUtc)
+      ? recommendation.candidate.endUtc!
+      : session.endUtc;
 }

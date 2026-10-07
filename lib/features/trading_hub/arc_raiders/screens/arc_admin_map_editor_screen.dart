@@ -9,6 +9,9 @@ import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_admin_marker_subtype_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_admin_marker_visual_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_map_backend.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_trade_value_catalog.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_conditions.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_asset_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_filter_icon_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_marker_alignment_engine.dart';
@@ -20,6 +23,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_map_marker_import_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_value.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_world_intel_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_admin_map_editor_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_map_filter_icon.dart';
@@ -414,6 +418,14 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
               !(marker.sourceRecordId?.toLowerCase().contains(query) ??
                   false) &&
               !(marker.blueprintId?.toLowerCase().contains(query) ?? false) &&
+              !marker.blueprintContainerFamily.label.toLowerCase().contains(
+                query,
+              ) &&
+              !marker.blueprintLootTier.label.toLowerCase().contains(query) &&
+              !marker.blueprintConditionIds
+                  .join(' ')
+                  .toLowerCase()
+                  .contains(query) &&
               !marker.evidence.any(
                 (evidence) =>
                     (evidence.landmarkText?.toLowerCase().contains(query) ??
@@ -894,6 +906,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
       builder: (context) => _NewMarkerDialog(
         title: 'Create POI',
         actionLabel: 'Place on Map',
+        mapId: _mapId,
         mapName: _map.displayName,
         initialKind: ArcAdminMapMarkerKind.poi,
         includeSeedKinds: true,
@@ -971,6 +984,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
           builder: (context) => _NewMarkerDialog(
             title: dialogTitle,
             actionLabel: 'Create Draft',
+            mapId: _mapId,
             mapName: _map.displayName,
             initialKind: initialKind,
             includeSeedKinds: true,
@@ -1011,6 +1025,13 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
       subtypeLabel: result.subtypeLabel,
       itemId: result.itemId,
       blueprintId: result.blueprintId,
+      blueprintIntelType: result.blueprintIntelType,
+      blueprintContainerFamily: result.blueprintContainerFamily,
+      blueprintConditionIds: result.blueprintConditionIds,
+      blueprintLootTier: result.blueprintLootTier,
+      blueprintContainerDensity: result.blueprintContainerDensity,
+      blueprintFallbackEligible: result.blueprintFallbackEligible,
+      blueprintResearchVersion: result.blueprintResearchVersion,
       sourceLabel: result.sourceLabel,
       confidence: result.confidence,
       point: point,
@@ -1036,6 +1057,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
         title: 'Edit POI',
         supportedLayers: _map.availableLayers,
         actionLabel: 'Apply Edit',
+        mapId: _mapId,
         mapName: _map.displayName,
         initialMarker: selected,
         includeSeedKinds: true,
@@ -1057,6 +1079,14 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
       clearItemId: result.itemId == null,
       blueprintId: result.blueprintId,
       clearBlueprintId: result.blueprintId == null,
+      blueprintIntelType: result.blueprintIntelType,
+      blueprintContainerFamily: result.blueprintContainerFamily,
+      blueprintConditionIds: result.blueprintConditionIds,
+      blueprintLootTier: result.blueprintLootTier,
+      blueprintContainerDensity: result.blueprintContainerDensity,
+      blueprintFallbackEligible: result.blueprintFallbackEligible,
+      blueprintResearchVersion: result.blueprintResearchVersion,
+      clearBlueprintResearchVersion: result.blueprintResearchVersion == null,
       sourceLabel: result.sourceLabel,
       confidence: result.confidence,
     );
@@ -1139,6 +1169,13 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
       subtypeLabel: selected.subtypeLabel,
       itemId: selected.itemId,
       blueprintId: selected.blueprintId,
+      blueprintIntelType: selected.blueprintIntelType,
+      blueprintContainerFamily: selected.blueprintContainerFamily,
+      blueprintConditionIds: selected.blueprintConditionIds,
+      blueprintLootTier: selected.blueprintLootTier,
+      blueprintContainerDensity: selected.blueprintContainerDensity,
+      blueprintFallbackEligible: selected.blueprintFallbackEligible,
+      blueprintResearchVersion: selected.blueprintResearchVersion,
       sourceLabel: selected.sourceLabel,
       confidence: selected.confidence,
       point: ArcNormalizedPoint(
@@ -2363,6 +2400,33 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
               style: const TextStyle(color: AppTheme.neonCyan),
             ),
           ],
+          if (marker.hasBlueprintRoutingMetadata) ...[
+            const SizedBox(height: 6),
+            Text(
+              'Routing: ${marker.effectiveBlueprintIntelType.label}',
+              style: const TextStyle(color: Colors.white70, fontSize: 12),
+            ),
+            if (marker.effectiveBlueprintContainerFamily !=
+                ArcBlueprintContainerFamily.unknown)
+              Text(
+                'Source family: ${marker.effectiveBlueprintContainerFamily.label}',
+                style: const TextStyle(color: Colors.white60, fontSize: 12),
+              ),
+            Text(
+              'Loot: ${marker.effectiveBlueprintLootTier.label} • density ${marker.blueprintContainerDensity}/5',
+              style: const TextStyle(color: Colors.white60, fontSize: 12),
+            ),
+            if (marker.blueprintConditionIds.isNotEmpty)
+              Text(
+                'Conditions: ${marker.blueprintConditionIds.join(', ')}',
+                style: const TextStyle(color: Colors.white60, fontSize: 12),
+              ),
+            if (marker.blueprintFallbackEligible)
+              const Text(
+                'Eligible for Blueprint probability fallback',
+                style: TextStyle(color: Colors.amberAccent, fontSize: 12),
+              ),
+          ],
           if (marker.sourceRecordId != null) ...[
             const SizedBox(height: 8),
             Text(
@@ -2653,6 +2717,13 @@ class _NewMarkerResult {
     this.subtypeLabel,
     this.itemId,
     this.blueprintId,
+    this.blueprintIntelType = ArcBlueprintMapIntelType.none,
+    this.blueprintContainerFamily = ArcBlueprintContainerFamily.unknown,
+    this.blueprintConditionIds = const <String>[],
+    this.blueprintLootTier = ArcBlueprintLootTier.standard,
+    this.blueprintContainerDensity = 0,
+    this.blueprintFallbackEligible = false,
+    this.blueprintResearchVersion,
     this.layer,
   });
 
@@ -2667,6 +2738,13 @@ class _NewMarkerResult {
   final String? subtypeLabel;
   final String? itemId;
   final String? blueprintId;
+  final ArcBlueprintMapIntelType blueprintIntelType;
+  final ArcBlueprintContainerFamily blueprintContainerFamily;
+  final List<String> blueprintConditionIds;
+  final ArcBlueprintLootTier blueprintLootTier;
+  final int blueprintContainerDensity;
+  final bool blueprintFallbackEligible;
+  final String? blueprintResearchVersion;
 }
 
 class _NewMarkerDialog extends StatefulWidget {
@@ -2674,6 +2752,7 @@ class _NewMarkerDialog extends StatefulWidget {
     required this.title,
     required this.actionLabel,
     this.initialMarker,
+    this.mapId,
     this.mapName,
     this.initialKind = ArcAdminMapMarkerKind.customIntel,
     this.includeSeedKinds = false,
@@ -2685,6 +2764,7 @@ class _NewMarkerDialog extends StatefulWidget {
   final String title;
   final String actionLabel;
   final ArcAdminMapMarker? initialMarker;
+  final String? mapId;
   final String? mapName;
   final ArcAdminMapMarkerKind initialKind;
   final bool includeSeedKinds;
@@ -2707,6 +2787,15 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
   bool _customSubtypeEnabled = false;
   ArcRaidIntelConfidence _confidence = ArcRaidIntelConfidence.confirmed;
   String? _blueprintId;
+  ArcBlueprintMapIntelType _blueprintIntelType = ArcBlueprintMapIntelType.none;
+  ArcBlueprintContainerFamily _blueprintContainerFamily =
+      ArcBlueprintContainerFamily.unknown;
+  final Set<String> _blueprintConditionIds = <String>{};
+  ArcBlueprintLootTier _blueprintLootTier = ArcBlueprintLootTier.standard;
+  int _blueprintContainerDensity = 0;
+  bool _blueprintFallbackEligible = false;
+  String? _blueprintResearchVersion;
+  String? _blueprintResearchSummary;
   ArcRaidMapLayer? _markerLayer;
 
   @override
@@ -2725,7 +2814,17 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
       _customSubtype.text = initial.subtypeLabel ?? '';
       _confidence = initial.confidence;
       _blueprintId = initial.blueprintId;
+      _blueprintIntelType = initial.blueprintIntelType;
+      _blueprintContainerFamily = initial.blueprintContainerFamily;
+      _blueprintConditionIds.addAll(initial.blueprintConditionIds);
+      _blueprintLootTier = initial.blueprintLootTier;
+      _blueprintContainerDensity = initial.blueprintContainerDensity;
+      _blueprintFallbackEligible = initial.blueprintFallbackEligible;
+      _blueprintResearchVersion = initial.blueprintResearchVersion;
+    } else {
+      _applyBlueprintKindDefaults();
     }
+    _refreshBlueprintResearchDefaults(overwriteExisting: initial == null);
   }
 
   @override
@@ -2741,6 +2840,29 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
   @override
   Widget build(BuildContext context) {
     final blueprints = ArcBlueprintSeedData.blueprints;
+    final conditionOptions = ArcMapConditions.combinedOptionsForMap(
+      widget.mapName ?? '',
+    ).where((condition) => !condition.isNeutral).toList(growable: false);
+    ArcBlueprint? linkedBlueprint;
+    if (_blueprintId != null) {
+      for (final blueprint in blueprints) {
+        if (blueprint.id == _blueprintId) {
+          linkedBlueprint = blueprint;
+          break;
+        }
+      }
+    }
+    final showBlueprintRouting =
+        _blueprintId != null ||
+        _kind == ArcAdminMapMarkerKind.blueprint ||
+        _kind == ArcAdminMapMarkerKind.lootContainer ||
+        _kind == ArcAdminMapMarkerKind.containerCluster ||
+        _kind == ArcAdminMapMarkerKind.lockedRoom ||
+        _kind == ArcAdminMapMarkerKind.securityRoom ||
+        _kind == ArcAdminMapMarkerKind.highValueLoot ||
+        _kind == ArcAdminMapMarkerKind.firstWaveCache ||
+        _kind == ArcAdminMapMarkerKind.raiderCache ||
+        _kind == ArcAdminMapMarkerKind.fieldCrate;
     final subtypeOptions = ArcAdminMapMarkerSubtypeCatalog.forKind(
       _kind,
       mapName: widget.mapName,
@@ -2785,6 +2907,7 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
                   _subtypeId = null;
                   _customSubtypeEnabled = false;
                   _customSubtype.clear();
+                  _applyBlueprintKindDefaults();
                 }),
               ),
               if (subtypeOptions.isNotEmpty) ...[
@@ -2911,8 +3034,161 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
                     );
                     _name.text = '${blueprint.name} historical find';
                   }
+                  _refreshBlueprintResearchDefaults(overwriteExisting: true);
                 }),
               ),
+              if (showBlueprintRouting) ...[
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'BLUEPRINT ACQUISITION INTELLIGENCE',
+                    style: AppTheme.bodyTextStyle(
+                      fontSize: 11,
+                      color: AppTheme.neonCyan,
+                      isBold: true,
+                    ),
+                  ),
+                ),
+                if (linkedBlueprint != null) ...[
+                  const SizedBox(height: 6),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      '${linkedBlueprint.name} • ${linkedBlueprint.rarityLabel} • UAG ${ArcBlueprintTradeValueCatalog.tradeTierFor(linkedBlueprint).label}',
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+                if (_blueprintResearchSummary?.trim().isNotEmpty == true) ...[
+                  const SizedBox(height: 4),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      _blueprintResearchSummary!,
+                      style: const TextStyle(
+                        color: Colors.white54,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 10),
+                DropdownButtonFormField<ArcBlueprintMapIntelType>(
+                  initialValue: _blueprintIntelType,
+                  isExpanded: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Blueprint routing role',
+                    helperText:
+                        'Exact finds beat container matches; fallback areas are probability-only.',
+                  ),
+                  items: [
+                    for (final value in ArcBlueprintMapIntelType.values)
+                      DropdownMenuItem(value: value, child: Text(value.label)),
+                  ],
+                  onChanged: (value) => setState(
+                    () => _blueprintIntelType =
+                        value ?? ArcBlueprintMapIntelType.none,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                DropdownButtonFormField<ArcBlueprintContainerFamily>(
+                  initialValue: _blueprintContainerFamily,
+                  isExpanded: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Container / source family',
+                  ),
+                  items: [
+                    for (final value in ArcBlueprintContainerFamily.values)
+                      DropdownMenuItem(value: value, child: Text(value.label)),
+                  ],
+                  onChanged: (value) => setState(
+                    () => _blueprintContainerFamily =
+                        value ?? ArcBlueprintContainerFamily.unknown,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                DropdownButtonFormField<ArcBlueprintLootTier>(
+                  initialValue: _blueprintLootTier,
+                  isExpanded: true,
+                  decoration: const InputDecoration(labelText: 'Loot tier'),
+                  items: [
+                    for (final value in ArcBlueprintLootTier.values)
+                      DropdownMenuItem(value: value, child: Text(value.label)),
+                  ],
+                  onChanged: (value) => setState(
+                    () => _blueprintLootTier =
+                        value ?? ArcBlueprintLootTier.standard,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                DropdownButtonFormField<int>(
+                  initialValue: _blueprintContainerDensity,
+                  isExpanded: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Relevant container density',
+                    helperText: '0 = unknown, 5 = very dense cluster.',
+                  ),
+                  items: [
+                    for (var value = 0; value <= 5; value++)
+                      DropdownMenuItem(
+                        value: value,
+                        child: Text(value == 0 ? 'Unknown' : '$value / 5'),
+                      ),
+                  ],
+                  onChanged: (value) =>
+                      setState(() => _blueprintContainerDensity = value ?? 0),
+                ),
+                if (conditionOptions.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Conditions / events',
+                      style: AppTheme.bodyTextStyle(
+                        fontSize: 12,
+                        color: Colors.white70,
+                        isBold: true,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      for (final condition in conditionOptions)
+                        FilterChip(
+                          label: Text(condition.label),
+                          selected: _blueprintConditionIds.contains(
+                            condition.id,
+                          ),
+                          onSelected: (selected) => setState(() {
+                            if (selected) {
+                              _blueprintConditionIds.add(condition.id);
+                            } else {
+                              _blueprintConditionIds.remove(condition.id);
+                            }
+                          }),
+                        ),
+                    ],
+                  ),
+                ],
+                SwitchListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Allow as Blueprint fallback route'),
+                  subtitle: const Text(
+                    'Lets Raid Intelligence use this area when no exact Blueprint location exists.',
+                  ),
+                  value: _blueprintFallbackEligible,
+                  onChanged: (value) =>
+                      setState(() => _blueprintFallbackEligible = value),
+                ),
+              ],
               const SizedBox(height: 10),
               DropdownButtonFormField<ArcRaidIntelConfidence>(
                 isExpanded: true,
@@ -3010,6 +3286,15 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
                           : _source.text.trim(),
                       confidence: _confidence,
                       blueprintId: _blueprintId,
+                      blueprintIntelType: _blueprintIntelType,
+                      blueprintContainerFamily: _blueprintContainerFamily,
+                      blueprintConditionIds: List<String>.unmodifiable(
+                        _blueprintConditionIds,
+                      ),
+                      blueprintLootTier: _blueprintLootTier,
+                      blueprintContainerDensity: _blueprintContainerDensity,
+                      blueprintFallbackEligible: _blueprintFallbackEligible,
+                      blueprintResearchVersion: _blueprintResearchVersion,
                       itemId:
                           subtype?.upgradeResource?.itemId ??
                           (widget.initialMarker?.kind == _kind &&
@@ -3026,6 +3311,85 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
         ),
       ],
     );
+  }
+
+  void _applyBlueprintKindDefaults() {
+    if (_kind == ArcAdminMapMarkerKind.blueprint) {
+      _blueprintIntelType = ArcBlueprintMapIntelType.exactFind;
+      return;
+    }
+    if (_kind == ArcAdminMapMarkerKind.highValueLoot) {
+      _blueprintIntelType = ArcBlueprintMapIntelType.lootZoneFallback;
+      _blueprintLootTier = ArcBlueprintLootTier.highValue;
+      _blueprintFallbackEligible = true;
+      return;
+    }
+    if (_kind == ArcAdminMapMarkerKind.lockedRoom ||
+        _kind == ArcAdminMapMarkerKind.securityRoom) {
+      _blueprintIntelType = ArcBlueprintMapIntelType.lootZoneFallback;
+      _blueprintLootTier = ArcBlueprintLootTier.lockedRoom;
+      _blueprintFallbackEligible = true;
+      if (_kind == ArcAdminMapMarkerKind.securityRoom) {
+        _blueprintContainerFamily = ArcBlueprintContainerFamily.security;
+      }
+      return;
+    }
+    if (_kind == ArcAdminMapMarkerKind.firstWaveCache) {
+      _blueprintIntelType = ArcBlueprintMapIntelType.containerOpportunity;
+      _blueprintContainerFamily = ArcBlueprintContainerFamily.firstWaveCache;
+      _blueprintFallbackEligible = true;
+      return;
+    }
+    if (_kind == ArcAdminMapMarkerKind.raiderCache) {
+      _blueprintIntelType = ArcBlueprintMapIntelType.containerOpportunity;
+      _blueprintContainerFamily = ArcBlueprintContainerFamily.raider;
+      _blueprintFallbackEligible = true;
+      return;
+    }
+    if (_kind == ArcAdminMapMarkerKind.containerCluster ||
+        _kind == ArcAdminMapMarkerKind.lootContainer ||
+        _kind == ArcAdminMapMarkerKind.fieldCrate) {
+      if (_blueprintIntelType == ArcBlueprintMapIntelType.none) {
+        _blueprintIntelType = ArcBlueprintMapIntelType.containerOpportunity;
+      }
+    }
+  }
+
+  void _refreshBlueprintResearchDefaults({required bool overwriteExisting}) {
+    final blueprintId = _blueprintId;
+    final mapId = widget.mapId;
+    if (blueprintId == null || mapId == null || mapId.trim().isEmpty) {
+      _blueprintResearchSummary = null;
+      if (overwriteExisting) _blueprintResearchVersion = null;
+      return;
+    }
+    final defaults = ArcBlueprintMapBackend.defaultsForBlueprintOnMap(
+      blueprintId,
+      mapId,
+    );
+    if (defaults == null) {
+      _blueprintResearchSummary =
+          'No canonical map-specific Blueprint research yet. Marker metadata can still provide fallback routing.';
+      if (overwriteExisting) _blueprintResearchVersion = null;
+      return;
+    }
+    _blueprintResearchSummary = defaults.researchSummary;
+    _blueprintResearchVersion = defaults.researchVersion;
+    if (overwriteExisting ||
+        _blueprintContainerFamily == ArcBlueprintContainerFamily.unknown) {
+      _blueprintContainerFamily = defaults.containerFamily;
+    }
+    if (overwriteExisting || _blueprintConditionIds.isEmpty) {
+      _blueprintConditionIds
+        ..clear()
+        ..addAll(defaults.conditionIds);
+    }
+    if (overwriteExisting && _kind == ArcAdminMapMarkerKind.blueprint) {
+      _blueprintIntelType = ArcBlueprintMapIntelType.exactFind;
+    } else if (overwriteExisting &&
+        _blueprintIntelType == ArcBlueprintMapIntelType.none) {
+      _blueprintIntelType = ArcBlueprintMapIntelType.containerOpportunity;
+    }
   }
 
   ArcAdminMapMarkerSubtype? _subtypeForId(
