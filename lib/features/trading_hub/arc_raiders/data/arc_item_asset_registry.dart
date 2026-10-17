@@ -41,8 +41,38 @@ class ArcItemAssetRegistry {
     return _aliases[clean] ?? clean;
   }
 
+  // These resource IDs are valid upgrade requirements, but individual
+  // artwork has not been supplied yet. Use one explicitly labelled neutral
+  // fallback rather than a broken image or a different item's picture.
+  static const String upgradeArtworkPending =
+      '${runtimeBase}upgrade_resource_art_pending.webp';
+
+  static const Set<String> _pendingArtworkItemIds = <String>{
+    'arc-data-modules',
+    'radial-presses',
+    'emperor-modulators',
+    'planks',
+    'battered-paperbacks',
+    'mini-pumps',
+    'calculators',
+    'raider-logbooks',
+    'skulker-targeters',
+    'differential-microphones',
+    'exodus-technical-handbooks',
+    'bully-fragmenters',
+    'thermal-shakers',
+    'frigate-inductors',
+  };
+
   static String assetPathForId(String itemId) {
     final id = canonicalId(itemId);
+    // Existing confirmed singular artwork; do not duplicate under a fake name.
+    if (id == 'magnetic-accelerators') {
+      return '${runtimeBase}magnetic_accelerator.webp';
+    }
+    if (_pendingArtworkItemIds.contains(id)) {
+      return upgradeArtworkPending;
+    }
     return '$runtimeBase${id.replaceAll('-', '_')}.webp';
   }
 

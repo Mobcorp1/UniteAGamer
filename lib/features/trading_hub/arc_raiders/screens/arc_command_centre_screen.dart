@@ -47,6 +47,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/my_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/nomadic_trader_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/operations_command_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/smart_trade_assist_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/command_centre/arc_command_centre_content.dart';
@@ -204,6 +205,17 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
         final currentRoute = ModalRoute.of(context)?.settings.name;
         if (routeName == currentRoute ||
             routeName == ArcCommandCentreScreen.routeName) {
+          return;
+        }
+        final benchCategory = action.routeArguments;
+        if (routeName == ScrappyGridScreen.benchRouteName &&
+            benchCategory is String) {
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) =>
+                  ScrappyGridScreen.bench(initialBenchCategory: benchCategory),
+            ),
+          );
           return;
         }
         Navigator.of(

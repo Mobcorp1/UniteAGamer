@@ -7,6 +7,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_be
 import 'package:uag_arc_raiders_hub/features/monetisation/screens/monetisation_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_command_centre_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_command_centre_relevance_mapper.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_command_bench_visibility_policy.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_user_personalisation_profile.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_expedition_state_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_season_reset_screen.dart';
@@ -295,7 +296,11 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     final duplicates = _detailContaining(blueprint.details, 'duplicate');
     final scrappy = _snapshotByLabel(state.snapshots, 'Scrappy');
     final benchStations = state.snapshots
-        .where((metric) => metric.label.startsWith('Bench: '))
+        .where(
+          (metric) =>
+              metric.label.startsWith('Bench: ') &&
+              ArcCommandBenchVisibilityPolicy.showInCommandCentre(metric),
+        )
         .toList(growable: false);
 
     final blueprintCard = _briefingStatusCard(
@@ -316,9 +321,10 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
           value: bench.value,
           detail: bench.detail,
           status: bench.status,
-          action: const ArcCommandAction(
+          action: ArcCommandAction(
             label: 'Open Bench Tracker',
             routeName: ScrappyGridScreen.benchRouteName,
+            routeArguments: bench.label.substring('Bench: '.length),
           ),
           icon: Icons.build_circle_outlined,
           image: ArcBenchArtwork.forStation(

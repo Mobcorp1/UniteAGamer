@@ -42,15 +42,18 @@ class ScrappyGridScreen extends StatefulWidget {
   const ScrappyGridScreen({
     super.key,
     this.initialMode = ArcScrappyTrackerMode.scrappy,
+    this.initialBenchCategory,
   });
 
-  const ScrappyGridScreen.bench({super.key})
+  const ScrappyGridScreen.bench({super.key, this.initialBenchCategory})
     : initialMode = ArcScrappyTrackerMode.bench;
 
   const ScrappyGridScreen.quest({super.key})
-    : initialMode = ArcScrappyTrackerMode.quest;
+    : initialMode = ArcScrappyTrackerMode.quest,
+      initialBenchCategory = null;
 
   final ArcScrappyTrackerMode initialMode;
+  final String? initialBenchCategory;
 
   @override
   State<ScrappyGridScreen> createState() => _ScrappyGridScreenState();
@@ -82,6 +85,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
   void initState() {
     super.initState();
     _mode = widget.initialMode;
+    _selectedBenchCategory = widget.initialBenchCategory;
     _scrappyStateStream = _repository.watchMyScrappyStates();
     _personalisationStream = _personalisationRepository.watchProfile();
     _progressionRecordsStream = _progressionRepository
@@ -99,11 +103,12 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
   @override
   void didUpdateWidget(covariant ScrappyGridScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.initialMode != widget.initialMode) {
+    if (oldWidget.initialMode != widget.initialMode ||
+        oldWidget.initialBenchCategory != widget.initialBenchCategory) {
       _mode = widget.initialMode;
       _selectedFilter = ArcScrappyFilter.all;
       _showFeedScrappy = false;
-      _selectedBenchCategory = null;
+      _selectedBenchCategory = widget.initialBenchCategory;
       _trackerCarouselIndex = 0;
       _expandedSections.clear();
     }
