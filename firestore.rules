@@ -307,12 +307,20 @@ service cloud.firestore {
 
       match /monetisation_usage/{usageId} {
         allow read: if isOwner(userId) || isAdminOrDev();
-        allow create, update: if isOwner(userId) || isAdminOrDev();
+        allow create, update: if (isOwner(userId) &&
+          usageId != 'community_referral_attribution') || isAdminOrDev();
         allow delete: if isAdminOrDev();
       }
 
       match /{document=**} {
-        allow read, create, update, delete: if isOwner(userId) || isAdminOrDev();
+        allow read: if isOwner(userId) || isAdminOrDev();
+        // Recursive grants are OR-combined with exact grants. Never allow
+        // the fallback to bypass the server-owned attribution exception.
+        allow create, update, delete: if isAdminOrDev() ||
+          (isOwner(userId) &&
+            (document.size() < 2 ||
+              document[0] != 'monetisation_usage' ||
+              document[1] != 'community_referral_attribution'));
       }
     }
 
@@ -839,9 +847,23 @@ service cloud.firestore {
       }
     }
 
+    // All trade invite authority, attribution-only codes and free-month grants
+    // are written exclusively by authenticated Cloud Functions.
+    match /uag_trade_invites/{inviteDigest} {
+      allow read, write: if false;
+    }
+    match /uag_trade_invite_issue_limits/{uid} {
+      allow read, write: if false;
+    }
+    match /uag_trade_referral_incentive_claims/{uid} {
+      allow read: if isOwner(uid) || isAdminOrDev();
+      allow write: if false;
+    }
+
     match /uag_community_referral_codes/{codeId} {
       allow read: if isSignedIn();
       allow create: if isSignedIn() &&
+        !request.resource.data.keys().hasAny(['attributionOnly', 'source', 'expiresAt']) &&
         request.resource.data.code == codeId &&
         request.resource.data.ownerUid == request.auth.uid &&
         request.resource.data.termsVersion is string &&

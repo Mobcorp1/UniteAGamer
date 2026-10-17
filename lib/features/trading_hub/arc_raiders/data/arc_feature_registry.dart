@@ -83,7 +83,7 @@ class ArcFeatureRegistry {
     ),
     ArcFeatureRegistryEntry(
       id: 'blueprint_tracker',
-      label: 'Blueprint Tracker',
+      label: 'Collections Tracker',
       personalisationFeature: ArcPersonalisationFeature.blueprintTracker,
       lifecycle: ArcFeatureLifecycle.ready,
       routeName: BlueprintGridScreen.routeName,
@@ -379,7 +379,7 @@ class ArcFeatureVisibilityDiagnosticsEngine {
           coreJourney
               .where(
                 (status) =>
-                    status.label == 'Blueprint Tracker' ||
+                    status.label == 'Collections Tracker' ||
                     status.label == 'Bench Tracker' ||
                     status.label == 'Scrappy Tracker',
               )
@@ -388,9 +388,9 @@ class ArcFeatureVisibilityDiagnosticsEngine {
               ))
         'Command Centre is available but all supported beta tracker systems are hidden.',
       if (coreJourney.any(
-        (status) => status.label == 'Blueprint Tracker' && status.warning,
+        (status) => status.label == 'Collections Tracker' && status.warning,
       ))
-        'Blueprint Tracker is not Live. Closed Beta 2 expects it to be available.',
+        'Collections Tracker is not Live. Closed Beta 2 expects it to be available.',
       if (coreJourney
           .where(
             (status) =>

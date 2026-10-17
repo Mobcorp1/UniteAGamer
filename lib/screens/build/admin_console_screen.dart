@@ -115,7 +115,7 @@ const List<_AdminFeature> _featureToggles = [
   ),
   _AdminFeature(
     key: 'blueprintTrackerEnabled',
-    title: 'Blueprint Tracker',
+    title: 'Collections Tracker',
     subtitle: 'Soft-launch safe core blueprint collection grid.',
     icon: Icons.grid_view_rounded,
   ),
@@ -1544,7 +1544,7 @@ class _ClosedBetaDiagnosticsCard extends StatelessWidget {
       ),
       _candidate(
         id: 'blueprint-tracker',
-        title: 'Blueprint Tracker',
+        title: 'Collections Tracker',
         type: 'blueprint',
         included: true,
         reason: 'Included when blueprint state is available to Command Centre.',

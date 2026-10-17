@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_smart_trade_terms.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_trade_bundle_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_subscription_tier.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/services/uag_entitlement_service.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_usage_gate.dart';
@@ -42,6 +45,14 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
   List<String> _matchingDupes = <String>[];
   Set<String> _selectedDupes = <String>{};
   final List<ArcTradeItem> _selectedTradeItems = <ArcTradeItem>[];
+  final Set<String> _selectedSmartWantedIds = <String>{};
+  final Set<String> _availableSmartWantedIds = <String>{};
+
+  bool get _smartTerms => widget.listing.acceptedBundles.any(
+    (bundle) => bundle.terms.notes == ArcSmartTradeTerms.marker);
+
+  int get _smartMinimum => _selectedAcceptedBundle?.effectiveTerms.minimumRequiredComponents ?? 1;
+
   String _selectedAcceptedBundleId = '';
   bool _preparingExactBundle = false;
   late final List<ArcTradeItem> _tradeItems;
@@ -76,9 +87,43 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
     if (activeBundles.isNotEmpty) {
       _selectedAcceptedBundleId = activeBundles.first.id;
     }
+    if (_smartTerms) _loadSmartEligibleDupes();
     _blueprintController.addListener(_onOfferInputChanged);
     _resourcesController.addListener(_onOfferInputChanged);
     _loadMatchingDupes();
+  }
+
+  Future<void> _loadSmartEligibleDupes() async {
+    try {
+      final states = await ArcBlueprintRepository().loadMyBlueprintStates();
+      final bundle = _selectedAcceptedBundle;
+      if (!mounted || bundle == null) return;
+      final eligible = bundle.components.where((component) =>
+        (states[component.itemId]?.dupesOwned ?? 0) > 0)
+        .map((component) => component.itemId).toSet();
+      setState(() {
+        _availableSmartWantedIds
+          ..clear()
+          ..addAll(eligible);
+        _selectedSmartWantedIds
+          ..clear()
+          ..addAll(eligible.take(_smartMinimum));
+      });
+      _syncSmartOfferText();
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _availableSmartWantedIds.clear();
+        _selectedSmartWantedIds.clear();
+      });
+    }
+  }
+
+  void _syncSmartOfferText() {
+    final selected = _selectedAcceptedBundle?.components
+        .where((component) => _selectedSmartWantedIds.contains(component.itemId))
+        .map((component) => component.itemName).join(', ') ?? '';
+    _blueprintController.text = selected;
   }
 
   void _onOfferInputChanged() {
@@ -94,7 +139,7 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
       setState(() {
         _matchingDupes = matches;
         _selectedDupes = matches.toSet();
-        _blueprintController.text = matches.join(', ');
+        if (!_smartTerms) _blueprintController.text = matches.join(', ');
         _isLoadingMatches = false;
       });
     } catch (_) {
@@ -481,6 +526,20 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
     if (bundle == null) {
       return null;
     }
+    if (bundle.terms.notes == ArcSmartTradeTerms.marker) {
+      final components = bundle.components.where((component) =>
+        _selectedSmartWantedIds.contains(component.itemId)).toList(growable: false);
+      if (components.length < bundle.effectiveTerms.minimumRequiredComponents ||
+          components.any((item) => !_availableSmartWantedIds.contains(item.itemId))) {
+        return null;
+      }
+      return ArcExactTradeBundleOffer(
+        templateId: bundle.id, components: components,
+        preparing: _preparingExactBundle,
+        preparationNote: _preparingExactBundle ? _noteController.text.trim() : '',
+        completionConfirmed: !_preparingExactBundle,
+      );
+    }
     return ArcExactTradeBundleOffer(
       templateId: bundle.id,
       components: bundle.components,
@@ -514,6 +573,43 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
         .toList(growable: false);
     if (bundles.isEmpty) {
       return const SizedBox.shrink();
+    }
+    if (_smartTerms) {
+      final bundle = _selectedAcceptedBundle;
+      if (bundle == null) return const SizedBox.shrink();
+      final selected = _buildExactBundleOffer();
+      final check = selected == null ? null : const ArcTradeBundleEngine()
+        .compare(template: bundle, offer: selected);
+      return _sectionCard(
+        title: 'SMART TRADE · $_smartMinimum:1',
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('Select at least $_smartMinimum DIFFERENT missing Blueprints. '
+            'Only duplicates recorded in your own collection are eligible.',
+            style: ArcUiTokens.body(color: ArcUiTokens.textSecondary)),
+          for (final component in bundle.components)
+            CheckboxListTile(
+              key: Key('smart-offer-${component.itemId}'),
+              dense: true,
+              value: _selectedSmartWantedIds.contains(component.itemId),
+              onChanged: !_availableSmartWantedIds.contains(component.itemId)
+                ? null : (checked) {
+                  setState(() {
+                    if (checked == true) { _selectedSmartWantedIds.add(component.itemId); }
+                    else { _selectedSmartWantedIds.remove(component.itemId); }
+                  });
+                  _syncSmartOfferText();
+                },
+              title: Text(component.itemName, style: ArcUiTokens.bodySmall(
+                color: ArcUiTokens.textPrimary)),
+              subtitle: !_availableSmartWantedIds.contains(component.itemId)
+                ? const Text('No confirmed spare', style: TextStyle(fontSize: 10)) : null,
+            ),
+          Text(check?.isExact == true ? 'QUALIFIED · Ready to propose' :
+            'Select qualifying spares before sending.',
+            style: TextStyle(color: check?.isExact == true
+              ? AppTheme.neonCyan : AppTheme.neonPink)),
+        ]),
+      );
     }
     return _sectionCard(
       title: 'Accepted Exact Bundles',
@@ -619,6 +715,32 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
   }
 
   Future<void> _submitOffer() async {
+    if (_smartTerms) {
+      final bundle = _selectedAcceptedBundle;
+      final offered = _buildExactBundleOffer();
+      if (bundle == null || offered == null ||
+          !const ArcTradeBundleEngine().compare(template: bundle, offer: offered).isExact) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Choose the required distinct missing Blueprints first.')));
+        return;
+      }
+      try {
+        final fresh = await ArcBlueprintRepository().loadMyBlueprintStates();
+        if (offered.components.any((item) =>
+          (fresh[item.itemId]?.dupesOwned ?? 0) < item.quantity)) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('A selected spare is no longer available. Refresh your collection.')));
+          return;
+        }
+      } catch (_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Could not verify your available spares. Try again.')));
+        return;
+      }
+      if (!mounted) return;
+    }
     if (!widget.listing.wantsNothing && !_formKey.currentState!.validate()) {
       return;
     }
@@ -642,22 +764,22 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
         offeredBlueprintText: widget.listing.wantsNothing
             ? ''
             : _blueprintController.text,
-        smallBundles: widget.listing.wantsNothing ? 0 : _smallBundles,
-        mediumBundles: widget.listing.wantsNothing ? 0 : _mediumBundles,
-        largeBundles: widget.listing.wantsNothing ? 0 : _largeBundles,
-        includesResources: widget.listing.wantsNothing
+        smallBundles: widget.listing.wantsNothing || _smartTerms ? 0 : _smallBundles,
+        mediumBundles: widget.listing.wantsNothing || _smartTerms ? 0 : _mediumBundles,
+        largeBundles: widget.listing.wantsNothing || _smartTerms ? 0 : _largeBundles,
+        includesResources: widget.listing.wantsNothing || _smartTerms
             ? false
             : _includesResources,
-        resourcesText: widget.listing.wantsNothing
+        resourcesText: widget.listing.wantsNothing || _smartTerms
             ? ''
             : _resourcesController.text,
         note: _noteController.text,
-        offeredTradeItemIds: widget.listing.wantsNothing
+        offeredTradeItemIds: widget.listing.wantsNothing || _smartTerms
             ? const <String>[]
             : _selectedTradeItems
                   .map((item) => item.id)
                   .toList(growable: false),
-        offeredTradeItemNames: widget.listing.wantsNothing
+        offeredTradeItemNames: widget.listing.wantsNothing || _smartTerms
             ? const <String>[]
             : _selectedTradeItems
                   .map((item) => item.name)
@@ -761,7 +883,7 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
                       ),
                     ),
                     _buildAcceptedBundlePicker(),
-                    _sectionCard(
+                    if (!_smartTerms) _sectionCard(
                       title: 'Auto Matches',
                       child: _isLoadingMatches
                           ? const Center(
@@ -817,8 +939,11 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
                                   .toList(growable: false),
                             ),
                     ),
-                    if (!listing.wantsNothing) _offerIntelligenceCard(),
-                    _sectionCard(
+                    if (!listing.wantsNothing && !_smartTerms) _offerIntelligenceCard(),
+                    if (_smartTerms)
+                      _sectionCard(title: 'Your Offer', child: _buildTextField(
+                        controller: _noteController, label: 'Message To Trader', maxLines: 3))
+                    else _sectionCard(
                       title: 'Your Offer',
                       child: Column(
                         children: [

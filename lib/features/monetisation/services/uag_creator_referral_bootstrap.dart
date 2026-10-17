@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_links/app_links.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/services/uag_trade_invite_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/widgets.dart';
 
@@ -31,6 +32,8 @@ class UagCreatorReferralBootstrap {
 
     try {
       _appLinks = AppLinks();
+      final initialLink = await _appLinks!.getInitialLink();
+      if (initialLink != null) await _handleIncomingUri(initialLink);
       _linkSubscription = _appLinks!.uriLinkStream.listen(
         _handleIncomingUri,
         onError: (Object error, StackTrace stackTrace) {
@@ -72,6 +75,7 @@ class UagCreatorReferralBootstrap {
 
   Future<void> _handleIncomingUri(Uri uri) async {
     UagCommunityReferralDeepLinkBootstrap.instance.captureRoute(uri);
+    await UagTradeInviteService.instance.captureRoute(uri);
     final referral = UagCreatorReferralLink.tryParse(uri);
     if (referral == null) {
       return;

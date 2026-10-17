@@ -1,6 +1,7 @@
 const admin = require('firebase-admin');
 const { onDocumentCreated, onDocumentWritten } = require('firebase-functions/v2/firestore');
 const { onRequest } = require('firebase-functions/v2/https');
+const { buildGateway: buildUagTradeInviteGateway } = require('./uag_trade_invite_gateway');
 const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { defineSecret } = require('firebase-functions/params');
 const Stripe = require('stripe');
@@ -668,6 +669,23 @@ function hasPaidSubscriptionHistory(userData) {
     ['active', 'trialing', 'cancelled', 'past_due', 'unpaid'].includes(status);
 }
 
+function isVerifiedTradeAttribution(referralData, userData, ownerUid, code) {
+  const attribution = userData?._verifiedCommunityAttribution || {};
+  return referralData.source === 'uag_trade_invite' &&
+    attribution.code === code &&
+    attribution.referrerUid === ownerUid &&
+    attribution.source === 'uag_trade_invite';
+}
+
+async function communityCashEligibleAtCheckout(ownerUid) {
+  const [terms, owner] = await Promise.all([
+    db.collection('uag_referral_terms_acceptances').doc(ownerUid).get(),
+    db.collection('users').doc(ownerUid).get(),
+  ]);
+  return terms.data()?.accepted === true &&
+    communityCashCommissionTier(owner.data() || {}) !== 'free';
+}
+
 async function resolveReferral(referralCode, { uid, planId, userData }) {
   const code = normalizeCommercialCode(referralCode);
   if (!code || !uid || !planId) return null;
@@ -741,14 +759,18 @@ async function resolveReferral(referralCode, { uid, planId, userData }) {
     const ownerUid = normalizeString(referralData.ownerUid);
     const canonical = normalizeCommercialCode(referralData.code);
     if (ownerUid && ownerUid !== uid && canonical === code) {
+      const attributionOnly = referralData.attributionOnly === true;
+      if (attributionOnly && !isVerifiedTradeAttribution(referralData, userData, ownerUid, code)) continue;
+      const cashEligibleAtSignup = !attributionOnly && await communityCashEligibleAtCheckout(ownerUid);
       return {
         code,
         ownerUid,
         source: 'uag_community_referral',
-        subscriberDiscountPercent:
-          COMMERCIAL_ECONOMY.discounts.communityReferralPercent,
+        ...(attributionOnly ? { source: 'uag_trade_invite' } : {}),
+        subscriberDiscountPercent: attributionOnly
+          ? 0 : COMMERCIAL_ECONOMY.discounts.communityReferralPercent,
         subscriberDiscountDuration: 'once',
-        commissionEligible: true,
+        commissionEligible: cashEligibleAtSignup,
         nextRenewalFree: false,
         promotionPreset: '',
       };
@@ -877,7 +899,10 @@ exports.createUagCheckoutSession = onRequest({ secrets: [stripeSecretKey] }, asy
         ? await resolveReferral(effectiveReferralCode, {
             uid,
             planId,
-            userData,
+            userData: {
+              ...userData,
+              _verifiedCommunityAttribution: communityAttribution,
+            },
           })
         : null;
 
@@ -1773,8 +1798,14 @@ async function handleSubscriptionUpdated(subscription) {
 
   const referralSource = normalizeString(subscription.metadata?.referralSource);
   if (referralOwnerUid && referralOwnerUid !== uid && plan.kind === 'core') {
-    if (referralSource === 'uag_community_referral') {
-      await syncCommunityPaidReferralSubscription({
+    if (referralSource === 'uag_community_referral' || referralSource === 'uag_trade_invite') {
+      // Unpaid trials must never qualify as paid trading-link conversions.
+      const previousState = referralSource === 'uag_trade_invite' && active
+        ? await db.collection('uag_community_referral_paid_subscriptions').doc(subscription.id).get()
+        : null;
+      const canSync = referralSource !== 'uag_trade_invite' || !active ||
+        (previousState?.data()?.everActivated === true);
+      if (canSync) await syncCommunityPaidReferralSubscription({
         subscription,
         referredUid: uid,
         referrerUid: referralOwnerUid,
@@ -2005,15 +2036,16 @@ async function handleInvoicePaid(invoice) {
   if (!uid || !planId) return;
 
   const plan = getPlan(planId);
-  const grossPence = invoice.amount_paid || plan.pricePence;
+  const grossPence = invoice.amount_paid ?? plan.pricePence;
   const stripeFeePence = estimateStripeFeePence(grossPence);
   const referralOwnerUid = subscription.metadata?.referralOwnerUid || '';
   const referralCode = subscription.metadata?.referralCode || '';
   const referralSource = subscription.metadata?.referralSource || '';
   const commissionMetadata = subscription.metadata?.commissionEligible;
-  const commissionEligible = commissionMetadata == null || commissionMetadata === ''
-    ? Boolean(referralOwnerUid)
-    : truthy(commissionMetadata);
+  const commissionEligible = referralSource === 'uag_trade_invite'
+    ? false
+    : commissionMetadata == null || commissionMetadata === ''
+      ? Boolean(referralOwnerUid) : truthy(commissionMetadata);
   const eligibleNetAmountPence = eligibleNetSubscriptionRevenuePence(
     invoice,
     grossPence,
@@ -2022,7 +2054,10 @@ async function handleInvoicePaid(invoice) {
 
   if (referralOwnerUid && referralOwnerUid !== uid && plan.kind === 'core') {
     const active = subscription.status === 'active' || subscription.status === 'trialing';
-    if (referralSource === 'uag_community_referral') {
+    if (referralSource === 'uag_community_referral' || referralSource === 'uag_trade_invite') {
+      // Trading-link conversions only count after Stripe confirms money received;
+      // zero-value trial invoices must never create a qualified conversion.
+      if (referralSource !== 'uag_trade_invite' || Number(invoice.amount_paid || 0) > 0) {
       // Sync before calculating the rate so a first successful paid referral
       // earns the first 5% band even if invoice.paid arrives before the
       // subscription.updated webhook.
@@ -2033,6 +2068,7 @@ async function handleInvoicePaid(invoice) {
         plan,
         active,
       });
+      }
     } else {
       await upsertCreatorReferredSubscription({
         subscription,
@@ -2833,8 +2869,31 @@ async function handleChargeReversal(charge, reversalType) {
   let reversedFromStatus = '';
 
   await db.runTransaction(async (transaction) => {
+    const paidStateRef = db.collection('uag_community_referral_paid_subscriptions')
+      .doc(normalizeString(event.stripeSubscriptionId));
     const ledger = await transaction.get(ledgerRef);
-    if (!ledger.exists) return;
+    const paidState = referralSource === 'uag_trade_invite'
+      ? await transaction.get(paidStateRef) : null;
+    if (!ledger.exists) {
+      if (referralSource === 'uag_trade_invite') {
+        if (paidState?.data()?.active === true) {
+          transaction.set(paidStateRef, {
+            active: false, lastReversal: reversalType,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          }, { merge: true });
+          transaction.set(db.collection('users').doc(creatorUid), {
+            'communityReferral.activePaidReferrals':
+              admin.firestore.FieldValue.increment(-1),
+          }, { merge: true });
+        }
+        transaction.set(eventRef, {
+          reversalType,
+          reversedAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+      }
+      return;
+    }
     const data = ledger.data() || {};
     if (data.lifecycleStatus === 'reversed' || data.status === 'reversed') return;
 
@@ -4796,3 +4855,17 @@ exports.redeemUagOperationCompletionReward = onRequest(
   uagRewardOptions,
   operationCompletionRewardHandler,
 );
+
+// PASS09 public opaque trading links: no client writes to invite/commission ledgers.
+exports.uagTradeInviteGateway = onRequest(
+  { cors: false },
+  buildUagTradeInviteGateway({ admin, db, auth: admin.auth() }),
+);
+
+// Admin-disabled by default. Eligibility is audited and fulfilled by a
+// trusted scheduled Function only after a >=30-day paid/refund hold period.
+const { evaluateAndGrant: evaluateUagTradeReferralIncentives } =
+  require('./uag_trade_referral_incentives');
+exports.evaluateUagTradeReferralIncentives = onSchedule('every day 06:25', async () => {
+  await evaluateUagTradeReferralIncentives({ db, admin });
+});

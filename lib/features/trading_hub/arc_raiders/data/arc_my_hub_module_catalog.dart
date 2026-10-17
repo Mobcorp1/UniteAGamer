@@ -25,7 +25,7 @@ class ArcMyHubModuleCatalog {
 
   static const List<ArcMyHubModuleDefinition> modules = [
     ArcMyHubModuleDefinition(
-      title: 'Blueprint Tracker',
+      title: 'Collections Tracker',
       routeName: BlueprintGridScreen.routeName,
       personalLayer: true,
     ),

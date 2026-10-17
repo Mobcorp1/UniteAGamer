@@ -11,7 +11,7 @@ void main() {
     );
 
     final directTapFlow = RegExp(
-      r'if \(!state\.owned\)\s*\{\s*await _markMissingAsOwned\(blueprint, state\);\s*return;\s*\}\s*await _openBlueprintPreview\(blueprint, state\);',
+      r'if \(!state\.owned\)\s*\{\s*await _markMissingAsOwned\(blueprint, state\);\s*return;\s*\}\s*await _openOwnedBlueprintDupeActions\(blueprint, state\);',
       multiLine: true,
     );
 
@@ -93,7 +93,7 @@ void main() {
       'lib/features/trading_hub/arc_raiders/widgets/blueprint_tile.dart',
     );
 
-    expect(grid, contains('static const int _gridColumns = 10;'));
+    expect(grid, contains('static const int _gridColumns = 17;'));
     expect(grid, contains('int sumDupesOwned()'));
     expect(grid, contains('ArcBlueprintGridViewMode.inGameFramed'));
     expect(grid, contains("Key('blueprint-landscape-static-ad')"));

@@ -13,7 +13,7 @@ void main() {
           maps.map((map) => map.id),
           containsAll(ArcRaidIntelligenceSeedData.supportedMapIds),
         );
-        expect(maps, hasLength(6));
+        expect(maps, hasLength(7));
 
         for (final map in maps) {
           expect(map.publicationState, ArcRaidMapPublicationState.published);
@@ -72,6 +72,15 @@ void main() {
             expect(map.dataVersion, 'pass-305-spaceport-two-layer-final-v1');
           }
 
+          if (map.id == 'pendola_pass') {
+            // Map artwork exists, but coordinate calibration and UAG-owned
+            // map markers are not yet verified. Do not fabricate them.
+            expect(map.regions, isEmpty);
+            expect(map.spawnRegions, isEmpty);
+            expect(map.pois, isEmpty);
+            expect(map.markers, isEmpty);
+            continue;
+          }
           expect(map.regions, isNotEmpty);
           expect(map.spawnRegions, isNotEmpty);
           for (final extraction in map.extractions) {

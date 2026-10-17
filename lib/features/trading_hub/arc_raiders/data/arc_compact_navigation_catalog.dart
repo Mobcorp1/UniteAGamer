@@ -135,7 +135,7 @@ class ArcCompactNavigationCatalog {
       label: 'PROGRESSION & TRACKING',
       items: [
         ArcCompactNavigationItem(
-          label: 'Blueprint Tracker',
+          label: 'Collections Tracker',
           icon: Icons.grid_on_rounded,
           routeName: BlueprintGridScreen.routeName,
           accessFlag: FeatureAccessFlag.blueprintTracker,

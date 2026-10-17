@@ -40,7 +40,7 @@ void main() {
       expect(source, contains('blueprintOwnership: blueprintOwnership'));
       expect(source, contains('questProgress: questProgress'));
       expect(source, contains('_personalisationRepository.markComplete'));
-      expect(source, contains('const AppEntryGate()'));
+      expect(source, contains('Navigator.of(context)'));
       expect(source, isNot(contains('_completionDestination')));
     },
   );

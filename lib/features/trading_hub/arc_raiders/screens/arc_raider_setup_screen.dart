@@ -246,7 +246,7 @@ class _ArcRaiderSetupScreenState extends State<ArcRaiderSetupScreen> {
             'Use your existing Tracker to import or select owned Blueprints, then return here.',
           ),
           _editor(
-            'Open Blueprint Tracker',
+            'Open Collections Tracker',
             '/trading-hub/arc-raiders/blueprints',
           ),
           _button('No Blueprints yet', widget.repository.confirmNoBlueprints),

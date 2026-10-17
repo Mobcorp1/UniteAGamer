@@ -22,7 +22,7 @@ void main() {
         tracker,
         matches(
           RegExp(
-            r'ArcBlueprintWorkspaceDock\(\s*current:\s*ArcBlueprintWorkspace.tracker,?\s*\)',
+            r'ArcCollectionsCategoryBar\(',
           ),
         ),
       );
@@ -58,8 +58,8 @@ void main() {
         'lib/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart',
       );
 
-      expect(source, contains('heightScale * 1.75'));
-      expect(source, contains('.clamp(0.20, 1.35)'));
+      expect(source, contains('math.min(widthScale, heightScale)'));
+      expect(source, contains('0.05,'));
       expect(source, contains('constrained: !isLandscape'));
       expect(source, contains('final viewportWidth = fittedWidth;'));
       expect(
@@ -71,7 +71,7 @@ void main() {
       expect(source, contains('commandBarGap -'));
       expect(source, contains('gridVerticalSafetyInset'));
       expect(source, contains('const commandBarGap = 6.0;'));
-      expect(source, contains('const gridVerticalSafetyInset = 2.0;'));
+      expect(source, contains('const gridVerticalSafetyInset = 10.0;'));
       expect(source, isNot(contains('reservedChromeHeight')));
       expect(source, contains('width: canvasWidth'));
       expect(source, contains('height: canvasHeight'));

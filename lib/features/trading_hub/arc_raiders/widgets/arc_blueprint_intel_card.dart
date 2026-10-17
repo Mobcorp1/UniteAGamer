@@ -27,12 +27,12 @@ class ArcBlueprintIntelCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final evidence = cluster.evidence;
-    final reports = evidence
-        .where((e) => e.sourceCategory == 'community_drop_report')
-        .toList();
-    final seeded = evidence
-        .where((e) => e.sourceCategory != 'community_drop_report')
-        .toList();
+    bool isReportedEvidence(ArcRaidIntelEvidence evidence) =>
+        evidence.sourceCategory == 'community_drop_report' ||
+        evidence.sourceCategory == 'community_research_seed';
+
+    final reports = evidence.where(isReportedEvidence).toList();
+    final seeded = evidence.where((e) => !isReportedEvidence(e)).toList();
     final names = ArcBlueprintSeedData.blueprints
         .where((b) => cluster.blueprintIds.contains(b.id))
         .map((b) => b.name)
@@ -128,13 +128,12 @@ class ArcBlueprintIntelCard extends StatelessWidget {
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                   title: Text(
-                    e.sourceCategory == 'community_drop_report'
+                    isReportedEvidence(e)
                         ? 'Reported at ${location(e)}'
                         : 'Route guidance: ${location(e)}',
                   ),
                   subtitle: Text(
                     [
-                      e.sourceReference,
                       if (e.containerSource != null) e.containerSource!,
                       if (e.acquisitionSource != null) e.acquisitionSource!,
                       if (e.claimSummary.isNotEmpty) e.claimSummary,

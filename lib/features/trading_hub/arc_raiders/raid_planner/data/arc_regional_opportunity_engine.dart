@@ -260,7 +260,7 @@ class ArcRegionalOpportunityEngine {
           conditions: conditions,
           maps: maps,
           reason:
-              'Uses the Blueprint Tracker seed/community condition and map intelligence.',
+              'Uses the Collections Tracker seed/community condition and map intelligence.',
         ),
       );
     }

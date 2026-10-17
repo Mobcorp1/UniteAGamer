@@ -34,7 +34,7 @@ class ArcCanonicalSources {
     kind: ArcCanonicalKind.blueprint,
     canonicalPath:
         'lib/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart',
-    owner: 'Blueprint Tracker',
+    owner: 'Collections Tracker',
     adapters: <String>[
       'arc_blueprint_fallback_data.dart',
       'arc_blueprint_intel_seed.dart',
@@ -44,7 +44,7 @@ class ArcCanonicalSources {
       'trade_items_data.dart',
     ],
     notes:
-        'Blueprint Tracker owns blueprint identity, naming, category, row/group and rarity. Other files should adapt this data instead of redefining it.',
+        'Collections Tracker owns blueprint identity, naming, category, row/group and rarity. Other files should adapt this data instead of redefining it.',
   );
 
   static const ArcCanonicalSource itemsResources = ArcCanonicalSource(

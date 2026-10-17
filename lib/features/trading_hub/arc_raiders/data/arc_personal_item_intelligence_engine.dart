@@ -132,7 +132,7 @@ class ArcPersonalItemIntelligenceEngine {
           dataset: effectiveDataset,
           outcome: ArcPersonalItemRecommendation.use,
           primaryReason:
-              'Blueprint Tracker says ${blueprint.name} is not owned yet.',
+              'Collections Tracker says ${blueprint.name} is not owned yet.',
           secondaryReasons: <String>[
             ...secondaryReasons,
             'Learn/consume this before treating it as trade stock.',

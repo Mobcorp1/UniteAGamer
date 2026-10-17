@@ -17,6 +17,7 @@ class ArcRaidIntelligenceSeedData {
     ArcPoiDataStore.buriedCity: 'buried_city',
     ArcPoiDataStore.damBattlegrounds: 'dam_battlegrounds',
     ArcPoiDataStore.rivenTides: 'riven_tides',
+    'Pendola Pass': 'pendola_pass',
     ArcPoiDataStore.spaceport: 'spaceport',
     ArcPoiDataStore.stellaMontis: 'stella_montis',
     ArcPoiDataStore.blueGate: 'blue_gate',
@@ -30,6 +31,8 @@ class ArcRaidIntelligenceSeedData {
     'dam_battlegrounds': 'dam_battlegrounds',
     'riven tides': 'riven_tides',
     'riven_tides': 'riven_tides',
+    'pendola pass': 'pendola_pass',
+    'pendola_pass': 'pendola_pass',
     'spaceport': 'spaceport',
     'stella montis': 'stella_montis',
     'stella_montis': 'stella_montis',
@@ -42,6 +45,7 @@ class ArcRaidIntelligenceSeedData {
     'buried_city',
     'dam_battlegrounds',
     'riven_tides',
+    'pendola_pass',
     'spaceport',
     'stella_montis',
     'blue_gate',
@@ -70,6 +74,7 @@ class ArcRaidIntelligenceSeedData {
       'buried_city' => ArcPoiDataStore.buriedCity,
       'dam_battlegrounds' => ArcPoiDataStore.damBattlegrounds,
       'riven_tides' => ArcPoiDataStore.rivenTides,
+      'pendola_pass' => 'Pendola Pass',
       'spaceport' => ArcPoiDataStore.spaceport,
       'stella_montis' => ArcPoiDataStore.stellaMontis,
       'blue_gate' => ArcPoiDataStore.blueGate,
@@ -189,15 +194,22 @@ class ArcRaidIntelligenceSeedData {
         ArcMapAssetRegistry.stellaMontisMapId =>
           'pass-305-stella-montis-two-layer-final-v1',
         ArcMapAssetRegistry.rivenTidesMapId => 'pass-305-riven-tides-final-v1',
+        ArcMapAssetRegistry.pendolaPassMapId =>
+          'frozen-trail-2.0-pendola-master-2026-10-08-v1',
         ArcMapAssetRegistry.spaceportMapId =>
           'pass-305-spaceport-two-layer-final-v1',
         _ => 'pass-275-local-schematic-v1',
       },
-      lastReviewed: DateTime.utc(2026, 7, 23),
+      lastReviewed: mapId == ArcMapAssetRegistry.pendolaPassMapId
+          ? DateTime.utc(2026, 10, 8)
+          : DateTime.utc(2026, 7, 23),
     );
   }
 
   static List<ArcRaidMapPoi> _pois(String displayName, String mapId) {
+    if (mapId == ArcMapAssetRegistry.pendolaPassMapId) {
+      return const <ArcRaidMapPoi>[];
+    }
     final sourcePois = ArcPoiDataStore.blueprintReportPoisForMap(displayName);
     final count = math.max(sourcePois.length, 1);
     return [
@@ -221,6 +233,9 @@ class ArcRaidIntelligenceSeedData {
   }
 
   static List<ArcRaidMapRegion> _regions(String mapId) {
+    if (mapId == ArcMapAssetRegistry.pendolaPassMapId) {
+      return const <ArcRaidMapRegion>[];
+    }
     const names = [
       ('northwest', 'Northwest Sector', 0.22, 0.22, 0.30),
       ('northeast', 'Northeast Sector', 0.78, 0.24, 0.38),
@@ -242,6 +257,9 @@ class ArcRaidIntelligenceSeedData {
   }
 
   static List<ArcRaidSpawnRegion> _spawnRegions(String mapId) {
+    if (mapId == ArcMapAssetRegistry.pendolaPassMapId) {
+      return const <ArcRaidSpawnRegion>[];
+    }
     return const [
           ('north_spawn', 'North Spawn Band', 0.50, 0.08),
           ('west_spawn', 'West Spawn Band', 0.08, 0.50),
@@ -276,6 +294,9 @@ class ArcRaidIntelligenceSeedData {
   }
 
   static List<ArcRaiderHatch> _hatches(String mapId) {
+    if (mapId == ArcMapAssetRegistry.pendolaPassMapId) {
+      return const <ArcRaiderHatch>[];
+    }
     return const [
           ('hatch_west', 'West Raider Hatch', 0.20, 0.55),
           ('hatch_east', 'East Raider Hatch', 0.80, 0.46),
@@ -530,6 +551,9 @@ class ArcRaidIntelligenceSeedData {
   }
 
   static List<ArcRaidMapMarker> _genericLootMarkers(String mapId) {
+    if (mapId == ArcMapAssetRegistry.pendolaPassMapId) {
+      return const <ArcRaidMapMarker>[];
+    }
     return const [
           (
             ArcRaidMapMarkerCategory.weaponCase,

@@ -67,14 +67,16 @@ class ArcBlueprintPhotoImportService {
   }
 
   Future<ArcBlueprintPhotoImportSummary> apply(
-    Iterable<ArcBlueprintPhotoCellDecision> decisions,
-  ) async {
+    Iterable<ArcBlueprintPhotoCellDecision> decisions, {
+    bool confirmedInitialImport = false,
+  }) async {
     final existing = await _repository.loadMyBlueprintStates();
     final decisionList = decisions.toList(growable: false);
     final blockReason =
         ArcBlueprintPhotoImportService.automaticUpdateBlockReason(
           decisions: decisionList,
           existing: existing,
+          confirmedInitialImport: confirmedInitialImport,
         );
     if (blockReason != null) {
       throw FormatException(blockReason);
@@ -107,6 +109,7 @@ class ArcBlueprintPhotoImportService {
   static String? automaticUpdateBlockReason({
     required Iterable<ArcBlueprintPhotoCellDecision> decisions,
     required Map<String, ArcBlueprintState> existing,
+    bool confirmedInitialImport = false,
   }) {
     final decisionList = decisions.toList(growable: false);
     if (decisionList.isEmpty) return null;
@@ -119,12 +122,17 @@ class ArcBlueprintPhotoImportService {
       return existing[decision.blueprintId]?.owned != true;
     }).length;
 
-    if (decisionList.length >= 80 &&
+    if (!confirmedInitialImport &&
+        decisionList.length >= 80 &&
         ownedDecisions.length >= decisionList.length - 1 &&
         existingOwned < (decisionList.length * 0.85).floor()) {
       return 'The scan tried to mark almost every Blueprint as owned. '
           'Nothing was changed. Re-align the locked grid with the cell edges '
           'and retake the images.';
+    }
+
+    if (confirmedInitialImport && existingOwned != 0) {
+      return 'Initial import requires an empty Blueprint collection.';
     }
 
     if (existingOwned > 0 && additions > 24) {

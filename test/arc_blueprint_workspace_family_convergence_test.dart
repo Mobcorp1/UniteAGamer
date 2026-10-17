@@ -34,7 +34,7 @@ void main() {
       source,
       matches(
         RegExp(
-          r'ArcBlueprintWorkspaceDock\(\s*current:\s*ArcBlueprintWorkspace.tracker,?\s*\)',
+          r'ArcCollectionsCategoryBar\(',
         ),
       ),
     );
@@ -43,7 +43,7 @@ void main() {
       source,
       matches(
         RegExp(
-          r'_buildOverviewGrid\(\s*context,\s*filtered,\s*states,\s*loadout,?\s*\)',
+          r'_buildOverviewGrid\(\s*context,\s*filtered,\s*states,?\s*\)',
         ),
       ),
     );

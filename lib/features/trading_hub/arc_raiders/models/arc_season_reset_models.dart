@@ -58,7 +58,7 @@ class ArcSeasonResetPolicy {
     'Scrappy target',
     'Quest target',
     'Bench target',
-    'Blueprint Tracker guidance',
+    'Collections Tracker guidance',
     'Favourite Loadout missing-item state',
     'Trade Intelligence relevance',
   ];
@@ -88,7 +88,7 @@ class ArcSeasonResetPolicy {
       ),
       ArcSeasonResetSystemImpact(
         id: 'blueprints',
-        label: 'Blueprint Tracker',
+        label: 'Collections Tracker',
         classification: ArcSeasonResetClassification.reset,
         reason:
             'Owned and duplicate blueprint state returns to missing for the new expedition.',

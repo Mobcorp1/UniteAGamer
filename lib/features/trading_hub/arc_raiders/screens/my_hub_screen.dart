@@ -58,7 +58,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
 
   late final List<_ArcHubFeature> _features = [
     _ArcHubFeature(
-      title: 'Blueprint Tracker',
+      title: 'Collections Tracker',
       subtitle:
           'Owned, missing, duplicates and priority blueprint hunt progress.',
       icon: Icons.grid_on_rounded,
@@ -275,8 +275,8 @@ class _MyHubScreenState extends State<MyHubScreen> {
 
   String? _featureAccessFlagForTitle(String title) {
     switch (title) {
-      case 'Blueprint Tracker':
-      case 'Blueprint Tracker Beta':
+      case 'Collections Tracker':
+      case 'Collections Tracker Beta':
       case 'Blueprint Grid':
         return FeatureAccessFlag.blueprintTracker;
       case 'Scrappy Tracker':
@@ -328,7 +328,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
 
   ArcPersonalisationFeature? _personalisationFeatureForTitle(String title) {
     return switch (title) {
-      'Blueprint Tracker' => ArcPersonalisationFeature.blueprintTracker,
+      'Collections Tracker' => ArcPersonalisationFeature.blueprintTracker,
       'Raid Intelligence' => ArcPersonalisationFeature.raidIntelligence,
       'Raid Planner' => ArcPersonalisationFeature.raidPlanner,
       'Match Raider' => ArcPersonalisationFeature.matchRider,
@@ -410,7 +410,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
       return _featureByTitle('My Loadout');
     }
 
-    return _featureByTitle('Blueprint Tracker');
+    return _featureByTitle('Collections Tracker');
   }
 
   String get _displayName {
@@ -809,7 +809,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
 
   Widget _personalTools(ArcUserPersonalisationProfile personalisation) {
     const candidateTitles = <String>[
-      'Blueprint Tracker',
+      'Collections Tracker',
       'Raid Intelligence',
       'Raid Planner',
       'Match Raider',
@@ -976,7 +976,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
       ('Report Drop', _featureByTitle('My Intel'), Icons.inventory_outlined),
       (
         'Start Hunt',
-        _featureByTitle('Blueprint Tracker'),
+        _featureByTitle('Collections Tracker'),
         Icons.track_changes_rounded,
       ),
       (
@@ -1906,8 +1906,8 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
 
   String? _featureAccessFlagForTitle(String title) {
     switch (title) {
-      case 'Blueprint Tracker':
-      case 'Blueprint Tracker Beta':
+      case 'Collections Tracker':
+      case 'Collections Tracker Beta':
       case 'Blueprint Grid':
         return FeatureAccessFlag.blueprintTracker;
       case 'Scrappy Tracker':

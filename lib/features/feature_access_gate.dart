@@ -309,7 +309,7 @@ class FeatureAccess {
             ),
           ),
           content: Text(
-            '$title is coming soon. Available in a future beta release. The Blueprint Tracker beta is currently the focus.',
+            '$title is coming soon. Available in a future beta release. The Collections Tracker beta is currently the focus.',
             style: const TextStyle(color: Colors.white70, height: 1.4),
           ),
           actions: [
@@ -352,7 +352,7 @@ class FeatureLockedScreen extends StatelessWidget {
           title: availability.isHidden ? 'Unavailable' : 'Coming Soon',
           message: availability.isHidden
               ? '$title is currently hidden from closed beta users.'
-              : '$title is coming soon. Available in a future beta release. The Blueprint Tracker beta is currently the focus.',
+              : '$title is coming soon. Available in a future beta release. The Collections Tracker beta is currently the focus.',
           accent: availability.isHidden ? Colors.white60 : AppTheme.neonPink,
         ),
       ),

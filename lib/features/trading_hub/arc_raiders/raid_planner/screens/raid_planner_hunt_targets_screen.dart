@@ -601,7 +601,7 @@ class _RaidPlannerHuntTargetsScreenState
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                'Hunts now sync with Blueprint Tracker ownership. Owned targets are removed from active hunt slots and replacements are filled automatically.',
+                                'Hunts now sync with Collections Tracker ownership. Owned targets are removed from active hunt slots and replacements are filled automatically.',
                                 style: AppTheme.bodyTextStyle(
                                   fontSize: 14,
                                   color: ArcUiTokens.textSecondary,

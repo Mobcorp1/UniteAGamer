@@ -75,7 +75,7 @@ void main() {
     expect(find.text('Open Raid Planner'), findsOneWidget);
     await tester.tap(find.text('Evidence and nearby navigation'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Community Drop Report'), findsOneWidget);
+    expect(find.textContaining('Reported at'), findsWidgets);
     expect(find.textContaining('Nearest POI:'), findsOneWidget);
   });
 

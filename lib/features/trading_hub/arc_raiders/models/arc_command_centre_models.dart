@@ -15,6 +15,7 @@ class ArcCommandAction {
   const ArcCommandAction({
     required this.label,
     this.routeName,
+    this.routeArguments,
     this.intent = ArcCommandActionIntent.route,
     this.placeholderMessage,
     this.featureTitle,
@@ -22,6 +23,7 @@ class ArcCommandAction {
 
   final String label;
   final String? routeName;
+  final Object? routeArguments;
   final ArcCommandActionIntent intent;
   final String? placeholderMessage;
   final String? featureTitle;

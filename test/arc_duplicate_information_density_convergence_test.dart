@@ -10,17 +10,11 @@ void main() {
       'lib/features/trading_hub/arc_raiders/widgets/command_centre/arc_command_centre_content.dart',
     );
 
-    expect(source, contains("const title = 'OPS SNAPSHOT';"));
-    expect(source, contains('_actionConsole(commandMoves, showHeader: false)'));
-    expect(
-      source,
-      contains('_systemCarousel(state, carouselTiles, showHeader: false)'),
-    );
-    expect(
-      source,
-      contains('_systemIntelligencePanel(state, tiles[activeIndex])'),
-    );
-    expect(source, contains('_seasonResetEntry(showTitle: false)'));
+    expect(source, contains("'NEXT RAID'"));
+    expect(source, contains("'COLLECTIONS TRACKER'"));
+    expect(source, contains('_systemCarousel'));
+    expect(source, contains('_systemIntelligencePanel(state, tiles[activeIndex])'));
+    expect(source, contains('_exploreBrief'));
     expect(source, contains('bool showHeader = true'));
     expect(source, contains('bool showTitle = true'));
     expect(source, isNot(contains("const title = 'COMMAND CENTRE';")));

@@ -53,7 +53,7 @@ void main() {
         'Raid Planner',
         'Hunt Targets',
         'Report a Rat / Contracts',
-        'Blueprint Tracker',
+        'Collections Tracker',
         'Scrappy Tracker',
         'Bench Tracker',
         'Quest Tracker',
@@ -165,7 +165,7 @@ void main() {
 
     test('declares feature gates for controlled drawer destinations', () {
       expect(
-        _item('Blueprint Tracker').accessFlag,
+        _item('Collections Tracker').accessFlag,
         FeatureAccessFlag.blueprintTracker,
       );
       expect(

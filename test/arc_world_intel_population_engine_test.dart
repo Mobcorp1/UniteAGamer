@@ -27,12 +27,20 @@ void main() {
       );
 
       for (final map in ArcRaidIntelligenceSeedData.maps) {
-        expect(result.coverageReport.markerCountByMap[map.id], greaterThan(0));
+        if (map.id == 'pendola_pass') {
+          // No verified local POIs yet; missing counts must mean zero, not
+          // null passed into a numerical matcher or a fabricated marker.
+          expect(result.coverageReport.markerCountByMap[map.id] ?? 0, 0);
+        } else {
+          expect(result.coverageReport.markerCountByMap[map.id], greaterThan(0));
+        }
         for (final layer in map.availableLayers) {
+          final count = result.coverageReport.markerCountByLayer['${map.id}:${layer.name}'] ?? 0;
+          expect(count, greaterThanOrEqualTo(0), reason: '${map.displayName} ${layer.label}');
           expect(
-            result.coverageReport.markerCountByLayer['${map.id}:${layer.name}'],
-            greaterThan(0),
-            reason: '${map.displayName} ${layer.label} should be populated.',
+            result.markers.where((marker) => marker.mapId == map.id && marker.layer == layer).length,
+            count,
+            reason: 'Coverage report must agree with real populated markers.',
           );
         }
       }

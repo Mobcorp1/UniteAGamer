@@ -1,3 +1,4 @@
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -41,7 +42,6 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositorie
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_user_personalisation_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_beta_feedback_screen.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/my_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/nomadic_trader_screen.dart';
@@ -206,7 +206,9 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
             routeName == ArcCommandCentreScreen.routeName) {
           return;
         }
-        Navigator.of(context).pushNamed(routeName);
+        Navigator.of(
+          context,
+        ).pushNamed(routeName, arguments: action.routeArguments);
       case ArcCommandActionIntent.favouriteLoadout:
         Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const FavouriteLoadoutScreen()),

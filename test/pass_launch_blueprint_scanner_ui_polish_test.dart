@@ -17,7 +17,7 @@ void main() {
 
     expect(
       normalized,
-      contains("label: hasOwnedBlueprints ? 'UPDATE' : 'SCAN'"),
+      contains('tooltip: hasOwnedBlueprints'),
     );
     expect(normalized, contains("'Update Blueprint ownership from game'"));
     expect(normalized, contains("'Scan Blueprint grid from game'"));
@@ -38,7 +38,7 @@ void main() {
     );
 
     expect(source, contains('final viewportWidth = fittedWidth;'));
-    expect(source, contains('const commandRailWidth = 132.0;'));
+    expect(source, contains('const commandRailWidth = 106.0;'));
     expect(source, contains('mainAxisSize: MainAxisSize.min'));
     expect(
       source,
@@ -53,17 +53,15 @@ void main() {
 
     expect(
       source,
-      contains(
-        "key: const Key(\n                                  'blueprint-live-scanner-capture',",
-      ),
+      matches(RegExp(r"key:\s*const Key\(\s*'blueprint-live-scanner-capture',?\s*\)")),
     );
     expect(source, contains('backgroundColor: AppTheme.neonPink'));
     expect(source, contains('foregroundColor: AppTheme.neonCyan'));
     expect(
       source,
-      contains(
-        'color: AppTheme.neonCyan.withValues(\n                                      alpha: 0.96,',
-      ),
+      matches(RegExp(
+        r'side:\s*BorderSide\(\s*color:\s*AppTheme\.neonCyan\.withValues\(\s*alpha:\s*0\.96,?\s*\),\s*width:\s*2,?\s*\)',
+      )),
     );
   });
 

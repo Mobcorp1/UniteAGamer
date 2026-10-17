@@ -15,6 +15,33 @@ class ArcTradeBundleEngine {
     final usedOfferIndexes = <int>{};
     const fittedEngine = ArcFittedWeaponTradeEngine();
     final terms = template.effectiveTerms;
+    // Smart share listings only qualify distinct, actual missing Blueprint IDs.
+    // Other historical bundle types keep their existing comparison semantics.
+    if (terms.notes == 'UAG_SMART_TRADE_V1') {
+      final wanted = template.components.map((item) => item.itemId).toSet();
+      final supplied = offer.components;
+      final uniqueIds = supplied.map((item) => item.itemId).toSet();
+      final invalid = supplied.any((item) =>
+        item.type != ArcTradeBundleComponentType.blueprint ||
+        !wanted.contains(item.itemId) || item.quantity != 1);
+      final count = supplied.length;
+      final required = terms.minimumRequiredComponents;
+      if (invalid || uniqueIds.length != count || count < required ||
+          count > wanted.length) {
+        return ArcTradeBundleMatchResult(
+          status: ArcTradeBundleMatchStatus.mismatch,
+          missing: <String>['Offer at least $required different missing Blueprints'],
+          incorrect: const <String>[],
+          unexpected: const <String>[],
+          equivalentSubstitutions: const <String>[],
+        );
+      }
+      return const ArcTradeBundleMatchResult(
+        status: ArcTradeBundleMatchStatus.exact,
+        missing: <String>[], incorrect: <String>[],
+        unexpected: <String>[], equivalentSubstitutions: <String>[],
+      );
+    }
     var matchedRequiredComponents = 0;
     var matchedRequiredQuantity = 0;
 

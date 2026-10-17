@@ -55,7 +55,7 @@ void main() {
       expect(tracker, contains('compactMobileLandscape'));
       expect(tracker, contains("ArcCompanionBottomDock(activeLabel: 'Track')"));
       expect(tracker, contains('if (!compactMobileLandscape)'));
-      expect(tracker, contains('ArcBlueprintWorkspaceDock('));
+      expect(tracker, contains('ArcCollectionsCategoryBar('));
       expect(tracker, contains("case 'loadout':"));
       expect(tracker, contains("case 'watches':"));
       expect(tracker, contains("label: 'Guaranteed Quest Unlock'"));

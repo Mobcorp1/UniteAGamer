@@ -4,7 +4,6 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blu
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_grid_view_preferences.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_ad_banner_card.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_blueprint_workspace_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 
 void main() {
@@ -53,14 +52,19 @@ void main() {
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 50));
 
+        // The canonical 17-column tracker is landscape-only. Portrait must
+        // display a deliberate rotation prompt, not an offscreen viewport.
+        if (size.height > size.width) {
+          expect(find.text('ROTATE TO LANDSCAPE'), findsOneWidget);
+          expect(tester.takeException(), isNull);
+          await tester.pumpWidget(const SizedBox.shrink());
+          return;
+        }
         final grid = find.byKey(
           const Key('blueprint-authoritative-grid-viewport'),
         );
         final before = tester.getRect(grid);
-        final workspaceDock = find.byType(ArcBlueprintWorkspaceDock);
-        final workspaceBar = find.byType(ArcBlueprintWorkspaceBar);
         final appDock = find.byType(ArcCompanionBottomDock);
-        expect(workspaceBar, findsOneWidget);
 
         final compactLandscape = size.width > size.height && size.height <= 720;
         final banner = find.byKey(const Key('blueprint-banner-slot'));
@@ -73,25 +77,13 @@ void main() {
             findsOneWidget,
           );
           expect(before.overlaps(tester.getRect(banner)), isFalse);
-          expect(workspaceDock, findsNothing);
-          expect(
-            find.descendant(of: find.byType(AppBar), matching: workspaceBar),
-            findsOneWidget,
-          );
-          expect(
-            tester.getRect(workspaceBar).bottom,
-            lessThanOrEqualTo(before.top),
-          );
+          expect(before.overlaps(tester.getRect(banner)), isFalse);
         } else {
           expect(appDock, findsOneWidget);
           expect(before.overlaps(tester.getRect(appDock)), isFalse);
           expect(banner, findsOneWidget);
           expect(before.overlaps(tester.getRect(banner)), isFalse);
-          expect(workspaceDock, findsOneWidget);
-          expect(
-            tester.getRect(banner).bottom,
-            lessThanOrEqualTo(tester.getRect(workspaceDock).top),
-          );
+          expect(tester.getRect(banner).bottom, lessThanOrEqualTo(size.height));
         }
 
         for (final phase in [1, 2, 0]) {

@@ -54,7 +54,7 @@ class UagSubscriptionPlan {
       creatorOnboardingDiscountPercent: 0,
       limits: UagPlanLimits.free,
       features: [
-        'Full Blueprint Tracker access',
+        'Full Collections Tracker access',
         UagMatchIntelligenceCopy.freeDescription,
         'Core UAG Raider voice item advice',
         'Intel contribution stays unlimited',

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bench_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_frozen_trail_collection_catalogue.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_command_centre_view_mapper.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_command_centre_relevance_mapper.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_decision_engine.dart';
@@ -63,13 +64,18 @@ class ArcCommandCentreEngine {
     Map<String, FeatureAvailability> featureAvailability =
         const <String, FeatureAvailability>{},
   }) {
-    final totalBlueprints = ArcBlueprintSeedData.blueprints.length;
+    // The in-game Frozen Trail tracker has 91 positions; the legacy seed has
+    // only 83. Count unique, genuinely mapped owned IDs, never spare copies.
+    const totalBlueprints = 91;
+    final trackedIds = ArcFrozenTrailCollectionCatalogue.blueprintEntries
+        .where((entry) => entry.slot != null && entry.slot! >= 1 && entry.slot! <= totalBlueprints)
+        .map((entry) => entry.id)
+        .toSet();
     final blueprintStateKnown = blueprintStates.isNotEmpty;
-    final ownedBlueprints = blueprintStates.values
-        .where((state) => state.owned)
-        .length
-        .clamp(0, totalBlueprints)
-        .toInt();
+    final ownedBlueprints = trackedIds.where(
+      (id) => blueprintStates[id]?.owned == true,
+    ).length;
+
     final missingBlueprints = blueprintStateKnown
         ? math.max(0, totalBlueprints - ownedBlueprints)
         : null;
@@ -79,7 +85,7 @@ class ArcCommandCentreEngine {
     );
     final recentBlueprint = _recentBlueprintName(blueprintStates);
     final prioritizedMissing = _prioritizedMissingBlueprints(blueprintStates);
-    final loadout = savedLoadouts.isEmpty ? null : savedLoadouts.first;
+    final loadout = _favouriteLoadout(savedLoadouts);
     final loadoutSummary = _loadoutSummary(loadout);
     final readyOperations = _operationCount(
       operationsState,
@@ -159,6 +165,16 @@ class ArcCommandCentreEngine {
       decisionState,
     );
     snapshots = _mergeSnapshots(_progressionSnapshots(progression), snapshots);
+    snapshots = _mergeSnapshots([
+      ArcCommandSnapshotMetric(
+        label: 'Favourite Loadout',
+        value: loadoutSummary.ready ? 'Saved' : 'Not saved',
+        detail: loadout?.name ?? 'No Favourite Loadout saved',
+        status: loadoutSummary.ready
+            ? ArcCommandStatus.success
+            : ArcCommandStatus.warning,
+      ),
+    ], snapshots);
     objectives = _mergeObjectives(
       _progressionObjectives(progression),
       objectives,
@@ -184,6 +200,17 @@ class ArcCommandCentreEngine {
     alerts = alerts
         .where(ArcCommandCentreCompletionPolicy.alertIsActionable)
         .toList(growable: false);
+    if (loadoutSummary.ready) {
+      objectives = objectives
+          .where((objective) => objective.title != 'Finish Favourite Loadout')
+          .toList(growable: false);
+      alerts = alerts
+          .where((alert) => alert.title != 'Finish Favourite Loadout')
+          .toList(growable: false);
+      recommendations = recommendations
+          .where((item) => item.title != 'Finish Favourite Loadout')
+          .toList(growable: false);
+    }
     var checklist = _checklist(
       loadoutReady: loadoutSummary.ready,
       tradeActivity: tradeActivity,
@@ -410,7 +437,7 @@ class ArcCommandCentreEngine {
   static String _onboardingSystemLabel(String systemId) {
     switch (systemId) {
       case 'blueprintTracker':
-        return 'Blueprint Tracker';
+        return 'Collections Tracker';
       case 'trading':
         return 'Smart Trade';
       case 'favouriteLoadout':
@@ -443,7 +470,7 @@ class ArcCommandCentreEngine {
     switch (systemId) {
       case 'blueprintTracker':
         return const ArcCommandAction(
-          label: 'Open Blueprint Tracker',
+          label: 'Open Collections Tracker',
           routeName: BlueprintGridScreen.routeName,
         );
       case 'trading':
@@ -510,6 +537,42 @@ class ArcCommandCentreEngine {
     ArcProgressionSnapshotBundle progression,
   ) {
     final activeQuest = progression.quest.activeQuest;
+    final benchDefinitionsByStation =
+        <String, List<ArcBenchProgressionDefinition>>{};
+    for (final definition in progression.bench.definitions) {
+      benchDefinitionsByStation
+          .putIfAbsent(definition.station, () => [])
+          .add(definition);
+    }
+
+    final benchSnapshots = <ArcCommandSnapshotMetric>[];
+    for (final entry in benchDefinitionsByStation.entries) {
+      final definitions = entry.value
+        ..sort((a, b) => a.level.compareTo(b.level));
+      final record =
+          progression.bench.recordsByBenchId[definitions.first.benchId];
+      final currentLevel = record?.currentLevel ?? 0;
+      ArcBenchProgressionDefinition? next;
+      for (final definition in definitions) {
+        if (definition.level > currentLevel) {
+          next = definition;
+          break;
+        }
+      }
+      benchSnapshots.add(
+        ArcCommandSnapshotMetric(
+          label: 'Bench: ${entry.key}',
+          value: 'Lv.$currentLevel',
+          detail: next == null ? 'MAX' : 'NEXT Lv.${next.level}',
+          status: next == null
+              ? ArcCommandStatus.success
+              : progression.bench.trackingKnown
+              ? ArcCommandStatus.active
+              : ArcCommandStatus.neutral,
+        ),
+      );
+    }
+
     return [
       ArcCommandSnapshotMetric(
         label: 'Quest Chain',
@@ -533,10 +596,10 @@ class ArcCommandCentreEngine {
         label: 'Scrappy',
         value: 'Lv.${progression.scrappy.state.currentLevel}',
         detail: progression.scrappy.nextUpgrade == null
-            ? 'All tracked upgrades complete'
+            ? 'MAX'
             : progression.scrappy.readyToUpgrade
-            ? '${progression.scrappy.nextUpgrade!.title} ready'
-            : progression.scrappy.progressLabel,
+            ? 'UPGRADE READY'
+            : 'NEXT Lv.${progression.scrappy.nextUpgrade!.level}',
         status: progression.scrappy.status,
       ),
       ArcCommandSnapshotMetric(
@@ -549,6 +612,7 @@ class ArcCommandCentreEngine {
             : progression.bench.upgradeLabel,
         status: progression.bench.status,
       ),
+      ...benchSnapshots,
     ];
   }
 
@@ -1070,7 +1134,7 @@ class ArcCommandCentreEngine {
           ? ArcCommandStatus.active
           : ArcCommandStatus.neutral,
       action: const ArcCommandAction(
-        label: 'Open Blueprint Tracker',
+        label: 'Open Collections Tracker',
         routeName: BlueprintGridScreen.routeName,
       ),
     );
@@ -1325,6 +1389,7 @@ class ArcCommandCentreEngine {
       action: ArcCommandAction(
         label: routeReady ? 'Continue Route' : 'Generate Run',
         routeName: ArcRaidIntelligenceScreen.routeName,
+        routeArguments: raidIntel.map.id,
       ),
     );
   }
@@ -1437,6 +1502,13 @@ class ArcCommandCentreEngine {
     );
   }
 
+  static ArcSavedLoadout? _favouriteLoadout(List<ArcSavedLoadout> loadouts) {
+    for (final loadout in loadouts) {
+      if (loadout.id == 'favourite-loadout') return loadout;
+    }
+    return loadouts.isEmpty ? null : loadouts.first;
+  }
+
   static _ArcLoadoutCommandSummary _loadoutSummary(ArcSavedLoadout? loadout) {
     if (loadout == null) {
       return const _ArcLoadoutCommandSummary(
@@ -1447,14 +1519,6 @@ class ArcCommandCentreEngine {
       );
     }
 
-    final missingSlots = <String>[
-      if (loadout.augment.trim().isEmpty) 'augment',
-      if (loadout.primaryWeapon.trim().isEmpty) 'primary weapon',
-      if (loadout.secondaryWeapon.trim().isEmpty) 'secondary weapon',
-      if (loadout.equipment.isEmpty && loadout.consumables.isEmpty)
-        'equipment or consumables',
-    ];
-    final ready = missingSlots.isEmpty;
     final kitParts = <String>[
       if (loadout.primaryWeapon.trim().isNotEmpty) loadout.primaryWeapon.trim(),
       if (loadout.secondaryWeapon.trim().isNotEmpty)
@@ -1463,10 +1527,10 @@ class ArcCommandCentreEngine {
     ];
 
     return _ArcLoadoutCommandSummary(
-      ready: ready,
-      statusLabel: ready ? 'Ready' : 'Needs ${missingSlots.length}',
+      ready: true,
+      statusLabel: 'Saved',
       detail: kitParts.isEmpty ? loadout.name : kitParts.join(' / '),
-      missingSlots: missingSlots,
+      missingSlots: const <String>[],
     );
   }
 

@@ -54,7 +54,7 @@ class ArcHelpCentreCatalog {
     ),
     ArcHelpCategory(
       id: 'blueprint-tracker',
-      title: 'Blueprint Tracker',
+      title: 'Collections Tracker',
       summary: 'Owned, missing, duplicate and wanted blueprint tracking.',
       routeName: BlueprintGridScreen.routeName,
       answers: [

@@ -9,7 +9,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 /// This deliberately builds on the app's own `UnifiedItemIndex` instead of
 /// scraping restricted editorial/database sites into the app. The rules below
 /// classify the full local item catalogue and combine it with live user state
-/// from the Blueprint Tracker.
+/// from the Collections Tracker.
 enum ArcItemPrimaryAction { keep, learn, trade, sell, recycle, use, check }
 
 class ArcVoiceItemDecision {
@@ -137,7 +137,7 @@ class ArcItemAdviceIndex {
 
     if (!owned) {
       final reasons = <String>[
-        'Blueprint Tracker says this blueprint is not owned.',
+        'Collections Tracker says this blueprint is not owned.',
         'Blueprint unlock value is higher than sale value until learned.',
         'Rarity: $rarity.',
       ];
@@ -164,7 +164,7 @@ class ArcItemAdviceIndex {
         : 'You already have this learned. If this drop is another copy, treat it as a duplicate.';
     final tradeStrength = _blueprintTradeStrength(blueprint.rarity);
     final reasons = <String>[
-      'Blueprint Tracker says this blueprint is already owned.',
+      'Collections Tracker says this blueprint is already owned.',
       'A second copy does not unlock extra progress.',
       tradeStrength,
     ];

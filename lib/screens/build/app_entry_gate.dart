@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/services/uag_trade_invite_service.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/uag_trade_invite_landing.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -228,8 +230,19 @@ class _AppEntryGateState extends State<AppEntryGate> {
                       WidgetsBinding.instance.addPostFrameCallback((_) {
                         if (mounted) _runLegalGateOnce();
                       });
-                      return widget.destinationBuilder?.call(context) ??
-                          const ArcCommandCentreScreen();
+                      if (widget.destinationBuilder == null) {
+                        return ValueListenableBuilder<String?>(
+                          valueListenable: UagTradeInviteService.instance.pendingToken,
+                          builder: (context, token, _) => token == null
+                              ? const ArcCommandCentreScreen()
+                              : UagTradeInviteLanding(
+                                  key: ValueKey(token),
+                                  token: token,
+                                  onExit: () {},
+                                ),
+                        );
+                      }
+                      return widget.destinationBuilder!.call(context);
                     },
                   ),
                 );

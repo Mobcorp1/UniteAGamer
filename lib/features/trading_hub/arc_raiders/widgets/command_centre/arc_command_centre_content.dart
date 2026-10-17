@@ -1,5 +1,7 @@
 // ignore_for_file: use_null_aware_elements
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/screens/monetisation_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_command_centre_models.dart';
@@ -59,11 +61,59 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
   final Map<String, bool> _expandedPanels = <String, bool>{};
   int _systemsIndex = 0;
 
+  static const double _briefingCarouselExtent = 258;
+  static const int _briefingCarouselLoopBase = 40000;
+  late final ScrollController _benchCarouselController;
+  late final ScrollController _eventCarouselController;
+  Timer? _eventRotationTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    final initialOffset = _briefingCarouselLoopBase * _briefingCarouselExtent;
+    _benchCarouselController = ScrollController(
+      initialScrollOffset: initialOffset,
+    );
+    _eventCarouselController = ScrollController(
+      initialScrollOffset: initialOffset,
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) => _startEventRotation());
+  }
+
+  @override
+  void dispose() {
+    _eventRotationTimer?.cancel();
+    _benchCarouselController.dispose();
+    _eventCarouselController.dispose();
+    super.dispose();
+  }
+
+  void _startEventRotation() {
+    _eventRotationTimer?.cancel();
+    _eventRotationTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (!mounted || !_eventCarouselController.hasClients) return;
+      final position = _eventCarouselController.position;
+      if (position.isScrollingNotifier.value) return;
+
+      var next = position.pixels + _briefingCarouselExtent;
+      if (next >= position.maxScrollExtent - (_briefingCarouselExtent * 4)) {
+        final reset = _briefingCarouselLoopBase * _briefingCarouselExtent;
+        _eventCarouselController.jumpTo(reset);
+        next = reset + _briefingCarouselExtent;
+      }
+
+      _eventCarouselController.animateTo(
+        next,
+        duration: const Duration(milliseconds: 420),
+        curve: Curves.easeOutCubic,
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final commandState = widget.commandState;
     final exploreTiles = _systemCarouselTiles(commandState);
-    final commandMoves = _commandMoves(commandState).take(6).toList();
 
     return ArcRaidersPageList(
       maxWidth: 1220,
@@ -101,8 +151,6 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
           ),
           const SizedBox(height: 8),
         ],
-        _commandHero(commandState, commandMoves),
-        const SizedBox(height: 8),
         _nextRaidBrief(commandState),
         const SizedBox(height: 8),
         _progressionBrief(commandState),
@@ -123,9 +171,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     final map = _detailValue(panel.details, 'Map:') ?? 'Recommended map';
     final condition =
         _detailValue(panel.details, 'Condition:') ?? panel.statusLabel;
-    final blueprintTargets =
-        _detailContaining(panel.details, 'Blueprint') ??
-        'Raid objectives ready to review';
+    final blueprintTargets = _detailContaining(panel.details, 'Blueprint');
     final accent = arcCommandStatusAccent(panel.status);
     final ctaLabel = panel.status == ArcCommandStatus.ready
         ? 'OPEN RAID'
@@ -136,7 +182,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
       active: panel.status == ArcCommandStatus.ready,
       child: Container(
         width: double.infinity,
-        constraints: const BoxConstraints(minHeight: 172),
+        constraints: const BoxConstraints(minHeight: 150),
         padding: const EdgeInsets.all(16),
         decoration: _imageDecoration(
           _imageForAction(panel.action),
@@ -168,24 +214,14 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
                     color: Colors.white,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  _shortActionText(panel.body),
-                  maxLines: compact ? 3 : 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTheme.bodyTextStyle(
-                    fontSize: compact ? 12 : 13,
-                    color: Colors.white70,
-                  ),
-                ),
                 const SizedBox(height: 12),
                 Wrap(
                   spacing: 7,
                   runSpacing: 7,
                   children: [
                     _briefingChip(condition, accent),
-                    _briefingChip(blueprintTargets, AppTheme.neonCyan),
-                    _briefingChip(panel.statusLabel, accent),
+                    if (blueprintTargets != null)
+                      _briefingChip(blueprintTargets, AppTheme.neonCyan),
                   ],
                 ),
               ],
@@ -255,88 +291,61 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     final blueprint = state.blueprintSummary;
     final owned =
         _detailContaining(blueprint.details, 'owned') ?? blueprint.statusLabel;
-    final missing = _detailContaining(blueprint.details, 'missing');
     final duplicates = _detailContaining(blueprint.details, 'duplicate');
     final scrappy = _snapshotByLabel(state.snapshots, 'Scrappy');
+    final benchStations = state.snapshots
+        .where((metric) => metric.label.startsWith('Bench: '))
+        .toList(growable: false);
 
     final blueprintCard = _briefingStatusCard(
-      title: 'BLUEPRINT TRACKER',
+      title: 'COLLECTIONS TRACKER',
       value: owned,
-      detail: [
-        if (missing != null) missing,
-        if (duplicates != null) duplicates,
-      ].join('  •  '),
+      detail: duplicates ?? '',
       action: blueprint.action,
       status: blueprint.status,
       icon: Icons.grid_view_rounded,
       image: _operationAsset('complete_blueprint_collection_card.webp'),
       large: true,
     );
-    final benchCard = _briefingStatusCard(
-      title: 'BENCH',
-      value: state.benchSummary.statusLabel,
-      detail:
-          _detailValue(state.benchSummary.details, 'Next upgrade:') ??
-          _summaryDetail(state.benchSummary),
-      action: state.benchSummary.action,
-      status: state.benchSummary.status,
-      icon: Icons.build_circle_outlined,
-      image: _operationAsset('upgrade_gunsmith_card.webp'),
-      dense: true,
-    );
-    final scrappyCard = _briefingStatusCard(
-      title: 'SCRAPPY',
-      value: scrappy?.value ?? 'Set up',
-      detail: scrappy?.detail ?? 'Open Scrappy Tracker',
-      action: const ArcCommandAction(
-        label: 'Open Scrappy Tracker',
-        routeName: ScrappyGridScreen.routeName,
+
+    final benchCards = <Widget>[
+      for (final bench in benchStations)
+        _briefingEventCard(
+          title: bench.label.substring('Bench: '.length).toUpperCase(),
+          value: bench.value,
+          detail: bench.detail,
+          status: bench.status,
+          action: const ArcCommandAction(
+            label: 'Open Bench Tracker',
+            routeName: ScrappyGridScreen.benchRouteName,
+          ),
+          icon: Icons.build_circle_outlined,
+        ),
+      _briefingEventCard(
+        title: 'SCRAPPY',
+        value: scrappy?.value ?? 'Lv.0',
+        detail: scrappy?.status == ArcCommandStatus.ready
+            ? 'UPGRADE READY'
+            : '',
+        status: scrappy?.status ?? ArcCommandStatus.neutral,
+        action: const ArcCommandAction(
+          label: 'Open Scrappy Tracker',
+          routeName: ScrappyGridScreen.routeName,
+        ),
+        icon: Icons.pets_rounded,
       ),
-      status: scrappy?.status ?? ArcCommandStatus.neutral,
-      icon: Icons.pets_rounded,
-      image: _operationAsset('missing_resources_card.webp'),
-      dense: true,
-    );
+    ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const ArcCommandSectionHeader(
-          title: 'PROGRESSION',
-          subtitle: 'What matters before the next run',
-          accent: AppTheme.neonCyan,
-        ),
-        const SizedBox(height: 7),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            if (constraints.maxWidth < 760) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  blueprintCard,
-                  const SizedBox(height: 8),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(child: benchCard),
-                      const SizedBox(width: 8),
-                      Expanded(child: scrappyCard),
-                    ],
-                  ),
-                ],
-              );
-            }
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(flex: 6, child: blueprintCard),
-                const SizedBox(width: 8),
-                Expanded(flex: 3, child: benchCard),
-                const SizedBox(width: 8),
-                Expanded(flex: 3, child: scrappyCard),
-              ],
-            );
-          },
+        blueprintCard,
+        const SizedBox(height: 8),
+        _railTitle('BENCHES + SCRAPPY', AppTheme.neonCyan),
+        const SizedBox(height: 6),
+        _loopingCardRail(
+          cards: benchCards,
+          controller: _benchCarouselController,
         ),
       ],
     );
@@ -347,15 +356,11 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     final activeQuest =
         _detailValue(state.questSummary.details, 'Active quest:') ??
         state.questSummary.statusLabel;
-    final questProgress = _detailValue(state.questSummary.details, 'Progress:');
-    final questMissing = _detailValue(state.questSummary.details, 'Missing:');
 
     final loadoutCard = _briefingStatusCard(
       title: 'FAVOURITE LOADOUT',
-      value: loadout?.value ?? 'Set up',
-      detail:
-          loadout?.detail ??
-          'Choose the kit you want Raid Intelligence to use.',
+      value: loadout?.value ?? 'NOT SAVED',
+      detail: loadout?.detail ?? '',
       action: const ArcCommandAction(
         label: 'Open Favourite Loadout',
         intent: ArcCommandActionIntent.favouriteLoadout,
@@ -367,45 +372,30 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     final questCard = _briefingStatusCard(
       title: 'CURRENT QUESTS',
       value: activeQuest,
-      detail: [
-        if (questProgress != null) questProgress,
-        if (questMissing != null && questMissing.isNotEmpty)
-          'Missing: $questMissing',
-      ].join('  •  '),
+      detail: '',
       action: state.questSummary.action,
       status: state.questSummary.status,
       icon: Icons.assignment_turned_in_outlined,
       image: _operationAsset('track_quests_card.webp'),
     );
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const ArcCommandSectionHeader(
-          title: 'LOADOUT + QUESTS',
-          subtitle: 'The kit and objectives feeding your raid plan',
-          accent: AppTheme.neonPink,
-        ),
-        const SizedBox(height: 7),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            if (constraints.maxWidth < 700) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [loadoutCard, const SizedBox(height: 8), questCard],
-              );
-            }
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(child: loadoutCard),
-                const SizedBox(width: 8),
-                Expanded(child: questCard),
-              ],
-            );
-          },
-        ),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 700) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [loadoutCard, const SizedBox(height: 8), questCard],
+          );
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: loadoutCard),
+            const SizedBox(width: 8),
+            Expanded(child: questCard),
+          ],
+        );
+      },
     );
   }
 
@@ -428,7 +418,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
       _briefingEventCard(
         title: 'NOMADIC TRADER',
         value: state.weeklyTraderSummary.statusLabel,
-        detail: _summaryDetail(state.weeklyTraderSummary),
+        detail: '',
         status: state.weeklyTraderSummary.status,
         action: state.weeklyTraderSummary.action,
         icon: Icons.storefront_rounded,
@@ -436,7 +426,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
       _briefingEventCard(
         title: 'OPERATIONS',
         value: state.operationsSummary.statusLabel,
-        detail: _summaryDetail(state.operationsSummary),
+        detail: '',
         status: state.operationsSummary.status,
         action: state.operationsSummary.action,
         icon: Icons.bolt_rounded,
@@ -446,25 +436,9 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const ArcCommandSectionHeader(
-          title: 'EVENTS FOR YOU',
-          subtitle: 'A few relevant live signals, not an endless feed',
-          accent: AppTheme.neonCyan,
-        ),
-        const SizedBox(height: 7),
-        SizedBox(
-          height: 132,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: events.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 8),
-            itemBuilder: (_, index) => events[index],
-          ),
-        ),
-        if (widget.eventPreview != null) ...[
-          const SizedBox(height: 8),
-          widget.eventPreview!,
-        ],
+        _railTitle('EVENTS FOR YOU', AppTheme.neonCyan),
+        const SizedBox(height: 6),
+        _loopingCardRail(cards: events, controller: _eventCarouselController),
       ],
     );
   }
@@ -481,7 +455,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
           );
     final tradeDetail = _hasTradeSignal(state.tradeSummary)
         ? _tradeSignalDetail(state.tradeSummary)
-        : 'Your duplicate state is ready when a useful trade opportunity appears.';
+        : '';
     final sessions = widget.tradeActivity.activeSessions;
     final readySessions = widget.tradeActivity.readySessions;
     final unread = widget.tradeActivity.unreadNotifications;
@@ -491,8 +465,6 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     final upcomingDetail = [
       if (readySessions > 0) '$readySessions ready',
       if (unread > 0) '$unread unread update${unread == 1 ? '' : 's'}',
-      if (readySessions == 0 && unread == 0)
-        'Tracked commitments will surface here as they become active',
     ].join('  •  ');
 
     final tradeCard = _briefingStatusCard(
@@ -545,7 +517,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
   ) {
     return _commandAccordion(
       title: 'EXPLORE',
-      subtitle: 'All tools and deeper ARC systems',
+      subtitle: '',
       icon: Icons.apps_rounded,
       accent: AppTheme.neonCyan,
       initiallyExpanded: false,
@@ -556,6 +528,38 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
           const SizedBox(height: 8),
           _seasonResetEntry(),
         ],
+      ),
+    );
+  }
+
+  Widget _railTitle(String title, Color accent) {
+    return Text(
+      title,
+      style: AppTheme.bodyTextStyle(
+        fontSize: 10,
+        color: accent,
+        isBold: true,
+      ).copyWith(letterSpacing: 1.0),
+    );
+  }
+
+  Widget _loopingCardRail({
+    required List<Widget> cards,
+    required ScrollController controller,
+  }) {
+    if (cards.isEmpty) return const SizedBox.shrink();
+    return SizedBox(
+      height: 118,
+      child: ListView.builder(
+        controller: controller,
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        itemExtent: _briefingCarouselExtent,
+        itemCount: _briefingCarouselLoopBase * 2,
+        itemBuilder: (context, index) => Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: cards[index % cards.length],
+        ),
       ),
     );
   }
@@ -685,16 +689,18 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
                   color: Colors.white,
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                _shortActionText(detail),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: AppTheme.bodyTextStyle(
-                  fontSize: 10,
-                  color: Colors.white60,
+              if (detail.trim().isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  _shortActionText(detail),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 10,
+                    color: Colors.white60,
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
         ),
@@ -746,138 +752,6 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     return _systemsIndex.clamp(0, tileCount - 1).toInt();
   }
 
-  Widget _commandHero(
-    ArcCommandCentreState commandState,
-    List<_CommandMoveData> commandMoves,
-  ) {
-    final priority = commandState.priority;
-    final accent = arcCommandStatusAccent(priority.status);
-    return _tapSurface(
-      action: priority.primaryAction,
-      child: Container(
-        constraints: const BoxConstraints(minHeight: 96),
-        padding: const EdgeInsets.all(10),
-        decoration: _imageDecoration(
-          _operationAsset('claim_operations_card.webp'),
-          AppTheme.neonCyan,
-          radius: 16,
-        ),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final compact = constraints.maxWidth < 700;
-            final copy = Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'RAIDER BRIEFING',
-                  style: AppTheme.bodyTextStyle(
-                    fontSize: 10,
-                    color: AppTheme.neonCyan,
-                    isBold: true,
-                  ).copyWith(letterSpacing: 1.4),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  _cleanText(priority.title),
-                  maxLines: compact ? 2 : 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTheme.tradingHeading(
-                    fontSize: compact ? 21 : 26,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 7),
-                Text(
-                  _shortActionText(priority.explanation),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTheme.bodyTextStyle(
-                    fontSize: compact ? 11 : 12,
-                    color: Colors.white70,
-                  ),
-                ),
-              ],
-            );
-
-            final status = Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              alignment: WrapAlignment.end,
-              children: [
-                _heroMetric(
-                  label: 'STATUS',
-                  value: _cleanText(priority.statusTag),
-                  accent: accent,
-                ),
-                _heroMetric(
-                  label: 'OPEN MOVES',
-                  value: '${commandMoves.length}',
-                  accent: commandMoves.isEmpty
-                      ? Colors.lightGreenAccent
-                      : AppTheme.neonPink,
-                ),
-              ],
-            );
-
-            if (compact) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  copy,
-                  const SizedBox(height: 10),
-                  Align(alignment: Alignment.centerLeft, child: status),
-                ],
-              );
-            }
-
-            return Row(
-              children: [
-                Expanded(child: copy),
-                const SizedBox(width: 12),
-                status,
-              ],
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _heroMetric({
-    required String label,
-    required String value,
-    required Color accent,
-  }) {
-    return Container(
-      constraints: const BoxConstraints(minWidth: 76),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.34),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: accent.withValues(alpha: 0.34)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            value,
-            style: AppTheme.tradingHeading(fontSize: 17, color: accent),
-          ),
-          const SizedBox(height: 1),
-          Text(
-            label,
-            style: AppTheme.bodyTextStyle(
-              fontSize: 8,
-              color: Colors.white60,
-              isBold: true,
-            ).copyWith(letterSpacing: .7),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _commandAccordion({
     required String title,
     required String subtitle,
@@ -914,12 +788,17 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
               color: accent,
             ),
           ),
-          subtitle: Text(
-            subtitle,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppTheme.bodyTextStyle(fontSize: 10, color: Colors.white54),
-          ),
+          subtitle: subtitle.trim().isEmpty
+              ? null
+              : Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 10,
+                    color: Colors.white54,
+                  ),
+                ),
           children: [child],
         ),
       ),
@@ -1406,6 +1285,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     );
   }
 
+  // ignore: unused_element
   List<_CommandMoveData> _commandMoves(ArcCommandCentreState state) {
     final moves = <_CommandMoveData>[];
     final seen = <String>{};

@@ -562,7 +562,7 @@ class ArcDecisionEngine {
             label: 'Create Trade',
             routeName: TradingCreateListingScreen.routeName,
           ),
-          sourceSystem: 'Blueprint Tracker',
+          sourceSystem: 'Collections Tracker',
           tradeAssisted: true,
           score: _score(
             readiness: 78,
@@ -637,10 +637,10 @@ class ArcDecisionEngine {
           status: ArcCommandStatus.neutral,
           progressLabel: 'Blueprint state not tracked yet',
           action: const ArcDecisionAction(
-            label: 'Open Blueprint Tracker',
+            label: 'Open Collections Tracker',
             routeName: BlueprintGridScreen.routeName,
           ),
-          sourceSystem: 'Blueprint Tracker',
+          sourceSystem: 'Collections Tracker',
           score: _score(
             setupCompleteness: 18,
             progressionUnlockValue: 42,
@@ -663,10 +663,10 @@ class ArcDecisionEngine {
           status: ArcCommandStatus.active,
           progressLabel: '$ownedBlueprints/$totalBlueprints owned',
           action: const ArcDecisionAction(
-            label: 'Open Blueprint Tracker',
+            label: 'Open Collections Tracker',
             routeName: BlueprintGridScreen.routeName,
           ),
-          sourceSystem: 'Blueprint Tracker',
+          sourceSystem: 'Collections Tracker',
           score: _score(
             multiSystemImpact: prioritizedMissingBlueprints.isEmpty ? 16 : 38,
             progressionUnlockValue: 52,

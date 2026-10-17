@@ -1,6 +1,8 @@
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_collections_tracker_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raider_setup_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_events_screen.dart';
 import 'dart:async';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/services/uag_trade_invite_service.dart';
 
 import 'features/monetisation/ads/uag_ad_consent_controller.dart';
 import 'features/monetisation/ads/uag_ad_service.dart';
@@ -51,6 +53,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/nom
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/operations_command_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raiders_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_collections_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/play_like_a_pro_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/smart_trade_assist_screen.dart';
@@ -88,6 +91,7 @@ Future<void> main() async {
   runApp(const _UagBootstrapApp());
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await UagTradeInviteService.instance.initialise();
 
   await UagCreatorReferralBootstrap.instance.initialise();
   await UagCommunityReferralDeepLinkBootstrap.instance.initialise();
@@ -295,6 +299,22 @@ class UAGTradersHubApp extends StatefulWidget {
           settings: settings,
         );
 
+      case ArcCollectionsScreen.routeName:
+        return MaterialPageRoute(
+          builder: (_) => const FeatureAccessRouteGate(
+            flag: FeatureAccessFlag.blueprintTracker,
+            title: 'Collections',
+            child: ArcCollectionsScreen(),
+          ),
+          settings: settings,
+        );
+
+      case ArcCollectionsTrackerScreen.routeName:
+        return MaterialPageRoute(
+          builder: (_) => const ArcCollectionsTrackerScreen(),
+          settings: settings,
+        );
+
       case BlueprintGridScreen.routeName:
         final args = settings.arguments is BlueprintGridTargetPickArgs
             ? settings.arguments! as BlueprintGridTargetPickArgs
@@ -464,11 +484,14 @@ class UAGTradersHubApp extends StatefulWidget {
         );
 
       case ArcRaidIntelligenceScreen.routeName:
+        final requestedMapId = settings.arguments is String
+            ? settings.arguments as String
+            : null;
         return MaterialPageRoute(
-          builder: (_) => const FeatureAccessRouteGate(
+          builder: (_) => FeatureAccessRouteGate(
             flag: FeatureAccessFlag.intelExplorer,
             title: 'Raid Intelligence',
-            child: ArcRaidIntelligenceScreen(),
+            child: ArcRaidIntelligenceScreen(initialMapId: requestedMapId),
           ),
           settings: settings,
         );

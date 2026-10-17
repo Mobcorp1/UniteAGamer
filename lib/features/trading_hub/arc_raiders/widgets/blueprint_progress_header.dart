@@ -62,7 +62,7 @@ class BlueprintProgressHeader extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  'ARC Raiders Blueprint Tracker',
+                  'ARC Raiders Collections Tracker',
                   style: AppTheme.tradingHeading(
                     fontSize: 24,
                     color: AppTheme.neonCyan,

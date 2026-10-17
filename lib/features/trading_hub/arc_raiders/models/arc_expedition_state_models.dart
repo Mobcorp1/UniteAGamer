@@ -15,7 +15,7 @@ enum ArcExpeditionSubsystem {
 
 extension ArcExpeditionSubsystemLabel on ArcExpeditionSubsystem {
   String get label => switch (this) {
-    ArcExpeditionSubsystem.blueprintTracker => 'Blueprint Tracker',
+    ArcExpeditionSubsystem.blueprintTracker => 'Collections Tracker',
     ArcExpeditionSubsystem.scrappyTracker => 'Scrappy Tracker',
     ArcExpeditionSubsystem.benchTracker => 'Bench Tracker',
     ArcExpeditionSubsystem.questTracker => 'Quest Tracker',

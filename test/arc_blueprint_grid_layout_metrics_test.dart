@@ -120,7 +120,7 @@ void main() {
       expect(gridWidth, greaterThan(0));
     });
 
-    test('view mode storage is stable and defaults to in-game view', () {
+    test('view mode storage is stable and defaults to full overview', () {
       expect(
         ArcBlueprintGridViewMode.fromStorage('in_game_framed'),
         ArcBlueprintGridViewMode.inGameFramed,
@@ -131,7 +131,7 @@ void main() {
       );
       expect(
         ArcBlueprintGridViewMode.fromStorage('unknown'),
-        ArcBlueprintGridViewMode.inGameFramed,
+        ArcBlueprintGridViewMode.fullOverview,
       );
       expect(
         ArcBlueprintGridViewMode.inGameFramed.storageValue,

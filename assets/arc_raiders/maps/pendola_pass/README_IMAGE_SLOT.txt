@@ -1,8 +1,16 @@
-FROZEN TRAIL MAP IMAGE SLOT
+PENDOLA PASS MAP MASTER
 
-Place the verified Pendola Pass surface map here using this exact filename:
-
+Canonical surface asset:
 pendola_pass_master.webp
 
-Until that file exists, Raid Intelligence uses its tactical schematic fallback.
-No third-party map artwork is bundled by this pass.
+Status:
+- master image installed
+- map promoted to Raid Intelligence
+- normalized identity calibration published
+- exact POI / spawn / extraction / hatch / loot marker coordinates still require verification against this final master
+
+Dynamic launch conditions observed:
+- Redirection
+- Frigate
+
+Do not seed schematic coordinates for Pendola Pass.

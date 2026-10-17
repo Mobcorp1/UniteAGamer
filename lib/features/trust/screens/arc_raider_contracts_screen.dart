@@ -856,7 +856,7 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
                     blueprintRewardCount = max > 0 ? 1 : 0;
                     validationMessage = max > 0
                         ? ''
-                        : 'Your Blueprint Tracker currently has no duplicates available to offer.';
+                        : 'Your Collections Tracker currently has no duplicates available to offer.';
                   });
                 } finally {
                   if (mounted) setState(() => loadingBlueprintRewards = false);
@@ -2080,7 +2080,7 @@ class _BlueprintRewardsState extends State<_BlueprintRewards> {
         return const _TrustLoadProblem(
           title: 'Rewards unavailable',
           message:
-              'We could not load your Blueprint rewards right now. Your Blueprint Tracker and duplicates have not been changed.',
+              'We could not load your Blueprint rewards right now. Your Collections Tracker and duplicates have not been changed.',
         );
       }
       if (!snapshot.hasData) {

@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:crypto/crypto.dart';
+
 class WebReleaseMetadata {
   const WebReleaseMetadata({
     required this.buildId,
@@ -106,13 +108,10 @@ Future<WebReleaseMetadata> prepareWebReleaseMetadata(
     }
   }
 
-  final buildId = await _resolveGitValue(
-    options.repoRoot,
-    const <String>['rev-parse', 'HEAD'],
-    allowLocalFallback: options.allowLocalFallback,
-    fallback: 'local-${DateTime.now().toUtc().millisecondsSinceEpoch}',
-    valueName: 'Git HEAD',
-  );
+  // Git HEAD is unchanged for uncommitted release passes. Fingerprint the
+  // compiled application instead, so the browser never mistakes changed JS
+  // for the old build. A byte-identical web build keeps the same identity.
+  final buildId = sha256.convert(await mainDartJs.readAsBytes()).toString();
   final branch = await _resolveGitValue(
     options.repoRoot,
     const <String>['branch', '--show-current'],

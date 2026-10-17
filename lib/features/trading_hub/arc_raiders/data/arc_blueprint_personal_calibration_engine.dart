@@ -37,6 +37,7 @@ class ArcBlueprintPersonalCalibrationResult {
 class ArcBlueprintPersonalCalibrationEngine {
   const ArcBlueprintPersonalCalibrationEngine({
     this.baseOwnedThreshold = 0.84,
+    this.columns = 10,
     this.minimumAnchorCount = 8,
     this.minimumCaptureAnchorCount = 4,
     this.maximumAdaptiveFloor = 0.94,
@@ -44,6 +45,7 @@ class ArcBlueprintPersonalCalibrationEngine {
   });
 
   final double baseOwnedThreshold;
+  final int columns;
   final int minimumAnchorCount;
   final int minimumCaptureAnchorCount;
   final double maximumAdaptiveFloor;
@@ -196,7 +198,7 @@ class ArcBlueprintPersonalCalibrationEngine {
     ArcBlueprintPhotoOccupancySample sample,
     int blueprintCount,
   ) {
-    final index = (sample.rowIndex * 10) + sample.columnIndex;
+    final index = (sample.rowIndex * columns) + sample.columnIndex;
     return index >= 0 && index < blueprintCount ? index : null;
   }
 }

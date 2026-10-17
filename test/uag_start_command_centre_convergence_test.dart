@@ -11,7 +11,7 @@ void main() {
       ).readAsStringSync();
 
       expect(gate, contains('return ArcRaiderSetupGate('));
-      expect(gate, contains('const ArcCommandCentreScreen();'));
+      expect(gate, contains('const ArcCommandCentreScreen()'));
       expect(gate, isNot(contains('const ArcRaidersHubScreen();')));
     },
   );

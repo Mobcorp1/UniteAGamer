@@ -24,9 +24,9 @@ void main() {
       expect(legacyEntryGate, contains('return ArcRaiderSetupGate('));
       expect(
         legacyEntryGate,
-        contains('return widget.destinationBuilder?.call(context) ??'),
+        contains('widget.destinationBuilder'),
       );
-      expect(legacyEntryGate, contains('const ArcCommandCentreScreen();'));
+      expect(legacyEntryGate, contains('const ArcCommandCentreScreen()'));
       expect(legacyEntryGate, isNot(contains('const ArcRaidersHubScreen();')));
       expect(main, contains('case ArcRaidersHubScreen.routeName:'));
       expect(main, contains('case ArcCommandCentreScreen.routeName:'));
@@ -168,6 +168,8 @@ void main() {
         final source = file.readAsStringSync();
         for (final match in assetReference.allMatches(source)) {
           final path = match.group(2)!;
+          // Interpolated runtime asset paths are not literal filenames.
+          if (path.contains(r'$')) continue;
           final asset = File(path);
           if (!asset.existsSync()) {
             offenders.add('${_normalisedPath(file)} -> missing $path');

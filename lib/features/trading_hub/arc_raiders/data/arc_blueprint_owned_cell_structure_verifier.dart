@@ -99,10 +99,14 @@ class ArcBlueprintOwnedCellStructureVerifier {
   ArcBlueprintOwnedCellStructureResult verify({
     required Uint8List topBytes,
     required Uint8List bottomBytes,
+    List<String>? singleGridBlueprintIds,
     Uint8List? bottomFiveRowBytes,
     required List<ArcBlueprintPhotoOccupancySample> samples,
     required List<ArcBlueprintTemplateVerificationSample> templateDiagnostics,
   }) {
+    final singleGrid = singleGridBlueprintIds != null;
+    final gridColumns = singleGrid ? 17 : ArcBlueprintCanonicalGrid.columns;
+    final gridRows = singleGrid ? 6 : ArcBlueprintCanonicalGrid.topRows;
     final decodedTop = img.decodeImage(topBytes);
     final decodedBottom = img.decodeImage(bottomBytes);
     if (decodedTop == null || decodedBottom == null) {
@@ -115,14 +119,14 @@ class ArcBlueprintOwnedCellStructureVerifier {
 
     final top = img.copyResize(
       img.bakeOrientation(decodedTop),
-      width: ArcBlueprintCanonicalGrid.columns * 100,
-      height: ArcBlueprintCanonicalGrid.topRows * 100,
+      width: gridColumns * 100,
+      height: gridRows * 100,
       interpolation: img.Interpolation.cubic,
     );
     final bottom = img.copyResize(
       img.bakeOrientation(decodedBottom),
-      width: ArcBlueprintCanonicalGrid.columns * 100,
-      height: ArcBlueprintCanonicalGrid.bottomRows * 100,
+      width: gridColumns * 100,
+      height: (singleGrid ? 6 : ArcBlueprintCanonicalGrid.bottomRows) * 100,
       interpolation: img.Interpolation.cubic,
     );
 
@@ -132,8 +136,8 @@ class ArcBlueprintOwnedCellStructureVerifier {
       if (decodedBottomFive != null) {
         bottomFive = img.copyResize(
           img.bakeOrientation(decodedBottomFive),
-          width: ArcBlueprintCanonicalGrid.columns * 100,
-          height: ArcBlueprintCanonicalGrid.topRows * 100,
+          width: gridColumns * 100,
+          height: gridRows * 100,
           interpolation: img.Interpolation.cubic,
         );
       }
@@ -148,20 +152,26 @@ class ArcBlueprintOwnedCellStructureVerifier {
     var suppressedCount = 0;
 
     for (final sample in samples) {
-      final canonicalIndex = ArcBlueprintCanonicalGrid.indexForGlobalCell(
-        rowIndex: sample.rowIndex,
-        columnIndex: sample.columnIndex,
-      );
+      final canonicalIndex = singleGrid
+          ? (sample.rowIndex * gridColumns + sample.columnIndex)
+          : ArcBlueprintCanonicalGrid.indexForGlobalCell(
+              rowIndex: sample.rowIndex,
+              columnIndex: sample.columnIndex,
+            );
       if (canonicalIndex == null) {
         verified.add(sample);
         continue;
       }
 
-      final source = sample.captureId == 'bottom' ? bottom : top;
-      final localRow = sample.captureId == 'bottom'
+      final source = !singleGrid && sample.captureId == 'bottom' ? bottom : top;
+      final localRow = singleGrid
+          ? sample.rowIndex
+          : sample.captureId == 'bottom'
           ? sample.rowIndex - ArcBlueprintCanonicalGrid.topRows
           : sample.rowIndex;
-      final rowCount = sample.captureId == 'bottom'
+      final rowCount = singleGrid
+          ? 6
+          : sample.captureId == 'bottom'
           ? ArcBlueprintCanonicalGrid.bottomRows
           : ArcBlueprintCanonicalGrid.topRows;
 
@@ -170,15 +180,22 @@ class ArcBlueprintOwnedCellStructureVerifier {
         continue;
       }
 
-      final primaryStructure = _measureCell(
-        source,
-        rowIndex: localRow,
-        columnIndex: sample.columnIndex,
-        rows: rowCount,
-      );
+      final primaryStructure = singleGrid
+          ? _measureSingleGridCell(
+              source,
+              rowIndex: localRow,
+              columnIndex: sample.columnIndex,
+            )
+          : _measureCell(
+              source,
+              rowIndex: localRow,
+              columnIndex: sample.columnIndex,
+              rows: rowCount,
+            );
 
       _CellStructure? overlapStructure;
-      if (sample.captureId == 'top' &&
+      if (!singleGrid &&
+          sample.captureId == 'top' &&
           sample.rowIndex == ArcBlueprintCanonicalGrid.topRows - 1 &&
           bottomFive != null) {
         overlapStructure = _measureCell(
@@ -246,10 +263,8 @@ class ArcBlueprintOwnedCellStructureVerifier {
           classification != 'owned' && rawProposalEvidence >= ownedThreshold;
       if (suppressed) suppressedCount++;
 
-      final overlapCorroborated =
-          overlapGate != null && overlapGate.allPassed;
-      final diagnosticStructure =
-          overlapCorroborated && !primaryGate.allPassed
+      final overlapCorroborated = overlapGate != null && overlapGate.allPassed;
+      final diagnosticStructure = overlapCorroborated && !primaryGate.allPassed
           ? overlapStructure!
           : primaryStructure;
 
@@ -359,7 +374,7 @@ class ArcBlueprintOwnedCellStructureVerifier {
     required int columnIndex,
     required int rows,
   }) {
-    final cellWidth = image.width / ArcBlueprintCanonicalGrid.columns;
+    final cellWidth = 100.0;
     final cellHeight = image.height / rows;
     final left = columnIndex * cellWidth;
     final top = rowIndex * cellHeight;
@@ -413,6 +428,89 @@ class ArcBlueprintOwnedCellStructureVerifier {
       bluePanelCoverage: bluePanel,
       footerDarkCoverage: footer.darkCoverage,
       footerContrast: footerContrast.toDouble(),
+      bookShapeEvidence: book,
+      tickShapeEvidence: tick,
+    );
+  }
+
+  /// Single-capture 17x6 cards have large bright artwork across the centre.
+  /// The legacy whole-panel blue/contrast ROIs wrongly treat white artwork as
+  /// missing blue background (confirmed by Grid 20 Sony diagnostics).
+  /// Measure the visible BLUE side rails independently of the central artwork.
+  /// All six original signal floors and all marker/artwork gates remain intact.
+  /// This method is never used for the original dual-capture layout.
+  _CellStructure _measureSingleGridCell(
+    img.Image image, {
+    required int rowIndex,
+    required int columnIndex,
+  }) {
+    const cellWidth = 100.0;
+    const cellHeight = 100.0;
+    final left = columnIndex * cellWidth;
+    final top = rowIndex * cellHeight;
+
+    // Two narrow interior side strips avoid central weapon/artwork silhouettes,
+    // cell borders, the top-right tick and the bottom-left book marker.
+    final leftBlue = _measureBluePanel(
+      image,
+      left: left + 9,
+      top: top + 33,
+      right: left + 22,
+      bottom: top + 67,
+    );
+    final rightBlue = _measureBluePanel(
+      image,
+      left: left + 78,
+      top: top + 33,
+      right: left + 91,
+      bottom: top + 67,
+    );
+    final bluePanel = (leftBlue + rightBlue) / 2;
+    final footer = _measureFooter(
+      image,
+      left: left + 8,
+      top: top + 77,
+      right: left + 92,
+      bottom: top + 95,
+    );
+    final sideLuma =
+        (_meanLuma(
+              image,
+              left: left + 9,
+              top: top + 33,
+              right: left + 22,
+              bottom: top + 67,
+            ) +
+            _meanLuma(
+              image,
+              left: left + 78,
+              top: top + 33,
+              right: left + 91,
+              bottom: top + 67,
+            )) /
+        2;
+    final contrast = ((sideLuma - footer.meanLuma) / 255.0)
+        .clamp(0.0, 1.0)
+        .toDouble();
+
+    final book = _measureWhiteShape(
+      image,
+      left: left + 7,
+      top: top + 74,
+      right: left + 31,
+      bottom: top + 95,
+    );
+    final tick = _measureWhiteShape(
+      image,
+      left: left + 70,
+      top: top + 5,
+      right: left + 95,
+      bottom: top + 29,
+    );
+    return _CellStructure(
+      bluePanelCoverage: bluePanel,
+      footerDarkCoverage: footer.darkCoverage,
+      footerContrast: contrast,
       bookShapeEvidence: book,
       tickShapeEvidence: tick,
     );

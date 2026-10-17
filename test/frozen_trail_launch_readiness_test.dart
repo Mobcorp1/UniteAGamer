@@ -20,6 +20,7 @@ void main() {
       ArcFrozenTrailPreviewData.items.map((item) => item.name),
       containsAll(<String>[
         'Frigate',
+        'Redirection',
         'Bully',
         'Skulker',
         'Hydra',
@@ -35,23 +36,32 @@ void main() {
     );
   });
 
-  test(
-    'Pendola Pass is prewired but not promoted to live Raid Intelligence',
-    () {
-      expect(
-        ArcMapAssetRegistry.canonicalMapIdFor('Pendola Pass'),
+  test('Pendola Pass is promoted to live Raid Intelligence', () {
+    expect(
+      ArcMapAssetRegistry.canonicalMapIdFor('Pendola Pass'),
+      ArcMapAssetRegistry.pendolaPassMapId,
+    );
+    expect(
+      ArcMapAssetRegistry.registeredMapIds,
+      contains(ArcMapAssetRegistry.pendolaPassMapId),
+    );
+    expect(
+      ArcRaidIntelligenceSeedData.supportedMapIds,
+      contains(ArcMapAssetRegistry.pendolaPassMapId),
+    );
+    expect(
+      ArcMapAssetRegistry.hasRegisteredAsset(
         ArcMapAssetRegistry.pendolaPassMapId,
-      );
-      expect(
-        ArcMapAssetRegistry.registeredMapIds,
-        contains(ArcMapAssetRegistry.pendolaPassMapId),
-      );
-      expect(
-        ArcRaidIntelligenceSeedData.supportedMapIds,
-        isNot(contains(ArcMapAssetRegistry.pendolaPassMapId)),
-      );
-    },
-  );
+      ),
+      isTrue,
+    );
+    expect(
+      ArcMapAssetRegistry.hasPublishedCalibration(
+        ArcMapAssetRegistry.pendolaPassMapId,
+      ),
+      isTrue,
+    );
+  });
 
   test('new ARC marker types exist', () {
     final ids = ArcAdminMapMarkerSubtypeCatalog.arc.map((item) => item.id);

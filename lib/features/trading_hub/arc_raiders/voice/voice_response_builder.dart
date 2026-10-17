@@ -67,9 +67,9 @@ class UagVoiceResponseBuilder {
           return const UagVoiceResponse(
             title: 'Hunts clear',
             body:
-                'Blueprint Tracker says you own every tracked blueprint. No missing hunt target found.',
+                'Collections Tracker says you own every tracked blueprint. No missing hunt target found.',
             spokenBody:
-                'Blueprint Tracker says you own every tracked blueprint.',
+                'Collections Tracker says you own every tracked blueprint.',
             shouldSpeak: true,
           );
         }
@@ -94,7 +94,7 @@ class UagVoiceResponseBuilder {
         return UagVoiceResponse(
           title: 'Recommended hunt targets',
           body:
-              'Recommended blueprint hunts: $names.\n\nBased on Blueprint Tracker missing state and Top 5 priority where available.',
+              'Recommended blueprint hunts: $names.\n\nBased on Collections Tracker missing state and Top 5 priority where available.',
           spokenBody: 'Recommended blueprint hunts are $names.',
           shouldSpeak: true,
         );
@@ -202,8 +202,8 @@ class UagVoiceResponseBuilder {
         return const UagVoiceResponse(
           title: 'Blueprint report ready',
           body:
-              'Open the Blueprint Tracker report sheet to submit map, source and acquisition evidence.',
-          spokenBody: 'Open the Blueprint Tracker report sheet to submit it.',
+              'Open the Collections Tracker report sheet to submit map, source and acquisition evidence.',
+          spokenBody: 'Open the Collections Tracker report sheet to submit it.',
           shouldSpeak: true,
         );
       case UagVoiceIntentType.reportWeaponCache:

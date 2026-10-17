@@ -149,9 +149,7 @@ class UagCommunityReferralRepository {
     );
   }
 
+  @Deprecated('Use the authenticated opaque UagTradeInviteService to create links')
   Uri referralUri(String code) =>
-      Uri.https('unite-a-gamer.web.app', '/', <String, String>{
-        'referrer': currentUid ?? '',
-        'refcode': code.trim().toUpperCase(),
-      });
+      throw UnsupportedError('Public UID referral links have been retired.');
 }

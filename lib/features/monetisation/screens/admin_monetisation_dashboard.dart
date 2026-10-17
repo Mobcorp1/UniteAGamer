@@ -507,7 +507,7 @@ class _OnboardingSimulatorCardState extends State<_OnboardingSimulatorCard> {
             ),
           ],
           const SizedBox(height: AppTheme.spaceM),
-          _sectionLabel('Blueprint Tracker'),
+          _sectionLabel('Collections Tracker'),
           _segmentedWrap([
             _simButton(
               'Set Up Now',

@@ -1711,7 +1711,7 @@ class _ProgressionStep extends StatelessWidget {
           ] else if (blueprintOwnership != null) ...[
             const SizedBox(height: 12),
             Text(
-              'BLUEPRINT TRACKER SETUP',
+              'COLLECTIONS TRACKER SETUP',
               style: AppTheme.tradingHeading(
                 fontSize: 13,
                 color: AppTheme.neonCyan,

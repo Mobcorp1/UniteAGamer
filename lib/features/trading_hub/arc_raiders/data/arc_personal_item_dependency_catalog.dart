@@ -234,7 +234,7 @@ class ArcPersonalItemDependencyCatalog {
         ..loadoutCompatibility.add(blueprint.category)
         ..notes.add(
           blueprint.intelHint.trim().isEmpty
-              ? 'Blueprint Tracker source of truth.'
+              ? 'Collections Tracker source of truth.'
               : blueprint.intelHint,
         );
     }

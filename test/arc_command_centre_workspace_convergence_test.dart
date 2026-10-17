@@ -3,13 +3,12 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('Command Centre is ordered as a ranked Raider briefing', () {
+  test('Command Centre is ordered as a stripped operational briefing', () {
     final source = File(
       'lib/features/trading_hub/arc_raiders/widgets/command_centre/arc_command_centre_content.dart',
     ).readAsStringSync();
 
     final order = <String>[
-      '_commandHero(commandState, commandMoves)',
       '_nextRaidBrief(commandState)',
       '_progressionBrief(commandState)',
       '_loadoutQuestBrief(commandState)',
@@ -46,10 +45,30 @@ void main() {
       'lib/features/trading_hub/arc_raiders/widgets/command_centre/arc_command_centre_content.dart',
     ).readAsStringSync();
 
+    expect(source, isNot(contains("'RAIDER BRIEFING'")));
+    expect(
+      source,
+      isNot(contains("subtitle: 'What matters before the next run'")),
+    );
+    expect(
+      source,
+      isNot(
+        contains("subtitle: 'The kit and objectives feeding your raid plan'"),
+      ),
+    );
+    expect(
+      source,
+      isNot(
+        contains(
+          "subtitle: 'A few relevant live signals, not an endless feed'",
+        ),
+      ),
+    );
+
     for (final label in const [
       'NEXT RAID',
-      'BLUEPRINT TRACKER',
-      'BENCH',
+      'COLLECTIONS TRACKER',
+      'BENCHES + SCRAPPY',
       'SCRAPPY',
       'FAVOURITE LOADOUT',
       'CURRENT QUESTS',
@@ -60,5 +79,17 @@ void main() {
     ]) {
       expect(source, contains(label), reason: label);
     }
+  });
+
+  test('bench and event rails are finite-signal infinite carousels', () {
+    final source = File(
+      'lib/features/trading_hub/arc_raiders/widgets/command_centre/arc_command_centre_content.dart',
+    ).readAsStringSync();
+
+    expect(source, contains('_benchCarouselController'));
+    expect(source, contains('_eventCarouselController'));
+    expect(source, contains('Timer.periodic(const Duration(seconds: 5)'));
+    expect(source, contains('index % cards.length'));
+    expect(source, contains("metric.label.startsWith('Bench: ')"));
   });
 }

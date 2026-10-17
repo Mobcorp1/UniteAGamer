@@ -159,7 +159,7 @@ String _normalisedActiveLabel(String value) {
   if (normalised == 'track' ||
       normalised == 'tracking' ||
       normalised == 'progress trackers' ||
-      normalised == 'blueprint tracker' ||
+      normalised == 'collections tracker' ||
       normalised == 'scrappy tracker' ||
       normalised == 'bench tracker' ||
       normalised == 'quest tracker' ||

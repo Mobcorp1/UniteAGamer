@@ -1391,7 +1391,7 @@ class _OnboardingBasicProfileScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _screenTitle(
-            'Step 4 of 6 - Blueprint Tracker',
+            'Step 4 of 6 - Collections Tracker',
             subtitle:
                 'Skip this if you have no blueprints or duplicates yet. You can return from the Tool Deck later.',
           ),
@@ -1409,7 +1409,7 @@ class _OnboardingBasicProfileScreenState
             height: 210,
             cards: [
               _choiceCard(
-                title: 'Set up Blueprint Tracker now',
+                title: 'Set up Collections Tracker now',
                 body:
                     'Choose this if you already have owned blueprints, missing targets or duplicates to enter.',
                 icon: Icons.grid_view_rounded,
@@ -1419,7 +1419,7 @@ class _OnboardingBasicProfileScreenState
                 ),
               ),
               _choiceCard(
-                title: 'Skip Blueprint Tracker for now',
+                title: 'Skip Collections Tracker for now',
                 body:
                     'Best for fresh starts, zero blueprints or no duplicates. The Command Centre will remind you later.',
                 icon: Icons.skip_next_rounded,
@@ -1434,8 +1434,8 @@ class _OnboardingBasicProfileScreenState
           const SizedBox(height: 16),
           _statusPanel(
             title: _blueprintChoice == _ArcBlueprintSetupChoice.setupNow
-                ? 'Blueprint Tracker will be enabled'
-                : 'Blueprint Tracker setup will stay pending',
+                ? 'Collections Tracker will be enabled'
+                : 'Collections Tracker setup will stay pending',
             body: _blueprintChoice == _ArcBlueprintSetupChoice.setupNow
                 ? 'The tracker will be available from the Command Centre and Tool Deck.'
                 : 'No grid setup is forced during onboarding. You can complete it when you have blueprint data worth tracking.',
@@ -1628,8 +1628,8 @@ class _OnboardingBasicProfileScreenState
       'Embark ID: ${_identityEmbarkComplete ? 'saved' : 'not added yet'}',
       'Archetypes: ${_selectedArchetypes.join(', ')}',
       _blueprintChoice == _ArcBlueprintSetupChoice.setupNow
-          ? 'Blueprint Tracker: enabled from Tool Deck'
-          : 'Blueprint Tracker: can be finished later',
+          ? 'Collections Tracker: enabled from Tool Deck'
+          : 'Collections Tracker: can be finished later',
       _acceptedTraderCode && _acceptedTermsOfService && _acceptedDataSecurity
           ? 'Command protocols: acknowledged'
           : 'Command protocols: incomplete',

@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/screens/monetisation_screen.dart';
 import 'package:uag_arc_raiders_hub/screens/build/feedback_screen.dart';
@@ -23,7 +24,6 @@ import 'play_like_a_pro_screen.dart';
 import '../../../trust/screens/arc_raider_contracts_screen.dart';
 import 'arc_profile_edit_screen.dart';
 import 'arc_match_rider_screen.dart';
-import 'blueprint_grid_screen.dart';
 import 'referral_tools_screen.dart';
 import 'scrappy_grid_screen.dart';
 import 'smart_trade_assist_screen.dart';
@@ -59,7 +59,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
       builder: (_) => const ArcCommandCentreScreen(),
     ),
     _ArcHubFeature(
-      title: 'Blueprint Tracker',
+      title: 'Collections Tracker',
       subtitle:
           'See exactly what you own, what is missing and what you can trade.',
       icon: Icons.grid_on_rounded,
@@ -1422,7 +1422,7 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
 
   late final List<_ArcHubFeature> _trackingFeatures = [
     _ArcHubFeature(
-      title: 'Blueprint Grid',
+      title: 'Collections Tracker',
       subtitle: 'Owned, missing, dupes and blueprint hunt progress.',
       icon: Icons.grid_on_rounded,
       accent: AppTheme.neonCyan,
@@ -1515,8 +1515,8 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
 
   String? _featureAccessFlagForTitle(String title) {
     switch (title) {
-      case 'Blueprint Tracker':
-      case 'Blueprint Tracker Beta':
+      case 'Collections Tracker':
+      case 'Collections Tracker Beta':
       case 'Blueprint Grid':
         return FeatureAccessFlag.blueprintTracker;
       case 'Scrappy Tracker':

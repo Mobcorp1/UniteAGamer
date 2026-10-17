@@ -22,7 +22,7 @@ void main() {
       expect(grid, contains('defaultTargetPlatform == TargetPlatform.android'));
       expect(grid, contains('defaultTargetPlatform == TargetPlatform.iOS'));
       expect(grid, contains('showOwnershipBadge: !isNativeMobile'));
-      expect(grid, contains('loadoutAction: isNativeMobile'));
+      expect(grid, isNot(contains('loadoutAction:'))); // No on-card stars on web OR Android.
       expect(tile, contains('this.showOwnershipBadge = true'));
       expect(tile, contains('if (showOwnershipBadge)'));
     },

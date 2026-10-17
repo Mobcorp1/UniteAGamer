@@ -347,7 +347,7 @@ void main() {
       expect(
         snapshot.summary.coreJourney.map((status) => status.label),
         containsAll(<String>[
-          'Blueprint Tracker',
+          'Collections Tracker',
           'Bench Tracker',
           'Scrappy Tracker',
         ]),
@@ -379,7 +379,7 @@ void main() {
       expect(
         snapshot.summary.warnings,
         contains(
-          'Blueprint Tracker is not Live. Closed Beta 2 expects it to be available.',
+          'Collections Tracker is not Live. Closed Beta 2 expects it to be available.',
         ),
       );
     });
@@ -427,7 +427,7 @@ ArcCommandCentreState _commandState() {
     snapshots: const [],
     objectives: const [
       ArcCommandObjective(
-        title: 'Check Blueprint Tracker',
+        title: 'Check Collections Tracker',
         reason: 'Review missing blueprints.',
         statusLabel: 'Optional',
         progressText: '2 missing',

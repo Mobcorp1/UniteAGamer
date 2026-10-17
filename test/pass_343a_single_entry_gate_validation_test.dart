@@ -33,9 +33,9 @@ void main() {
     expect(gateSource, contains('return ArcRaiderSetupGate('));
     expect(
       gateSource,
-      contains('return widget.destinationBuilder?.call(context) ??'),
+      contains('widget.destinationBuilder'),
     );
-    expect(gateSource, contains('const ArcCommandCentreScreen();'));
+    expect(gateSource, contains('const ArcCommandCentreScreen()'));
     expect(gateSource, isNot(contains('const ArcRaidersHubScreen();')));
   });
 

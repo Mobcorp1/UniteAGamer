@@ -100,9 +100,13 @@ class ArcBlueprintOwnershipMarkerVerificationEngine {
   ArcBlueprintOwnershipMarkerVerificationResult verify({
     required Uint8List topBytes,
     required Uint8List bottomBytes,
+    List<String>? singleGridBlueprintIds,
     required List<ArcBlueprintPhotoOccupancySample> samples,
     required List<ArcBlueprintTemplateVerificationSample> templateDiagnostics,
   }) {
+    final singleGrid = singleGridBlueprintIds != null;
+    final gridColumns = singleGrid ? 17 : ArcBlueprintCanonicalGrid.columns;
+    final gridRows = singleGrid ? 6 : ArcBlueprintCanonicalGrid.topRows;
     final decodedTop = img.decodeImage(topBytes);
     final decodedBottom = img.decodeImage(bottomBytes);
     if (decodedTop == null || decodedBottom == null) {
@@ -115,14 +119,14 @@ class ArcBlueprintOwnershipMarkerVerificationEngine {
 
     final top = img.copyResize(
       decodedTop,
-      width: ArcBlueprintCanonicalGrid.columns * 100,
-      height: ArcBlueprintCanonicalGrid.topRows * 100,
+      width: gridColumns * 100,
+      height: gridRows * 100,
       interpolation: img.Interpolation.cubic,
     );
     final bottom = img.copyResize(
       decodedBottom,
-      width: ArcBlueprintCanonicalGrid.columns * 100,
-      height: ArcBlueprintCanonicalGrid.bottomRows * 100,
+      width: gridColumns * 100,
+      height: (singleGrid ? 6 : ArcBlueprintCanonicalGrid.bottomRows) * 100,
       interpolation: img.Interpolation.cubic,
     );
 
@@ -136,10 +140,12 @@ class ArcBlueprintOwnershipMarkerVerificationEngine {
     var suppressedCount = 0;
 
     for (final sample in samples) {
-      final canonicalIndex = ArcBlueprintCanonicalGrid.indexForGlobalCell(
-        rowIndex: sample.rowIndex,
-        columnIndex: sample.columnIndex,
-      );
+      final canonicalIndex = singleGrid
+          ? (sample.rowIndex * gridColumns + sample.columnIndex)
+          : ArcBlueprintCanonicalGrid.indexForGlobalCell(
+              rowIndex: sample.rowIndex,
+              columnIndex: sample.columnIndex,
+            );
       final template = canonicalIndex == null
           ? null
           : templatesByIndex[canonicalIndex];
@@ -149,14 +155,18 @@ class ArcBlueprintOwnershipMarkerVerificationEngine {
         continue;
       }
 
-      final source = sample.captureId == 'bottom' ? bottom : top;
-      final localRow = sample.captureId == 'bottom'
+      final source = !singleGrid && sample.captureId == 'bottom' ? bottom : top;
+      final localRow = singleGrid
+          ? sample.rowIndex
+          : sample.captureId == 'bottom'
           ? sample.rowIndex - ArcBlueprintCanonicalGrid.topRows
           : sample.rowIndex;
 
       if (localRow < 0 ||
           localRow >=
-              (sample.captureId == 'bottom'
+              (singleGrid
+                  ? 6
+                  : sample.captureId == 'bottom'
                   ? ArcBlueprintCanonicalGrid.bottomRows
                   : ArcBlueprintCanonicalGrid.topRows)) {
         verified.add(sample);
@@ -264,7 +274,7 @@ class ArcBlueprintOwnershipMarkerVerificationEngine {
     required int rowIndex,
     required int columnIndex,
   }) {
-    final cellWidth = image.width / ArcBlueprintCanonicalGrid.columns;
+    final cellWidth = 100.0;
     final rowCount = math.max(1, image.height ~/ 100);
     final cellHeight = image.height / rowCount;
 

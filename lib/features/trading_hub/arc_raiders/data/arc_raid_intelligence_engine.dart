@@ -2,6 +2,7 @@ import 'arc_raid_time_budget.dart';
 import 'dart:math' as math;
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_intel_seed.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_community_seed.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_opportunity_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_research_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_intelligence_location_resolver.dart';
@@ -286,9 +287,15 @@ class ArcRaidIntelligenceEngine {
     final loadoutNames = _loadoutItemNames(favouriteLoadout);
     final mapClusters = <ArcRaidIntelCluster>[];
     final missing = _missingBlueprints(blueprintStates);
+    final effectiveDropReports = blueprintStates.isEmpty
+        ? dropReports
+        : <ArcBlueprintDropReport>[
+            ...ArcBlueprintCommunitySeed.reportsForMap(map.id),
+            ...dropReports,
+          ];
     final reportClusters = const ArcBlueprintOpportunityEngine().build(
       map: map,
-      reports: dropReports,
+      reports: effectiveDropReports,
       blueprintStates: blueprintStates,
       canonicalMarkers: canonicalMarkers,
     );
@@ -1029,6 +1036,9 @@ class ArcRaidIntelligenceEngine {
     final reportDriven = cluster.evidence.any(
       (item) => item.sourceCategory == 'community_drop_report',
     );
+    final communitySeedDriven = cluster.evidence.any(
+      (item) => item.sourceCategory == 'community_research_seed',
+    );
     final researchDriven = cluster.evidence.any(
       (item) => item.sourceCategory == 'uag_research_baseline',
     );
@@ -1080,6 +1090,8 @@ class ArcRaidIntelligenceEngine {
       approximate: !reportDriven,
       detail: objectiveOnly
           ? '${cluster.cautiousSummary}. ${cluster.objectiveSummary}. Tracker guidance based on POI/loot classification; not a guaranteed resource spawn. ${cluster.freshnessLabel}.'
+          : communitySeedDriven
+          ? '${cluster.cautiousSummary}. Reported Blueprint opportunity at this location. Not a guaranteed spawn. ${cluster.freshnessLabel}.$objectiveDetail'
           : researchDriven
           ? cluster.reportCount > 0
                 ? '${cluster.cautiousSummary}. Baseline POI/container match with ${cluster.reportCount} separately documented find ${_plural(cluster.reportCount, 'lead', 'leads')}. Not a guaranteed spawn. ${cluster.freshnessLabel}.$objectiveDetail'
@@ -1090,6 +1102,8 @@ class ArcRaidIntelligenceEngine {
           'Tracker Objectives'
         else if (reportDriven)
           'Drop Reports'
+        else if (communitySeedDriven)
+          'Community Intel'
         else if (researchDriven)
           'Research Baseline'
         else

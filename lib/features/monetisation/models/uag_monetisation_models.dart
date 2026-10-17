@@ -114,7 +114,7 @@ class UagPlans {
     charityProfitPercent: 0,
     adsLabel: 'Passive ads + optional rewarded boosts',
     benefits: [
-      'Full Blueprint Tracker access',
+      'Full Collections Tracker access',
       UagMatchIntelligenceCopy.freeDescription,
       'Core UAG Raider voice item advice',
       'Unlimited Intel contribution',

@@ -1683,6 +1683,12 @@ class TradingRepository {
     final uid = currentUid;
     if (uid == null) return;
 
+    // Smart Trade requires a canonical structured bundle, never a free-text
+    // claim that an offer automatically qualifies.
+    if (listing.acceptedBundles.any((bundle) =>
+      bundle.terms.notes == 'UAG_SMART_TRADE_V1') && exactBundleOffer == null) {
+      throw StateError('Select qualifying missing Blueprints for this smart listing.');
+    }
     if (exactBundleOffer != null) {
       final templateMatches = listing.acceptedBundles.where(
         (bundle) => bundle.id == exactBundleOffer.templateId && bundle.active,
@@ -1816,6 +1822,18 @@ class TradingRepository {
     }
     if (listing.expiresAt.isBefore(DateTime.now())) {
       throw Exception('This listing has expired.');
+    }
+    if (listing.acceptedBundles.any((bundle) =>
+        bundle.terms.notes == 'UAG_SMART_TRADE_V1')) {
+      final exact = offer.exactBundleOffer;
+      final candidates = listing.acceptedBundles.where((bundle) =>
+        bundle.active && bundle.id == exact?.templateId &&
+        bundle.terms.notes == 'UAG_SMART_TRADE_V1');
+      if (exact == null || candidates.isEmpty ||
+          !const ArcTradeBundleEngine().compare(
+            template: candidates.first, offer: exact).isExact) {
+        throw StateError('This proposal does not meet the published smart terms.');
+      }
     }
     await _ensureNoSessionAlreadyExistsForOffer(offer.id);
 

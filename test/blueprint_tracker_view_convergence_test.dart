@@ -37,7 +37,7 @@ void main() {
     );
 
     expect(source, contains('showWorkspaceInHeader'));
-    expect(source, contains('const ArcBlueprintWorkspaceBar('));
+    expect(source, contains('ArcCollectionsCategoryBar('));
     expect(source, contains('bottomNavigationBar: AnimatedBuilder('));
     expect(source, contains("'blueprint-landscape-static-ad'"));
     expect(source, contains("ArcCompanionBottomDock(activeLabel: 'Track')"));
@@ -50,7 +50,7 @@ void main() {
 
     expect(tracker, contains("Key('blueprint-landscape-side-layout')"));
     expect(tracker, contains("'blueprint-landscape-static-ad'"));
-    expect(tracker, contains('commandRailWidth = 132.0'));
+    expect(tracker, contains('commandRailWidth = 106.0'));
     expect(tracker, isNot(contains("Key('blueprint-side-ad-left')")));
     expect(tracker, isNot(contains("Key('blueprint-side-ad-right')")));
   });

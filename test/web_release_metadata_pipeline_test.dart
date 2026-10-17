@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:crypto/crypto.dart';
 
 import 'package:flutter_test/flutter_test.dart';
 
@@ -7,7 +8,7 @@ import '../tool/prepare_web_release.dart';
 
 void main() {
   group('UAG web release metadata pipeline', () {
-    test('prepares and validates Git-backed release metadata', () async {
+    test('prepares and validates content-backed release metadata', () async {
       final repo = await _createGitRepository();
       addTearDown(() => repo.deleteSync(recursive: true));
       await File('${repo.path}/build/web/main.dart.js').create(recursive: true);
@@ -18,14 +19,14 @@ void main() {
           outputPath: 'build/web/nested/version.json',
         ),
       );
-      final head = _git(repo, const <String>['rev-parse', 'HEAD']);
+      final compiledDigest = sha256.convert(File('${repo.path}/build/web/main.dart.js').readAsBytesSync()).toString();
       final versionFile = File('${repo.path}/build/web/nested/version.json');
       final payload =
           jsonDecode(versionFile.readAsStringSync()) as Map<String, dynamic>;
 
       expect(versionFile.existsSync(), isTrue);
-      expect(metadata.buildId, head);
-      expect(payload['buildId'], head);
+      expect(metadata.buildId, compiledDigest);
+      expect(payload['buildId'], compiledDigest);
       expect(payload['buildId'], isNotEmpty);
       expect(payload['builtAt'], isNotEmpty);
       expect(DateTime.parse(payload['builtAt'] as String).isUtc, isTrue);
@@ -56,7 +57,7 @@ void main() {
     });
 
     test(
-      'tool exits non-zero when required Git identity cannot be resolved',
+      'tool generates content identity even when Git cannot be resolved',
       () async {
         final directory = await Directory.systemTemp.createTemp(
           'uag-version-nogit-',
@@ -73,10 +74,10 @@ void main() {
           'build/web/version.json',
         ]);
 
-        expect(exitCode, isNot(0));
+        expect(exitCode, 0);
         expect(
           File('${directory.path}/build/web/version.json').existsSync(),
-          isFalse,
+          isTrue,
         );
       },
     );

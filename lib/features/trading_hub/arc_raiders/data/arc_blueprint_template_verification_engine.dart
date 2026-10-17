@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/services.dart';
+import 'arc_blueprint_asset_registry.dart';
+import 'arc_frozen_trail_collection_catalogue.dart';
 import 'package:image/image.dart' as img;
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_canonical_grid.dart';
@@ -61,8 +63,12 @@ class ArcBlueprintTemplateVerificationEngine {
   Future<ArcBlueprintTemplateVerificationResult> verify({
     required Uint8List topBytes,
     required Uint8List bottomBytes,
+    List<String>? singleGridBlueprintIds,
     required List<ArcBlueprintPhotoOccupancySample> samples,
   }) async {
+    final singleGrid = singleGridBlueprintIds != null;
+    final gridColumns = singleGrid ? 17 : ArcBlueprintCanonicalGrid.columns;
+    final gridRows = singleGrid ? 6 : ArcBlueprintCanonicalGrid.topRows;
     final top = img.decodeImage(topBytes);
     final bottom = img.decodeImage(bottomBytes);
     if (top == null || bottom == null) {
@@ -75,14 +81,14 @@ class ArcBlueprintTemplateVerificationEngine {
 
     final normalizedTop = img.copyResize(
       top,
-      width: ArcBlueprintCanonicalGrid.columns * 100,
-      height: ArcBlueprintCanonicalGrid.topRows * 100,
+      width: gridColumns * 100,
+      height: gridRows * 100,
       interpolation: img.Interpolation.cubic,
     );
     final normalizedBottom = img.copyResize(
       bottom,
-      width: ArcBlueprintCanonicalGrid.columns * 100,
-      height: ArcBlueprintCanonicalGrid.bottomRows * 100,
+      width: gridColumns * 100,
+      height: (singleGrid ? 6 : ArcBlueprintCanonicalGrid.bottomRows) * 100,
       interpolation: img.Interpolation.cubic,
     );
 
@@ -102,34 +108,73 @@ class ArcBlueprintTemplateVerificationEngine {
       }
     }
 
+    // New Frozen Trail Blueprints are not part of the old seed collection.
+    // Load their existing WebP assets by stable Blueprint ID; if not present,
+    // missing art must not suppress a valid ownership detection.
+    if (singleGrid) {
+      for (final entry
+          in ArcFrozenTrailCollectionCatalogue.frozenTrailBlueprintAdditions) {
+        if (templates.containsKey(entry.id)) continue;
+        final path = ArcBlueprintAssetRegistry.assetFor(entry.name);
+        if (path == null) continue;
+        try {
+          final data = await rootBundle.load(path);
+          final decoded = img.decodeImage(data.buffer.asUint8List());
+          if (decoded != null) templates[entry.id] = _signature(decoded);
+        } catch (_) {
+          // Artwork is optional; screenshot evidence remains authoritative.
+        }
+      }
+    }
+
     final diagnostics = <ArcBlueprintTemplateVerificationSample>[];
     final verified = <ArcBlueprintPhotoOccupancySample>[];
     var suppressed = 0;
 
     for (final sample in samples) {
-      final canonicalIndex = ArcBlueprintCanonicalGrid.indexForGlobalCell(
-        rowIndex: sample.rowIndex,
-        columnIndex: sample.columnIndex,
-      );
+      final canonicalIndex = singleGrid
+          ? (sample.rowIndex * gridColumns + sample.columnIndex)
+          : ArcBlueprintCanonicalGrid.indexForGlobalCell(
+              rowIndex: sample.rowIndex,
+              columnIndex: sample.columnIndex,
+            );
       if (canonicalIndex == null ||
           canonicalIndex < 0 ||
-          canonicalIndex >= ArcBlueprintSeedData.blueprints.length) {
+          canonicalIndex >=
+              (singleGridBlueprintIds?.length ??
+                  ArcBlueprintSeedData.blueprints.length)) {
         verified.add(sample);
         continue;
       }
 
-      final blueprint = ArcBlueprintSeedData.blueprints[canonicalIndex];
-      final template = templates[blueprint.id];
-      final source = sample.captureId == 'bottom'
+      final blueprint = singleGrid
+          ? ArcBlueprintSeedData.blueprints
+                .where(
+                  (item) => item.id == singleGridBlueprintIds[canonicalIndex],
+                )
+                .firstOrNull
+          : ArcBlueprintSeedData.blueprints[canonicalIndex];
+      if (blueprint == null && !singleGrid) {
+        verified.add(sample);
+        continue;
+      }
+      final template =
+          templates[singleGrid
+              ? singleGridBlueprintIds[canonicalIndex]
+              : blueprint!.id];
+      final source = !singleGrid && sample.captureId == 'bottom'
           ? normalizedBottom
           : normalizedTop;
-      final localRow = sample.captureId == 'bottom'
+      final localRow = singleGrid
+          ? sample.rowIndex
+          : sample.captureId == 'bottom'
           ? sample.rowIndex - ArcBlueprintCanonicalGrid.topRows
           : sample.rowIndex;
       final capturedSignature = _cellSignature(
         source,
         rowIndex: localRow,
         columnIndex: sample.columnIndex,
+        artworkOnly: singleGrid,
       );
 
       final similarity = template == null
@@ -167,8 +212,20 @@ class ArcBlueprintTemplateVerificationEngine {
       );
       diagnostics.add(
         ArcBlueprintTemplateVerificationSample(
-          blueprintId: blueprint.id,
-          blueprintName: blueprint.name,
+          // New Frozen Trail entries may not exist in the legacy seed list.
+          // Retain their canonical ID for diagnostics without assuming a
+          // legacy ArcBlueprint is present.
+          blueprintId: blueprint?.id ?? singleGridBlueprintIds![canonicalIndex],
+          blueprintName:
+              blueprint?.name ??
+              ArcFrozenTrailCollectionCatalogue.blueprintEntries
+                  .where(
+                    (entry) =>
+                        entry.id == singleGridBlueprintIds![canonicalIndex],
+                  )
+                  .map((entry) => entry.name)
+                  .firstOrNull ??
+              singleGridBlueprintIds![canonicalIndex],
           canonicalIndex: canonicalIndex,
           rowIndex: sample.rowIndex,
           columnIndex: sample.columnIndex,
@@ -195,8 +252,9 @@ class ArcBlueprintTemplateVerificationEngine {
     img.Image image, {
     required int rowIndex,
     required int columnIndex,
+    bool artworkOnly = false,
   }) {
-    final cellWidth = image.width / ArcBlueprintCanonicalGrid.columns;
+    final cellWidth = 100.0;
     final rows = image.height ~/ 100;
     final cellHeight = image.height / math.max(1, rows);
     final left = (columnIndex * cellWidth + cellWidth * 0.08).round().clamp(
@@ -211,10 +269,15 @@ class ArcBlueprintTemplateVerificationEngine {
       0,
       image.height - 2,
     );
-    final bottom = (rowIndex * cellHeight + cellHeight * 0.92).round().clamp(
-      top + 1,
-      image.height - 1,
-    );
+    // User-provided artwork templates are cropped above the lower book icon
+    // and dark card footer. Match only that same region in a *single-grid*
+    // screenshot. Other engines still inspect the FULL screenshot for the
+    // bookmark, corner tick, blue grid, and dark-footer ownership signals.
+    // Legacy two-capture comparisons intentionally remain unchanged.
+    final artworkBottomFraction = artworkOnly ? 0.78 : 0.92;
+    final bottom = (rowIndex * cellHeight + cellHeight * artworkBottomFraction)
+        .round()
+        .clamp(top + 1, image.height - 1);
     final crop = img.copyCrop(
       image,
       x: left,

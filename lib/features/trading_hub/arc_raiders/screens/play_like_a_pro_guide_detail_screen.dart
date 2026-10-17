@@ -210,7 +210,7 @@ class PlayLikeAProGuideDetailScreen extends StatelessWidget {
                             guide.tags.contains('blueprints'))
                           _routeButton(
                             context,
-                            'Open Blueprint Tracker',
+                            'Open Collections Tracker',
                             Icons.grid_view_rounded,
                             BlueprintGridScreen.routeName,
                           ),

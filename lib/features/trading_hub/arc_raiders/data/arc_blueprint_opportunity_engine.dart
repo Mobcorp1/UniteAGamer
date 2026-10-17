@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_community_seed.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_intelligence_location_resolver.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_poi_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_seed_data.dart';
@@ -120,17 +121,27 @@ class ArcBlueprintOpportunityEngine {
               report: report,
               locationLabel: locationLabel,
             ),
-            sourceCategory: 'community_drop_report',
-            sourceReference: report.signature.isEmpty
+            sourceCategory: ArcBlueprintCommunitySeed.isSeedReport(report)
+                ? 'community_research_seed'
+                : 'community_drop_report',
+            sourceReference: ArcBlueprintCommunitySeed.isSeedReport(report)
+                ? ''
+                : report.signature.isEmpty
                 ? report.id
                 : report.signature,
-            publishedAt: report.createdAt,
-            reviewedAt: report.lastConfirmedAt,
+            publishedAt: ArcBlueprintCommunitySeed.isSeedReport(report)
+                ? null
+                : report.createdAt,
+            reviewedAt: ArcBlueprintCommunitySeed.isSeedReport(report)
+                ? null
+                : report.lastConfirmedAt,
             direct:
                 !report.isGiftedOrIndirect ||
                 report.recipientWitnessedOriginalPickup,
             confidence: confidence,
-            notes: report.notes,
+            notes: ArcBlueprintCommunitySeed.isSeedReport(report)
+                ? ''
+                : report.notes,
           ),
       ];
 
@@ -183,6 +194,14 @@ class ArcBlueprintOpportunityEngine {
       );
     }
 
+    if (ArcBlueprintCommunitySeed.isSeedReport(report)) {
+      return _resolveCommunitySeedPoint(
+        map,
+        report,
+        canonicalMarkers: canonicalMarkers,
+      );
+    }
+
     final resolution = const ArcIntelligenceLocationResolver()
         .resolveBlueprintReport(
           map: map,
@@ -194,13 +213,114 @@ class ArcBlueprintOpportunityEngine {
           legacyPoint: report.historicalPoint,
           preferredLayer: report.intelligenceLayer,
         );
-    if (resolution == null || resolution.needsAdminReview) return null;
+    if (resolution != null && !resolution.needsAdminReview) {
+      return _ResolvedReportPoint(
+        point: resolution.point,
+        layer: resolution.layer,
+        label: resolution.label,
+        approximate: resolution.approximate,
+      );
+    }
+
+    return null;
+  }
+
+  _ResolvedReportPoint? _resolveCommunitySeedPoint(
+    ArcRaidMap map,
+    ArcBlueprintDropReport report, {
+    required List<ArcAdminMapMarker> canonicalMarkers,
+  }) {
+    final rawLabel = report.intelligencePoiName?.trim();
+    if (rawLabel == null || rawLabel.isEmpty) return null;
+    final query = _normalize(rawLabel);
+    if (query.isEmpty) return null;
+
+    final candidates = <_CommunitySeedPointCandidate>[];
+
+    for (final marker in canonicalMarkers) {
+      if (marker.mapId != map.id ||
+          !marker.isPublished ||
+          marker.kind != ArcAdminMapMarkerKind.poi) {
+        continue;
+      }
+      final labels = <String>[marker.name, ...marker.aliases];
+      var best = 0.0;
+      for (final label in labels) {
+        best = math.max(best, _communityLabelScore(query, _normalize(label)));
+      }
+      if (best >= 0.82) {
+        candidates.add(
+          _CommunitySeedPointCandidate(
+            point: marker.point,
+            layer: marker.layer,
+            label: marker.name,
+            score: best + (marker.adminVerified ? 0.02 : 0),
+          ),
+        );
+      }
+    }
+
+    if (candidates.isEmpty) return null;
+    candidates.sort((a, b) {
+      final scoreCompare = b.score.compareTo(a.score);
+      if (scoreCompare != 0) return scoreCompare;
+      return b.label.length.compareTo(a.label.length);
+    });
+
+    final best = candidates.first;
+    if (candidates.length > 1) {
+      final next = candidates[1];
+      if (_normalize(best.label) != _normalize(next.label) &&
+          best.score - next.score < 0.055) {
+        return null;
+      }
+    }
+
     return _ResolvedReportPoint(
-      point: resolution.point,
-      layer: resolution.layer,
-      label: resolution.label,
-      approximate: resolution.approximate,
+      point: best.point,
+      layer: best.layer,
+      label: best.label,
+      approximate: true,
     );
+  }
+
+  double _communityLabelScore(String query, String candidate) {
+    if (query.isEmpty || candidate.isEmpty) return 0;
+    if (query == candidate) return 1;
+
+    final queryTokens = query
+        .split(' ')
+        .where((value) => value.isNotEmpty)
+        .toSet();
+    final candidateTokens = candidate
+        .split(' ')
+        .where((value) => value.isNotEmpty)
+        .toSet();
+    if (candidateTokens.isEmpty) return 0;
+
+    final matched = candidateTokens.where(queryTokens.contains).length;
+    final candidateCoverage = matched / candidateTokens.length;
+    final queryCoverage = matched / math.max(1, queryTokens.length);
+
+    if (query.contains(candidate)) {
+      final specificity = math.min(candidate.length / 40, 1.0);
+      return 0.90 + (specificity * 0.06);
+    }
+    if (candidate.contains(query) && queryTokens.length >= 2) {
+      return 0.90;
+    }
+    if (candidateCoverage == 1 && candidateTokens.length >= 2) {
+      return 0.88 + math.min(candidateTokens.length * 0.015, 0.06);
+    }
+    if (candidateCoverage == 1 &&
+        candidateTokens.length == 1 &&
+        candidate.length >= 7) {
+      return 0.86;
+    }
+    if (candidateCoverage >= 0.75 && queryCoverage >= 0.45) {
+      return 0.82 + ((candidateCoverage - 0.75) * 0.2);
+    }
+    return 0;
   }
 
   /// Cluster location is already resolved against the current published POI.
@@ -333,4 +453,18 @@ class _ResolvedReportPoint {
   final ArcRaidMapLayer layer;
   final String label;
   final bool approximate;
+}
+
+class _CommunitySeedPointCandidate {
+  const _CommunitySeedPointCandidate({
+    required this.point,
+    required this.layer,
+    required this.label,
+    required this.score,
+  });
+
+  final ArcNormalizedPoint point;
+  final ArcRaidMapLayer layer;
+  final String label;
+  final double score;
 }

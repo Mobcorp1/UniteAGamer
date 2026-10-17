@@ -7,7 +7,7 @@ void main() {
     test('defines the required unique categories', () {
       const expected = [
         'Getting Started',
-        'Blueprint Tracker',
+        'Collections Tracker',
         'Favourite Loadout',
         'Trading',
         'Match Raider',

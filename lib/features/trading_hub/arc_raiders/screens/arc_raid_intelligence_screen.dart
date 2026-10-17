@@ -11,6 +11,7 @@ import '../widgets/arc_raid_location_picker.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_frozen_trail_preview_screen.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_asset_registry.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_launch_map_policy.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_marker_stack_resolver.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_view_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_auto_recommendation_engine.dart';
@@ -65,6 +66,7 @@ class ArcRaidIntelligenceScreen extends StatefulWidget {
     this.nomadicTraderTrackerLoader,
     this.profileLoader,
     this.regionalConditionsLoader,
+    this.initialMapId,
   });
   final Stream<Map<String, ArcBlueprintState>> Function()? blueprintStates;
   final Stream<ArcSavedLoadout?> Function()? favouriteLoadout;
@@ -81,6 +83,11 @@ class ArcRaidIntelligenceScreen extends StatefulWidget {
   final Future<ArcTraderProfile> Function()? profileLoader;
   final Future<ArcRegionalMapConditionsSnapshot> Function()?
   regionalConditionsLoader;
+
+  /// Explicit launch intent from Command Centre / recommendation routing.
+  ///
+  /// When null, Raid Intelligence preserves its normal remembered-map behaviour.
+  final String? initialMapId;
 
   static const routeName = '/trading-hub/arc-raiders/raid-intelligence';
 
@@ -116,6 +123,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   final TransformationController _mapController = TransformationController();
   final TextEditingController _searchController = TextEditingController();
 
+  late final String? _explicitInitialMapId;
   String _mapId = ArcMapAssetRegistry.blueGateMapId;
   ArcRaidMapLayer _activeLayer = ArcRaidMapLayer.surface;
   ArcRaidMapFilterState _filters = ArcRaidMapFilterState.defaults;
@@ -180,6 +188,12 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   @override
   void initState() {
     super.initState();
+    _explicitInitialMapId = ArcRaidLaunchMapPolicy.canonicalExplicitMapId(
+      widget.initialMapId,
+    );
+    if (_explicitInitialMapId != null) {
+      _mapId = _explicitInitialMapId;
+    }
     _mapController.addListener(_onMapTransformChanged);
     unawaited(_initialiseScreen());
   }
@@ -201,6 +215,12 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
         await (widget.loadActiveRoute?.call() ??
             _routeRepository.loadActiveRoute());
     if (!mounted || route == null) return;
+    if (!ArcRaidLaunchMapPolicy.routeCanApply(
+      explicitMapId: _explicitInitialMapId,
+      routeMapId: route.mapId,
+    )) {
+      return;
+    }
     setState(() {
       final canonicalRouteMapId =
           ArcMapAssetRegistry.canonicalMapIdFor(route.mapId) ?? route.mapId;
@@ -231,6 +251,15 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       await _loadActiveRoute();
     } catch (_) {
       if (mounted) setState(() => _lastData['routeError'] = true);
+    }
+    if (!ArcRaidLaunchMapPolicy.shouldRestoreLastMap(
+      explicitMapId: _explicitInitialMapId,
+    )) {
+      await _restoreLayerView(
+        mapId: _explicitInitialMapId!,
+        layer: _activeLayer,
+      );
+      return;
     }
     await _restoreLastMapView();
     unawaited(_loadRecommendationContext());
@@ -525,7 +554,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
             ),
           ),
           IconButton(
-            tooltip: 'Open Blueprint Tracker',
+            tooltip: 'Open Collections Tracker',
             onPressed: () =>
                 Navigator.of(context).pushNamed(BlueprintGridScreen.routeName),
             icon: const Icon(Icons.grid_view_rounded),

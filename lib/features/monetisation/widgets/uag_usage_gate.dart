@@ -84,6 +84,6 @@ class UagUsageGate {
     if (action == UagBillableAction.matchmakingSearch) {
       return '$intro\n\nFree includes ${UagMatchIntelligenceCopy.free.label.toLowerCase()}. Essential unlocks ${UagMatchIntelligenceCopy.essential.label.toLowerCase()} with deeper schedule, communication and squad-intent analysis. Premium unlocks ${UagMatchIntelligenceCopy.premium.label.toLowerCase()} for the strongest private-signal recommendations.';
     }
-    return '$intro\n\nFree users keep the core app, Intel contribution, Blueprint Tracker and basic UAG Raider access. Essential unlocks regular-player limits. Premium unlocks unlimited power-user tools and no ads.';
+    return '$intro\n\nFree users keep the core app, Intel contribution, Collections Tracker and basic UAG Raider access. Essential unlocks regular-player limits. Premium unlocks unlimited power-user tools and no ads.';
   }
 }

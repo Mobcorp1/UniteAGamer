@@ -164,7 +164,7 @@ extension ArcPersonalisationFeatureX on ArcPersonalisationFeature {
       case ArcPersonalisationFeature.availability:
         return 'Availability';
       case ArcPersonalisationFeature.blueprintTracker:
-        return 'Blueprint Tracker';
+        return 'Collections Tracker';
       case ArcPersonalisationFeature.blueprintIntelligence:
         return 'Blueprint Intelligence';
       case ArcPersonalisationFeature.blueprintWatches:

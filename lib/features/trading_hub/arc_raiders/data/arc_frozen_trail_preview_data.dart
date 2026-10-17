@@ -10,6 +10,7 @@ enum ArcFrozenTrailContentType {
   system,
   workstation,
   instrument,
+  condition,
 }
 
 class ArcFrozenTrailContentItem {
@@ -41,6 +42,7 @@ class ArcFrozenTrailContentItem {
     ArcFrozenTrailContentType.system => 'SYSTEM',
     ArcFrozenTrailContentType.workstation => 'RESEARCH',
     ArcFrozenTrailContentType.instrument => 'INSTRUMENT',
+    ArcFrozenTrailContentType.condition => 'MAP CONDITION',
   };
 }
 
@@ -81,6 +83,15 @@ class ArcFrozenTrailPreviewData {
       detail:
           'Raiders navigate internal passages, unlock routes and fight ARC and other Raiders in close quarters.',
       icon: Icons.air_rounded,
+    ),
+    ArcFrozenTrailContentItem(
+      id: 'redirection',
+      name: 'Redirection',
+      type: ArcFrozenTrailContentType.condition,
+      summary: 'Frozen Trail map condition observed on Pendola Pass at launch.',
+      detail:
+          'Tracked as a dynamic map condition rather than a fixed map marker.',
+      icon: Icons.alt_route_rounded,
     ),
     ArcFrozenTrailContentItem(
       id: 'bully',

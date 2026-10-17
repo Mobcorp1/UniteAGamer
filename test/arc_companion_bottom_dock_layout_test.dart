@@ -111,7 +111,7 @@ void main() {
       'Wall of Legends': 'DISCOVER',
       'Report a Rat': 'DISCOVER',
       'Progress Trackers': 'TRACK',
-      'Blueprint Tracker': 'TRACK',
+      'Collections Tracker': 'TRACK',
       'Favourite Loadout': 'TRACK',
       'My Intel': 'TRACK',
       'Trading': 'TRADE',

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/services/uag_trade_invite_service.dart';
 import 'package:flutter/services.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/arc_tactical_page.dart';
@@ -34,8 +35,10 @@ class _UagReferARaiderPanelState extends State<UagReferARaiderPanel> {
     try {
       if (!termsAccepted) await _repository.acceptCurrentReferralTerms();
       final code = await _repository.ensureMyReferralCode();
-      final uri = _repository.referralUri(code);
-      await Clipboard.setData(ClipboardData(text: uri.toString()));
+      final invite = await UagTradeInviteService.instance.create(programmeCode: code);
+      final url = invite['url']?.toString() ?? '';
+      if (url.isEmpty) throw StateError('Secure link was not generated.');
+      await Clipboard.setData(ClipboardData(text: url));
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Refer a Raider link copied.')),

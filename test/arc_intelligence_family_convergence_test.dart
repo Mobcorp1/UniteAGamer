@@ -97,7 +97,7 @@ void main() {
         'lib/features/trading_hub/arc_raiders/screens/arc_intel_explorer_screen.dart',
       ).readAsStringSync();
 
-      expect(raid, contains('ArcLiveMapConditionsStrip'));
+      expect(raid, contains('_regionalConditions'));
       expect(community, contains('ArcLiveMapConditionsStrip'));
       expect(explorer, contains('ArcLiveMapConditionsStrip'));
     });

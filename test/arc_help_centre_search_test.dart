@@ -64,10 +64,13 @@ void main() {
         await _pumpHelp(tester);
         expect(find.text('Where should I start?'), findsNothing);
         expect(find.text('How do I mark a blueprint?'), findsWidgets);
-        expect(find.text('BLUEPRINT TRACKER'), findsOneWidget);
+        expect(find.text('Collections Tracker'), findsWidgets);
 
-        final category = tester.getTopLeft(find.text('Blueprint Tracker'));
-        final answers = tester.getTopLeft(find.text('BLUEPRINT TRACKER'));
+        // Card labels retain normal case; ArcSectionHeader transforms the
+        // answer-panel heading to uppercase. Compare DIFFERENT widgets.
+        expect(find.text('COLLECTIONS TRACKER'), findsOneWidget);
+        final category = tester.getTopLeft(find.text('Collections Tracker').first);
+        final answers = tester.getTopLeft(find.text('COLLECTIONS TRACKER'));
         if (width == 1080 && scale == 1) {
           expect(answers.dx, greaterThan(category.dx));
         } else {
@@ -96,7 +99,7 @@ void main() {
         await _pumpHelp(tester);
         expect(find.text('No matching topics'), findsOneWidget);
         expect(find.byType(ExpansionTile), findsNothing);
-        expect(find.text('BLUEPRINT TRACKER'), findsNothing);
+        expect(find.text('Collections Tracker'), findsNothing);
         expect(find.text('Where should I start?'), findsNothing);
         expect(
           tester.takeException(),
@@ -112,7 +115,7 @@ void main() {
         expect(tester.widget<TextField>(search).controller!.text, isEmpty);
         expect(find.text('No matching topics'), findsNothing);
         expect(find.text('Where should I start?'), findsOneWidget);
-        expect(find.text('Blueprint Tracker'), findsOneWidget);
+        expect(find.text('Collections Tracker'), findsWidgets);
         expect(find.byTooltip('Clear search'), findsNothing);
         expect(
           tester.takeException(),

@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "pendola_pass_surface_identity_v1",
+  "mapId": "pendola_pass",
+  "layer": "surface",
+  "published": true,
+  "residualError": 0,
+  "anchors": [
+    {
+      "id": "top_left",
+      "canonical": {"x": 0.0, "y": 0.0},
+      "image": {"x": 0.0, "y": 0.0}
+    },
+    {
+      "id": "top_right",
+      "canonical": {"x": 1.0, "y": 0.0},
+      "image": {"x": 1.0, "y": 0.0}
+    },
+    {
+      "id": "bottom_left",
+      "canonical": {"x": 0.0, "y": 1.0},
+      "image": {"x": 0.0, "y": 1.0}
+    },
+    {
+      "id": "bottom_right",
+      "canonical": {"x": 1.0, "y": 1.0},
+      "image": {"x": 1.0, "y": 1.0}
+    }
+  ],
+  "notes": "Identity calibration for the complete Pendola Pass master. Exact gameplay marker coordinates remain separately verified."
+}
