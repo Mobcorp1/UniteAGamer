@@ -93,6 +93,7 @@ flutter:
 
     - assets/arc_raiders/hero_cards/
     - assets/arc_raiders/hub/
+    - assets/arc_raiders/hub/benches/
     - assets/arc_raiders/loading/
     - assets/arc_raiders/loadouts/weapons/
   fonts:

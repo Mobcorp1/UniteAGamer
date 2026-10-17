@@ -7,6 +7,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bench_upgrade_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bench_artwork.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_compact_tracker_card_metrics.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_progression_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_progression_models.dart';
@@ -1118,12 +1119,23 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
 
     return Container(
       padding: const EdgeInsets.all(10),
-      decoration: ArcUiTokens.surfaceDecoration(
-        role: ArcSurfaceRole.panel,
-        radius: ArcUiTokens.radiusM,
-        accent: ArcUiTokens.primaryAccent,
-        borderOpacity: 0.22,
-      ),
+      decoration:
+          ArcUiTokens.surfaceDecoration(
+            role: ArcSurfaceRole.panel,
+            radius: ArcUiTokens.radiusM,
+            accent: ArcUiTokens.primaryAccent,
+            borderOpacity: 0.22,
+          ).copyWith(
+            image:
+                selected != null && ArcBenchArtwork.forStation(selected) != null
+                ? DecorationImage(
+                    image: AssetImage(ArcBenchArtwork.forStation(selected)!),
+                    fit: BoxFit.contain,
+                    alignment: Alignment.centerRight,
+                    opacity: 0.20,
+                  )
+                : null,
+          ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

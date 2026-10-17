@@ -3,6 +3,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bench_artwork.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/screens/monetisation_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_command_centre_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_command_centre_relevance_mapper.dart';
@@ -320,6 +321,9 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
             routeName: ScrappyGridScreen.benchRouteName,
           ),
           icon: Icons.build_circle_outlined,
+          image: ArcBenchArtwork.forStation(
+            bench.label.substring('Bench: '.length),
+          ),
         ),
       _briefingEventCard(
         title: 'SCRAPPY',
@@ -333,6 +337,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
           routeName: ScrappyGridScreen.routeName,
         ),
         icon: Icons.pets_rounded,
+        image: ArcBenchArtwork.forStation('Scrappy'),
       ),
     ];
 
@@ -649,6 +654,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     required ArcCommandStatus status,
     required ArcCommandAction action,
     required IconData icon,
+    String? image,
   }) {
     final accent = arcCommandStatusAccent(status);
     return SizedBox(
@@ -658,6 +664,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
         child: ArcCommandCentreCard(
           accent: accent,
           padding: const EdgeInsets.all(11),
+          image: image,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -2083,8 +2090,11 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
 
   String _imageForCommandTitle(String title, {required String fallback}) {
     final key = title.toLowerCase();
-    if (key.contains('upgrade gunsmith') || key.contains('upgrade bench')) {
-      return _operationAsset('upgrade_gunsmith_card.webp');
+    if (key.contains('upgrade gunsmith')) {
+      return ArcBenchArtwork.forStation('Gunsmith')!;
+    }
+    if (key.contains('upgrade bench')) {
+      return ArcBenchArtwork.forStation('Workbench')!;
     }
     if (key.contains('missing resources') ||
         key.contains('secure antiseptic')) {
@@ -2165,12 +2175,15 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
           return _operationAsset('complete_blueprint_collection_card.webp');
         }
         if (route.contains('bench')) {
-          return _operationAsset('upgrade_gunsmith_card.webp');
+          return ArcBenchArtwork.forStation('Workbench')!;
         }
         if (route.contains('quest')) {
           return _operationAsset('track_quests_card.webp');
         }
-        if (route.contains('resource') || route.contains('scrappy')) {
+        if (route.contains('scrappy')) {
+          return ArcBenchArtwork.forStation('Scrappy')!;
+        }
+        if (route.contains('resource')) {
           return _operationAsset('missing_resources_card.webp');
         }
         return _operationAsset('arc_command_centre_background.webp');

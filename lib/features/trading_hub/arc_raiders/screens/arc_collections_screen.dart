@@ -251,7 +251,8 @@ class _ArcCollectionsScreenState extends State<ArcCollectionsScreen> {
                   : ArcUiTokens.textDisabled,
             ),
           ),
-          if (_selected == ArcCollectionType.blueprints &&
+          if ((_selected == ArcCollectionType.blueprints ||
+                  _selected == ArcCollectionType.stencils) &&
               entry != null &&
               ArcFrozenTrailCollectionCatalogue.frozenTrailArtworkPaths
                   .containsKey(entry.id))

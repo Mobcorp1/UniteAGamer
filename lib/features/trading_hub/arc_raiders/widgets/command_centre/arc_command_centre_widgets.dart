@@ -26,23 +26,35 @@ class ArcCommandCentreCard extends StatelessWidget {
     required this.child,
     this.accent = AppTheme.neonCyan,
     this.padding = const EdgeInsets.all(12),
+    this.image,
   });
 
   final Widget child;
   final Color accent;
   final EdgeInsetsGeometry padding;
+  final String? image;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: padding,
-      decoration: ArcUiTokens.surfaceDecoration(
-        role: ArcSurfaceRole.raised,
-        accent: accent,
-        radius: ArcUiTokens.radiusXL,
-        borderOpacity: 0.26,
-        glow: true,
-      ),
+      decoration:
+          ArcUiTokens.surfaceDecoration(
+            role: ArcSurfaceRole.raised,
+            accent: accent,
+            radius: ArcUiTokens.radiusXL,
+            borderOpacity: 0.26,
+            glow: true,
+          ).copyWith(
+            image: image == null
+                ? null
+                : DecorationImage(
+                    image: AssetImage(image!),
+                    fit: BoxFit.contain,
+                    alignment: Alignment.centerRight,
+                    opacity: 0.40,
+                  ),
+          ),
       child: child,
     );
   }

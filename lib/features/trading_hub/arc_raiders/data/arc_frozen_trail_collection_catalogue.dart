@@ -331,6 +331,33 @@ class ArcFrozenTrailCollectionCatalogue {
       duplicateStatus: ArcCollectionEconomyStatus.unknown,
       tradeStatus: ArcCollectionEconomyStatus.unknown,
     ),
+    ArcCollectionEntry(
+      id: 'fortuna',
+      name: 'Fortuna',
+      type: ArcCollectionType.stencils,
+      slot: 11,
+      confidence: ArcCollectionSlotConfidence.verifiedInGame,
+      duplicateStatus: ArcCollectionEconomyStatus.unknown,
+      tradeStatus: ArcCollectionEconomyStatus.unknown,
+    ),
+    ArcCollectionEntry(
+      id: 'garnet',
+      name: 'Garnet',
+      type: ArcCollectionType.stencils,
+      slot: 13,
+      confidence: ArcCollectionSlotConfidence.verifiedInGame,
+      duplicateStatus: ArcCollectionEconomyStatus.unknown,
+      tradeStatus: ArcCollectionEconomyStatus.unknown,
+    ),
+    ArcCollectionEntry(
+      id: 'ochre',
+      name: 'Ochre',
+      type: ArcCollectionType.stencils,
+      slot: 14,
+      confidence: ArcCollectionSlotConfidence.verifiedInGame,
+      duplicateStatus: ArcCollectionEconomyStatus.unknown,
+      tradeStatus: ArcCollectionEconomyStatus.unknown,
+    ),
   ];
 
   static const designEntries = <ArcCollectionEntry>[];
@@ -518,6 +545,9 @@ class ArcFrozenTrailCollectionCatalogue {
   /// These names match the incoming PNG-to-WebP asset workflow; no new assets
   /// are required at install time. Asset display must be wired in the live UI.
   static const frozenTrailArtworkPaths = <String, String>{
+    'fortuna': 'assets/arc_raiders/blueprints/fortuna.webp',
+    'garnet': 'assets/arc_raiders/blueprints/garnet.webp',
+    'ochre': 'assets/arc_raiders/blueprints/ochre.webp',
     'yank-grenade': 'assets/arc_raiders/blueprints/yank-grenade.webp',
     'grappling-hook': 'assets/arc_raiders/blueprints/grappling-hook.webp',
     'tether-launcher': 'assets/arc_raiders/blueprints/tether-launcher.webp',
