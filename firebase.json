@@ -27,7 +27,7 @@
         "destination": "/support.html"
       },
       {
-        "source": "!/@(guides|about|public-assets){,/**}",
+        "source": "!/@(guides|about|public-assets|tools|maps){,/**}",
         "destination": "/app.html"
       }
     ],

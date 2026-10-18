@@ -40,7 +40,7 @@ void main() {
 
       final privacyIndex = firebase.indexOf('"source": "/privacy"');
       final spaFallback = firebase.indexOf(
-        '"source": "!/@(guides|about|public-assets){,/**}"',
+        '"source": "!/@(guides|about|public-assets|tools|maps){,/**}"',
       );
       expect(privacyIndex, greaterThanOrEqualTo(0));
       expect(spaFallback, greaterThan(privacyIndex));
