@@ -40,7 +40,16 @@ class ArcLoadoutSeedData {
       name: 'Anvil',
       category: 'Hand Cannon',
       role: 'High-impact raider stopping power',
-      slots: ['Muzzle Mod', 'Tech Mod'],
+      slots: ['Muzzle Mod'],
+      blueprintBased: true,
+    ),
+    ArcLoadoutWeaponSpec(
+      name: 'Bantam',
+      category: 'Hand Cannon',
+      role: 'Frozen Trail heavy-ammo double-action revolver',
+      slots: [],
+      craftable: true,
+      gunsmithLevel: 1,
       blueprintBased: true,
     ),
     ArcLoadoutWeaponSpec(
@@ -187,6 +196,15 @@ class ArcLoadoutSeedData {
       blueprintBased: true,
     ),
     ArcLoadoutWeaponSpec(
+      name: 'Stiletto',
+      category: 'Battle Rifle',
+      role: 'Frozen Trail light-ammo semi-auto precision rifle',
+      slots: ['Muzzle Mod', 'Underbarrel Mod', 'Stock Mod'],
+      craftable: true,
+      gunsmithLevel: 1,
+      blueprintBased: true,
+    ),
+    ArcLoadoutWeaponSpec(
       name: 'Stitcher',
       category: 'SMG',
       role: 'Close-range ARC and raider pressure',
@@ -278,7 +296,7 @@ class ArcLoadoutSeedData {
     ArcLoadoutOption(
       name: 'Heavy Shield',
       type: ArcLoadoutSlotType.equipment,
-      description: '80 charge, 52.5% damage reduction, 15% movement penalty.',
+      description: '80 charge, 52.5% damage reduction, 10% movement penalty.',
       craftable: true,
     ),
     ArcLoadoutOption(

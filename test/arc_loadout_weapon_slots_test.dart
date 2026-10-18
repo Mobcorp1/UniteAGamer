@@ -5,7 +5,8 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 
 void main() {
   const expectedSlots = <String, List<String>>{
-    'Anvil': ['Muzzle Mod', 'Tech Mod'],
+    'Anvil': ['Muzzle Mod'],
+    'Bantam': [],
     'Aphelion': ['Underbarrel Mod', 'Stock Mod'],
     'Arpeggio': [
       'Muzzle Mod',
@@ -53,6 +54,7 @@ void main() {
     'Rascal': [],
     'Rattler': ['Stock Mod', 'Converter'],
     'Renegade': ['Muzzle Mod', 'Underbarrel Mod', 'Stock Mod'],
+    'Stiletto': ['Muzzle Mod', 'Underbarrel Mod', 'Stock Mod'],
     'Stitcher': [
       'Muzzle Mod',
       'Underbarrel Mod',
@@ -86,7 +88,6 @@ void main() {
   test('PASS 259A verified weapon slot counts stay exact', () {
     expect(ArcLoadoutCompatibilityRegistry.slotsForWeapon('Anvil'), [
       'Muzzle Mod',
-      'Tech Mod',
     ]);
     expect(ArcLoadoutCompatibilityRegistry.slotsForWeapon('Stitcher'), [
       'Muzzle Mod',

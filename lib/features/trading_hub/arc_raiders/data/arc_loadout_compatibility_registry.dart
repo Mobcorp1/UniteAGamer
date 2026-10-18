@@ -89,7 +89,9 @@ class ArcLoadoutCompatibilityRegistry {
         .where(
           (attachment) =>
               attachment.slotType == slotType &&
-              attachment.supportsWeapon(weaponName),
+              (attachment.supportsWeapon(weaponName) ||
+                  (normalise(weaponName) == 'stiletto' &&
+                      attachment.supportsWeapon('Ferro'))),
         )
         .toList();
 
@@ -121,6 +123,8 @@ class ArcLoadoutCompatibilityRegistry {
     if (attachment == null) return attachmentName == 'Empty Slot';
 
     return attachment.slotType == slotTypeForLabel(slotLabel) &&
-        attachment.supportsWeapon(weaponName);
+        (attachment.supportsWeapon(weaponName) ||
+            (normalise(weaponName) == 'stiletto' &&
+                attachment.supportsWeapon('Ferro')));
   }
 }

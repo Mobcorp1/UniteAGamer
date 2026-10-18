@@ -22,6 +22,101 @@ class UnifiedItemIndex {
   const UnifiedItemIndex._();
   static const List<UnifiedItemEntry> items = <UnifiedItemEntry>[
     UnifiedItemEntry(
+      id: 'bantam',
+      name: 'Bantam',
+      usedIn: <String>['Trading Hub', 'Favourite Loadout', 'Crafting Planner'],
+    ),
+    UnifiedItemEntry(
+      id: 'stiletto',
+      name: 'Stiletto',
+      usedIn: <String>['Trading Hub', 'Favourite Loadout', 'Crafting Planner'],
+    ),
+    UnifiedItemEntry(
+      id: 'bantam-blueprint',
+      name: 'Bantam Blueprint',
+      usedIn: <String>['Trading Hub', 'Blueprint Tracker', 'Crafting Planner'],
+    ),
+    UnifiedItemEntry(
+      id: 'stiletto-blueprint',
+      name: 'Stiletto Blueprint',
+      usedIn: <String>['Trading Hub', 'Blueprint Tracker', 'Crafting Planner'],
+    ),
+    UnifiedItemEntry(
+      id: 'radial-presses',
+      name: 'Radial Presses',
+      usedIn: <String>['Trading Hub', 'Bench Tracker', 'Crafting Planner'],
+    ),
+    UnifiedItemEntry(
+      id: 'magnetic-accelerators',
+      name: 'Magnetic Accelerators',
+      usedIn: <String>['Trading Hub', 'Bench Tracker', 'Crafting Planner'],
+    ),
+    UnifiedItemEntry(
+      id: 'emperor-modulators',
+      name: 'Emperor Modulators',
+      usedIn: <String>['Trading Hub', 'Bench Tracker', 'Crafting Planner'],
+    ),
+    UnifiedItemEntry(
+      id: 'arc-data-modules',
+      name: 'ARC Data Modules',
+      usedIn: <String>['Trading Hub', 'Bench Tracker', 'Crafting Planner'],
+    ),
+    UnifiedItemEntry(
+      id: 'planks',
+      name: 'Planks',
+      usedIn: <String>['Trading Hub', 'Bench Tracker', 'Crafting Planner'],
+    ),
+    UnifiedItemEntry(
+      id: 'battered-paperbacks',
+      name: 'Battered Paperbacks',
+      usedIn: <String>['Trading Hub', 'Bench Tracker', 'Crafting Planner'],
+    ),
+    UnifiedItemEntry(
+      id: 'mini-pumps',
+      name: 'Mini Pumps',
+      usedIn: <String>['Trading Hub', 'Bench Tracker', 'Crafting Planner'],
+    ),
+    UnifiedItemEntry(
+      id: 'calculators',
+      name: 'Calculators',
+      usedIn: <String>['Trading Hub', 'Bench Tracker', 'Crafting Planner'],
+    ),
+    UnifiedItemEntry(
+      id: 'raider-logbooks',
+      name: 'Raider Logbooks',
+      usedIn: <String>['Trading Hub', 'Bench Tracker', 'Crafting Planner'],
+    ),
+    UnifiedItemEntry(
+      id: 'skulker-targeters',
+      name: 'Skulker Targeters',
+      usedIn: <String>['Trading Hub', 'Bench Tracker', 'Crafting Planner'],
+    ),
+    UnifiedItemEntry(
+      id: 'differential-microphones',
+      name: 'Differential Microphones',
+      usedIn: <String>['Trading Hub', 'Bench Tracker', 'Crafting Planner'],
+    ),
+    UnifiedItemEntry(
+      id: 'exodus-technical-handbooks',
+      name: 'Exodus Technical Handbooks',
+      usedIn: <String>['Trading Hub', 'Bench Tracker', 'Crafting Planner'],
+    ),
+    UnifiedItemEntry(
+      id: 'bully-fragmenters',
+      name: 'Bully Fragmenters',
+      usedIn: <String>['Trading Hub', 'Bench Tracker', 'Crafting Planner'],
+    ),
+    UnifiedItemEntry(
+      id: 'thermal-shakers',
+      name: 'Thermal Shakers',
+      usedIn: <String>['Trading Hub', 'Bench Tracker', 'Crafting Planner'],
+    ),
+    UnifiedItemEntry(
+      id: 'frigate-inductors',
+      name: 'Frigate Inductors',
+      usedIn: <String>['Trading Hub', 'Bench Tracker', 'Crafting Planner'],
+    ),
+    UnifiedItemEntry(
       id: 'acoustic-guitar',
       name: 'Acoustic Guitar',
       usedIn: <String>['Trading Hub'],

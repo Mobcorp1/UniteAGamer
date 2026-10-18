@@ -1,4 +1,5 @@
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_item_intelligence_catalog.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_frozen_trail_weapon_content.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_item_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
@@ -6,23 +7,27 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 class ArcItemIntelligenceEngine {
   ArcItemIntelligenceEngine._();
 
+  // Keep the generated RaidTheory snapshot immutable; Frozen Trail extends it.
+  static final List<ArcItemIntelligenceItem> _allItems =
+      List<ArcItemIntelligenceItem>.unmodifiable(<ArcItemIntelligenceItem>[
+        ...ArcItemIntelligenceCatalog.items.map(
+          ArcFrozenTrailWeaponContent.currentItem,
+        ),
+        ...ArcFrozenTrailWeaponContent.items,
+      ]);
+
   static final Map<String, ArcItemIntelligenceItem> _byId =
       <String, ArcItemIntelligenceItem>{
-        for (final item in ArcItemIntelligenceCatalog.items) item.id: item,
+        for (final item in _allItems) item.id: item,
       };
 
-  static List<ArcItemIntelligenceItem> get items =>
-      ArcItemIntelligenceCatalog.items;
+  static List<ArcItemIntelligenceItem> get items => _allItems;
 
   static List<ArcItemIntelligenceItem> get craftables =>
-      ArcItemIntelligenceCatalog.items
-          .where((item) => item.craftable)
-          .toList(growable: false);
+      _allItems.where((item) => item.craftable).toList(growable: false);
 
   static List<ArcItemIntelligenceItem> get recyclables =>
-      ArcItemIntelligenceCatalog.items
-          .where((item) => item.recyclable)
-          .toList(growable: false);
+      _allItems.where((item) => item.recyclable).toList(growable: false);
 
   static ArcItemIntelligenceItem? byId(String id) => _byId[id];
 
@@ -83,7 +88,11 @@ class ArcItemIntelligenceEngine {
   }
 
   static ArcItemIntelligenceItem? resolve(String query) {
-    final matches = ArcItemIntelligenceCatalog.items
+    // A bare weapon name resolves to the craftable weapon, not its blueprint.
+    final canonical = normalise(query);
+    if (canonical == 'bantam') return _byId['bantam_i'];
+    if (canonical == 'stiletto') return _byId['stiletto_i'];
+    final matches = _allItems
         .where((item) => _matches(item, query))
         .toList(growable: false);
     if (matches.isEmpty) {

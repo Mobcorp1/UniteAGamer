@@ -915,9 +915,10 @@ class ArcWeaponAttachmentDatabase {
           isPenalty: true,
         ),
       ],
-      compatibleWeapons: ['Anvil'],
+      compatibleWeapons: <String>[],
       assetPath: 'assets/arc_raiders/blueprints/anvil-splitter.webp',
-      notes: 'Uses the current Tech Mod slot through the special slot type.',
+      notes:
+          'Legacy item: no longer usable as a mod. Sell or recycle for Amplified Fragments.',
     ),
   ]);
 

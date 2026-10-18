@@ -66,7 +66,7 @@ class ArcLoadoutRepairCatalog {
       name: 'Heavy Shield',
       charge: 80,
       damageReductionPercent: 52.5,
-      movementPenaltyPercent: 15,
+      movementPenaltyPercent: 10,
       craftRecipe: <String, int>{'power_rod': 1, 'voltage_converter': 2},
       repairRecipe: <String, int>{'arc_circuitry': 2, 'voltage_converter': 1},
       repairDurability: 50,

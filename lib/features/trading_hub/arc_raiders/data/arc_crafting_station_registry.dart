@@ -11,6 +11,7 @@ class ArcCraftingStationRegistry {
     'med_station': 'Medical Lab',
     'utility_bench': 'Utility Station',
     'refiner': 'Refiner',
+    'research_station': 'Research Station',
   };
 
   /// Returns null for workbench, in_raid and unknown station IDs.

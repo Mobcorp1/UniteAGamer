@@ -15,10 +15,10 @@ void main() {
       );
     });
 
-    test('two-slot weapon returns two ordered slots', () {
-      expect(ArcLoadoutCompatibilityRegistry.slotsForWeapon('Anvil'), [
-        'Muzzle Mod',
-        'Tech Mod',
+    test('two-slot Aphelion retains its two verified slots', () {
+      expect(ArcLoadoutCompatibilityRegistry.slotsForWeapon('Aphelion'), [
+        'Underbarrel Mod',
+        'Stock Mod',
       ]);
     });
 

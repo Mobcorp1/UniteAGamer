@@ -16,6 +16,8 @@ class ArcLoadoutAssetRegistry {
 
   static const Map<String, String> _weaponAssets = {
     'anvil': 'assets/arc_raiders/blueprints/anvil.webp',
+    'bantam': 'assets/arc_raiders/blueprints/bantam.webp',
+    'stiletto': 'assets/arc_raiders/blueprints/stiletto.webp',
     'arpeggio': 'assets/arc_raiders/blueprints/arpeggio.webp',
     'bobcat': 'assets/arc_raiders/blueprints/bobcat.webp',
     'burletta': 'assets/arc_raiders/blueprints/burletta.webp',

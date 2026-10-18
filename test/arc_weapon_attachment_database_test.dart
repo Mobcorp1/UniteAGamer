@@ -230,7 +230,10 @@ void main() {
               weaponName: 'Anvil',
               slotLabel: 'Tech Mod',
             ).map((attachment) => attachment.name);
-        expect(anvilTech, contains('Anvil Splitter'));
+        expect(
+          anvilTech,
+          isEmpty,
+        ); // Legacy Splitter is not an equipable mod in 2.0.
       },
     );
 

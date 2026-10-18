@@ -117,6 +117,215 @@ class ArcTradeItemsData {
   ArcTradeItemsData._();
 
   static const List<ArcTradeItem> items = <ArcTradeItem>[
+    ArcTradeItem(
+      id: 'bantam',
+      name: 'Bantam',
+      category: ArcTradeItemCategory.weapon,
+      tradeValue: ArcTradeValueTier.mid,
+      rarity: ArcTradeItemRarity.uncommon,
+      stackable: false,
+      sourceHints: <String>['Frozen Trail 2.0'],
+      notes:
+          'Verify in-game trade eligibility and current value before making offers.',
+    ),
+    ArcTradeItem(
+      id: 'stiletto',
+      name: 'Stiletto',
+      category: ArcTradeItemCategory.weapon,
+      tradeValue: ArcTradeValueTier.mid,
+      rarity: ArcTradeItemRarity.uncommon,
+      stackable: false,
+      sourceHints: <String>['Frozen Trail 2.0'],
+      notes:
+          'Verify in-game trade eligibility and current value before making offers.',
+    ),
+    ArcTradeItem(
+      id: 'bantam-blueprint',
+      name: 'Bantam Blueprint',
+      category: ArcTradeItemCategory.blueprint,
+      tradeValue: ArcTradeValueTier.mid,
+      rarity: ArcTradeItemRarity.rare,
+      stackable: false,
+      sourceHints: <String>['Frozen Trail 2.0'],
+      notes:
+          'Verify in-game trade eligibility and current value before making offers.',
+    ),
+    ArcTradeItem(
+      id: 'stiletto-blueprint',
+      name: 'Stiletto Blueprint',
+      category: ArcTradeItemCategory.blueprint,
+      tradeValue: ArcTradeValueTier.mid,
+      rarity: ArcTradeItemRarity.rare,
+      stackable: false,
+      sourceHints: <String>['Frozen Trail 2.0'],
+      notes:
+          'Verify in-game trade eligibility and current value before making offers.',
+    ),
+    ArcTradeItem(
+      id: 'radial-presses',
+      name: 'Radial Presses',
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.mid,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      sourceHints: <String>['Frozen Trail 2.0'],
+      notes:
+          'Verify in-game trade eligibility and current value before making offers.',
+    ),
+    ArcTradeItem(
+      id: 'magnetic-accelerators',
+      name: 'Magnetic Accelerators',
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.mid,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      sourceHints: <String>['Frozen Trail 2.0'],
+      notes:
+          'Verify in-game trade eligibility and current value before making offers.',
+    ),
+    ArcTradeItem(
+      id: 'emperor-modulators',
+      name: 'Emperor Modulators',
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.mid,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      sourceHints: <String>['Frozen Trail 2.0'],
+      notes:
+          'Verify in-game trade eligibility and current value before making offers.',
+    ),
+    ArcTradeItem(
+      id: 'arc-data-modules',
+      name: 'ARC Data Modules',
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.mid,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      sourceHints: <String>['Frozen Trail 2.0'],
+      notes:
+          'Verify in-game trade eligibility and current value before making offers.',
+    ),
+    ArcTradeItem(
+      id: 'planks',
+      name: 'Planks',
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.mid,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      sourceHints: <String>['Frozen Trail 2.0'],
+      notes:
+          'Verify in-game trade eligibility and current value before making offers.',
+    ),
+    ArcTradeItem(
+      id: 'battered-paperbacks',
+      name: 'Battered Paperbacks',
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.mid,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      sourceHints: <String>['Frozen Trail 2.0'],
+      notes:
+          'Verify in-game trade eligibility and current value before making offers.',
+    ),
+    ArcTradeItem(
+      id: 'mini-pumps',
+      name: 'Mini Pumps',
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.mid,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      sourceHints: <String>['Frozen Trail 2.0'],
+      notes:
+          'Verify in-game trade eligibility and current value before making offers.',
+    ),
+    ArcTradeItem(
+      id: 'calculators',
+      name: 'Calculators',
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.mid,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      sourceHints: <String>['Frozen Trail 2.0'],
+      notes:
+          'Verify in-game trade eligibility and current value before making offers.',
+    ),
+    ArcTradeItem(
+      id: 'raider-logbooks',
+      name: 'Raider Logbooks',
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.mid,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      sourceHints: <String>['Frozen Trail 2.0'],
+      notes:
+          'Verify in-game trade eligibility and current value before making offers.',
+    ),
+    ArcTradeItem(
+      id: 'skulker-targeters',
+      name: 'Skulker Targeters',
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.mid,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      sourceHints: <String>['Frozen Trail 2.0'],
+      notes:
+          'Verify in-game trade eligibility and current value before making offers.',
+    ),
+    ArcTradeItem(
+      id: 'differential-microphones',
+      name: 'Differential Microphones',
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.mid,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      sourceHints: <String>['Frozen Trail 2.0'],
+      notes:
+          'Verify in-game trade eligibility and current value before making offers.',
+    ),
+    ArcTradeItem(
+      id: 'exodus-technical-handbooks',
+      name: 'Exodus Technical Handbooks',
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.mid,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      sourceHints: <String>['Frozen Trail 2.0'],
+      notes:
+          'Verify in-game trade eligibility and current value before making offers.',
+    ),
+    ArcTradeItem(
+      id: 'bully-fragmenters',
+      name: 'Bully Fragmenters',
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.mid,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      sourceHints: <String>['Frozen Trail 2.0'],
+      notes:
+          'Verify in-game trade eligibility and current value before making offers.',
+    ),
+    ArcTradeItem(
+      id: 'thermal-shakers',
+      name: 'Thermal Shakers',
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.mid,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      sourceHints: <String>['Frozen Trail 2.0'],
+      notes:
+          'Verify in-game trade eligibility and current value before making offers.',
+    ),
+    ArcTradeItem(
+      id: 'frigate-inductors',
+      name: 'Frigate Inductors',
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.mid,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      sourceHints: <String>['Frozen Trail 2.0'],
+      notes:
+          'Verify in-game trade eligibility and current value before making offers.',
+    ),
     // Weapons / weapon value placeholders used for trade listings.
     ArcTradeItem(
       id: 'l4-weapon',

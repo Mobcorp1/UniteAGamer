@@ -56,11 +56,8 @@ void main() {
     },
   );
 
-  test('Anvil fitted weapon exposes two canonical slots', () {
-    expect(fittedEngine.slotsForWeapon('Anvil'), <String>[
-      'Muzzle Mod',
-      'Tech Mod',
-    ]);
+  test('Anvil fitted weapon exposes only the current muzzle slot', () {
+    expect(fittedEngine.slotsForWeapon('Anvil'), <String>['Muzzle Mod']);
   });
 
   test('zero-slot weapons produce a valid empty configuration', () {

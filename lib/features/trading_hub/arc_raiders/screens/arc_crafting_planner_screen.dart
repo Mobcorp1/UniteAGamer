@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_item_intelligence_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_frozen_trail_weapon_content.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_item_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_saved_loadout_repository.dart';
@@ -41,6 +42,7 @@ class _ArcCraftingPlannerScreenState extends State<ArcCraftingPlannerScreen> {
     'Medical',
     'Utility',
     'Refiner',
+    'Research Station',
     'Workbench',
     'In Raid',
     'Field Craft',
@@ -537,6 +539,13 @@ class _ArcCraftingPlannerScreenState extends State<ArcCraftingPlannerScreen> {
         ),
         children: [
           if (_mode == _CraftingPlannerMode.craft && plan != null) ...[
+            if (ArcFrozenTrailWeaponContent.unlockNoteFor(item.id) != null) ...[
+              Text(
+                ArcFrozenTrailWeaponContent.unlockNoteFor(item.id)!,
+                style: ArcUiTokens.metadata(color: ArcUiTokens.warning),
+              ),
+              const SizedBox(height: 8),
+            ],
             _sectionLabel('IMMEDIATE RECIPE'),
             _keyValueList(item.recipe),
             const SizedBox(height: 8),
