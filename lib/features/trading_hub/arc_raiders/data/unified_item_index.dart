@@ -22,6 +22,186 @@ class UnifiedItemIndex {
   const UnifiedItemIndex._();
   static const List<UnifiedItemEntry> items = <UnifiedItemEntry>[
     UnifiedItemEntry(
+      id: 'amplification-module-mk-i',
+      name: "Amplification Module Mk. I",
+      usedIn: <String>['Favourite Loadout', 'Trading Hub'],
+    ),
+    UnifiedItemEntry(
+      id: 'amplification-module-mk-ii',
+      name: "Amplification Module Mk. II",
+      usedIn: <String>['Favourite Loadout', 'Trading Hub'],
+    ),
+    UnifiedItemEntry(
+      id: 'amplification-module-mk-iii',
+      name: "Amplification Module Mk. III",
+      usedIn: <String>['Favourite Loadout', 'Trading Hub'],
+    ),
+    UnifiedItemEntry(
+      id: 'amplification-module-mk-iv',
+      name: "Amplification Module Mk. IV",
+      usedIn: <String>['Favourite Loadout', 'Trading Hub'],
+    ),
+    UnifiedItemEntry(
+      id: 'amplification-module-mk-v',
+      name: "Amplification Module Mk. V",
+      usedIn: <String>['Favourite Loadout', 'Trading Hub'],
+    ),
+    UnifiedItemEntry(
+      id: 'amplified-fragments',
+      name: "Amplified Fragments",
+      usedIn: <String>['Favourite Loadout', 'Trading Hub'],
+    ),
+    UnifiedItemEntry(
+      id: 'arc-conductive-coupler',
+      name: "ARC Conductive Coupler",
+      usedIn: <String>['Trading Hub'],
+    ),
+    UnifiedItemEntry(
+      id: 'arc-insulated-coupler',
+      name: "ARC Insulated Coupler",
+      usedIn: <String>['Trading Hub'],
+    ),
+    UnifiedItemEntry(
+      id: 'arc-plated-coupler',
+      name: "ARC Plated Coupler",
+      usedIn: <String>['Trading Hub'],
+    ),
+    UnifiedItemEntry(
+      id: 'emperor-gateway-conduit',
+      name: "Emperor Gateway Conduit",
+      usedIn: <String>['Trading Hub'],
+    ),
+    UnifiedItemEntry(
+      id: 'emperor-gateway-conduit-blueprint',
+      name: "Emperor Gateway Conduit Blueprint",
+      usedIn: <String>['Trading Hub'],
+    ),
+    UnifiedItemEntry(
+      id: 'pneumatic-actuator',
+      name: "Pneumatic Actuator",
+      usedIn: <String>['Favourite Loadout', 'Trading Hub'],
+    ),
+    UnifiedItemEntry(
+      id: 'pressure-regulator',
+      name: "Pressure Regulator",
+      usedIn: <String>['Favourite Loadout', 'Trading Hub'],
+    ),
+    UnifiedItemEntry(
+      id: 'fossilized-lightning',
+      name: "Fossilized Lightning",
+      usedIn: <String>['Favourite Loadout', 'Trading Hub'],
+    ),
+    UnifiedItemEntry(
+      id: 'fluted-rotor-core',
+      name: "Fluted Rotor Core",
+      usedIn: <String>['Favourite Loadout', 'Trading Hub'],
+    ),
+    UnifiedItemEntry(
+      id: 'propellant-valve-assembly',
+      name: "Propellant Valve Assembly",
+      usedIn: <String>['Favourite Loadout', 'Trading Hub'],
+    ),
+    UnifiedItemEntry(
+      id: 'sheet-metal',
+      name: "Sheet Metal",
+      usedIn: <String>['Outpost / Bench Tracker', 'Trading Hub'],
+    ),
+    UnifiedItemEntry(
+      id: 'steel-cable',
+      name: "Steel Cable",
+      usedIn: <String>['Outpost / Bench Tracker', 'Trading Hub'],
+    ),
+    UnifiedItemEntry(
+      id: 'cable-stripper',
+      name: "Cable Stripper",
+      usedIn: <String>['Outpost / Bench Tracker', 'Trading Hub'],
+    ),
+    UnifiedItemEntry(
+      id: 'epoxy-bucket',
+      name: "Epoxy Bucket",
+      usedIn: <String>['Outpost / Bench Tracker', 'Trading Hub'],
+    ),
+    UnifiedItemEntry(
+      id: 'hand-drill',
+      name: "Hand Drill",
+      usedIn: <String>['Outpost / Bench Tracker', 'Trading Hub'],
+    ),
+    UnifiedItemEntry(
+      id: 'laser-level',
+      name: "Laser Level",
+      usedIn: <String>['Outpost / Bench Tracker', 'Trading Hub'],
+    ),
+    UnifiedItemEntry(
+      id: 'insulation-roll',
+      name: "Insulation Roll",
+      usedIn: <String>['Outpost / Bench Tracker', 'Trading Hub'],
+    ),
+    UnifiedItemEntry(
+      id: 'frigate-diagnostic-node',
+      name: "Frigate Diagnostic Node",
+      usedIn: <String>['Outpost / Bench Tracker', 'Trading Hub'],
+    ),
+    UnifiedItemEntry(
+      id: 'stencil-parts',
+      name: "Stencil Parts",
+      usedIn: <String>['Trading Hub'],
+    ),
+    UnifiedItemEntry(
+      id: 'basic-camera',
+      name: "Basic Camera",
+      usedIn: <String>['Trading Hub'],
+    ),
+    UnifiedItemEntry(
+      id: 'advanced-camera',
+      name: "Advanced Camera",
+      usedIn: <String>['Trading Hub'],
+    ),
+    UnifiedItemEntry(
+      id: 'grappling-hook',
+      name: "Grappling Hook",
+      usedIn: <String>['Trading Hub'],
+    ),
+    UnifiedItemEntry(
+      id: 'tether-launcher',
+      name: "Tether Launcher",
+      usedIn: <String>['Trading Hub'],
+    ),
+    UnifiedItemEntry(
+      id: 'yank-grenade',
+      name: "Yank Grenade",
+      usedIn: <String>['Trading Hub'],
+    ),
+    UnifiedItemEntry(
+      id: 'mountaineers-detector',
+      name: "Mountaineer's Detector",
+      usedIn: <String>['Trading Hub'],
+    ),
+    UnifiedItemEntry(
+      id: 'banjo',
+      name: "Banjo",
+      usedIn: <String>['Trading Hub'],
+    ),
+    UnifiedItemEntry(
+      id: 'harmonica',
+      name: "Harmonica",
+      usedIn: <String>['Trading Hub'],
+    ),
+    UnifiedItemEntry(
+      id: 'grappling-hook-blueprint',
+      name: "Grappling Hook Blueprint",
+      usedIn: <String>['Trading Hub'],
+    ),
+    UnifiedItemEntry(
+      id: 'tether-launcher-blueprint',
+      name: "Tether Launcher Blueprint",
+      usedIn: <String>['Trading Hub'],
+    ),
+    UnifiedItemEntry(
+      id: 'yank-grenade-blueprint',
+      name: "Yank Grenade Blueprint",
+      usedIn: <String>['Trading Hub'],
+    ),
+    UnifiedItemEntry(
       id: 'bantam',
       name: 'Bantam',
       usedIn: <String>['Trading Hub', 'Favourite Loadout', 'Crafting Planner'],

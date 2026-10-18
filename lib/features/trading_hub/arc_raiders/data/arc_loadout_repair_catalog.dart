@@ -167,6 +167,34 @@ class ArcLoadoutRepairCatalog {
     String weaponName, {
     int tier = 4,
   }) {
+    // Old Anvil repairs are pre-2.0 and must never be quoted as current.
+    if (normalise(weaponName) == 'anvil') {
+      if (tier == 2) {
+        return const ArcVerifiedRepairRecipe(
+          itemName: 'Anvil',
+          tier: 2,
+          materials: <String, int>{
+            'advanced_mechanical_components': 2,
+            'heavy_gun_parts': 2,
+          },
+          durabilityRestored: 55,
+          sourceUrl: 'https://arcraiders.wiki/wiki/Anvil',
+        );
+      }
+      if (tier == 3) {
+        return const ArcVerifiedRepairRecipe(
+          itemName: 'Anvil',
+          tier: 3,
+          materials: <String, int>{
+            'advanced_mechanical_components': 2,
+            'heavy_gun_parts': 3,
+          },
+          durabilityRestored: 60,
+          sourceUrl: 'https://arcraiders.wiki/wiki/Anvil',
+        );
+      }
+      return null; // Current tier I and IV exact costs are not yet independently resolved.
+    }
     final recipes = weaponRepairs[normalise(weaponName)];
     if (recipes == null) return null;
     for (final recipe in recipes) {

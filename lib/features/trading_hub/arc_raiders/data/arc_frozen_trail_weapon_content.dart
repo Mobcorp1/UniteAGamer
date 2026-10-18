@@ -217,6 +217,9 @@ class ArcFrozenTrailWeaponContent {
   }
 
   static String? unlockNoteFor(String id) {
+    if (id == 'anvil_i') {
+      return 'Anvil Blueprint must be learned; current Gunsmith II recipe: 2 Advanced Mechanical Components, 3 Heavy Gun Parts, 3 Hand Drills.';
+    }
     if (id.startsWith('bantam_') && id != 'bantam_blueprint') {
       return 'Learn Bantam Blueprint first. Research Station Lv.1: 3,000 Research Points + 8 Hornet Drivers. Blueprint is not consumed per weapon.';
     }

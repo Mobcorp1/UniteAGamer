@@ -1,5 +1,6 @@
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_item_intelligence_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_frozen_trail_weapon_content.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_frozen_trail_two_content.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_item_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
@@ -10,10 +11,11 @@ class ArcItemIntelligenceEngine {
   // Keep the generated RaidTheory snapshot immutable; Frozen Trail extends it.
   static final List<ArcItemIntelligenceItem> _allItems =
       List<ArcItemIntelligenceItem>.unmodifiable(<ArcItemIntelligenceItem>[
-        ...ArcItemIntelligenceCatalog.items.map(
-          ArcFrozenTrailWeaponContent.currentItem,
-        ),
+        ...ArcItemIntelligenceCatalog.items
+            .map(ArcFrozenTrailWeaponContent.currentItem)
+            .map(ArcFrozenTrailTwoContent.updatedLegacyItem),
         ...ArcFrozenTrailWeaponContent.items,
+        ...ArcFrozenTrailTwoContent.items,
       ]);
 
   static final Map<String, ArcItemIntelligenceItem> _byId =

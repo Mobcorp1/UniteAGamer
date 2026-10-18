@@ -118,6 +118,366 @@ class ArcTradeItemsData {
 
   static const List<ArcTradeItem> items = <ArcTradeItem>[
     ArcTradeItem(
+      id: 'amplification-module-mk-i',
+      name: "Amplification Module Mk. I",
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.high,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      notes:
+          'Frozen Trail candidate. Tradeability and market price require real in-game verification.',
+    ),
+    ArcTradeItem(
+      id: 'amplification-module-mk-ii',
+      name: "Amplification Module Mk. II",
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.high,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      notes:
+          'Frozen Trail candidate. Tradeability and market price require real in-game verification.',
+    ),
+    ArcTradeItem(
+      id: 'amplification-module-mk-iii',
+      name: "Amplification Module Mk. III",
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.high,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      notes:
+          'Frozen Trail candidate. Tradeability and market price require real in-game verification.',
+    ),
+    ArcTradeItem(
+      id: 'amplification-module-mk-iv',
+      name: "Amplification Module Mk. IV",
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.high,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      notes:
+          'Frozen Trail candidate. Tradeability and market price require real in-game verification.',
+    ),
+    ArcTradeItem(
+      id: 'amplification-module-mk-v',
+      name: "Amplification Module Mk. V",
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.high,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      notes:
+          'Frozen Trail candidate. Tradeability and market price require real in-game verification.',
+    ),
+    ArcTradeItem(
+      id: 'amplified-fragments',
+      name: "Amplified Fragments",
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.high,
+      rarity: ArcTradeItemRarity.epic,
+      stackable: true,
+      notes:
+          'Frozen Trail candidate. Tradeability and market price require real in-game verification.',
+    ),
+    ArcTradeItem(
+      id: 'arc-conductive-coupler',
+      name: "ARC Conductive Coupler",
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.high,
+      rarity: ArcTradeItemRarity.epic,
+      stackable: true,
+      notes:
+          'Frozen Trail candidate. Tradeability and market price require real in-game verification.',
+    ),
+    ArcTradeItem(
+      id: 'arc-insulated-coupler',
+      name: "ARC Insulated Coupler",
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.high,
+      rarity: ArcTradeItemRarity.epic,
+      stackable: true,
+      notes:
+          'Frozen Trail candidate. Tradeability and market price require real in-game verification.',
+    ),
+    ArcTradeItem(
+      id: 'arc-plated-coupler',
+      name: "ARC Plated Coupler",
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.high,
+      rarity: ArcTradeItemRarity.epic,
+      stackable: true,
+      notes:
+          'Frozen Trail candidate. Tradeability and market price require real in-game verification.',
+    ),
+    ArcTradeItem(
+      id: 'emperor-gateway-conduit',
+      name: "Emperor Gateway Conduit",
+      category: ArcTradeItemCategory.key,
+      tradeValue: ArcTradeValueTier.high,
+      rarity: ArcTradeItemRarity.legendary,
+      stackable: false,
+      notes:
+          'Frozen Trail candidate. Tradeability and market price require real in-game verification.',
+    ),
+    ArcTradeItem(
+      id: 'emperor-gateway-conduit-blueprint',
+      name: "Emperor Gateway Conduit Blueprint",
+      category: ArcTradeItemCategory.blueprint,
+      tradeValue: ArcTradeValueTier.high,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: false,
+      notes:
+          'Frozen Trail candidate. Tradeability and market price require real in-game verification.',
+    ),
+    ArcTradeItem(
+      id: 'pneumatic-actuator',
+      name: "Pneumatic Actuator",
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.high,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      notes:
+          'Frozen Trail candidate. Tradeability and market price require real in-game verification.',
+    ),
+    ArcTradeItem(
+      id: 'pressure-regulator',
+      name: "Pressure Regulator",
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.high,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      notes:
+          'Frozen Trail candidate. Tradeability and market price require real in-game verification.',
+    ),
+    ArcTradeItem(
+      id: 'fossilized-lightning',
+      name: "Fossilized Lightning",
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.high,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      notes:
+          'Frozen Trail candidate. Tradeability and market price require real in-game verification.',
+    ),
+    ArcTradeItem(
+      id: 'fluted-rotor-core',
+      name: "Fluted Rotor Core",
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.high,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      notes:
+          'Frozen Trail candidate. Tradeability and market price require real in-game verification.',
+    ),
+    ArcTradeItem(
+      id: 'propellant-valve-assembly',
+      name: "Propellant Valve Assembly",
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.high,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      notes:
+          'Frozen Trail candidate. Tradeability and market price require real in-game verification.',
+    ),
+    ArcTradeItem(
+      id: 'sheet-metal',
+      name: "Sheet Metal",
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.mid,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      notes:
+          'Frozen Trail candidate. Tradeability and market price require real in-game verification.',
+    ),
+    ArcTradeItem(
+      id: 'steel-cable',
+      name: "Steel Cable",
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.mid,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      notes:
+          'Frozen Trail candidate. Tradeability and market price require real in-game verification.',
+    ),
+    ArcTradeItem(
+      id: 'cable-stripper',
+      name: "Cable Stripper",
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.mid,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      notes:
+          'Frozen Trail candidate. Tradeability and market price require real in-game verification.',
+    ),
+    ArcTradeItem(
+      id: 'epoxy-bucket',
+      name: "Epoxy Bucket",
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.mid,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      notes:
+          'Frozen Trail candidate. Tradeability and market price require real in-game verification.',
+    ),
+    ArcTradeItem(
+      id: 'hand-drill',
+      name: "Hand Drill",
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.high,
+      rarity: ArcTradeItemRarity.rare,
+      stackable: true,
+      notes:
+          'Frozen Trail candidate. Tradeability and market price require real in-game verification.',
+    ),
+    ArcTradeItem(
+      id: 'laser-level',
+      name: "Laser Level",
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.mid,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      notes:
+          'Frozen Trail candidate. Tradeability and market price require real in-game verification.',
+    ),
+    ArcTradeItem(
+      id: 'insulation-roll',
+      name: "Insulation Roll",
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.mid,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      notes:
+          'Frozen Trail candidate. Tradeability and market price require real in-game verification.',
+    ),
+    ArcTradeItem(
+      id: 'frigate-diagnostic-node',
+      name: "Frigate Diagnostic Node",
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.high,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      notes:
+          'Frozen Trail candidate. Tradeability and market price require real in-game verification.',
+    ),
+    ArcTradeItem(
+      id: 'stencil-parts',
+      name: "Stencil Parts",
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.mid,
+      rarity: ArcTradeItemRarity.epic,
+      stackable: true,
+      notes:
+          'Frozen Trail candidate. Tradeability and market price require real in-game verification.',
+    ),
+    ArcTradeItem(
+      id: 'basic-camera',
+      name: "Basic Camera",
+      category: ArcTradeItemCategory.craftingMaterial,
+      tradeValue: ArcTradeValueTier.mid,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      notes:
+          'Frozen Trail candidate. Tradeability and market price require real in-game verification.',
+    ),
+    ArcTradeItem(
+      id: 'advanced-camera',
+      name: "Advanced Camera",
+      category: ArcTradeItemCategory.quickUse,
+      tradeValue: ArcTradeValueTier.mid,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      notes:
+          'Frozen Trail candidate. Tradeability and market price require real in-game verification.',
+    ),
+    ArcTradeItem(
+      id: 'grappling-hook',
+      name: "Grappling Hook",
+      category: ArcTradeItemCategory.quickUse,
+      tradeValue: ArcTradeValueTier.mid,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      notes:
+          'Frozen Trail candidate. Tradeability and market price require real in-game verification.',
+    ),
+    ArcTradeItem(
+      id: 'tether-launcher',
+      name: "Tether Launcher",
+      category: ArcTradeItemCategory.quickUse,
+      tradeValue: ArcTradeValueTier.mid,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      notes:
+          'Frozen Trail candidate. Tradeability and market price require real in-game verification.',
+    ),
+    ArcTradeItem(
+      id: 'yank-grenade',
+      name: "Yank Grenade",
+      category: ArcTradeItemCategory.quickUse,
+      tradeValue: ArcTradeValueTier.mid,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      notes:
+          'Frozen Trail candidate. Tradeability and market price require real in-game verification.',
+    ),
+    ArcTradeItem(
+      id: 'mountaineers-detector',
+      name: "Mountaineer's Detector",
+      category: ArcTradeItemCategory.quickUse,
+      tradeValue: ArcTradeValueTier.mid,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      notes:
+          'Frozen Trail candidate. Tradeability and market price require real in-game verification.',
+    ),
+    ArcTradeItem(
+      id: 'banjo',
+      name: "Banjo",
+      category: ArcTradeItemCategory.quickUse,
+      tradeValue: ArcTradeValueTier.mid,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      notes:
+          'Frozen Trail candidate. Tradeability and market price require real in-game verification.',
+    ),
+    ArcTradeItem(
+      id: 'harmonica',
+      name: "Harmonica",
+      category: ArcTradeItemCategory.quickUse,
+      tradeValue: ArcTradeValueTier.mid,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      notes:
+          'Frozen Trail candidate. Tradeability and market price require real in-game verification.',
+    ),
+    ArcTradeItem(
+      id: 'grappling-hook-blueprint',
+      name: "Grappling Hook Blueprint",
+      category: ArcTradeItemCategory.blueprint,
+      tradeValue: ArcTradeValueTier.mid,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      notes:
+          'Frozen Trail candidate. Tradeability and market price require real in-game verification.',
+    ),
+    ArcTradeItem(
+      id: 'tether-launcher-blueprint',
+      name: "Tether Launcher Blueprint",
+      category: ArcTradeItemCategory.blueprint,
+      tradeValue: ArcTradeValueTier.mid,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      notes:
+          'Frozen Trail candidate. Tradeability and market price require real in-game verification.',
+    ),
+    ArcTradeItem(
+      id: 'yank-grenade-blueprint',
+      name: "Yank Grenade Blueprint",
+      category: ArcTradeItemCategory.blueprint,
+      tradeValue: ArcTradeValueTier.mid,
+      rarity: ArcTradeItemRarity.unknown,
+      stackable: true,
+      notes:
+          'Frozen Trail candidate. Tradeability and market price require real in-game verification.',
+    ),
+    ArcTradeItem(
       id: 'bantam',
       name: 'Bantam',
       category: ArcTradeItemCategory.weapon,

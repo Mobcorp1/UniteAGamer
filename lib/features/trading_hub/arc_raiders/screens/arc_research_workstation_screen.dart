@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_frozen_trail_preview_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_frozen_trail_two_content.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_progression_workspace_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
@@ -37,6 +38,8 @@ class ArcResearchWorkstationScreen extends StatelessWidget {
             _hero(research),
             const SizedBox(height: AppTheme.spaceM),
             _confirmed(),
+            const SizedBox(height: AppTheme.spaceM),
+            _currentContent(),
             const SizedBox(height: AppTheme.spaceM),
             _pending(),
           ],
@@ -124,25 +127,75 @@ class ArcResearchWorkstationScreen extends StatelessWidget {
       'Located in the new Outpost.',
       'Used to research new elements of the world.',
       'Unlocks higher levels of weapon customisation and modding.',
-      'A fully upgraded workstation unlocks weapon quality level V.',
-      'Level V opens branching Amplified Weapon abilities and enhancements.',
+      'Research Station level IV plus Gunsmith level IV unlock weapon quality V.',
+      'Outpost IV is required for these workshop upgrades; amplification cannot be reversed.',
       'Embark says the first rollout covers 15 weapons.',
     ], ArcUiTokens.success);
   }
 
+  Widget _currentContent() {
+    final outpost = ArcFrozenTrailProgressionCatalog.outpost
+        .map(
+          (tier) =>
+              'Outpost Lv.${tier.level}: ${tier.materials.entries.map((m) => '${m.value}x ${m.key.replaceAll('_', ' ')}').join(', ')}. ${tier.source}',
+        )
+        .toList(growable: false);
+    final research = ArcFrozenTrailProgressionCatalog.researchStation
+        .map(
+          (tier) =>
+              'Research Lv.${tier.level}: ${tier.materials.entries.map((m) => '${m.value}x ${m.key.replaceAll('_', ' ')}').join(', ')}. ${tier.source}',
+        )
+        .toList(growable: false);
+    final modules = ArcFrozenTrailProgressionCatalog
+        .amplificationMarkByWeapon
+        .entries
+        .map((entry) => '${entry.key}: Mk.${entry.value} Amplification Module')
+        .toList(growable: false);
+    final researchReturns = ArcFrozenTrailProgressionCatalog
+        .researchPointYield
+        .entries
+        .map(
+          (item) =>
+              '${item.key.replaceAll('_', ' ')}: ${item.value} Research Points when studied',
+        )
+        .toList(growable: false);
+    return Column(
+      children: <Widget>[
+        _section(
+          'RESEARCH ITEMS / POINTS',
+          researchReturns,
+          ArcUiTokens.success,
+        ),
+        const SizedBox(height: 12),
+        _section('OUTPOST LEVELS', outpost, ArcUiTokens.primaryAccent),
+        const SizedBox(height: 12),
+        _section(
+          'RESEARCH STATION MATERIALS',
+          research,
+          ArcUiTokens.secondaryAccent,
+        ),
+        const SizedBox(height: 12),
+        _section(
+          'AMPLIFICATION MODULES - 15 WEAPONS',
+          modules,
+          ArcUiTokens.success,
+        ),
+      ],
+    );
+  }
+
   Widget _pending() {
     return _section(
-      'LAUNCH-DAY DATA STILL REQUIRED',
+      'STILL AWAITING IN-GAME VALIDATION',
       const <String>[
-        'Research Workstation upgrade tiers and exact material costs.',
-        'Which requirements are Outpost-only versus standard bench resources.',
-        'Complete list of all 15 Amplified Weapons.',
-        'Every branch, modifier and unlock requirement.',
-        'Blueprint or quest requirements tied to the workstation.',
+        'Exact research-node unlock costs and node-specific materials for every amplified weapon.',
+        'Current user Outpost level is not yet saved or enforced; this view is a cost reference.',
+        'Amplified repair quantities vary with installed weapon perks.',
+        'Not every visible material is guaranteed to be tradeable in an actual raid.',
       ],
       ArcUiTokens.warning,
       footer:
-          'These stay intentionally untracked until Embark publishes or the game confirms them. The screen is ready for those values without inventing them.',
+          'The materials above are 2.0 reference values; player-specific Outpost completion is not yet synchronised.',
     );
   }
 

@@ -30,16 +30,24 @@ void main() {
     expect(heavy.repairRecipe, {'arc_circuitry': 2, 'voltage_converter': 1});
   });
 
-  test('Anvil IV repair rolls refined materials to raw resources', () {
-    final recipe = ArcLoadoutRepairCatalog.repairForWeapon('Anvil', tier: 4)!;
-    final rollup = ArcItemIntelligenceEngine.planForRequirements(
-      targetName: 'Anvil IV repair',
-      requirements: recipe.materials,
-    );
-    expect(recipe.durabilityRestored, 65);
-    expect(rollup.rawMaterials['metal_parts'], 35);
-    expect(rollup.rawMaterials['rubber_parts'], 15);
-    expect(rollup.rawMaterials['simple_gun_parts'], 5);
+  test('Anvil 2.0 repair exposes verified tiers without inventing IV', () {
+    expect(ArcLoadoutRepairCatalog.repairForWeapon('Anvil', tier: 1), isNull);
+    final tierTwo = ArcLoadoutRepairCatalog.repairForWeapon('Anvil', tier: 2);
+    final tierThree = ArcLoadoutRepairCatalog.repairForWeapon('Anvil', tier: 3);
+    expect(tierTwo, isNotNull);
+    expect(tierTwo!.materials, <String, int>{
+      'advanced_mechanical_components': 2,
+      'heavy_gun_parts': 2,
+    });
+    expect(tierTwo.durabilityRestored, 55);
+    expect(tierThree, isNotNull);
+    expect(tierThree!.materials, <String, int>{
+      'advanced_mechanical_components': 2,
+      'heavy_gun_parts': 3,
+    });
+    expect(tierThree.durabilityRestored, 60);
+    // No verified tier-IV 2.0 recipe; never fall back to the obsolete one.
+    expect(ArcLoadoutRepairCatalog.repairForWeapon('Anvil', tier: 4), isNull);
   });
 
   test('Stitcher IV repair rolls refined materials to raw resources', () {

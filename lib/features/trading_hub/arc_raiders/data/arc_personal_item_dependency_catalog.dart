@@ -1,4 +1,5 @@
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bench_upgrade_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_frozen_trail_two_content.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_asset_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_seed_data.dart';
@@ -14,9 +15,9 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 class ArcPersonalItemDependencyCatalog {
   const ArcPersonalItemDependencyCatalog._();
 
-  static const String datasetVersion = 'uag-arc-items-2026-07-28-pass-297';
-  static const String gameVersion = 'ARC Raiders 1.28 research snapshot';
-  static const String effectiveDateIso = '2026-07-28T00:00:00.000Z';
+  static const String datasetVersion = 'uag-arc-items-2026-10-18-pass11d';
+  static const String gameVersion = 'Frozen Trail 2.0 verified subset';
+  static const String effectiveDateIso = '2026-10-18T00:00:00.000Z';
 
   static final ArcPersonalItemDataset current = ArcPersonalItemDataset(
     version: datasetVersion,
@@ -134,6 +135,52 @@ class ArcPersonalItemDependencyCatalog {
           source: '$system upgrade requirement',
           futureOnly: requirement.level > 1,
           blocking: requirement.level <= 2,
+        ),
+      );
+    }
+
+    // Separate Outpost requirements from Bench requirements: new progression
+    // is not yet stored, so each requirement is marked futureOnly here.
+    for (final upgrade in ArcFrozenTrailProgressionCatalog.outpost) {
+      for (final material in upgrade.materials.entries) {
+        draftFor(
+          id: material.key,
+          name: _titleFromId(material.key.replaceAll('_', '-')),
+          category: 'Outpost Material',
+        ).dependencies.add(
+          ArcPersonalItemDependency(
+            system: 'Outpost',
+            objectiveId: 'outpost-level-${upgrade.level}',
+            label: 'Outpost Lv.${upgrade.level}',
+            requiredQuantity: material.value,
+            source: upgrade.source,
+            futureOnly: true,
+          ),
+        );
+      }
+    }
+    // Mark-specific modules and amplified repair material are not ordinary scrap.
+    for (final entry
+        in ArcFrozenTrailProgressionCatalog.amplificationMarkByWeapon.entries) {
+      final mark = const <int, String>{
+        1: 'i',
+        2: 'ii',
+        3: 'iii',
+        4: 'iv',
+        5: 'v',
+      }[entry.value]!;
+      draftFor(
+        id: 'amplification_module_mk_$mark',
+        name: 'Amplification Module Mk. $mark',
+        category: 'Amplification Material',
+      ).dependencies.add(
+        ArcPersonalItemDependency(
+          system: 'Amplification',
+          objectiveId: 'amplify-${_itemId(entry.key)}',
+          label: 'Amplify ${entry.key}',
+          requiredQuantity: 1,
+          source: 'Gunsmith IV and Research Station IV; Outpost IV',
+          futureOnly: true,
         ),
       );
     }
