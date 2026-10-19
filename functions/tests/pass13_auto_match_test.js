@@ -16,7 +16,7 @@ test('muted, paused and non-blueprint watches never match',()=>{
  assert.equal(watchFitsListing({...watch,notificationPreference:'muted'},listing),false);
  assert.equal(watchFitsListing({...watch,type:'rider'},listing),false);
 });
-const left={uid:'a',visibleInSearch:true,lookingNow:true,autoMatchAlertsEnabled:true,region:'EU', platform:'PS5',crossplayEnabled:true,preferredEvents:['ARC Frigate']};
+const left={uid:'a',visibleInSearch:true,lookingNow:true,autoMatchAlertsEnabled:true,updatedAt:{toMillis:()=>Date.now()-30000},region:'EU', platform:'PS5',crossplayEnabled:true,preferredEvents:['ARC Frigate']};
 const right={...left,uid:'b',platform:'PC'};
 test('matching requires mutual opt-in, an activity, visibility, region and crossplay',()=>{
  assert.equal(riderFits(left,right),true);

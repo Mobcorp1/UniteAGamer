@@ -543,7 +543,9 @@ service cloud.firestore {
 
     match /trading_notifications/{notificationId} {
       allow read: if isNotificationTarget() || isAdminOrDev();
-      allow create: if isIncomingNotificationActor() && request.resource.data.id == notificationId;
+      allow create: if isIncomingNotificationActor() &&
+        request.resource.data.id == notificationId &&
+        !(request.resource.data.type in ['watch_match', 'matchmaking']);
       allow update: if (isNotificationTarget() || isAdminOrDev()) &&
         request.resource.data.id == resource.data.id &&
         request.resource.data.targetUid == resource.data.targetUid &&
@@ -607,6 +609,12 @@ service cloud.firestore {
         request.resource.data.targetUid == resource.data.targetUid &&
         request.resource.data.actorUid == resource.data.actorUid;
       allow delete: if isNotificationTarget() || isAdminOrDev();
+    }
+
+    // Server-owned early launch discovery kill switch. Change via Firebase Console only.
+    match /uag_release_controls/{controlId} {
+      allow read: if isAdminOrDev();
+      allow write: if false;
     }
 
     match /notification_broadcasts/{broadcastId} {

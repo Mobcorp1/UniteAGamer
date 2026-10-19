@@ -1,149 +1,188 @@
 'use strict';
 
-// UAG PASS 13: opt-in, candidate-only discovery. No trade or squad is auto-accepted.
+// PASS 13B: server-owned, candidate-only discovery. No automatic trade acceptance.
 const crypto = require('crypto');
-
-const clean = (v) => String(v ?? '').trim();
-const slug = (v) => clean(v).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-const strings = (v) => Array.isArray(v) ? v.filter((x) => typeof x === 'string').map(clean).filter(Boolean) : [];
+const clean = (value) => String(value ?? '').trim();
+const slug = (value) => clean(value).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const strings = (value) => Array.isArray(value) ? value.filter((v) => typeof v === 'string').map(clean).filter(Boolean) : [];
 const shared = (a, b) => strings(a).some((x) => strings(b).some((y) => slug(x) === slug(y)));
-const idFor = (...parts) => crypto.createHash('sha256').update(parts.join('|')).digest('hex');
-const expiryMillis = (v) => v && typeof v.toMillis === 'function' ? v.toMillis() :
-  (v && typeof v.toDate === 'function' ? v.toDate().getTime() : Date.parse(clean(v)));
+const idFor = (...parts) => crypto.createHash('sha256').update(JSON.stringify(parts)).digest('hex');
+const millis = (value) => {
+  if (value && typeof value.toMillis === 'function') return value.toMillis();
+  if (value && typeof value.toDate === 'function') return value.toDate().getTime();
+  if (value instanceof Date) return value.getTime();
+  return typeof value === 'string' ? Date.parse(value) : NaN;
+};
+const ageVerified = (user) => user?.ageVerification?.verifiedOver18 === true;
+const noBlockField = (user, uid) => !strings(user?.blockedMatchRiderUids).includes(uid);
+const prefAllows = (preferences, kind) => preferences?.[kind] !== false;
 
 function liveListing(listing, now = Date.now()) {
-  return !!listing && listing.active === true && Number.isFinite(expiryMillis(listing.expiresAt)) &&
-    expiryMillis(listing.expiresAt) > now && clean(listing.ownerUid || listing.userId).length > 0;
+  return !!listing && listing.active === true && Number.isFinite(millis(listing.expiresAt)) &&
+    millis(listing.expiresAt) > now && !!clean(listing.ownerUid || listing.userId);
 }
-
 function watchFitsListing(watch, listing, now = Date.now()) {
   if (!liveListing(listing, now) || !watch || watch.active !== true ||
-    watch.type !== 'blueprint' || watch.notificationsEnabled !== true ||
-    watch.notificationPreference === 'muted') return false;
-  if (!clean(watch.ownerUid) || clean(watch.ownerUid) === clean(listing.ownerUid || listing.userId)) return false;
+      watch.type !== 'blueprint' || watch.notificationsEnabled !== true ||
+      watch.notificationPreference === 'muted' || !clean(watch.ownerUid) ||
+      clean(watch.ownerUid) === clean(listing.ownerUid || listing.userId)) return false;
   const wanted = [watch.blueprintId, watch.blueprintDisplayName].map(slug).filter(Boolean);
   const offered = [...strings(listing.offeredBlueprintNames), ...strings(listing.offeredTradeItemIds),
     ...strings(listing.offeredTradeItemNames)].map(slug);
-  return wanted.some((x) => offered.includes(x));
+  return wanted.some((needle) => offered.includes(needle));
 }
-
-// Avoid claiming a percentage or advanced proprietary client scoring on the server.
-function riderFits(left, right) {
+function freshLooking(profile, now = Date.now(), maxAgeMs = 6 * 60 * 60 * 1000) {
+  const lastChanged = millis(profile?.updatedAt);
+  return profile?.lookingNow === true && profile?.autoMatchAlertsEnabled === true &&
+    profile?.visibleInSearch !== false && Number.isFinite(lastChanged) &&
+    lastChanged <= now && now - lastChanged <= maxAgeMs;
+}
+function riderFits(left, right, now = Date.now()) {
   if (!left || !right || !clean(left.uid) || !clean(right.uid) || left.uid === right.uid) return false;
-  if (left.visibleInSearch === false || right.visibleInSearch === false) return false;
-  if (left.lookingNow !== true || right.lookingNow !== true) return false;
-  if (left.autoMatchAlertsEnabled !== true || right.autoMatchAlertsEnabled !== true) return false;
-  const lPlatform = slug(left.platform), rPlatform = slug(right.platform);
-  if (lPlatform && rPlatform && lPlatform !== rPlatform &&
-    (left.crossplayEnabled === false || right.crossplayEnabled === false)) return false;
-  if (clean(left.region) && clean(right.region) && slug(left.region) !== slug(right.region)) return false;
-  const lServer = slug(left.serverPreference), rServer = slug(right.serverPreference);
-  if (lServer && rServer && lServer !== 'automatic' && rServer !== 'automatic' && lServer !== rServer) return false;
-  const blocked = (a, b) => strings(a.blockedMatchRiderUids).includes(b.uid);
-  if (blocked(left, right) || blocked(right, left)) return false;
+  if (!freshLooking(left, now) || !freshLooking(right, now)) return false;
+  const leftPlatform = slug(left.platform), rightPlatform = slug(right.platform);
+  if (leftPlatform && rightPlatform && leftPlatform !== rightPlatform &&
+      (left.crossplayEnabled === false || right.crossplayEnabled === false)) return false;
+  const leftRegion = slug(left.region), rightRegion = slug(right.region);
+  if (leftRegion && rightRegion && leftRegion !== rightRegion) return false;
+  const leftServer = slug(left.serverPreference), rightServer = slug(right.serverPreference);
+  if (leftServer && rightServer && leftServer !== 'automatic' && rightServer !== 'automatic' && leftServer !== rightServer) return false;
+  if (!noBlockField(left, right.uid) || !noBlockField(right, left.uid)) return false;
+  const bothHaveEvents = strings(left.preferredEvents).length && strings(right.preferredEvents).length;
+  if (bothHaveEvents && !shared(left.preferredEvents, right.preferredEvents)) return false;
+  if (strings(left.comms).length && strings(right.comms).length && !shared(left.comms, right.comms) &&
+      !strings(left.comms).includes('Flexible') && !strings(right.comms).includes('Flexible')) return false;
   return shared(left.preferredEvents, right.preferredEvents) ||
     shared(left.preferredMaps, right.preferredMaps) || shared(left.playstyles, right.playstyles);
 }
 
-const isAgeVerified = (user) => user && user.ageVerification && user.ageVerification.verifiedOver18 === true;
-const noBlock = (a, bUid) => !strings(a.blockedMatchRiderUids).includes(bUid);
-
-function buildHandlers(db, admin) {
-  const firestore = admin.firestore;
-  const ageCache = new Map();
-  async function user(uid) {
-    if (!uid) return null;
-    if (!ageCache.has(uid)) ageCache.set(uid, db.collection('users').doc(uid).get().then((s) => s.data() || null));
-    return ageCache.get(uid);
+// Paging protects early-launch discovery from arbitrary first-page omissions.
+// A hard cap deliberately fails visibly instead of claiming a complete search.
+async function readCandidates(db, path, maxDocs = 3000) {
+  const perPage = 250;
+  const items = [];
+  let previous = null;
+  for (;;) {
+    let q = db.collection(path).orderBy('__name__').limit(perPage);
+    if (previous) q = q.startAfter(previous);
+    const page = await q.get();
+    items.push(...page.docs);
+    if (items.length > maxDocs) throw new Error(`PASS13B_DISCOVERY_CAP_EXCEEDED:${path}`);
+    if (page.size < perPage) return items;
+    previous = page.docs[page.docs.length - 1];
   }
-  async function pairIsUnblocked(aUid, bUid) {
-    const [a, b, ab, ba] = await Promise.all([
-      user(aUid), user(bUid),
+}
+function buildHandlers(db, admin) {
+  const timestamp = () => admin.firestore.FieldValue.serverTimestamp();
+  const users = new Map();
+  const prefCache = new Map();
+  const authCache = new Map();
+  const getUser = async (uid) => {
+    if (!users.has(uid)) users.set(uid, db.collection('users').doc(uid).get().then((doc) => doc.data() || null));
+    return users.get(uid);
+  };
+  const getPreferences = async (uid) => {
+    if (!prefCache.has(uid)) prefCache.set(uid, db.collection('users').doc(uid)
+      .collection('notification_preferences').doc('current').get().then((doc) => doc.data() || null));
+    return prefCache.get(uid);
+  };
+  const isActiveAccount = async (uid) => {
+    if (!authCache.has(uid)) authCache.set(uid, admin.auth().getUser(uid)
+      .then((record) => !record.disabled).catch((error) => {
+        if (error.code === 'auth/user-not-found') return false;
+        throw error;
+      }));
+    return authCache.get(uid);
+  };
+  async function allowed(uid, kind) {
+    const [user, prefs, active] = await Promise.all([getUser(uid), getPreferences(uid), isActiveAccount(uid)]);
+    return !!active && ageVerified(user) && prefAllows(prefs, kind);
+  }
+  async function unblocked(aUid, bUid) {
+    const [a, b, first, second] = await Promise.all([
+      getUser(aUid), getUser(bUid),
       db.collection('uag_user_blocks').doc(`${aUid}_${bUid}`).get(),
       db.collection('uag_user_blocks').doc(`${bUid}_${aUid}`).get(),
     ]);
-    return !ab.exists && !ba.exists && noBlock(a, bUid) && noBlock(b, aUid);
+    return !first.exists && !second.exists && noBlockField(a, bUid) && noBlockField(b, aUid);
   }
-  async function notifyAllowed(uid, kind) {
-    const [current, prefs] = await Promise.all([
-      user(uid),
-      db.collection('users').doc(uid).collection('notification_preferences').doc('current').get(),
-    ]);
-    return isAgeVerified(current) && prefs.data()?.[kind] !== false;
+  async function enabled(kind) {
+    const doc = await db.collection('uag_release_controls').doc('launch_matching').get();
+    const data = doc.data() || {};
+    return data.enabled === true && data[kind] === true;
   }
-  async function queue({ targetUid, actorUid, type, sourceId, listingId, route, title, body, push }) {
-    const ref = db.collection('trading_notifications').doc(idFor('pass13', type, sourceId, targetUid));
+  async function queue({ targetUid, actorUid, type, sourceId, listingId = null, watchId = null, route, title, body, push }) {
+    const ref = db.collection('trading_notifications').doc(idFor('pass13b', type, sourceId, targetUid));
     try {
       await ref.create({
         id: ref.id, targetUid, actorUid, title, body, type,
-        route, deepLink: route, entityId: sourceId,
-        listingId: type === 'watch_match' ? listingId : null,
-        offerId: null, sessionId: null,
-        broadcastPushHandled: push !== true,
-        read: false, createdAt: firestore.FieldValue.serverTimestamp(),
-        updatedAt: firestore.FieldValue.serverTimestamp(),
+        route, deepLink: route, entityId: sourceId, listingId, watchId,
+        offerId: null, sessionId: null, broadcastPushHandled: push !== true,
+        read: false, createdAt: timestamp(), updatedAt: timestamp(),
       });
-    } catch (e) {
-      if (e.code !== 6 && e.code !== 'already-exists') throw e;
+    } catch (error) {
+      if (error.code !== 6 && error.code !== 'already-exists') throw error;
     }
   }
   async function checkWatch(watchId, watch, listingId, listing) {
     if (!watchFitsListing(watch, listing)) return;
     const sellerUid = clean(listing.ownerUid || listing.userId);
     const buyerUid = clean(watch.ownerUid);
-    if (!(await notifyAllowed(buyerUid, 'watchesAndQueues'))) return;
-    const [buyer, seller] = await Promise.all([user(buyerUid), user(sellerUid)]);
-    if (!isAgeVerified(seller) || !(await pairIsUnblocked(buyerUid, sellerUid))) return;
-    // Immediate alerts are explicit. Other watch preferences remain in-app or silent;
-    // time-window/digest matching must be implemented before sending scheduled pushes.
-    if (watch.notificationPreference === 'digest' || watch.notificationPreference === 'favouriteRidersOnly') return;
-    const push = watch.notificationPreference === 'immediate';
+    const preference = clean(watch.notificationPreference);
+    if (preference === 'digest' || preference === 'favouriteRidersOnly') return;
+    if (!(await allowed(buyerUid, 'watchesAndQueues')) || !(await allowed(sellerUid, 'trading')) ||
+        !(await unblocked(buyerUid, sellerUid))) return;
+    // A listing is a potential opportunity only. Never auto-propose or book a trade.
+    // A non-immediate Watch is in-app only until availability/digest policies exist.
+    const push = preference === 'immediate';
     await queue({ targetUid: buyerUid, actorUid: sellerUid, type: 'watch_match',
-      sourceId: `${listingId}_${watchId}`, listingId, route: '/trading-hub/arc-raiders/blueprint-watches',
-      title: 'UAG trade opportunity', body: 'A live listing matches your Blueprint Watch. Review before sending an offer.', push });
+      sourceId: `${listingId}:${watchId}`, listingId, watchId,
+      route: '/trading-hub/arc-raiders/blueprint-watches',
+      title: 'Potential Blueprint trade',
+      body: 'An active offer matches your Blueprint Watch. Check the terms before responding.', push });
   }
   async function onListing(event) {
+    if (!(await enabled('tradeAlertsEnabled'))) return;
     const snap = event.data?.after ?? event.data;
-    if (!snap?.exists) return;
-    const listing = snap.data();
-    if (!liveListing(listing)) return;
-    const watches = await db.collection('arc_blueprint_watches').limit(400).get();
-    for (const watch of watches.docs) {
-      await checkWatch(watch.id, watch.data(), snap.id, listing);
+    if (!snap?.exists || !liveListing(snap.data())) return;
+    for (const watch of await readCandidates(db, 'arc_blueprint_watches')) {
+      await checkWatch(watch.id, watch.data(), snap.id, snap.data());
     }
   }
   async function onWatch(event) {
+    if (!(await enabled('tradeAlertsEnabled'))) return;
     const snap = event.data?.after ?? event.data;
-    if (!snap?.exists) return;
-    const watch = snap.data();
-    if (!watch || !watch.active || !watch.notificationsEnabled || watch.type !== 'blueprint') return;
-    const listings = await db.collection('arc_trade_listings').limit(300).get();
-    for (const listing of listings.docs) {
-      await checkWatch(snap.id, watch, listing.id, listing.data());
+    if (!snap?.exists || snap.data()?.type !== 'blueprint') return;
+    for (const listing of await readCandidates(db, 'trading_listings')) {
+      await checkWatch(snap.id, snap.data(), listing.id, listing.data());
     }
   }
   async function onRider(event) {
+    if (!(await enabled('squadAlertsEnabled'))) return;
     const snap = event.data?.after ?? event.data;
     if (!snap?.exists) return;
     const current = snap.data();
-    if (current.lookingNow !== true || current.autoMatchAlertsEnabled !== true || current.visibleInSearch === false) return;
-    if (!(await notifyAllowed(snap.id, 'matchmaking'))) return;
-    const profiles = await db.collection('arc_match_rider_profiles').limit(250).get();
-    for (const doc of profiles.docs) {
-      if (doc.id === snap.id || !riderFits(current, doc.data())) continue;
-      const other = doc.data();
-      if (!(await notifyAllowed(doc.id, 'matchmaking'))) continue;
-      const [left, right] = await Promise.all([user(snap.id), user(doc.id)]);
-      if (!isAgeVerified(left) || !isAgeVerified(right) || !(await pairIsUnblocked(snap.id, doc.id))) continue;
-      const pair = [snap.id, doc.id].sort().join('_');
-      for (const recipient of [{uid:snap.id, actor:doc.id}, {uid:doc.id, actor:snap.id}]) {
+    const now = Date.now();
+    // Only run on the current profile's opt-in transition/fresh save.
+    if (!freshLooking(current, now) || !(await allowed(snap.id, 'matchmaking'))) return;
+    for (const candidate of await readCandidates(db, 'arc_match_rider_profiles')) {
+      if (candidate.id === snap.id) continue;
+      const other = candidate.data();
+      // Explicit document identity is authoritative; never trust an injected UID.
+      if (clean(current.uid) !== snap.id || clean(other.uid) !== candidate.id ||
+          !riderFits(current, other, now)) continue;
+      if (!(await allowed(candidate.id, 'matchmaking')) || !(await unblocked(snap.id, candidate.id))) continue;
+      const pair = [snap.id, candidate.id].sort();
+      // One alert per pair per 6-hour window; both profiles must remain fresh.
+      const windowId = String(Math.floor(now / (6 * 60 * 60 * 1000)));
+      for (const recipient of [{uid: pair[0], actor: pair[1]}, {uid: pair[1], actor: pair[0]}]) {
         await queue({ targetUid: recipient.uid, actorUid: recipient.actor, type: 'matchmaking',
-          sourceId: pair, route: '/trading-hub/arc-raiders/match-a-raider',
-          title: 'Potential squadmate found', body: 'A Raider is looking now with compatible game preferences. Review their profile before inviting.', push: true });
+          sourceId: `${pair.join(':')}:${windowId}`, route: '/trading-hub/arc-raiders/match-a-raider',
+          title: 'Potential squadmate found',
+          body: 'A compatible Raider is looking for a squad. Review their profile before inviting.', push: true });
       }
     }
   }
-  return { onListing, onWatch, onRider };
+  return { onListing, onWatch, onRider, enabled, allowed, unblocked };
 }
-
-module.exports = { slug, liveListing, watchFitsListing, riderFits, buildHandlers };
+module.exports = { slug, millis, liveListing, watchFitsListing, freshLooking, riderFits, readCandidates, buildHandlers };

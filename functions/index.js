@@ -3386,7 +3386,12 @@ function buildMessage({ data, tokens }) {
         data: deliveryDataFromNotification(data, data.id),
       },
       fcmOptions: {
-        link: normalizeString(data.deepLink || data.route || '/') || '/',
+        link: (() => {
+          const destination = normalizeString(data.deepLink || data.route || '/app');
+          return destination.startsWith('/') && !destination.startsWith('//') &&
+            !destination.includes('..') && !destination.includes('\\')
+            ? `https://uniteagamer.com${destination}` : 'https://uniteagamer.com/app';
+        })(),
       },
     },
     tokens,
@@ -3413,6 +3418,9 @@ async function loadUserPushTargets(uid, type) {
     seen.add(token);
     targets.push({ token, ref: doc.ref, legacy: false });
   });
+
+  // A migrated device may be explicitly disabled; never revive its legacy token.
+  if (!devicesSnap.empty) return targets;
 
   const legacySnap = await db
     .collection('users')
@@ -4409,7 +4417,7 @@ exports.processUagNotificationSchedules = onSchedule(
 // These exports are additive; existing listing search and Match Raider ranking remain.
 const pass13AutoMatches = require('./uag_pass13_auto_matches').buildHandlers(db, admin);
 exports.uagPass13WatchTradeListings = onDocumentWritten(
-  'arc_trade_listings/{listingId}', pass13AutoMatches.onListing);
+  'trading_listings/{listingId}', pass13AutoMatches.onListing);
 exports.uagPass13WatchBlueprintWatches = onDocumentWritten(
   'arc_blueprint_watches/{watchId}', pass13AutoMatches.onWatch);
 exports.uagPass13WatchMatchRider = onDocumentWritten(
@@ -4425,6 +4433,19 @@ exports.sendTradingNotificationPush = onDocumentCreated(
     const targetUid = data.targetUid;
     if (!targetUid) return;
 
+    // Recheck consent at dispatch time: preferences may have changed since matching.
+    const currentPreference = await db.collection('users').doc(targetUid)
+      .collection('notification_preferences').doc('current').get();
+    if (currentPreference.data()?.[preferenceKeyForType(data.type)] === false) return;
+    if (data.type === 'watch_match' || data.type === 'matchmaking') {
+      const actor = normalizeString(data.actorUid);
+      if (!actor || actor === targetUid) return;
+      const [blockA, blockB] = await Promise.all([
+        db.collection('uag_user_blocks').doc(`${targetUid}_${actor}`).get(),
+        db.collection('uag_user_blocks').doc(`${actor}_${targetUid}`).get(),
+      ]);
+      if (blockA.exists || blockB.exists) return;
+    }
     const targets = await loadUserPushTargets(targetUid, data.type);
     if (!targets.length) return;
     await sendToTargets({

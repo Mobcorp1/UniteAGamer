@@ -529,7 +529,7 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
             activeThumbColor: AppTheme.neonCyan,
             title: const Text('Notify me about suitable squadmates'),
             subtitle: const Text(
-              'Only while Looking now is enabled; respects notification settings.',
+              'Only while Looking now is enabled. Refresh your profile within 6 hours to stay active; notifications require permission.',
             ),
           ),
           SwitchListTile.adaptive(
@@ -628,10 +628,12 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
         }
         final matches = snapshot.data!.where((candidate) =>
           candidate.profile.lookingNow &&
-          candidate.profile.autoMatchAlertsEnabled).take(3).toList();
+          candidate.profile.autoMatchAlertsEnabled &&
+          candidate.profile.updatedAt != null &&
+          DateTime.now().difference(candidate.profile.updatedAt!).inHours < 6).take(10).toList();
         if (matches.isEmpty) {
           return watchMessage('Squad watch active. No suitable Raiders '
-            'are looking right now; UAG will alert you when one appears.');
+            'are looking right now; alerts arrive after the service is enabled.');
         }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,

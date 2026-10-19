@@ -164,6 +164,22 @@ class _TradingNotificationsScreenState
       }
     }
     if (!mounted) return;
+    // Prefer the exact live listing instead of redirecting to an empty market.
+    if (notification.type == TradingNotificationType.blueprintWatchMatch &&
+        notification.hasListingTarget) {
+      final listing = await _repository.getListingById(notification.listingId);
+      if (!mounted) return;
+      if (listing != null && listing.isLive) {
+        Navigator.of(context).push(MaterialPageRoute<void>(
+          builder: (_) => TradingListingDetailScreen(listing: listing),
+        ));
+      } else {
+        Navigator.of(context).push(MaterialPageRoute<void>(
+          builder: (_) => const TradingBlueprintWatchesScreen(),
+        ));
+      }
+      return;
+    }
     final route = notification.route.trim().isNotEmpty
         ? notification.route.trim()
         : notification.deepLink.trim();

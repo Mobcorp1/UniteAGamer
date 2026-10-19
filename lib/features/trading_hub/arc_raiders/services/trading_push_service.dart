@@ -215,9 +215,16 @@ class TradingPushService {
     _openRoute(TradingNotificationsScreen.routeName);
   }
 
-  void _openRoute(String routeName) {
+  void _openRoute(String routeName, [int attempt = 0]) {
     final navigator = navigatorKey.currentState;
-    if (navigator == null) return;
+    if (navigator == null) {
+      // Cold-start FCM can arrive before the application Navigator mounts.
+      if (attempt < 8) {
+        WidgetsBinding.instance.addPostFrameCallback((_) =>
+            _openRoute(routeName, attempt + 1));
+      }
+      return;
+    }
     navigator.pushNamed(routeName);
   }
 
