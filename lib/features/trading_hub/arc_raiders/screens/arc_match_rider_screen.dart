@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_conditions.dart';
 import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_match_intelligence_copy.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_subscription_tier.dart';
@@ -29,6 +30,11 @@ class ArcMatchRiderScreen extends StatefulWidget {
 }
 
 class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
+  // Restore the existing live candidate browser with --dart-define=UAG_SHOW_MANUAL_SEARCH=true.
+  static const bool _showManualSearch = bool.fromEnvironment(
+    'UAG_SHOW_MANUAL_SEARCH', defaultValue: false);
+  static final List<String> _eventOptions = ArcMapConditions
+      .selectableEventOptions.map((event) => event.label).toList();
   static final List<String> _archetypeOptions =
       ArcPlayerArchetypeCatalog.labels;
 
@@ -49,6 +55,7 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
     'Dam Battlegrounds',
     'Stella Montis',
     'Riven Tides',
+    'Pendola Pass',
   ];
 
   static const List<String> _modeOptions = [
@@ -259,7 +266,7 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
       ),
       appBar: const UagAppBar(
         title: 'Match Raider',
-        subtitle: 'Squad compatibility + live Raider discovery',
+        subtitle: 'Opt-in squad watch and Raider invitations',
         showLogout: false,
       ),
       body: ArcRaidersScreenShell(
@@ -455,6 +462,12 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
             (values) => _setProfile(profile.copyWith(preferredModes: values)),
           ),
           _buildSection(
+            'Preferred events',
+            _eventOptions,
+            profile.preferredEvents,
+            (values) => _setProfile(profile.copyWith(preferredEvents: values)),
+          ),
+          _buildSection(
             'Goals',
             _goalOptions,
             profile.goals,
@@ -508,6 +521,18 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
             ),
           ),
           SwitchListTile.adaptive(
+            value: profile.autoMatchAlertsEnabled,
+            onChanged: (value) => _setProfile(
+              profile.copyWith(autoMatchAlertsEnabled: value),
+            ),
+            contentPadding: EdgeInsets.zero,
+            activeThumbColor: AppTheme.neonCyan,
+            title: const Text('Notify me about suitable squadmates'),
+            subtitle: const Text(
+              'Only while Looking now is enabled; respects notification settings.',
+            ),
+          ),
+          SwitchListTile.adaptive(
             value: profile.visibleInSearch,
             onChanged: (value) =>
                 _setProfile(profile.copyWith(visibleInSearch: value)),
@@ -557,10 +582,70 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildMatchesFeed(profile),
+        if (_showManualSearch)
+          _buildMatchesFeed(profile)
+        else
+          _buildPassiveMatchWatch(profile),
         const SizedBox(height: AppTheme.spaceM),
         _buildInvitesPanels(),
       ],
+    );
+  }
+
+  Widget _buildPassiveMatchWatch(ArcMatchRiderProfile profile) {
+    Widget watchMessage(String message) => Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: AppTheme.neonCyan,
+        radius: 18,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('SQUAD MATCH WATCH',
+            style: TextStyle(color: Colors.cyanAccent,
+              fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Text(message, style: const TextStyle(color: Colors.white70)),
+        ],
+      ),
+    );
+    if (!profile.lookingNow || !profile.autoMatchAlertsEnabled) {
+      return watchMessage('Choose your events and playstyle, then enable '
+        'Looking now and squad alerts. UAG will watch for potential matches.');
+    }
+    return StreamBuilder<List<ArcMatchCandidate>>(
+      stream: _repository.watchCandidates(profile),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return watchMessage('Squad watch is temporarily unavailable. '
+            'Your profile is saved; please try again later.');
+        }
+        if (!snapshot.hasData) {
+          return watchMessage('Checking for suitable squadmates...');
+        }
+        final matches = snapshot.data!.where((candidate) =>
+          candidate.profile.lookingNow &&
+          candidate.profile.autoMatchAlertsEnabled).take(3).toList();
+        if (matches.isEmpty) {
+          return watchMessage('Squad watch active. No suitable Raiders '
+            'are looking right now; UAG will alert you when one appears.');
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            watchMessage('Potential squadmates found. Review before inviting.'),
+            const SizedBox(height: 8),
+            for (final candidate in matches)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: _buildMatchCard(candidate, isFavourite: false),
+              ),
+          ],
+        );
+      },
     );
   }
 

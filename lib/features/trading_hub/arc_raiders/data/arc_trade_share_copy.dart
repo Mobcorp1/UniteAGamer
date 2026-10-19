@@ -5,7 +5,7 @@ class ArcTradeShareCopy {
   const ArcTradeShareCopy._();
 
   static const String headline =
-      '⚡ ARC RAIDERS: YOUR NEXT BLUEPRINT IS ONE TRADE AWAY';
+      '⚡ ARC RAIDERS: THESE BLUEPRINTS ARE UP FOR TRADE';
 
   static const String hashtags =
       '#ArcRaiders #BlueprintTrading #ArcRaidersTrading #UniteAGamer #FYP';
@@ -20,18 +20,18 @@ class ArcTradeShareCopy {
   /// original Raider after authentication and mandatory onboarding.
   static String whatsApp({required String raider, required String link}) =>
       '🎮 ARC RAIDERS — TRADE WITH ${_displayName(raider)}\n\n'
-      'Got spare Blueprints? I’m looking to swap. Tap my personal Raider link, '
-      'sign in or join UAG, complete your Raider setup and come straight '
-      'to my trading page to propose a trade.\n\n'
+      'See what I have available. To find out what I need in return, open my '
+      'personal Raider link, sign in or join UAG and complete your Raider '
+      'setup. Compare collections and send me an offer inside UAG.\n\n'
       '🔗 $link';
 
   /// Long social caption. Use with the cinematic artwork, not a text inventory.
   /// Up to five relevant hashtags, including #FYP, and no assumed social handle.
   static String social({required String raider, required String link}) =>
       '$headline\n\n'
-      'Still hunting that one ARC Raiders Blueprint while your stash fills '
-      'up with duplicates? Someone out there might have exactly what you need — '
-      'and your spare might be the one they have been searching for.\n\n'
+      'I have spare ARC Raiders Blueprints ready to trade. Take a look at the '
+      'available items on my share card. What am I looking for? '
+      'That part stays inside UAG.\n\n'
       'I’m ${_displayName(raider)}, and I’m trading through the UAG ARC Raiders Hub. '
       'Take a look at my personal Raider trading page, compare what works for '
       'your collection and send me an offer directly. Whether you are trying '
@@ -41,7 +41,7 @@ class ArcTradeShareCopy {
       'link, create your free account or sign in, finish the required Raider '
       'setup and you will be brought straight back to my trading page. '
       'From there, propose a trade and arrange the exchange through UAG.\n\n'
-      '👇 SEE MY TRADES AND SEND AN OFFER\n'
+      '👇 SEE WHAT I NEED AND SEND AN OFFER IN UAG\n'
       '🔗 $link\n\n'
       '$hashtags';
 }

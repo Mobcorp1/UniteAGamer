@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_blueprint_watches_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_beta_first_run.dart';
@@ -39,6 +40,8 @@ class TradingListingsScreen extends StatefulWidget {
 }
 
 class _TradingListingsScreenState extends State<TradingListingsScreen> {
+  static const bool _showManualSearch = bool.fromEnvironment(
+    'UAG_SHOW_MANUAL_SEARCH', defaultValue: false);
   final TradingRepository _repository = TradingRepository();
   final ArcBlueprintRepository _blueprintRepository = ArcBlueprintRepository();
   final ArcScrappyRepository _scrappyRepository = ArcScrappyRepository();
@@ -577,6 +580,10 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Retain the complete original Trading Listings experience for later growth.
+    if (!_showManualSearch) {
+      return TradingBlueprintWatchesScreen(showAppBar: widget.showAppBar);
+    }
     return Scaffold(
       extendBody: true,
       bottomNavigationBar: const ArcCompanionBottomDock(activeLabel: 'Trading'),

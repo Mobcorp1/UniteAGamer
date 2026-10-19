@@ -145,7 +145,7 @@ class ArcCollectionVisualShare {
     double rows(List<ArcCollectionShareItem> items) =>
       (items.length / columns).ceil().toDouble().clamp(1.0, 999.0).toDouble();
     final calculated = 158 + 62 + rows(trade) * tileHeight +
-      62 + rows(wanted) * tileHeight + 112;
+      (wanted.isEmpty ? 0 : 62 + rows(wanted) * tileHeight) + 112;
     final height = portrait ? 1920.0 : calculated;
     if (height > 16000) throw StateError('Collection export too tall');
     final recorder = ui.PictureRecorder();
@@ -233,7 +233,7 @@ class ArcCollectionVisualShare {
       y += rows(items) * tileHeight;
     }
     await section('SPARES FOR TRADE', trade);
-    await section('NEEDED', wanted);
+    if (wanted.isNotEmpty) await section('NEEDED', wanted);
     if (portrait && (trade.length < duplicates.length || wanted.length < needed.length)) {
       _paintText(canvas, 'Full collection available through UAG',
         28, height - 91, 18, Colors.white70, maxWidth: 1000);
@@ -527,8 +527,9 @@ class _ArcTradeShareDialogState extends State<_ArcTradeShareDialog> {
     }
     setState(() { _sharing = true; _status = null; });
     try {
+      // External artwork shows only spares; private needs remain within UAG.
       final png = await ArcCollectionVisualShare._exportPng(widget.title,
-        _orderedWanted, widget.duplicates,
+        const <ArcCollectionShareItem>[], widget.duplicates,
         portrait: portrait, raider: _raiderName,
         link: _verifiedTradeUrl, minimums: _minimums);
       final name = 'UAG_${widget.title.replaceAll(' ', '_')}_${portrait ? '9x16' : 'trade'}.png';

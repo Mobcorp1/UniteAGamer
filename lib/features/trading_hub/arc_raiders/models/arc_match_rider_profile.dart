@@ -15,6 +15,7 @@ class ArcMatchRiderProfile {
     required this.playstyles,
     required this.preferredMaps,
     required this.preferredModes,
+    this.preferredEvents = const <String>[],
     required this.goals,
     this.sessionIntent = ArcPlayerSessionCatalog.defaultIntent,
     this.currentPriority = ArcPlayerSessionCatalog.defaultPriority,
@@ -43,6 +44,7 @@ class ArcMatchRiderProfile {
     required this.squadPreferences,
     required this.lookingNow,
     required this.visibleInSearch,
+    this.autoMatchAlertsEnabled = false,
     required this.notes,
     required this.updatedAt,
   });
@@ -58,6 +60,7 @@ class ArcMatchRiderProfile {
   final List<String> playstyles;
   final List<String> preferredMaps;
   final List<String> preferredModes;
+  final List<String> preferredEvents;
   final List<String> goals;
   final String sessionIntent;
   final String currentPriority;
@@ -86,6 +89,7 @@ class ArcMatchRiderProfile {
   final List<String> squadPreferences;
   final bool lookingNow;
   final bool visibleInSearch;
+  final bool autoMatchAlertsEnabled;
   final String notes;
   final DateTime? updatedAt;
 
@@ -105,6 +109,7 @@ class ArcMatchRiderProfile {
     List<String>? playstyles,
     List<String>? preferredMaps,
     List<String>? preferredModes,
+    List<String>? preferredEvents,
     List<String>? goals,
     String? sessionIntent,
     String? currentPriority,
@@ -133,6 +138,7 @@ class ArcMatchRiderProfile {
     List<String>? squadPreferences,
     bool? lookingNow,
     bool? visibleInSearch,
+    bool? autoMatchAlertsEnabled,
     String? notes,
     DateTime? updatedAt,
   }) {
@@ -148,6 +154,7 @@ class ArcMatchRiderProfile {
       playstyles: playstyles ?? this.playstyles,
       preferredMaps: preferredMaps ?? this.preferredMaps,
       preferredModes: preferredModes ?? this.preferredModes,
+      preferredEvents: preferredEvents ?? this.preferredEvents,
       goals: goals ?? this.goals,
       sessionIntent: sessionIntent ?? this.sessionIntent,
       currentPriority: currentPriority ?? this.currentPriority,
@@ -179,6 +186,8 @@ class ArcMatchRiderProfile {
       squadPreferences: squadPreferences ?? this.squadPreferences,
       lookingNow: lookingNow ?? this.lookingNow,
       visibleInSearch: visibleInSearch ?? this.visibleInSearch,
+      autoMatchAlertsEnabled:
+          autoMatchAlertsEnabled ?? this.autoMatchAlertsEnabled,
       notes: notes ?? this.notes,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -197,6 +206,7 @@ class ArcMatchRiderProfile {
       'playstyles': playstyles,
       'preferredMaps': preferredMaps,
       'preferredModes': preferredModes,
+      'preferredEvents': preferredEvents,
       'goals': goals,
       'sessionIntent': ArcPlayerSessionCatalog.normalizeIntent(sessionIntent),
       'currentPriority': ArcPlayerSessionCatalog.normalizePriority(
@@ -227,6 +237,7 @@ class ArcMatchRiderProfile {
       'squadPreferences': squadPreferences,
       'lookingNow': lookingNow,
       'visibleInSearch': visibleInSearch,
+      'autoMatchAlertsEnabled': autoMatchAlertsEnabled,
       'notes': notes,
       'updatedAt': FieldValue.serverTimestamp(),
     };
@@ -245,6 +256,7 @@ class ArcMatchRiderProfile {
       'playstyles': playstyles,
       'preferredMaps': preferredMaps,
       'preferredModes': preferredModes,
+      'preferredEvents': preferredEvents,
       'goals': goals,
       'sessionIntent': ArcPlayerSessionCatalog.normalizeIntent(sessionIntent),
       'currentPriority': ArcPlayerSessionCatalog.normalizePriority(
@@ -265,6 +277,7 @@ class ArcMatchRiderProfile {
       'squadPreferences': squadPreferences,
       'lookingNow': lookingNow,
       'visibleInSearch': visibleInSearch,
+      'autoMatchAlertsEnabled': autoMatchAlertsEnabled,
       'notes': notes,
       'updatedAt': FieldValue.serverTimestamp(),
       for (final field in privateMatchFields) field: FieldValue.delete(),
@@ -395,6 +408,7 @@ class ArcMatchRiderProfile {
       playstyles: readList('playstyles'),
       preferredMaps: readList('preferredMaps'),
       preferredModes: readList('preferredModes'),
+      preferredEvents: readList('preferredEvents'),
       goals: readList('goals'),
       sessionIntent: ArcPlayerSessionCatalog.normalizeIntent(
         map['sessionIntent'] as String?,
@@ -427,6 +441,7 @@ class ArcMatchRiderProfile {
       squadPreferences: readList('squadPreferences'),
       lookingNow: map['lookingNow'] == true,
       visibleInSearch: map['visibleInSearch'] != false,
+      autoMatchAlertsEnabled: map['autoMatchAlertsEnabled'] == true,
       notes: (map['notes'] as String? ?? '').trim(),
       updatedAt: updatedAt,
     );

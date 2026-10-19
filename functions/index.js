@@ -4405,6 +4405,16 @@ exports.processUagNotificationSchedules = onSchedule(
   }
 );
 
+// PASS 13: server-side, opt-in watch and squad candidate alerts.
+// These exports are additive; existing listing search and Match Raider ranking remain.
+const pass13AutoMatches = require('./uag_pass13_auto_matches').buildHandlers(db, admin);
+exports.uagPass13WatchTradeListings = onDocumentWritten(
+  'arc_trade_listings/{listingId}', pass13AutoMatches.onListing);
+exports.uagPass13WatchBlueprintWatches = onDocumentWritten(
+  'arc_blueprint_watches/{watchId}', pass13AutoMatches.onWatch);
+exports.uagPass13WatchMatchRider = onDocumentWritten(
+  'arc_match_rider_profiles/{profileUid}', pass13AutoMatches.onRider);
+
 exports.sendTradingNotificationPush = onDocumentCreated(
   'trading_notifications/{notificationId}',
   async (event) => {

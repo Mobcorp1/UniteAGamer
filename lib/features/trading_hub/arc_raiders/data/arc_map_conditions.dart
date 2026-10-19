@@ -37,11 +37,27 @@ class ArcMapConditions {
   static const String blueGateMap = 'The Blue Gate';
   static const String spaceportMap = 'Spaceport';
   static const String rivenTidesMap = 'Riven Tides';
+  static const String pendolaPassMap = 'Pendola Pass';
 
   static const ArcMapCondition noSpecialCondition = ArcMapCondition(
     id: 'none',
     label: 'No event / standard raid',
     type: ArcMapConditionType.neutral,
+  );
+
+  // Map conditions are selectable interests, not assertions of live schedule.
+  static const ArcMapCondition arcFrigate = ArcMapCondition(
+    id: 'arc_frigate',
+    label: 'ARC Frigate',
+    type: ArcMapConditionType.event,
+  );
+
+  static const ArcMapCondition redirection = ArcMapCondition(
+    id: 'redirection',
+    label: 'Redirection',
+    type: ArcMapConditionType.event,
+    isMapSpecific: true,
+    supportedMaps: [pendolaPassMap],
   );
 
   static const ArcMapCondition nightRaid = ArcMapCondition(
@@ -166,6 +182,8 @@ class ArcMapConditions {
 
   static const List<ArcMapCondition> _allConditions = [
     noSpecialCondition,
+    arcFrigate,
+    redirection,
     nightRaid,
     electromagneticStorm,
     bloom,
@@ -185,6 +203,11 @@ class ArcMapConditions {
     beachcombing,
     lastResort,
   ];
+
+  static List<ArcMapCondition> get selectableEventOptions =>
+      List<ArcMapCondition>.unmodifiable(
+        _allConditions.where((item) => item.isEvent),
+      );
 
   static List<ArcMapCondition> combinedOptionsForMap(String mapName) {
     return canonicalOrder(

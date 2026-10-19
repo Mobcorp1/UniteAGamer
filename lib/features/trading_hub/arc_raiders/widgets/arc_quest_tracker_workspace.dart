@@ -93,6 +93,53 @@ class _ArcQuestTrackerWorkspaceState extends State<ArcQuestTrackerWorkspace> {
     });
   }
 
+  Future<void> _batchComplete() async {
+    if (_busy || _tracked.isEmpty) return;
+    final selected = <String>{};
+    final ordered = _engine.ordered(_tracked).toList();
+    final choice = await showDialog<Set<String>>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, refresh) => AlertDialog(
+          title: const Text('Complete selected quests'),
+          content: SizedBox(
+            width: 440,
+            height: 360,
+            child: ListView(
+              children: [
+                for (final quest in ordered)
+                  CheckboxListTile(
+                    dense: true,
+                    title: Text(quest.displayName),
+                    value: selected.contains(quest.id),
+                    onChanged: (value) => refresh(() {
+                      if (value == true) { selected.add(quest.id); }
+                      else { selected.remove(quest.id); }
+                    }),
+                  ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancel')),
+            FilledButton(
+              onPressed: selected.isEmpty ? null : () => Navigator.pop(
+                dialogContext, Set<String>.from(selected)),
+              child: Text('Complete ${selected.length}'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (choice == null || choice.isEmpty || !mounted) return;
+    await _run(() async {
+      for (final questId in choice) {
+        if (!await widget.onCompleteQuest(questId)) break;
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final completed = widget.snapshot.completedQuestIds;
@@ -199,6 +246,11 @@ class _ArcQuestTrackerWorkspaceState extends State<ArcQuestTrackerWorkspace> {
                 icon: const Icon(Icons.search_rounded, size: 18),
                 label: const Text('FIND MY CURRENT QUEST'),
               ),
+              OutlinedButton.icon(
+                onPressed: _busy || tracked.isEmpty ? null : _batchComplete,
+                icon: const Icon(Icons.checklist_rounded, size: 18),
+                label: const Text('BATCH COMPLETE'),
+              ),
             ],
           ),
           if (_showFinder) ...[
@@ -212,6 +264,19 @@ class _ArcQuestTrackerWorkspaceState extends State<ArcQuestTrackerWorkspace> {
                 border: OutlineInputBorder(),
                 isDense: true,
               ),
+            ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: _busy || _query.trim().isEmpty ? null : () => _run(() async {
+                final completedIds = widget.snapshot.completedQuestIds;
+                final batch = _engine.search(_query).take(25)
+                    .map((node) => node.id)
+                    .where((id) => !completedIds.contains(id))
+                    .toSet();
+                await widget.onTrackedChanged(<String>{..._tracked, ...batch});
+              }),
+              icon: const Icon(Icons.playlist_add_check_rounded),
+              label: const Text('TRACK VISIBLE RESULTS (UP TO 25)'),
             ),
             const SizedBox(height: 8),
             ConstrainedBox(
