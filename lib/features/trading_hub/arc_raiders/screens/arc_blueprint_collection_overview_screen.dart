@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/services/uag_android_responsiveness_guard.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_collection_visual_share.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_collection_models.dart';
@@ -27,7 +28,14 @@ class _ArcBlueprintCollectionOverviewScreenState
   @override
   void initState() {
     super.initState();
+    UagAndroidResponsivenessGuard.instance.enterSurface('BlueprintCollectionOverview');
     _states = ArcBlueprintRepository().loadMyBlueprintStates();
+  }
+
+  @override
+  void dispose() {
+    UagAndroidResponsivenessGuard.instance.exitSurface('BlueprintCollectionOverview');
+    super.dispose();
   }
 
   void _openExtra(ArcNativeCollectionKind kind) {

@@ -7,6 +7,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/services/uag_android_responsiveness_guard.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_collection_visual_share.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -154,6 +155,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
   @override
   void initState() {
     super.initState();
+    UagAndroidResponsivenessGuard.instance.enterSurface('BlueprintGridScreen');
     _stateStream = _watchBlueprintStateSnapshot().asBroadcastStream();
     _loadoutStream = _watchFavouriteLoadout().asBroadcastStream();
     if (_isFavouriteLoadoutTargetPickMode) {
@@ -207,6 +209,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
 
   @override
   void dispose() {
+    UagAndroidResponsivenessGuard.instance.exitSurface('BlueprintGridScreen');
     _searchController.dispose();
     _blueprintGridTransformController.dispose();
     super.dispose();

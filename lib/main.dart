@@ -1,4 +1,5 @@
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_collections_tracker_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/services/uag_android_responsiveness_guard.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raider_setup_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_events_screen.dart';
 import 'dart:async';
@@ -84,6 +85,7 @@ import 'package:uag_arc_raiders_hub/features/monetisation/services/uag_community
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  UagAndroidResponsivenessGuard.instance.install();
 
   // Render the approved UAG boot treatment immediately while Firebase and
   // startup services initialise. This gives native mobile the same first
