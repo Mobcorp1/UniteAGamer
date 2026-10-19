@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  const host = 'https://unite-a-gamer.web.app';
+  const host = 'https://uniteagamer.com';
   const publicPaths = <String>[
     '/tools/',
     '/tools/blueprint-tracker/',
