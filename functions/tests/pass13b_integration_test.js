@@ -73,6 +73,7 @@ const user = () => ({ ageVerification: { verifiedOver18: true } });
 const admin = { firestore: { FieldValue: { serverTimestamp: () => 'SERVER_TIMESTAMP' } },
   auth: () => ({ getUser: async () => ({ disabled: false }) }) };
 const doc = (id, obj) => ({ id, exists: true, data: () => obj });
+const qaControl = (flags, uids) => ({ enabled:true, qaMode:'testers', publicEnabled:false, testerUids:uids, qaExpiresAt:new Date(Date.now()+86400000), ...flags });
 
 test('default-off release gate: no matchmaking and no trade notifications', async () => {
   const { db, notices } = fakeDb({ collections: {
@@ -87,7 +88,7 @@ test('default-off release gate: no matchmaking and no trade notifications', asyn
 });
 
 test('trade notification respects age, blocks, current preference and idempotency', async () => {
-  const env = fakeDb({ control: { enabled: true, tradeAlertsEnabled: true },
+  const env = fakeDb({ control: qaControl({tradeAlertsEnabled:true},['buyer','seller']),
     users: { buyer: user(), seller: user() },
     collections: { arc_blueprint_watches: [doc('watchA',watch)] } });
   const h = buildHandlers(env.db,admin);
@@ -98,12 +99,12 @@ test('trade notification respects age, blocks, current preference and idempotenc
   const data = [...env.notices.values()][0];
   assert.equal(data.broadcastPushHandled,false);
   assert.equal(data.listingId,'listingA');
-  const muted = fakeDb({ control: { enabled: true, tradeAlertsEnabled: true },
+  const muted = fakeDb({ control: qaControl({tradeAlertsEnabled:true},['buyer','seller']),
     users: {buyer:user(), seller:user()}, preferences: { buyer: { watchesAndQueues: false } },
     collections:{ arc_blueprint_watches:[doc('watchA',watch)] } });
   await buildHandlers(muted.db,admin).onListing(evt);
   assert.equal(muted.notices.size,0);
-  const blocked = fakeDb({ control: { enabled: true, tradeAlertsEnabled: true },
+  const blocked = fakeDb({ control: qaControl({tradeAlertsEnabled:true},['buyer','seller']),
     users: {buyer:user(), seller:user()}, blocks:['buyer_seller'],
     collections:{ arc_blueprint_watches:[doc('watchA',watch)] } });
   await buildHandlers(blocked.db,admin).onListing(evt);
@@ -111,7 +112,7 @@ test('trade notification respects age, blocks, current preference and idempotenc
 });
 
 test('six-hour stale expiry prevents squad notifications and enabled pair sends two deduped alerts', async () => {
-  const control = { enabled: true, squadAlertsEnabled: true };
+  const control = qaControl({squadAlertsEnabled:true},['a','b']);
   const env = fakeDb({control,users:{a:user(),b:user()},
     collections:{arc_match_rider_profiles:[doc('a',rider('a')),doc('b',rider('b'))]}});
   const h = buildHandlers(env.db,admin);

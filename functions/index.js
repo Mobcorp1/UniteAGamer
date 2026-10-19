@@ -4415,6 +4415,7 @@ exports.processUagNotificationSchedules = onSchedule(
 
 // PASS 13: server-side, opt-in watch and squad candidate alerts.
 // These exports are additive; existing listing search and Match Raider ranking remain.
+const pass13CQA = require('./uag_pass13c_qa_guard');
 const pass13AutoMatches = require('./uag_pass13_auto_matches').buildHandlers(db, admin);
 exports.uagPass13WatchTradeListings = onDocumentWritten(
   'trading_listings/{listingId}', pass13AutoMatches.onListing);
@@ -4432,6 +4433,10 @@ exports.sendTradingNotificationPush = onDocumentCreated(
     if (data.broadcastPushHandled === true) return;
     const targetUid = data.targetUid;
     if (!targetUid) return;
+
+    // PASS 13C: discovery is QA-only and still valid at the instant of dispatch.
+    // Legacy offer/invite notifications do NOT use this new gate.
+    if (data.pass13Discovery === true && !(await pass13CQA.canDeliver(db, admin, data))) return;
 
     // Recheck consent at dispatch time: preferences may have changed since matching.
     const currentPreference = await db.collection('users').doc(targetUid)

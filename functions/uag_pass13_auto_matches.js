@@ -74,26 +74,17 @@ async function readCandidates(db, path, maxDocs = 3000) {
 }
 function buildHandlers(db, admin) {
   const timestamp = () => admin.firestore.FieldValue.serverTimestamp();
-  const users = new Map();
-  const prefCache = new Map();
-  const authCache = new Map();
-  const getUser = async (uid) => {
-    if (!users.has(uid)) users.set(uid, db.collection('users').doc(uid).get().then((doc) => doc.data() || null));
-    return users.get(uid);
-  };
-  const getPreferences = async (uid) => {
-    if (!prefCache.has(uid)) prefCache.set(uid, db.collection('users').doc(uid)
-      .collection('notification_preferences').doc('current').get().then((doc) => doc.data() || null));
-    return prefCache.get(uid);
-  };
-  const isActiveAccount = async (uid) => {
-    if (!authCache.has(uid)) authCache.set(uid, admin.auth().getUser(uid)
-      .then((record) => !record.disabled).catch((error) => {
-        if (error.code === 'auth/user-not-found') return false;
-        throw error;
-      }));
-    return authCache.get(uid);
-  };
+  // No cross-invocation caches: deleted accounts and revoked consent take effect
+  // immediately. Candidate scans are restricted to QA participants below.
+  const qa = require('./uag_pass13c_qa_guard');
+  const getUser = async (uid) => (await db.collection('users').doc(uid).get()).data() || null;
+  const getPreferences = async (uid) => (await db.collection('users').doc(uid)
+    .collection('notification_preferences').doc('current').get()).data() || null;
+  const isActiveAccount = async (uid) => admin.auth().getUser(uid)
+    .then((record) => !record.disabled).catch((error) => {
+      if (error.code === 'auth/user-not-found') return false;
+      throw error;
+    });
   async function allowed(uid, kind) {
     const [user, prefs, active] = await Promise.all([getUser(uid), getPreferences(uid), isActiveAccount(uid)]);
     return !!active && ageVerified(user) && prefAllows(prefs, kind);
@@ -107,15 +98,21 @@ function buildHandlers(db, admin) {
     return !first.exists && !second.exists && noBlockField(a, bUid) && noBlockField(b, aUid);
   }
   async function enabled(kind) {
-    const doc = await db.collection('uag_release_controls').doc('launch_matching').get();
-    const data = doc.data() || {};
-    return data.enabled === true && data[kind] === true;
+    return qa.controlValid(await qa.readControl(db), kind);
+  }
+  async function qaMember(uid, kind) {
+    return qa.qaMemberAllowed(await qa.readControl(db), uid, kind);
+  }
+  async function qaPair(first, second, kind) {
+    return qa.qaPairAllowed(await qa.readControl(db), first, second, kind);
   }
   async function queue({ targetUid, actorUid, type, sourceId, listingId = null, watchId = null, route, title, body, push }) {
     const ref = db.collection('trading_notifications').doc(idFor('pass13b', type, sourceId, targetUid));
     try {
       await ref.create({
         id: ref.id, targetUid, actorUid, title, body, type,
+        // Only server-written, tester-gated discovery messages may reach push.
+        pass13Discovery: true,
         route, deepLink: route, entityId: sourceId, listingId, watchId,
         offerId: null, sessionId: null, broadcastPushHandled: push !== true,
         read: false, createdAt: timestamp(), updatedAt: timestamp(),
@@ -129,6 +126,7 @@ function buildHandlers(db, admin) {
     const sellerUid = clean(listing.ownerUid || listing.userId);
     const buyerUid = clean(watch.ownerUid);
     const preference = clean(watch.notificationPreference);
+    if (!(await qaPair(buyerUid, sellerUid, 'tradeAlertsEnabled'))) return;
     if (preference === 'digest' || preference === 'favouriteRidersOnly') return;
     if (!(await allowed(buyerUid, 'watchesAndQueues')) || !(await allowed(sellerUid, 'trading')) ||
         !(await unblocked(buyerUid, sellerUid))) return;
@@ -145,6 +143,7 @@ function buildHandlers(db, admin) {
     if (!(await enabled('tradeAlertsEnabled'))) return;
     const snap = event.data?.after ?? event.data;
     if (!snap?.exists || !liveListing(snap.data())) return;
+    if (!(await qaMember(clean(snap.data().ownerUid || snap.data().userId), 'tradeAlertsEnabled'))) return;
     for (const watch of await readCandidates(db, 'arc_blueprint_watches')) {
       await checkWatch(watch.id, watch.data(), snap.id, snap.data());
     }
@@ -153,6 +152,7 @@ function buildHandlers(db, admin) {
     if (!(await enabled('tradeAlertsEnabled'))) return;
     const snap = event.data?.after ?? event.data;
     if (!snap?.exists || snap.data()?.type !== 'blueprint') return;
+    if (!(await qaMember(clean(snap.data().ownerUid), 'tradeAlertsEnabled'))) return;
     for (const listing of await readCandidates(db, 'trading_listings')) {
       await checkWatch(snap.id, snap.data(), listing.id, listing.data());
     }
@@ -164,13 +164,15 @@ function buildHandlers(db, admin) {
     const current = snap.data();
     const now = Date.now();
     // Only run on the current profile's opt-in transition/fresh save.
-    if (!freshLooking(current, now) || !(await allowed(snap.id, 'matchmaking'))) return;
+    if (!freshLooking(current, now) || !(await qaMember(snap.id, 'squadAlertsEnabled')) ||
+        !(await allowed(snap.id, 'matchmaking'))) return;
     for (const candidate of await readCandidates(db, 'arc_match_rider_profiles')) {
       if (candidate.id === snap.id) continue;
       const other = candidate.data();
       // Explicit document identity is authoritative; never trust an injected UID.
       if (clean(current.uid) !== snap.id || clean(other.uid) !== candidate.id ||
-          !riderFits(current, other, now)) continue;
+          !riderFits(current, other, now) ||
+          !(await qaPair(snap.id, candidate.id, 'squadAlertsEnabled'))) continue;
       if (!(await allowed(candidate.id, 'matchmaking')) || !(await unblocked(snap.id, candidate.id))) continue;
       const pair = [snap.id, candidate.id].sort();
       // One alert per pair per 6-hour window; both profiles must remain fresh.
@@ -183,6 +185,6 @@ function buildHandlers(db, admin) {
       }
     }
   }
-  return { onListing, onWatch, onRider, enabled, allowed, unblocked };
+  return { onListing, onWatch, onRider, enabled, allowed, unblocked, qaMember, qaPair };
 }
 module.exports = { slug, millis, liveListing, watchFitsListing, freshLooking, riderFits, readCandidates, buildHandlers };
