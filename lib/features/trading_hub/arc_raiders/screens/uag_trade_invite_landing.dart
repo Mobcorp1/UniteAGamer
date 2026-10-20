@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 import '../models/trading_listing.dart';
 import '../repositories/trading_repository.dart';
@@ -36,10 +37,10 @@ class _UagTradeInviteLandingState extends State<UagTradeInviteLanding> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF07131D),
+      backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0E2735),
-        foregroundColor: const Color(0xFF6CE6EA),
+        backgroundColor: AppTheme.cardBackgroundDeep,
+        foregroundColor: AppTheme.neonCyan,
         title: const Text('RAIDER TRADE INVITATION'),
         leading: IconButton(onPressed: _exit, icon: const Icon(Icons.close)),
       ),
@@ -53,7 +54,7 @@ class _UagTradeInviteLandingState extends State<UagTradeInviteLanding> {
             return Center(child: Padding(
               padding: const EdgeInsets.all(24),
               child: Column(mainAxisSize: MainAxisSize.min, children: [
-                const Text('INVITATION UNAVAILABLE', style: TextStyle(color: Color(0xFFFF91C8), fontSize: 20)),
+                const Text('INVITATION UNAVAILABLE', style: TextStyle(color: AppTheme.neonPink, fontSize: 20)),
                 const SizedBox(height: 10),
                 const Text('This trading link cannot be opened right now. It may have expired or been revoked. Ask the Raider for a new link.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white70)),
                 TextButton(onPressed: _exit, child: const Text('Return to UAG')),
@@ -71,7 +72,7 @@ class _UagTradeInviteLandingState extends State<UagTradeInviteLanding> {
                   .toList(growable: false);
               return ListView(padding: const EdgeInsets.all(16), children: [
                 Text('TRADE WITH $alias', style: const TextStyle(fontSize: 25,
-                  color: Color(0xFF69E5E9), fontWeight: FontWeight.bold)),
+                  color: AppTheme.neonCyan, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 6),
                 const Text('Your link brought you directly back to the original Raider. Review an active listing to make an explicit offer and arrange a session.',
                   style: TextStyle(color: Colors.white70)),
@@ -79,18 +80,18 @@ class _UagTradeInviteLandingState extends State<UagTradeInviteLanding> {
                 if (!listings.hasData && !listings.hasError)
                   const Center(child: CircularProgressIndicator()),
                 if (listings.hasError)
-                  const Text('Listings are temporarily unavailable.', style: TextStyle(color: Colors.orangeAccent)),
+                  const Text('Listings are temporarily unavailable.', style: TextStyle(color: AppTheme.warningAmber)),
                 if (listings.hasData && matching.isEmpty)
                   const Text('This Raider has no active trade listings yet. You can browse the Trading Hub while they prepare a listing.',
                     style: TextStyle(color: Colors.white70)),
                 ...matching.map((listing) => Card(
-                  color: const Color(0xFF163342),
+                  color: AppTheme.cardBackgroundAlt,
                   child: ListTile(
                     title: Text(listing.title, style: const TextStyle(color: Colors.white)),
                     subtitle: Text('${listing.offeredItem} · Wants: ${listing.wantedText}',
                       maxLines: 2, overflow: TextOverflow.ellipsis,
                       style: const TextStyle(color: Colors.white70)),
-                    trailing: const Icon(Icons.arrow_forward_ios, color: Color(0xFFFF92C8)),
+                    trailing: const Icon(Icons.arrow_forward_ios, color: AppTheme.neonPink),
                     onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
                       builder: (_) => TradingListingDetailScreen(listing: listing),
                     )),

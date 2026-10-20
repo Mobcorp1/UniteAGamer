@@ -25,9 +25,10 @@ class ArcCollectionsCategoryBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 32,
-      decoration: const BoxDecoration(
-        color: Color(0xDD08151D),
-        border: Border(bottom: BorderSide(color: Color(0xFF21606E), width: 0.8)),
+      decoration: BoxDecoration(
+        color: uag_pass14_theme.AppTheme.cardBackgroundDeep.withValues(alpha: 0.90),
+        border: Border(bottom: BorderSide(
+          color: uag_pass14_theme.AppTheme.neonCyan.withValues(alpha: 0.28), width: 0.8)),
       ),
       child: Row(
         children: [
@@ -37,7 +38,7 @@ class ArcCollectionsCategoryBar extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 2),
                 child: Material(
                   color: selected == category && !dupesSelected
-                      ? const Color(0xFF123D4D)
+                      ? uag_pass14_theme.AppTheme.cardBackgroundAlt
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(5),
                   child: InkWell(
@@ -50,8 +51,8 @@ class ArcCollectionsCategoryBar extends StatelessWidget {
                         borderRadius: BorderRadius.circular(5),
                         border: Border.all(
                           color: selected == category && !dupesSelected
-                              ? const Color(0xFF33DCE8)
-                              : const Color(0xFF32515A),
+                              ? uag_pass14_theme.AppTheme.neonCyan
+                              : uag_pass14_theme.AppTheme.neonCyan.withValues(alpha: 0.24),
                         ),
                       ),
                       child: FittedBox(
@@ -64,8 +65,8 @@ class ArcCollectionsCategoryBar extends StatelessWidget {
                             fontWeight: FontWeight.w800,
                             letterSpacing: 0.7,
                             color: selected == category && !dupesSelected
-                                ? const Color(0xFF65F4F7)
-                                : const Color(0xFFCEDDE1),
+                                ? uag_pass14_theme.AppTheme.neonCyan
+                                : Colors.white70,
                           ),
                         ),
                       ),
@@ -78,7 +79,7 @@ class ArcCollectionsCategoryBar extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 2),
                 child: Material(
-                  color: dupesSelected ? const Color(0xFF563048) : Colors.transparent,
+                  color: dupesSelected ? uag_pass14_theme.AppTheme.neonPink.withValues(alpha: 0.17) : Colors.transparent,
                   borderRadius: BorderRadius.circular(5),
                   child: InkWell(
                     key: const Key('collections-tab-dupes'),
@@ -89,7 +90,7 @@ class ArcCollectionsCategoryBar extends StatelessWidget {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(5),
                         border: Border.all(color: dupesSelected
-                          ? uag_pass14_theme.AppTheme.neonPink : const Color(0xFF32515A)),
+                          ? uag_pass14_theme.AppTheme.neonPink : uag_pass14_theme.AppTheme.neonCyan.withValues(alpha: 0.24)),
                       ),
                       child: const FittedBox(fit: BoxFit.scaleDown,
                         child: Text('DUPES', maxLines: 1,

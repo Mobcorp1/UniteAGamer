@@ -111,7 +111,7 @@ class _ArcAdditionalCollectionsScreenState
     final chosen = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF0C1B26),
+      backgroundColor: uag_pass14_theme.AppTheme.cardBackgroundDeep,
       builder: (sheetContext) {
         var query = '';
         return StatefulBuilder(builder: (sheetContext, rebuild) {
@@ -306,7 +306,7 @@ class _ArcAdditionalCollectionsScreenState
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF111B26),
+      backgroundColor: uag_pass14_theme.AppTheme.cardBackgroundDeep,
       builder: (ctx) => StatefulBuilder(builder: (ctx, refresh) {
         final owned = _displayOwned.contains(slot);
         return SafeArea(
@@ -316,7 +316,7 @@ class _ArcAdditionalCollectionsScreenState
             child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(_name(slot), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 19)),
               Text('${_kind.title} · Position $slot · ${owned ? 'Owned' : 'Needed'}',
-                  style: const TextStyle(color: Color(0xFF75DBE5))),
+                  style: const TextStyle(color: uag_pass14_theme.AppTheme.neonCyan)),
               const SizedBox(height: 8),
               if (_reviewStates.length == _kind.slots) ...[
                 TextButton.icon(
@@ -328,7 +328,7 @@ class _ArcAdditionalCollectionsScreenState
               ],
               if (_kind == ArcNativeCollectionKind.designs) TextButton.icon(
                 key: const Key('collections-assign-design-name'),
-                icon: const Icon(Icons.edit_outlined, color: Color(0xFF64E8EF)),
+                icon: const Icon(Icons.edit_outlined, color: uag_pass14_theme.AppTheme.neonCyan),
                 label: Text(_assignedDesignNames.containsKey(slot)
                     ? 'Correct Design name' : 'Assign verified Design name'),
                 onPressed: () {
@@ -350,7 +350,7 @@ class _ArcAdditionalCollectionsScreenState
                       await _saveOneDupe(slot, 1);
                       if (ctx.mounted) refresh(() {});
                     },
-                    icon: const Icon(Icons.add_circle_outline, color: Color(0xFF2CE1EB)),
+                    icon: const Icon(Icons.add_circle_outline, color: uag_pass14_theme.AppTheme.neonCyan),
                   ),
                 ),
               ]),
@@ -461,9 +461,9 @@ class _ArcAdditionalCollectionsScreenState
           width: cardWidth,
           padding: const EdgeInsets.all(3),
           decoration: BoxDecoration(
-            color: owned ? const Color(0xFF163344) : const Color(0xFF12161E),
-            border: Border.all(color: review ? Colors.amberAccent :
-                dupes > 0 ? uag_pass14_theme.AppTheme.neonPink : const Color(0xFF325366)),
+            color: owned ? uag_pass14_theme.AppTheme.cardBackgroundAlt : uag_pass14_theme.AppTheme.cardBackgroundDeep,
+            border: Border.all(color: review ? uag_pass14_theme.AppTheme.warningAmber :
+                dupes > 0 ? uag_pass14_theme.AppTheme.neonPink : uag_pass14_theme.AppTheme.neonCyan.withValues(alpha: 0.25)),
             borderRadius: BorderRadius.circular(5),
           ),
           child: Column(children: [
@@ -477,7 +477,7 @@ class _ArcAdditionalCollectionsScreenState
                   size: 18, color: owned ? Colors.cyanAccent : Colors.white30),
               Positioned(right: 0, top: 0, child: Icon(
                 owned ? Icons.check_circle : Icons.remove_circle_outline,
-                size: 12, color: owned ? const Color(0xFFFFD949) : Colors.white30)),
+                size: 12, color: owned ? uag_pass14_theme.AppTheme.warningAmber : Colors.white30)),
               if (dupes > 0) Positioned(bottom: 0, right: 0,
                 child: Text('+$dupes', style: const TextStyle(fontSize: 10,
                     color: uag_pass14_theme.AppTheme.neonPink, fontWeight: FontWeight.bold))),
@@ -500,23 +500,23 @@ class _ArcAdditionalCollectionsScreenState
         key: key,
         style: OutlinedButton.styleFrom(
           padding: const EdgeInsets.symmetric(horizontal: 5),
-          foregroundColor: selected ? const Color(0xFF68F0F6) : Colors.white70,
-          backgroundColor: camera ? const Color(0xFFE93895)
-              : selected ? const Color(0xFF163E4D) : const Color(0xFF0D1D27),
-          side: BorderSide(color: camera ? const Color(0xFF65E6F2) :
-            selected ? const Color(0xFF45D7E7) : const Color(0xFF325362)),
+          foregroundColor: camera ? uag_pass14_theme.AppTheme.darkBackground : selected ? uag_pass14_theme.AppTheme.neonCyan : Colors.white70,
+          backgroundColor: camera ? uag_pass14_theme.AppTheme.neonPink
+              : selected ? uag_pass14_theme.AppTheme.cardBackgroundAlt : uag_pass14_theme.AppTheme.cardBackground,
+          side: BorderSide(color: camera ? uag_pass14_theme.AppTheme.neonCyan :
+            selected ? uag_pass14_theme.AppTheme.neonCyan : uag_pass14_theme.AppTheme.neonCyan.withValues(alpha: 0.25)),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
         onPressed: onTap,
-        icon: Icon(icon, size: 20, color: camera ? Colors.white : null),
+        icon: Icon(icon, size: 20, color: camera ? uag_pass14_theme.AppTheme.darkBackground : null),
         label: title.isEmpty ? const SizedBox.shrink() :
           Text(title, maxLines: 1, overflow: TextOverflow.fade,
             style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800)),
       ));
     return Container(
-      decoration: BoxDecoration(color: const Color(0xDD071824),
+      decoration: BoxDecoration(color: uag_pass14_theme.AppTheme.cardBackgroundDeep.withValues(alpha: 0.87),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF28626E))),
+        border: Border.all(color: uag_pass14_theme.AppTheme.neonCyan.withValues(alpha: 0.28))),
       padding: const EdgeInsets.all(6),
       child: ListView(padding: EdgeInsets.zero, children: [
         action(key: const Key('collections-upload-native-screenshot'),
@@ -545,7 +545,7 @@ class _ArcAdditionalCollectionsScreenState
         ],
         const SizedBox(height: 8),
         Center(child: Text('${_saved.ownedSlots.length}/${_kind.slots}',
-          style: const TextStyle(color: Color(0xFF62E5EB), fontSize: 10))),
+          style: const TextStyle(color: uag_pass14_theme.AppTheme.neonCyan, fontSize: 10))),
       ]),
     );
   }
@@ -676,14 +676,14 @@ class _ArcAdditionalCollectionsScreenState
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 3),
                     decoration: BoxDecoration(
-                      color: owned ? const Color(0xFF163344) : const Color(0xFF12161E),
+                      color: owned ? uag_pass14_theme.AppTheme.cardBackgroundAlt : uag_pass14_theme.AppTheme.cardBackgroundDeep,
                       borderRadius: BorderRadius.circular(5),
                       border: Border.all(color: copies > 0
-                          ? uag_pass14_theme.AppTheme.neonPink : const Color(0xFF325366)),
+                          ? uag_pass14_theme.AppTheme.neonPink : uag_pass14_theme.AppTheme.neonCyan.withValues(alpha: 0.25)),
                     ),
                     child: Column(children: [
                       Text(slot.toString().padLeft(2, '0'),
-                        style: const TextStyle(fontSize: 9, color: Color(0xFF65E6F2))),
+                        style: const TextStyle(fontSize: 9, color: uag_pass14_theme.AppTheme.neonCyan)),
                       Expanded(child: Stack(alignment: Alignment.center, children: [
                         Icon(owned ? Icons.weekend_outlined : Icons.lock_outline,
                           size: cardWidth < 42 ? 17 : 24,
@@ -753,7 +753,7 @@ class _ArcAdditionalCollectionsScreenState
   Widget build(BuildContext context) {
     final hasPending = _reviewStates.isNotEmpty || _pendingDupes.isNotEmpty;
     return Scaffold(
-      backgroundColor: const Color(0xFF071018),
+      backgroundColor: uag_pass14_theme.AppTheme.darkBackground,
       appBar: AppBar(
         titleSpacing: 0,
         toolbarHeight: 48,
@@ -792,12 +792,12 @@ class _ArcAdditionalCollectionsScreenState
           ]);
         }),
         backgroundColor: Colors.transparent,
-        foregroundColor: const Color(0xFF62E5EB),
+        foregroundColor: uag_pass14_theme.AppTheme.neonCyan,
         elevation: 0,
         scrolledUnderElevation: 0,
         actions: [PopupMenuButton<String>(
           tooltip: 'Collections menu',
-          icon: const Icon(Icons.menu_rounded, color: Color(0xFFFF4BA0)),
+          icon: const Icon(Icons.menu_rounded, color: uag_pass14_theme.AppTheme.neonPink),
           onSelected: (action) {
             if (action == 'all') setState(() => _view = ArcCollectionView.all);
             if (action == 'needed') setState(() => _view = ArcCollectionView.needed);
@@ -818,7 +818,7 @@ class _ArcAdditionalCollectionsScreenState
           if (_busy || !_loaded) const LinearProgressIndicator(),
           if (_message != null) Text(_message!,
             maxLines: 2, overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: Color(0xFFFFC77B), fontSize: 11)),
+            style: const TextStyle(color: uag_pass14_theme.AppTheme.warningAmber, fontSize: 11)),
           if (_reviewStates.isNotEmpty)
             Row(children: [
               Expanded(child: Text('SCREENSHOT REVIEW: $_reviewOwnedCount owned · $_reviewUnknownCount uncertain. Tap any card to verify.',

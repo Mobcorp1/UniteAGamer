@@ -61,9 +61,9 @@ class _UagRaiderAgreementScreenState extends State<UagRaiderAgreementScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF05090E),
+      backgroundColor: ArcUiTokens.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF07111A),
+        backgroundColor: ArcUiTokens.surfaceBase,
         foregroundColor: Colors.white,
         title: const Text('RAIDER AGREEMENT'),
       ),
@@ -83,7 +83,7 @@ class _UagRaiderAgreementScreenState extends State<UagRaiderAgreementScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.fromLTRB(18, 12, 18, 12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF07111A),
+                  color: ArcUiTokens.surfaceBase,
                   border: Border(
                     bottom: BorderSide(
                       color: ArcUiTokens.primaryAccent.withValues(alpha: 0.42),
@@ -133,7 +133,7 @@ class _UagRaiderAgreementScreenState extends State<UagRaiderAgreementScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF07111A),
+                          color: ArcUiTokens.surfaceBase,
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
                             color: _reachedEnd
@@ -201,7 +201,7 @@ class _AgreementSection extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: const Color(0xFF09131C),
+        color: ArcUiTokens.surfacePanel,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: ArcUiTokens.primaryAccent.withValues(alpha: 0.26),

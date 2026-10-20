@@ -84,11 +84,11 @@ class _ArcBlueprintCollectionOverviewScreenState
         .where((e) => e.slot != null).toList()
       ..sort((a, b) => a.slot!.compareTo(b.slot!));
     return Scaffold(
-      backgroundColor: const Color(0xFF071018),
+      backgroundColor: uag_pass14_theme.AppTheme.darkBackground,
       appBar: AppBar(
         title: const Text('COLLECTIONS GRID'),
-        backgroundColor: const Color(0xFF0A202B),
-        foregroundColor: const Color(0xFF62E5EB),
+        backgroundColor: uag_pass14_theme.AppTheme.cardBackgroundDeep,
+        foregroundColor: uag_pass14_theme.AppTheme.neonCyan,
         actions: [IconButton(
           tooltip: 'Refresh collection', icon: const Icon(Icons.refresh),
           onPressed: () => setState(() => _states = ArcBlueprintRepository().loadMyBlueprintStates()),
@@ -103,10 +103,10 @@ class _ArcBlueprintCollectionOverviewScreenState
         ])),
         Padding(padding: const EdgeInsets.symmetric(horizontal: 10), child: Row(children: [
           const Expanded(child: Text('BLUEPRINT INVENTORY · 91 POSITIONS', style:
-              TextStyle(color: Color(0xFF68DCE7), fontSize: 12))),
+              TextStyle(color: uag_pass14_theme.AppTheme.neonCyan, fontSize: 12))),
           DropdownButton<String>(
             key: const Key('blueprints-inventory-filter'),
-            value: _filter, dropdownColor: const Color(0xFF1B303C),
+            value: _filter, dropdownColor: uag_pass14_theme.AppTheme.cardBackgroundAlt,
             style: const TextStyle(color: Colors.white),
             items: const [
               DropdownMenuItem(value: 'all', child: Text('All items')),
@@ -119,7 +119,7 @@ class _ArcBlueprintCollectionOverviewScreenState
         Expanded(child: FutureBuilder<Map<String, ArcBlueprintState>>(
           future: _states,
           builder: (context, snap) {
-            if (snap.hasError) return const Center(child: Text('Could not load Blueprints. Check sign-in.', style: TextStyle(color: Colors.orange)));
+            if (snap.hasError) return const Center(child: Text('Could not load Blueprints. Check sign-in.', style: TextStyle(color: uag_pass14_theme.AppTheme.warningAmber)));
             if (!snap.hasData) return const Center(child: CircularProgressIndicator());
             final states = snap.data!;
             return Column(children: [
@@ -170,8 +170,8 @@ class _ArcBlueprintCollectionOverviewScreenState
                                     child: Container(width: tileWidth, height: tileWidth*1.20,
                                     padding: const EdgeInsets.all(2),
                                     decoration: BoxDecoration(
-                                      color: owned ? const Color(0xFF163B4C) : const Color(0xFF11161D),
-                                      border: Border.all(color: dupes>0 ? uag_pass14_theme.AppTheme.neonPink : const Color(0xFF325366)),
+                                      color: owned ? uag_pass14_theme.AppTheme.cardBackgroundAlt : uag_pass14_theme.AppTheme.cardBackgroundDeep,
+                                      border: Border.all(color: dupes>0 ? uag_pass14_theme.AppTheme.neonPink : uag_pass14_theme.AppTheme.neonCyan.withValues(alpha: 0.26)),
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: Column(children: [

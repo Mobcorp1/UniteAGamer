@@ -264,6 +264,36 @@ class AppTheme {
         ),
         textStyle: bodyTextStyle(fontSize: 12, color: Colors.white),
       ),
+      // PASS14B: shared native Material picker contracts. All nine app-owned
+      // date/time picker invocations inherit these tokens without changing
+      // their selection, navigation, validation or persistence behaviour.
+      datePickerTheme: DatePickerThemeData(
+        backgroundColor: cardBackgroundDeep,
+        surfaceTintColor: Colors.transparent,
+        headerBackgroundColor: cardBackgroundAlt,
+        headerForegroundColor: neonCyan,
+        dayForegroundColor: WidgetStateProperty.all(Colors.white),
+        todayForegroundColor: WidgetStateProperty.all(neonCyan),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(cardRadius),
+          side: BorderSide(color: glassBorder),
+        ),
+      ),
+      timePickerTheme: TimePickerThemeData(
+        backgroundColor: cardBackgroundDeep,
+        dialBackgroundColor: cardBackgroundAlt,
+        dialHandColor: neonPink,
+        dialTextColor: Colors.white,
+        hourMinuteColor: cardBackgroundAlt,
+        hourMinuteTextColor: neonCyan,
+        dayPeriodColor: cardBackgroundAlt,
+        dayPeriodTextColor: neonCyan,
+        entryModeIconColor: neonCyan,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(cardRadius),
+          side: BorderSide(color: glassBorder),
+        ),
+      ),
       dialogTheme: DialogThemeData(
         backgroundColor: cardBackgroundDeep,
         surfaceTintColor: Colors.transparent,

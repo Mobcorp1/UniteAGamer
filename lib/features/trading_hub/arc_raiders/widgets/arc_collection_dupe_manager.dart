@@ -114,18 +114,18 @@ class _ArcCollectionDupeManagerState extends State<ArcCollectionDupeManager> {
               decoration: InputDecoration(
                 isDense: true,
                 hintText: 'Search ${widget.collection} to add dupes',
-                prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF65E6F2)),
+                prefixIcon: const Icon(Icons.search_rounded, color: uag_pass14_theme.AppTheme.neonCyan),
                 suffixIcon: query.isNotEmpty ? IconButton(
                   tooltip: 'Clear duplicate search',
                   onPressed: () => setState(_search.clear),
                   icon: const Icon(Icons.close_rounded)) : null,
                 filled: true,
-                fillColor: const Color(0xFF0E2230),
+                fillColor: uag_pass14_theme.AppTheme.cardBackground,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(9)),
               ),
             )),
             const SizedBox(width: 9),
-            Text('$recorded saved', style: const TextStyle(color: Color(0xFF66E1E9), fontSize: 11)),
+            Text('$recorded saved', style: const TextStyle(color: uag_pass14_theme.AppTheme.neonCyan, fontSize: 11)),
           ]),
         ),
         Padding(
@@ -137,7 +137,7 @@ class _ArcCollectionDupeManagerState extends State<ArcCollectionDupeManager> {
         ),
         if (_error != null) Padding(
           padding: const EdgeInsets.symmetric(horizontal: 9),
-          child: Text(_error!, style: const TextStyle(color: Colors.orangeAccent, fontSize: 11))),
+          child: Text(_error!, style: const TextStyle(color: uag_pass14_theme.AppTheme.warningAmber, fontSize: 11))),
         Expanded(child: LayoutBuilder(builder: (context, constraints) {
           // Small, self-contained thumbnail tiles; on narrow devices they
           // wrap naturally instead of becoming wide, text-heavy rows.
@@ -164,7 +164,7 @@ class _ArcCollectionDupeManagerState extends State<ArcCollectionDupeManager> {
                   key: Key('collections-assign-${i - rows.length}'),
                   onPressed: _saving == null ? () => _assignName(name) : null,
                   child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    const Icon(Icons.add_link_rounded, color: Color(0xFF65E6F2)),
+                    const Icon(Icons.add_link_rounded, color: uag_pass14_theme.AppTheme.neonCyan),
                     const SizedBox(height: 4),
                     Text(name, maxLines: 3, overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 11)),
@@ -183,9 +183,9 @@ class _ArcCollectionDupeManagerState extends State<ArcCollectionDupeManager> {
               return Container(
                 key: Key('collections-dupe-card-${item.id}'),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF102934),
+                  color: uag_pass14_theme.AppTheme.cardBackgroundAlt,
                   border: Border.all(color: item.spares > 0
-                      ? uag_pass14_theme.AppTheme.neonPink : const Color(0xFF2D5260)),
+                      ? uag_pass14_theme.AppTheme.neonPink : uag_pass14_theme.AppTheme.neonCyan.withValues(alpha: 0.26)),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Padding(
@@ -195,9 +195,9 @@ class _ArcCollectionDupeManagerState extends State<ArcCollectionDupeManager> {
                       if (item.imageAssetPath != null)
                         Image.asset(item.imageAssetPath!, fit: BoxFit.contain,
                           errorBuilder: (_, _, _) => Icon(item.icon,
-                            color: const Color(0xFF65E6F2), size: 27))
+                            color: uag_pass14_theme.AppTheme.neonCyan, size: 27))
                       else Icon(item.icon, color: item.owned
-                        ? const Color(0xFF65E6F2) : Colors.white38, size: 27),
+                        ? uag_pass14_theme.AppTheme.neonCyan : Colors.white38, size: 27),
                       if (!item.owned) const Positioned(top: 0, right: 0,
                         child: Icon(Icons.lock_outline_rounded, color: Colors.white54, size: 12)),
                     ])),
@@ -221,7 +221,7 @@ class _ArcCollectionDupeManagerState extends State<ArcCollectionDupeManager> {
                                 ? null : () => _adjust(item.id, -1),
                             child: const SizedBox(width: 29, height: 28,
                               child: Center(child: Icon(Icons.remove_circle_outline,
-                                size: 21, color: Color(0xFFE6DAEA)))),
+                                size: 21, color: Colors.white70))),
                           ),
                         ),
                         SizedBox(width: 25, child: Text('${item.spares}',
@@ -238,7 +238,7 @@ class _ArcCollectionDupeManagerState extends State<ArcCollectionDupeManager> {
                                 ? null : () => _adjust(item.id, 1),
                             child: const SizedBox(width: 29, height: 28,
                               child: Center(child: Icon(Icons.add_circle_outline,
-                                size: 21, color: Color(0xFF4FE2EF)))),
+                                size: 21, color: uag_pass14_theme.AppTheme.neonCyan))),
                           ),
                         ),
                       ],

@@ -28,7 +28,7 @@ class _ArcCollectionsScreenState extends State<ArcCollectionsScreen> {
   Widget build(BuildContext context) {
     if (MediaQuery.orientationOf(context) == Orientation.portrait) {
       return const Scaffold(
-        backgroundColor: Color(0xFF07111B),
+        backgroundColor: ArcUiTokens.surfaceBase,
         body: Center(
           child: Padding(
             padding: EdgeInsets.all(24),

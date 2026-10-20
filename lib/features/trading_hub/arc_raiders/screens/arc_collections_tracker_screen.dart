@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_collection_slot_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_native_collection_screenshot_recognizer.dart';
@@ -63,7 +64,7 @@ class _ArcCollectionsTrackerScreenState
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return const Text('Sign in to view',
-              style: TextStyle(color: Color(0xFFFFC77B), fontSize: 11));
+              style: TextStyle(color: AppTheme.warningAmber, fontSize: 11));
         }
         if (!snapshot.hasData) {
           return const SizedBox(
@@ -73,7 +74,7 @@ class _ArcCollectionsTrackerScreenState
         }
         return Text('${snapshot.data} / $total',
             style: const TextStyle(
-              color: Color(0xFF6CE6E9),
+              color: AppTheme.neonCyan,
               fontWeight: FontWeight.w800,
               fontSize: 16,
             ));
@@ -91,7 +92,7 @@ class _ArcCollectionsTrackerScreenState
     required VoidCallback onTap,
   }) {
     return Material(
-      color: const Color(0xFF122A35),
+      color: AppTheme.cardBackgroundAlt,
       borderRadius: BorderRadius.circular(8),
       child: InkWell(
         key: Key('collections-tracker-$keyName'),
@@ -100,11 +101,11 @@ class _ArcCollectionsTrackerScreenState
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           decoration: BoxDecoration(
-            border: Border.all(color: const Color(0xFF36717B)),
+            border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.35)),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(children: [
-            Icon(icon, color: const Color(0xFF63DBE7), size: 23),
+            Icon(icon, color: AppTheme.neonCyan, size: 23),
             const SizedBox(width: 12),
             Expanded(child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -121,7 +122,7 @@ class _ArcCollectionsTrackerScreenState
             )),
             _count(ownedCount, total),
             const SizedBox(width: 7),
-            const Icon(Icons.chevron_right, color: Color(0xFF67DDE7)),
+            const Icon(Icons.chevron_right, color: AppTheme.neonCyan),
           ]),
         ),
       ),
@@ -136,11 +137,11 @@ class _ArcCollectionsTrackerScreenState
     final designCount = _designs?.then((state) => state.ownedSlots.length);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF07131D),
+      backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         title: const Text('COLLECTIONS TRACKER'),
-        backgroundColor: const Color(0xFF0D2530),
-        foregroundColor: const Color(0xFF68E3EB),
+        backgroundColor: AppTheme.cardBackgroundDeep,
+        foregroundColor: AppTheme.neonCyan,
         actions: [IconButton(
           key: const Key('collections-tracker-refresh'),
           tooltip: 'Refresh collection counts',
@@ -154,7 +155,7 @@ class _ArcCollectionsTrackerScreenState
           padding: const EdgeInsets.all(12),
           children: [
             const Text('YOUR COLLECTIONS', style: TextStyle(
-              color: Color(0xFF6CE6E9),
+              color: AppTheme.neonCyan,
               letterSpacing: 1.5,
               fontWeight: FontWeight.w800,
             )),
@@ -198,7 +199,7 @@ class _ArcCollectionsTrackerScreenState
             ),
             const SizedBox(height: 16),
             const Text('UPDATE YOUR COLLECTION', style: TextStyle(
-              color: Color(0xFF6CE6E9),
+              color: AppTheme.neonCyan,
               letterSpacing: 1.4,
               fontWeight: FontWeight.w800,
             )),
@@ -209,7 +210,7 @@ class _ArcCollectionsTrackerScreenState
               icon: const Icon(Icons.upload_file),
               label: const Text('SCAN / UPDATE BLUEPRINTS'),
               style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFF6CE6E9),
+                foregroundColor: AppTheme.neonCyan,
                 padding: const EdgeInsets.symmetric(vertical: 11),
               ),
             ),
@@ -220,8 +221,8 @@ class _ArcCollectionsTrackerScreenState
               icon: const Icon(Icons.edit_note),
               label: const Text('MANAGE BLUEPRINT OWNERSHIP & DUPLICATES'),
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF1D6472),
-                foregroundColor: Colors.white,
+                backgroundColor: AppTheme.neonCyan,
+                foregroundColor: AppTheme.darkBackground,
                 padding: const EdgeInsets.symmetric(vertical: 11),
               ),
             ),

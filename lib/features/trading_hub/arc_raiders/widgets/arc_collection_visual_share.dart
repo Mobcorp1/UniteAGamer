@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -575,7 +576,7 @@ class _ArcTradeShareDialogState extends State<_ArcTradeShareDialog> {
       explicitMinimum: _overrides[selected.id]);
     return Dialog(
       surfaceTintColor: Colors.transparent,
-      backgroundColor: const Color(0xFF071A27),
+      backgroundColor: AppTheme.cardBackgroundDeep,
       insetPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: 830,
@@ -585,11 +586,11 @@ class _ArcTradeShareDialogState extends State<_ArcTradeShareDialog> {
           Column(mainAxisSize: MainAxisSize.min, children: [
             Padding(padding: const EdgeInsets.fromLTRB(12, 7, 5, 0),
               child: Row(children: [
-                const Icon(Icons.swap_horiz_rounded, color: Color(0xFF42DEEE)),
+                const Icon(Icons.swap_horiz_rounded, color: AppTheme.neonCyan),
                 const SizedBox(width: 7),
                 Expanded(child: Text('${widget.title} · TRADE SHARE',
                   style: const TextStyle(fontFamily: 'SpaceGrotesk', fontSize: 27,
-                    color: Color(0xFF42DEEE)))),
+                    color: AppTheme.neonCyan))),
                 IconButton(tooltip: 'Close share preview',
                   onPressed: () => Navigator.of(context).pop(),
                   icon: const Icon(Icons.close, color: Colors.white70)),
