@@ -574,6 +574,7 @@ class _ArcTradeShareDialogState extends State<_ArcTradeShareDialog> {
       demand: _demand[selected.id],
       explicitMinimum: _overrides[selected.id]);
     return Dialog(
+      surfaceTintColor: Colors.transparent,
       backgroundColor: const Color(0xFF071A27),
       insetPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: ConstrainedBox(

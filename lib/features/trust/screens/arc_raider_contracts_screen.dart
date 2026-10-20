@@ -1707,6 +1707,7 @@ class _IssuerReviewDialogState extends State<_IssuerReviewDialog> {
   Widget build(BuildContext context) => PopScope(
     canPop: !_busy,
     child: AlertDialog(
+      surfaceTintColor: Colors.transparent,
       backgroundColor: ArcUiTokens.surfaceOverlay,
       scrollable: true,
       title: Text(
@@ -1886,6 +1887,7 @@ class _ContractVideoDialogState extends State<_ContractVideoDialog> {
   Widget build(BuildContext context) => PopScope(
     canPop: !_busy,
     child: AlertDialog(
+      surfaceTintColor: Colors.transparent,
       scrollable: true,
       backgroundColor: ArcUiTokens.surfaceOverlay,
       title: const Text('Submit completion video'),

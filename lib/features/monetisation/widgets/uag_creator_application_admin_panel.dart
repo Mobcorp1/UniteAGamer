@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart' as uag_pass14_theme;
 
 import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_creator_application_policy.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_creator_programme_models.dart';
@@ -32,6 +33,8 @@ class _UagCreatorApplicationAdminPanelState
     final approved = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: uag_pass14_theme.AppTheme.cardBackgroundDeep,
+        surfaceTintColor: Colors.transparent,
         title: const Text('Approve Creator'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -108,6 +111,8 @@ class _UagCreatorApplicationAdminPanelState
     final reason = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: uag_pass14_theme.AppTheme.cardBackgroundDeep,
+        surfaceTintColor: Colors.transparent,
         title: const Text('Reject Creator Application'),
         content: TextField(
           controller: controller,

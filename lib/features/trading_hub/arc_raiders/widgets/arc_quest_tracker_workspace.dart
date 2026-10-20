@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart' as uag_pass14_theme;
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_quest_catalogue.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_quest_reward_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_quest_position_engine.dart';
@@ -101,6 +102,8 @@ class _ArcQuestTrackerWorkspaceState extends State<ArcQuestTrackerWorkspace> {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, refresh) => AlertDialog(
+          backgroundColor: uag_pass14_theme.AppTheme.cardBackgroundDeep,
+          surfaceTintColor: Colors.transparent,
           title: const Text('Complete selected quests'),
           content: SizedBox(
             width: 440,

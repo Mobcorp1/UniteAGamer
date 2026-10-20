@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart' as uag_pass14_theme;
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/services/uag_android_responsiveness_guard.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_collection_visual_share.dart';
@@ -150,6 +151,8 @@ class _ArcBlueprintCollectionOverviewScreenState
                                 child: Opacity(opacity: relevant ? 1 : .20,
                                   child: InkWell(
                                     onTap: () => showDialog<void>(context: context, builder: (dialog) => AlertDialog(
+                                      backgroundColor: uag_pass14_theme.AppTheme.cardBackgroundDeep,
+                                      surfaceTintColor: Colors.transparent,
                                       title: Text(entry.name),
                                       content: Text('${owned ? 'Owned' : 'Needed'} · $dupes spare copies'),
                                       actions: [
@@ -168,7 +171,7 @@ class _ArcBlueprintCollectionOverviewScreenState
                                     padding: const EdgeInsets.all(2),
                                     decoration: BoxDecoration(
                                       color: owned ? const Color(0xFF163B4C) : const Color(0xFF11161D),
-                                      border: Border.all(color: dupes>0 ? const Color(0xFFFF4EA4) : const Color(0xFF325366)),
+                                      border: Border.all(color: dupes>0 ? uag_pass14_theme.AppTheme.neonPink : const Color(0xFF325366)),
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: Column(children: [
@@ -177,7 +180,7 @@ class _ArcBlueprintCollectionOverviewScreenState
                                           errorBuilder: (_, _, _) => Icon(owned ? Icons.inventory_2_outlined : Icons.lock_outline, color: Colors.white30))),
                                         Positioned(right: 0, top: 0, child: Icon(owned ? Icons.check_circle : Icons.remove_circle_outline,
                                           size: 12, color: owned ? const Color(0xFFFFD949) : Colors.white30)),
-                                        if (dupes>0) Positioned(right: 0, bottom: 0, child: Text('+$dupes', style: const TextStyle(fontSize: 10, color: Color(0xFFFF4EA4)))),
+                                        if (dupes>0) Positioned(right: 0, bottom: 0, child: Text('+$dupes', style: const TextStyle(fontSize: 10, color: uag_pass14_theme.AppTheme.neonPink))),
                                       ])),
                                       Text(entry.name, maxLines:1, overflow:TextOverflow.ellipsis,
                                         style: const TextStyle(color: Colors.white, fontSize: 8)),

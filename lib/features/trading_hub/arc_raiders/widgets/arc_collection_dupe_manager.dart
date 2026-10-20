@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart' as uag_pass14_theme;
 
 /// Read-only row identity; only + or - requests a persisted change.
 class ArcCollectionDupeEntry {
@@ -184,7 +185,7 @@ class _ArcCollectionDupeManagerState extends State<ArcCollectionDupeManager> {
                 decoration: BoxDecoration(
                   color: const Color(0xFF102934),
                   border: Border.all(color: item.spares > 0
-                      ? const Color(0xFF8B426D) : const Color(0xFF2D5260)),
+                      ? uag_pass14_theme.AppTheme.neonPink : const Color(0xFF2D5260)),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Padding(
@@ -226,7 +227,7 @@ class _ArcCollectionDupeManagerState extends State<ArcCollectionDupeManager> {
                         SizedBox(width: 25, child: Text('${item.spares}',
                           maxLines: 2, overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(color: Color(0xFFFF8FC1),
+                          style: const TextStyle(color: uag_pass14_theme.AppTheme.neonPink,
                             fontWeight: FontWeight.bold))),
                         Tooltip(
                           message: 'Add one spare ${item.name}',

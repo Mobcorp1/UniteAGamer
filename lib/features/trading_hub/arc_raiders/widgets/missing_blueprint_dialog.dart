@@ -38,6 +38,7 @@ class MissingBlueprintDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      surfaceTintColor: Colors.transparent,
       backgroundColor: AppTheme.cardBackgroundDeep,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),

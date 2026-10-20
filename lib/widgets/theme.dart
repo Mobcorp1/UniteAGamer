@@ -204,9 +204,71 @@ class AppTheme {
           ),
         ),
       ),
+      // PASS14: these are application-wide defaults, including routes that do
+      // not explicitly use the shared UAG dialog/widget wrappers.
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: neonCyan,
+          foregroundColor: darkBackground,
+          disabledBackgroundColor: cardBackgroundAlt,
+          disabledForegroundColor: Colors.white38,
+          textStyle: buttonTextStyle(color: darkBackground, fontSize: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(buttonRadius),
+          ),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: neonCyan,
+          textStyle: buttonTextStyle(color: neonCyan, fontSize: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(buttonRadius),
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: neonCyan,
+          side: BorderSide(color: neonCyan.withValues(alpha: 0.55)),
+          textStyle: buttonTextStyle(color: neonCyan, fontSize: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(buttonRadius),
+          ),
+        ),
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: cardBackgroundDeep,
+        surfaceTintColor: Colors.transparent,
+        textStyle: bodyTextStyle(fontSize: 14, color: Colors.white),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(cardRadius),
+          side: BorderSide(color: neonCyan.withValues(alpha: 0.3)),
+        ),
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: cardBackgroundAlt,
+        selectedColor: neonCyan.withValues(alpha: 0.16),
+        disabledColor: cardBackgroundDeep,
+        labelStyle: bodyTextStyle(fontSize: 12, color: Colors.white),
+        side: BorderSide(color: neonCyan.withValues(alpha: 0.25)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(buttonRadius),
+        ),
+      ),
+      tooltipTheme: TooltipThemeData(
+        decoration: BoxDecoration(
+          color: cardBackgroundDeep,
+          border: Border.all(color: neonCyan.withValues(alpha: 0.5)),
+          borderRadius: BorderRadius.circular(buttonRadius),
+        ),
+        textStyle: bodyTextStyle(fontSize: 12, color: Colors.white),
+      ),
       dialogTheme: DialogThemeData(
         backgroundColor: cardBackgroundDeep,
         surfaceTintColor: Colors.transparent,
+        titleTextStyle: titleTextStyle(fontSize: 20, color: neonCyan, isBold: true),
+        contentTextStyle: bodyTextStyle(fontSize: 14, color: Colors.white70),
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(cardRadius),

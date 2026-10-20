@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart' as uag_pass14_theme;
 import 'package:image_picker/image_picker.dart';
 import '../../trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import '../models/arc_contract_projections.dart';
@@ -259,6 +260,8 @@ Future<String?> arcContractReason(
   final result = await showDialog<String>(
     context: context,
     builder: (context) => AlertDialog(
+      backgroundColor: uag_pass14_theme.AppTheme.cardBackgroundDeep,
+      surfaceTintColor: Colors.transparent,
       title: Text(title),
       content: TextField(
         controller: controller,

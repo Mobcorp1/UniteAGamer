@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart' as uag_pass14_theme;
 
 enum ArcCollectionsCategory { blueprints, stencils, designs }
 
@@ -88,12 +89,12 @@ class ArcCollectionsCategoryBar extends StatelessWidget {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(5),
                         border: Border.all(color: dupesSelected
-                          ? const Color(0xFFFF4FAB) : const Color(0xFF32515A)),
+                          ? uag_pass14_theme.AppTheme.neonPink : const Color(0xFF32515A)),
                       ),
                       child: const FittedBox(fit: BoxFit.scaleDown,
                         child: Text('DUPES', maxLines: 1,
                           style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800,
-                            letterSpacing: 0.7, color: Color(0xFFFF90CA))),
+                            letterSpacing: 0.7, color: uag_pass14_theme.AppTheme.neonPink)),
                     ),
                   ),
                 ),

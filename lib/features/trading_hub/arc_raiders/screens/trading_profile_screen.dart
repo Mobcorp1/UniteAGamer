@@ -3428,6 +3428,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
       onTap: () => showDialog<void>(
         context: context,
         builder: (_) => AlertDialog(
+          surfaceTintColor: Colors.transparent,
           backgroundColor: AppTheme.cardBackground,
           title: Text(label, style: const TextStyle(color: Colors.white)),
           content: Icon(icon, size: 72, color: AppTheme.neonCyan),

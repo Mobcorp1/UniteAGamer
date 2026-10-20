@@ -488,6 +488,7 @@ class _AdminConsoleBody extends StatelessWidget {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
+          surfaceTintColor: Colors.transparent,
           backgroundColor: AppTheme.cardBackgroundDeep,
           title: Text(
             'Delete feedback?',

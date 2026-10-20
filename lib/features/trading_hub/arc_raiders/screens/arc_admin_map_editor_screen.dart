@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart' as uag_pass14_theme;
 import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
 
@@ -1127,6 +1128,8 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
+          backgroundColor: uag_pass14_theme.AppTheme.cardBackgroundDeep,
+          surfaceTintColor: Colors.transparent,
           title: const Text('Move marker'),
           content: Text(
             'Move ${selected.name} from ${selected.layer.label} to ${edited.layer.label}?',
@@ -1226,6 +1229,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        surfaceTintColor: Colors.transparent,
         backgroundColor: AppTheme.cardBackgroundDeep,
         shape: AppTheme.tradingDialogShape(),
         title: Text(
@@ -2907,6 +2911,8 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
         : selectedSubtype?.id;
 
     return AlertDialog(
+      backgroundColor: uag_pass14_theme.AppTheme.cardBackgroundDeep,
+      surfaceTintColor: Colors.transparent,
       title: Text(widget.title),
       content: SizedBox(
         width: 520,

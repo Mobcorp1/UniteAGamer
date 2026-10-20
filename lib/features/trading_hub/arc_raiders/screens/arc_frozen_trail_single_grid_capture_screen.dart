@@ -7,6 +7,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bl
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_three_state_grid_classifier.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart' as uag_pass14_theme;
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_single_grid_locator.dart';
@@ -366,6 +367,8 @@ class _ArcFrozenTrailSingleGridCaptureScreenState
         final approved = await showDialog<bool>(
           context: context,
           builder: (dialogContext) => AlertDialog(
+            backgroundColor: uag_pass14_theme.AppTheme.cardBackgroundDeep,
+            surfaceTintColor: Colors.transparent,
             title: const Text('Confirm first Blueprint import'),
             content: Text(
               'Add ${stillNew.length} owned Blueprints? '

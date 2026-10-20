@@ -296,6 +296,7 @@ class FeatureAccess {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
+          surfaceTintColor: Colors.transparent,
           backgroundColor: AppTheme.cardBackground,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),

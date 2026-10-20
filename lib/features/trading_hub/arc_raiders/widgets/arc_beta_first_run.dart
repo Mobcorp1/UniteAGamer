@@ -872,6 +872,7 @@ class _ArcFirstRunDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
+      surfaceTintColor: Colors.transparent,
       backgroundColor: Colors.transparent,
       child: Container(
         constraints: const BoxConstraints(maxWidth: 420),

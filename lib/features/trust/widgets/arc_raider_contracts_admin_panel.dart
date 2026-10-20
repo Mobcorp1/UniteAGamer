@@ -1,6 +1,7 @@
 import 'package:url_launcher/url_launcher.dart';
 import 'arc_contract_discovery.dart';
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart' as uag_pass14_theme;
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import '../models/arc_raider_contract_models.dart';
 import '../repositories/arc_raider_contracts_repository.dart';
@@ -132,6 +133,8 @@ class ArcRaiderContractsAdminPanel extends StatelessWidget {
                                     await showDialog<void>(
                                       context: c,
                                       builder: (d) => AlertDialog(
+                                        backgroundColor: uag_pass14_theme.AppTheme.cardBackgroundDeep,
+                                        surfaceTintColor: Colors.transparent,
                                         title: const Text(
                                           'Incident review trail',
                                         ),

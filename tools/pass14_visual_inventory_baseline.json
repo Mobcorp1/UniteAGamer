@@ -1,0 +1,378 @@
+{
+  "mode": "verify",
+  "sourceHeadRequired": "ef7d31468532991827b9c7c213917ae3a20d90a6",
+  "affectedFiles": 0,
+  "modalStylesApplied": 0,
+  "duplicateAccentsNormalised": 0,
+  "changes": [],
+  "inventory": {
+    "dartFiles": 732,
+    "screenFiles": 93,
+    "modalCalls": 77,
+    "hardcodedColourDeclarations": 210,
+    "manualReviewFlags": 13
+  },
+  "manualReview": [
+    {
+      "file": "lib/build/app_drawer.dart",
+      "screen": false,
+      "modalCalls": 0,
+      "modalKinds": {},
+      "customOverrides": [],
+      "hardcodedColourCount": 2
+    },
+    {
+      "file": "lib/features/onboarding/screens/uag_raider_agreement_screen.dart",
+      "screen": true,
+      "modalCalls": 0,
+      "modalKinds": {},
+      "customOverrides": [],
+      "hardcodedColourCount": 5
+    },
+    {
+      "file": "lib/features/trading_hub/arc_raiders/models/arc_operations_models.dart",
+      "screen": false,
+      "modalCalls": 0,
+      "modalKinds": {},
+      "customOverrides": [],
+      "hardcodedColourCount": 1
+    },
+    {
+      "file": "lib/features/trading_hub/arc_raiders/screens/arc_additional_collections_screen.dart",
+      "screen": true,
+      "modalCalls": 8,
+      "modalKinds": {
+        "showModalBottomSheet": 2,
+        "AlertDialog": 5,
+        "Dialog": 1
+      },
+      "customOverrides": [],
+      "hardcodedColourCount": 27
+    },
+    {
+      "file": "lib/features/trading_hub/arc_raiders/screens/arc_away_screen.dart",
+      "screen": true,
+      "modalCalls": 0,
+      "modalKinds": {},
+      "customOverrides": [
+        {
+          "line": 70,
+          "type": "review_special_surface",
+          "widget": "showDatePicker"
+        },
+        {
+          "line": 78,
+          "type": "review_special_surface",
+          "widget": "showTimePicker"
+        }
+      ],
+      "hardcodedColourCount": 0
+    },
+    {
+      "file": "lib/features/trading_hub/arc_raiders/screens/arc_blueprint_collection_overview_screen.dart",
+      "screen": true,
+      "modalCalls": 1,
+      "modalKinds": {
+        "AlertDialog": 1
+      },
+      "customOverrides": [],
+      "hardcodedColourCount": 9
+    },
+    {
+      "file": "lib/features/trading_hub/arc_raiders/screens/arc_collections_screen.dart",
+      "screen": true,
+      "modalCalls": 0,
+      "modalKinds": {},
+      "customOverrides": [],
+      "hardcodedColourCount": 1
+    },
+    {
+      "file": "lib/features/trading_hub/arc_raiders/screens/arc_collections_tracker_screen.dart",
+      "screen": true,
+      "modalCalls": 0,
+      "modalKinds": {},
+      "customOverrides": [],
+      "hardcodedColourCount": 13
+    },
+    {
+      "file": "lib/features/trading_hub/arc_raiders/screens/arc_frozen_trail_preview_screen.dart",
+      "screen": true,
+      "modalCalls": 0,
+      "modalKinds": {},
+      "customOverrides": [],
+      "hardcodedColourCount": 2
+    },
+    {
+      "file": "lib/features/trading_hub/arc_raiders/screens/arc_frozen_trail_single_grid_capture_screen.dart",
+      "screen": true,
+      "modalCalls": 1,
+      "modalKinds": {
+        "AlertDialog": 1
+      },
+      "customOverrides": [],
+      "hardcodedColourCount": 17
+    },
+    {
+      "file": "lib/features/trading_hub/arc_raiders/screens/arc_mandatory_onboarding_screen.dart",
+      "screen": true,
+      "modalCalls": 0,
+      "modalKinds": {},
+      "customOverrides": [],
+      "hardcodedColourCount": 6
+    },
+    {
+      "file": "lib/features/trading_hub/arc_raiders/screens/arc_raiders_hub_screen.dart",
+      "screen": true,
+      "modalCalls": 0,
+      "modalKinds": {},
+      "customOverrides": [],
+      "hardcodedColourCount": 3
+    },
+    {
+      "file": "lib/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart",
+      "screen": true,
+      "modalCalls": 4,
+      "modalKinds": {
+        "showModalBottomSheet": 4
+      },
+      "customOverrides": [],
+      "hardcodedColourCount": 4
+    },
+    {
+      "file": "lib/features/trading_hub/arc_raiders/screens/my_hub_screen.dart",
+      "screen": true,
+      "modalCalls": 0,
+      "modalKinds": {},
+      "customOverrides": [],
+      "hardcodedColourCount": 3
+    },
+    {
+      "file": "lib/features/trading_hub/arc_raiders/screens/nomadic_trader_screen.dart",
+      "screen": true,
+      "modalCalls": 4,
+      "modalKinds": {
+        "showModalBottomSheet": 4
+      },
+      "customOverrides": [],
+      "hardcodedColourCount": 1
+    },
+    {
+      "file": "lib/features/trading_hub/arc_raiders/screens/play_like_a_pro_routine_screen.dart",
+      "screen": true,
+      "modalCalls": 0,
+      "modalKinds": {},
+      "customOverrides": [
+        {
+          "line": 57,
+          "type": "review_special_surface",
+          "widget": "showTimePicker"
+        }
+      ],
+      "hardcodedColourCount": 0
+    },
+    {
+      "file": "lib/features/trading_hub/arc_raiders/screens/trading_profile_screen.dart",
+      "screen": true,
+      "modalCalls": 1,
+      "modalKinds": {
+        "AlertDialog": 1
+      },
+      "customOverrides": [
+        {
+          "line": 3430,
+          "type": "modal_explicit_colour_review",
+          "widget": "AlertDialog"
+        }
+      ],
+      "hardcodedColourCount": 0
+    },
+    {
+      "file": "lib/features/trading_hub/arc_raiders/screens/trading_trade_sessions_screen.dart",
+      "screen": true,
+      "modalCalls": 5,
+      "modalKinds": {
+        "showModalBottomSheet": 2,
+        "AlertDialog": 3
+      },
+      "customOverrides": [
+        {
+          "line": 549,
+          "type": "review_special_surface",
+          "widget": "showDatePicker"
+        },
+        {
+          "line": 566,
+          "type": "review_special_surface",
+          "widget": "showTimePicker"
+        }
+      ],
+      "hardcodedColourCount": 0
+    },
+    {
+      "file": "lib/features/trading_hub/arc_raiders/screens/uag_trade_invite_landing.dart",
+      "screen": true,
+      "modalCalls": 0,
+      "modalKinds": {},
+      "customOverrides": [],
+      "hardcodedColourCount": 7
+    },
+    {
+      "file": "lib/features/trading_hub/arc_raiders/session_planner/session_creation_sheet.dart",
+      "screen": false,
+      "modalCalls": 1,
+      "modalKinds": {
+        "showModalBottomSheet": 1
+      },
+      "customOverrides": [
+        {
+          "line": 55,
+          "type": "review_special_surface",
+          "widget": "showDatePicker"
+        },
+        {
+          "line": 68,
+          "type": "review_special_surface",
+          "widget": "showTimePicker"
+        }
+      ],
+      "hardcodedColourCount": 0
+    },
+    {
+      "file": "lib/features/trading_hub/arc_raiders/widgets/arc_blueprint_live_targeting_overlay.dart",
+      "screen": false,
+      "modalCalls": 0,
+      "modalKinds": {},
+      "customOverrides": [],
+      "hardcodedColourCount": 1
+    },
+    {
+      "file": "lib/features/trading_hub/arc_raiders/widgets/arc_collections_category_bar.dart",
+      "screen": false,
+      "modalCalls": 0,
+      "modalKinds": {},
+      "customOverrides": [],
+      "hardcodedColourCount": 9
+    },
+    {
+      "file": "lib/features/trading_hub/arc_raiders/widgets/arc_collection_dupe_manager.dart",
+      "screen": false,
+      "modalCalls": 0,
+      "modalKinds": {},
+      "customOverrides": [],
+      "hardcodedColourCount": 10
+    },
+    {
+      "file": "lib/features/trading_hub/arc_raiders/widgets/arc_collection_visual_share.dart",
+      "screen": false,
+      "modalCalls": 1,
+      "modalKinds": {
+        "Dialog": 1
+      },
+      "customOverrides": [],
+      "hardcodedColourCount": 33
+    },
+    {
+      "file": "lib/features/trading_hub/arc_raiders/widgets/arc_precision_map_pin.dart",
+      "screen": false,
+      "modalCalls": 0,
+      "modalKinds": {},
+      "customOverrides": [],
+      "hardcodedColourCount": 2
+    },
+    {
+      "file": "lib/features/trading_hub/arc_raiders/widgets/arc_quest_tracker_workspace.dart",
+      "screen": false,
+      "modalCalls": 1,
+      "modalKinds": {
+        "AlertDialog": 1
+      },
+      "customOverrides": [],
+      "hardcodedColourCount": 1
+    },
+    {
+      "file": "lib/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart",
+      "screen": false,
+      "modalCalls": 0,
+      "modalKinds": {},
+      "customOverrides": [],
+      "hardcodedColourCount": 24
+    },
+    {
+      "file": "lib/features/trading_hub/arc_raiders/widgets/my_hub_cinematic_background.dart",
+      "screen": false,
+      "modalCalls": 0,
+      "modalKinds": {},
+      "customOverrides": [],
+      "hardcodedColourCount": 2
+    },
+    {
+      "file": "lib/features/trust/screens/arc_raider_contracts_screen.dart",
+      "screen": true,
+      "modalCalls": 2,
+      "modalKinds": {
+        "AlertDialog": 2
+      },
+      "customOverrides": [
+        {
+          "line": 273,
+          "type": "review_special_surface",
+          "widget": "showDatePicker"
+        },
+        {
+          "line": 280,
+          "type": "review_special_surface",
+          "widget": "showTimePicker"
+        }
+      ],
+      "hardcodedColourCount": 2
+    },
+    {
+      "file": "lib/main.dart",
+      "screen": false,
+      "modalCalls": 0,
+      "modalKinds": {},
+      "customOverrides": [
+        {
+          "line": 133,
+          "type": "review_special_surface",
+          "widget": "MaterialApp("
+        },
+        {
+          "line": 835,
+          "type": "review_special_surface",
+          "widget": "MaterialApp("
+        }
+      ],
+      "hardcodedColourCount": 0
+    },
+    {
+      "file": "lib/widgets/theme.dart",
+      "screen": false,
+      "modalCalls": 0,
+      "modalKinds": {},
+      "customOverrides": [
+        {
+          "line": 76,
+          "type": "review_special_surface",
+          "widget": "ThemeData("
+        }
+      ],
+      "hardcodedColourCount": 15
+    },
+    {
+      "file": "lib/widgets/uag_cinematic_loading_screen.dart",
+      "screen": false,
+      "modalCalls": 0,
+      "modalKinds": {},
+      "customOverrides": [],
+      "hardcodedColourCount": 10
+    }
+  ],
+  "skipped": [],
+  "protected": [
+    "lib/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart",
+    "lib/features/trading_hub/arc_raiders/widgets/blueprint_tile.dart",
+    "lib/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart"
+  ],
+  "note": "Code checks cannot certify screenshots, third-party/native UI, nested subthemes or subjective visual acceptance. Manual UI route audit remains required."
+}

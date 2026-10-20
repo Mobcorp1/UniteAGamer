@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_collections_category_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_collection_dupe_manager.dart';
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart' as uag_pass14_theme;
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_collection_visual_share.dart';
@@ -194,6 +195,8 @@ class _ArcAdditionalCollectionsScreenState
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: uag_pass14_theme.AppTheme.cardBackgroundDeep,
+        surfaceTintColor: Colors.transparent,
         title: const Text('Discard unsaved changes?'),
         content: const Text('Screenshot reviews and unsaved duplicate edits will be lost. Saved items are not affected.'),
         actions: [
@@ -264,6 +267,8 @@ class _ArcAdditionalCollectionsScreenState
       final confirm = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
+          backgroundColor: uag_pass14_theme.AppTheme.cardBackgroundDeep,
+          surfaceTintColor: Colors.transparent,
           title: Text('Own ${_name(slot)}?'),
           content: const Text('This item is marked missing. Confirm you own one AND have a spare copy before adding +1.'),
           actions: [
@@ -373,6 +378,8 @@ class _ArcAdditionalCollectionsScreenState
     final approved = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: uag_pass14_theme.AppTheme.cardBackgroundDeep,
+        surfaceTintColor: Colors.transparent,
         title: Text('Save ${_kind.title} collection?'),
         content: Text('Add ${additions.length} owned positions and save ${_pendingDupes.length} manually edited duplicate counts? '
           '$_reviewUnknownCount screenshot positions require review and will not be imported. '
@@ -456,7 +463,7 @@ class _ArcAdditionalCollectionsScreenState
           decoration: BoxDecoration(
             color: owned ? const Color(0xFF163344) : const Color(0xFF12161E),
             border: Border.all(color: review ? Colors.amberAccent :
-                dupes > 0 ? const Color(0xFFFF3C97) : const Color(0xFF325366)),
+                dupes > 0 ? uag_pass14_theme.AppTheme.neonPink : const Color(0xFF325366)),
             borderRadius: BorderRadius.circular(5),
           ),
           child: Column(children: [
@@ -473,7 +480,7 @@ class _ArcAdditionalCollectionsScreenState
                 size: 12, color: owned ? const Color(0xFFFFD949) : Colors.white30)),
               if (dupes > 0) Positioned(bottom: 0, right: 0,
                 child: Text('+$dupes', style: const TextStyle(fontSize: 10,
-                    color: Color(0xFFFF61B6), fontWeight: FontWeight.bold))),
+                    color: uag_pass14_theme.AppTheme.neonPink, fontWeight: FontWeight.bold))),
             ])),
             Tooltip(message: name,
               child: Text(cardName, overflow: TextOverflow.ellipsis, maxLines: 1,
@@ -552,6 +559,8 @@ class _ArcAdditionalCollectionsScreenState
     final slot = await showDialog<int>(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: uag_pass14_theme.AppTheme.cardBackgroundDeep,
+        surfaceTintColor: Colors.transparent,
         title: Text('Choose in-game slot for $name'),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
           const Text('Check the Design position in your game first. The 100 reference names are not sorted in game order.'),
@@ -578,6 +587,8 @@ class _ArcAdditionalCollectionsScreenState
     if (previousName != null && previousName != name) {
       final change = await showDialog<bool>(context: context,
         builder: (ctx) => AlertDialog(
+          backgroundColor: uag_pass14_theme.AppTheme.cardBackgroundDeep,
+          surfaceTintColor: Colors.transparent,
           title: const Text('Correct saved Design name?'),
           content: Text('Slot $slot is currently labelled $previousName. Replace it with $name? Ownership and spare quantities are not changed.'),
           actions: [
@@ -668,7 +679,7 @@ class _ArcAdditionalCollectionsScreenState
                       color: owned ? const Color(0xFF163344) : const Color(0xFF12161E),
                       borderRadius: BorderRadius.circular(5),
                       border: Border.all(color: copies > 0
-                          ? const Color(0xFFFF3C97) : const Color(0xFF325366)),
+                          ? uag_pass14_theme.AppTheme.neonPink : const Color(0xFF325366)),
                     ),
                     child: Column(children: [
                       Text(slot.toString().padLeft(2, '0'),
@@ -679,7 +690,7 @@ class _ArcAdditionalCollectionsScreenState
                           color: owned ? Colors.cyanAccent : Colors.white38),
                         if (copies > 0) Positioned(right: 0, bottom: 0,
                           child: Text('+$copies', style: const TextStyle(
-                            fontSize: 8, color: Color(0xFFFF8FC1)))),
+                            fontSize: 8, color: uag_pass14_theme.AppTheme.neonPink))),
                       ])),
                       SizedBox(height: rowHeight * 0.42,
                         child: Center(child: Text(name,
@@ -814,7 +825,10 @@ class _ArcAdditionalCollectionsScreenState
                   style: const TextStyle(color: Colors.white70, fontSize: 11))),
               if (_screenshot != null) TextButton(
                 onPressed: () => showDialog<void>(context: context,
-                  builder: (ctx) => Dialog(child: InteractiveViewer(child:
+                  builder: (ctx) => Dialog(
+                    backgroundColor: uag_pass14_theme.AppTheme.cardBackgroundDeep,
+                    surfaceTintColor: Colors.transparent,
+                    child: InteractiveViewer(child:
                       Image.memory(_screenshot!, fit: BoxFit.contain)))),
                 child: const Text('View original'),
               ),

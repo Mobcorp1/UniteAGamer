@@ -9,6 +9,7 @@ class FanDisclaimerDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      surfaceTintColor: Colors.transparent,
       backgroundColor: ArcUiTokens.surfaceOverlay,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(ArcUiTokens.radiusL),
