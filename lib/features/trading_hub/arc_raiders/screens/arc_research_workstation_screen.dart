@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/amplification/arc_amplification_workspace.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_frozen_trail_preview_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_frozen_trail_two_content.dart';
@@ -36,6 +37,8 @@ class ArcResearchWorkstationScreen extends StatelessWidget {
             ),
             const SizedBox(height: AppTheme.spaceM),
             _hero(research),
+            const SizedBox(height: AppTheme.spaceM),
+            const ArcAmplificationWorkspace(),
             const SizedBox(height: AppTheme.spaceM),
             _confirmed(),
             const SizedBox(height: AppTheme.spaceM),
@@ -188,7 +191,7 @@ class ArcResearchWorkstationScreen extends StatelessWidget {
     return _section(
       'STILL AWAITING IN-GAME VALIDATION',
       const <String>[
-        'Exact research-node unlock costs and node-specific materials for every amplified weapon.',
+        'Individual amplified weapon perk-node costs and incompatible branches must be verified before application.',
         'Current user Outpost level is not yet saved or enforced; this view is a cost reference.',
         'Amplified repair quantities vary with installed weapon perks.',
         'Not every visible material is guaranteed to be tradeable in an actual raid.',

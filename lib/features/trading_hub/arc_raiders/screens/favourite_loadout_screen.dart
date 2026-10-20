@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/amplification/arc_amplification_workspace.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_loadout_bridge.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_unlock_engine.dart';
@@ -1441,6 +1442,8 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                               ],
                               _buildCompactLoadoutHeader(blueprintStates),
                               const SizedBox(height: 6),
+                              ArcAmplificationLoadoutPanel(primary: _primaryWeapon, secondary: _secondaryWeapon),
+                              const SizedBox(height: 6),
                               _buildPortraitInGameBoard(blueprintStates),
                               const SizedBox(height: 6),
                               _buildLoadoutIntelGrid(
@@ -1465,6 +1468,8 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                               ],
                               _buildCompactLoadoutHeader(blueprintStates),
                               const SizedBox(height: 6),
+                              ArcAmplificationLoadoutPanel(primary: _primaryWeapon, secondary: _secondaryWeapon),
+                              const SizedBox(height: 6),
                               _buildCompactMobileBoard(blueprintStates),
                             ],
                           ),
@@ -1481,6 +1486,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                             const SizedBox(height: 10),
                           ],
                           _buildHero(blueprintStates),
+                          ArcAmplificationLoadoutPanel(primary: _primaryWeapon, secondary: _secondaryWeapon),
                           const SizedBox(height: 8),
                           const ArcBlueprintWorkspaceBar(
                             current: ArcBlueprintWorkspace.loadout,

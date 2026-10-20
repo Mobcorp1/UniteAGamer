@@ -67,6 +67,7 @@ class ArcRaidIntelligenceScreen extends StatefulWidget {
     this.profileLoader,
     this.regionalConditionsLoader,
     this.initialMapId,
+    this.initialSearchQuery,
   });
   final Stream<Map<String, ArcBlueprintState>> Function()? blueprintStates;
   final Stream<ArcSavedLoadout?> Function()? favouriteLoadout;
@@ -88,6 +89,8 @@ class ArcRaidIntelligenceScreen extends StatefulWidget {
   ///
   /// When null, Raid Intelligence preserves its normal remembered-map behaviour.
   final String? initialMapId;
+  /// Optional research launch filter. Only existing map markers are searched.
+  final String? initialSearchQuery;
 
   static const routeName = '/trading-hub/arc-raiders/raid-intelligence';
 
@@ -193,6 +196,11 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     );
     if (_explicitInitialMapId != null) {
       _mapId = _explicitInitialMapId;
+    }
+    final researchQuery = widget.initialSearchQuery?.trim() ?? '';
+    if (researchQuery.isNotEmpty) {
+      _searchController.text = researchQuery;
+      _filters = _filters.copyWith(searchQuery: researchQuery);
     }
     _mapController.addListener(_onMapTransformChanged);
     unawaited(_initialiseScreen());
