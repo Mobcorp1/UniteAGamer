@@ -657,6 +657,39 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
     }
   }
 
+  Future<void> _confirmInGameBenchUpgrade(List<ArcScrappyItem> items) async {
+    if (items.isEmpty) return;
+    final station = items.first.category;
+    final level = _progressionEngine.benchLevelForItems(items);
+    if (station.trim().isEmpty || level <= 0) return;
+    final approved = await UagDialogs.confirm(
+      context: context,
+      title: 'Upgrade $station to Lv.$level?',
+      message: 'Confirm only if this bench is already Lv.$level in ARC Raiders. This updates your Command Centre without changing collected materials.',
+      confirmLabel: 'Confirm upgraded',
+      titleColor: ArcUiTokens.primaryAccent,
+      confirmBackgroundColor: ArcUiTokens.primaryAccent,
+      confirmForegroundColor: ArcUiTokens.background,
+      borderColor: ArcUiTokens.primaryAccent,
+    );
+    if (approved != true || !mounted) return;
+    try {
+      final updated = await _progressionRepository.setBenchBaseline(
+        station: station,
+        level: level,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(updated ? '$station Lv.$level saved.' : '$station level already recorded.'),
+      ));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Bench level not saved. Try again.')),
+      );
+    }
+  }
+
   Widget _buildExpansionSection({
     required String id,
     required String title,
@@ -780,6 +813,18 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                   ),
                 ),
               ),
+              if (_mode == ArcScrappyTrackerMode.bench) ...[
+                const SizedBox(height: 5),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () => _confirmInGameBenchUpgrade(items),
+                    icon: const Icon(Icons.upgrade_rounded, size: 17),
+                    label: const Text('CONFIRM UPGRADED IN-GAME'),
+                    style: ArcUiTokens.textButtonStyle(accent: ArcUiTokens.success),
+                  ),
+                ),
+              ],
               const SizedBox(height: 7),
               child ?? _buildAdaptiveTileWrap(items, states),
             ],

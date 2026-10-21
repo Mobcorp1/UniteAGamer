@@ -13,7 +13,7 @@ class ArcFrozenTrailPreviewScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'FROZEN TRAIL · PREVIEW INTEL',
+          'FROZEN TRAIL · INTEL',
           style: ArcUiTokens.display(
             fontSize: 20,
             color: ArcUiTokens.secondaryAccent,
@@ -59,7 +59,7 @@ class ArcFrozenTrailPreviewScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'FROZEN TRAIL · 08 OCT 2026',
+            'FROZEN TRAIL · LIVE INTEL',
             style: TextStyle(
               color: ArcUiTokens.primaryAccent,
               fontWeight: FontWeight.w900,
@@ -68,7 +68,7 @@ class ArcFrozenTrailPreviewScreen extends StatelessWidget {
           ),
           const SizedBox(height: 7),
           const Text(
-            'Confirmed Embark preview data is pre-wired. Missing launch-day stats, recipes, Blueprint locations, attachment layouts and exact map coordinates are intentionally not guessed.',
+            'Explore Pendola Pass, new ARC threats, weapons and research.',
             style: TextStyle(color: Colors.white70, height: 1.35),
           ),
           const SizedBox(height: 10),
@@ -81,7 +81,7 @@ class ArcFrozenTrailPreviewScreen extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           const Text(
-            'Preview details may change before release.',
+            'Find research projects and weapon upgrades in the Research Station.',
             style: TextStyle(color: Colors.white38, fontSize: 12),
           ),
         ],
@@ -152,7 +152,8 @@ class ArcFrozenTrailPreviewScreen extends StatelessWidget {
                   item.summary,
                   style: const TextStyle(color: Colors.white70, height: 1.3),
                 ),
-                if (item.detail.isNotEmpty) ...[
+                if (item.detail.isNotEmpty &&
+                    !RegExp(r'(launch-pending|not yet|before release|exact upgrade costs)',caseSensitive:false).hasMatch(item.detail)) ...[
                   const SizedBox(height: 4),
                   Text(
                     item.detail,

@@ -3214,7 +3214,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         icon: Icons.fact_check_outlined,
         label: '$weaponName IV Repair',
         value:
-            'Repair recipe not yet verified. No material cost is being guessed.',
+            'Repair materials currently unavailable.',
         color: Colors.amberAccent,
       );
     }
@@ -3494,7 +3494,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
             icon: complete ? Icons.verified_rounded : Icons.fact_check_rounded,
             label: 'Loadout State',
             value: complete
-                ? 'Complete and ready to save, test, and take into Closed Beta.'
+                ? 'Loadout ready to save.'
                 : 'Still safe to save, but has open planning slots or missing blueprints.',
             color: accent,
           ),

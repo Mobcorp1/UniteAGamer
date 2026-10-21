@@ -8,6 +8,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/fou
 import 'arc_amplification_catalog.dart';
 import 'arc_amplification_repository.dart';
 import 'arc_amplification_state.dart';
+import 'arc_research_quantity_dialog.dart';
 
 /// Full shared progress editor, displayed inside the Research Workstation.
 class ArcAmplificationWorkspace extends StatefulWidget {
@@ -22,27 +23,25 @@ class _ArcAmplificationWorkspaceState extends State<ArcAmplificationWorkspace> {
   void initState(){super.initState();_progress=_repo.watch();}
   bool _busy=false;
   String? _focused;
+  bool _showCatalogue = false;
+  final Set<String> _openProjects = <String>{};
   Future<void> _run(ArcAmplificationState Function(ArcAmplificationState) operation) async {
     if(_busy)return;
     setState(()=>_busy=true);
-    try {await _repo.update(operation);} catch(error){
-      if(mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Research not saved: $error')));
+    try {await _repo.update(operation);} catch(_){
+      if(mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Research not saved. Try again.')));
     } finally {if(mounted)setState(()=>_busy=false);}
   }
-  Future<int?> _number(String title,int original,{int? max}) async {
-    final controller=TextEditingController(text:original.toString());
-    try {
-      return await showDialog<int>(context:context,builder:(context)=>AlertDialog(
-        title:Text(title),content:TextField(controller:controller,keyboardType:TextInputType.number,
-          autofocus:true,decoration:const InputDecoration(labelText:'Quantity',helperText:'Enter your actual in-game amount')),
-        actions:[TextButton(onPressed:()=>Navigator.pop(context),child:const Text('Cancel')),
-          FilledButton(onPressed:(){final value=int.tryParse(controller.text.trim());
-            if(value==null || value<0 || (max!=null && value>max) || value>999999999)return;
-            Navigator.pop(context,value);
-          },child:const Text('Save'))],
-      ));
-    } finally {controller.dispose();}
-  }
+  Future<int?> _number(String title, int original, {int? max}) =>
+      showDialog<int>(
+        context: context,
+        builder: (_) => ArcResearchQuantityDialog(
+          title: title,
+          initialValue: original,
+          maxValue: max ?? 999999,
+        ),
+      );
+
   Future<void> _setPoints(ArcAmplificationState s) async {
     final n=await _number('Available Research Points',s.researchPoints);
     if(n!=null && mounted) await _run((state)=>state.setPoints(n));
@@ -92,51 +91,119 @@ class _ArcAmplificationWorkspaceState extends State<ArcAmplificationWorkspace> {
   Widget build(BuildContext context){
     return StreamBuilder<ArcAmplificationState>(
       stream:_progress,builder:(context,snapshot){
-        if(snapshot.hasError)return _card(Text('Research sync unavailable. Sign in or check your connection: ${snapshot.error}',style:const TextStyle(color:ArcUiTokens.warning)));
+        if(snapshot.hasError)return _card(const Text('Research unavailable. Try again.',style:TextStyle(color:ArcUiTokens.warning)));
         if(!snapshot.hasData)return const Center(child:Padding(padding:EdgeInsets.all(24),child:CircularProgressIndicator()));
         final s=snapshot.data!;
         final active=s.active.map(ArcAmplificationCatalog.project).toList();
+        final inactive = ArcAmplificationCatalog.projects
+            .where((p) => !s.active.contains(p.id)).toList(growable: false);
         return Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
           _card(Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-            Text('AMPLIFICATION RESEARCH',style:ArcUiTokens.display(fontSize:22,color:ArcUiTokens.primaryAccent)),
-            const SizedBox(height:6),
-            Wrap(spacing:8,runSpacing:8,children:[
-              _chip('${active.length} / 5 ACTIVE'),_chip('${s.completed.length} / 15 UNLOCKED',color:ArcUiTokens.secondaryAccent),
-              _chip('${s.researchPoints} RP AVAILABLE',color:ArcUiTokens.success),
-            ]),
+            Text('AMPLIFICATION PROJECTS',style:ArcUiTokens.display(fontSize:22,color:ArcUiTokens.primaryAccent)),
             const SizedBox(height:8),
-            const Text('Manual game tracking · synced to your UAG account. Progress is not read from the console. Research unlocks perks; a weapon must still be amplified and upgraded in-game.',style:TextStyle(color:ArcUiTokens.textSecondary,fontSize:12)),
-            Wrap(spacing:6,children:[
-              TextButton.icon(onPressed:_busy?null:()=>_setPoints(s),icon:const Icon(Icons.edit_note),label:const Text('Set RP balance')),
-              TextButton.icon(onPressed:_busy?null:()=>_study(s),icon:const Icon(Icons.menu_book),label:const Text('Study an item')),
+            Wrap(spacing:7,runSpacing:7,children:[
+              _chip('${active.length}/5 ACTIVE'),
+              _chip('${s.completed.length}/15 UNLOCKED',color:ArcUiTokens.secondaryAccent),
+              _chip('${s.researchPoints} RP',color:ArcUiTokens.success),
+            ]),
+            const SizedBox(height:6),
+            Wrap(spacing:4,children:[
+              TextButton.icon(onPressed:_busy?null:()=>_setPoints(s),icon:const Icon(Icons.edit,size:17),label:const Text('Set RP')),
+              TextButton.icon(onPressed:_busy?null:()=>_study(s),icon:const Icon(Icons.menu_book,size:17),label:const Text('Study items')),
             ]),
           ])),
           const SizedBox(height:12),
-          for(final p in active) ...[_projectCard(p,s),const SizedBox(height:9)],
-          _card(Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-            Text('RESEARCH CATALOGUE',style:ArcUiTokens.display(fontSize:19,color:ArcUiTokens.secondaryAccent)),
-            const SizedBox(height:7),
-            for(final p in ArcAmplificationCatalog.projects) if(!s.active.contains(p.id))
-              ListTile(contentPadding:EdgeInsets.zero,dense:true,title:Text(p.title,style:const TextStyle(color:Colors.white,fontWeight:FontWeight.bold)),
-                subtitle:Text('${p.perk} · ${p.weapons.join(', ')}',style:const TextStyle(color:ArcUiTokens.textSecondary)),
-                trailing:s.completed.contains(p.id)?const Icon(Icons.verified,color:ArcUiTokens.success):
-                  TextButton(onPressed:(_busy || !s.canStartMore)?null:()=>_run((state)=>state.start(p.id)),child:const Text('Start')),
-                onTap:()=>setState(()=>_focused==p.id ? _focused=null : _focused=p.id),
+          Row(children:[
+            Expanded(child:Text('ACTIVE RESEARCH',style:ArcUiTokens.display(fontSize:19,color:ArcUiTokens.primaryAccent))),
+            _chip('${active.length} / 5'),
+          ]),
+          const SizedBox(height:8),
+          if(active.isEmpty)
+            _card(const Text('Choose a project below to start researching.',style:TextStyle(color:ArcUiTokens.textSecondary))),
+          for(final p in active) ...[_projectCard(p,s),const SizedBox(height:8)],
+          const SizedBox(height:7),
+          _card(Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+            InkWell(
+              onTap:()=>setState(()=>_showCatalogue=!_showCatalogue),
+              child:Padding(
+                padding:const EdgeInsets.symmetric(vertical:5),
+                child:Row(children:[
+                  const Icon(Icons.science_outlined,color:ArcUiTokens.secondaryAccent),
+                  const SizedBox(width:8),
+                  Expanded(child:Text('BROWSE RESEARCH',style:ArcUiTokens.display(fontSize:19,color:ArcUiTokens.secondaryAccent))),
+                  Text('${inactive.length}',style:const TextStyle(color:ArcUiTokens.textSecondary)),
+                  Icon(_showCatalogue?Icons.expand_less:Icons.expand_more,color:ArcUiTokens.secondaryAccent),
+                ]),
               ),
-            if(_focused!=null && !s.active.contains(_focused))
-              Builder(builder:(_){final p=ArcAmplificationCatalog.project(_focused!);
-                return _card(Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-                  Text(p.title,style:const TextStyle(color:ArcUiTokens.primaryAccent,fontWeight:FontWeight.bold)),
-                  ...p.objectives.map((o)=>Text('• ${o.label}: ${o.target}',style:const TextStyle(color:ArcUiTokens.textSecondary))),
-                  Text('Step 2: 5,000 RP + ${p.materialCount} × ${p.material}',style:const TextStyle(color:ArcUiTokens.textSecondary)),
-                ]));}),
+            ),
+            if(_showCatalogue) ...[
+              const SizedBox(height:10),
+              LayoutBuilder(builder:(context,constraints){
+                final width=constraints.maxWidth;
+                final columns=width>=760?3:width>=390?2:1;
+                final itemWidth=(width-8*(columns-1))/columns;
+                return Wrap(spacing:8,runSpacing:8,children:[
+                  for(final p in inactive)
+                    SizedBox(width:itemWidth,child:InkWell(
+                      onTap:()=>setState(()=>_focused=_focused==p.id?null:p.id),
+                      child:Container(
+                        padding:const EdgeInsets.all(10),
+                        decoration:BoxDecoration(
+                          color:ArcUiTokens.surfaceRaised,
+                          borderRadius:BorderRadius.circular(ArcUiTokens.radiusM),
+                          border:Border.all(color:(_focused==p.id?ArcUiTokens.secondaryAccent:ArcUiTokens.primaryAccent).withValues(alpha:.3)),
+                        ),
+                        child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                          Text(p.title,maxLines:2,overflow:TextOverflow.ellipsis,style:const TextStyle(color:ArcUiTokens.textPrimary,fontWeight:FontWeight.bold,fontSize:12)),
+                          const SizedBox(height:4),
+                          Text(p.weapons.join(' / '),maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:ArcUiTokens.textSecondary,fontSize:10)),
+                          const SizedBox(height:5),
+                          if(s.completed.contains(p.id))
+                            const Text('UNLOCKED',style:TextStyle(color:ArcUiTokens.success,fontWeight:FontWeight.bold,fontSize:11))
+                          else Align(alignment:Alignment.centerRight,child:SizedBox(height:31,child:TextButton(
+                            onPressed:(_busy||!s.canStartMore)?null:()=>_run((state)=>state.start(p.id)),
+                            child:const Text('START'),
+                          ))),
+                        ]),
+                      ),
+                    )),
+                ]);
+              }),
+              if(_focused!=null && !s.active.contains(_focused))
+                Builder(builder:(_){
+                  final p=ArcAmplificationCatalog.project(_focused!);
+                  return Padding(padding:const EdgeInsets.only(top:10),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                    Text(p.title,style:const TextStyle(color:ArcUiTokens.primaryAccent,fontWeight:FontWeight.bold)),
+                    Text(p.perk,style:const TextStyle(color:ArcUiTokens.textSecondary,fontSize:12)),
+                    for(final objective in p.objectives)
+                      Text('• ${objective.label} · ${objective.target}',style:const TextStyle(color:ArcUiTokens.textSecondary,fontSize:12)),
+                    Text('5,000 RP · ${p.materialCount} × ${p.material}',style:const TextStyle(color:ArcUiTokens.textSecondary,fontSize:12)),
+                  ]));
+                }),
+            ],
           ])),
         ]);
       });
   }
   Widget _projectCard(ArcAmplificationProject p,ArcAmplificationState s){
     final complete=s.canComplete(p.id);
+    final expanded=_openProjects.contains(p.id);
+    final objectivesDone=p.objectives.where((o)=>s.objectiveCount(p.id,p.objectives.indexOf(o))>=o.target).length;
     return _card(Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+      InkWell(
+        onTap:()=>setState(()=>expanded?_openProjects.remove(p.id):_openProjects.add(p.id)),
+        child:Row(children:[
+          Icon(expanded?Icons.expand_less:Icons.expand_more,color:ArcUiTokens.primaryAccent),
+          const SizedBox(width:6),
+          Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+            Text(p.title.toUpperCase(),maxLines:1,overflow:TextOverflow.ellipsis,style:ArcUiTokens.display(fontSize:18,color:ArcUiTokens.primaryAccent)),
+            Text('$objectivesDone/${p.objectives.length} OBJECTIVES · ${s.shortage(p.id)} MATERIALS NEEDED',style:const TextStyle(color:ArcUiTokens.textSecondary,fontSize:11)),
+          ])),
+          Icon(complete?Icons.check_circle:Icons.radio_button_unchecked,color:complete?ArcUiTokens.success:ArcUiTokens.textTertiary,size:19),
+        ]),
+      ),
+      if(expanded) ...[
+      const SizedBox(height:9),
       Row(children:[
         Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
           Text(p.title.toUpperCase(),style:ArcUiTokens.display(fontSize:19,color:ArcUiTokens.primaryAccent)),
@@ -157,7 +224,6 @@ class _ArcAmplificationWorkspaceState extends State<ArcAmplificationWorkspace> {
             const Icon(Icons.edit,color:ArcUiTokens.textTertiary,size:16),
           ])));}),
       ],
-      if(p.sourceNote!=null)Padding(padding:const EdgeInsets.only(top:7),child:Text(p.sourceNote!,style:const TextStyle(color:ArcUiTokens.warning,fontSize:12))),
       const Divider(),
       Row(children:[
         Expanded(child:Text('Research Points: ${s.researchPoints} / 5,000',style:const TextStyle(color:ArcUiTokens.textSecondary,fontSize:12))),
@@ -172,7 +238,7 @@ class _ArcAmplificationWorkspaceState extends State<ArcAmplificationWorkspace> {
         if(s.shortage(p.id)>0)OutlinedButton.icon(onPressed:()=>_showTradeBrief(p,s),icon:const Icon(Icons.swap_horiz,size:17),label:Text('Trade brief: ${s.shortage(p.id)} needed')),
         FilledButton(onPressed:(_busy || !complete)?null:()=>_complete(p),child:const Text('Complete in-game research')),
       ]),
-      const Text('Map opens existing marker filters; enemy spawn availability is not guaranteed. Trade eligibility must be verified in-game.',style:TextStyle(color:ArcUiTokens.textTertiary,fontSize:11)),
+      ],
     ]));
   }
 }
@@ -263,8 +329,7 @@ class _ArcAmplificationAttachmentSlotState
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Choose a planned amplification. Research unlock and '
-                  'installation on this weapon are tracked separately.',
+                  'Select a perk for this weapon.',
                   style: ArcUiTokens.bodySmall(
                     color: ArcUiTokens.textSecondary,
                   ),
@@ -306,8 +371,7 @@ class _ArcAmplificationAttachmentSlotState
                   ),
                 ),
                 Text(
-                  'Only confirm applied upgrades after installing them in-game. '
-                  'Ordinary attachment slots and compatibility remain unchanged.',
+                  'Mark upgrades after applying them in-game.',
                   style: ArcUiTokens.bodySmall(
                     color: ArcUiTokens.textTertiary,
                   ),
@@ -470,20 +534,20 @@ class _ArcAmplificationAttachmentSlotState
 
 class _WeaponPerkLine extends StatelessWidget {
   Future<void> _editStock(BuildContext context,String name,int current) async {
-    final controller=TextEditingController(text:current.toString());
     try {
-      final next=await showDialog<int>(context:context,builder:(dialogContext)=>AlertDialog(
-        title:Text('Available $name'),
-        content:TextField(controller:controller,autofocus:true,keyboardType:TextInputType.number,decoration:const InputDecoration(labelText:'Actual in-game stash quantity')),
-        actions:[TextButton(onPressed:()=>Navigator.pop(dialogContext),child:const Text('Cancel')),
-          FilledButton(onPressed:(){final n=int.tryParse(controller.text);if(n!=null && n>=0 && n<=999999)Navigator.pop(dialogContext,n);},child:const Text('Save'))],
-      ));
+      final next=await showDialog<int>(
+        context:context,
+        builder:(_)=>ArcResearchQuantityDialog(
+          title:'Available $name',
+          initialValue:current,
+        ),
+      );
       if(next!=null && context.mounted){
         await ArcAmplificationRepository().update((s)=>s.setMaterial(name,next));
       }
-    } catch(error){
-      if(context.mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Stock not saved: $error')));
-    } finally {controller.dispose();}
+    } catch(_){
+      if(context.mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Stock not saved. Try again.')));
+    }
   }
   Future<void> _apply(BuildContext context,String weapon,String id,String title) async {
     final confirmed=await showDialog<bool>(context:context,builder:(dialogContext)=>AlertDialog(
@@ -494,7 +558,7 @@ class _WeaponPerkLine extends StatelessWidget {
     ));
     if(confirmed==true && context.mounted){
       try{await ArcAmplificationRepository().update((s)=>s.confirmApplied(weapon,id));}
-      catch(error){if(context.mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Perk not marked as applied: $error')));}
+      catch(_){if(context.mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Perk not saved. Try again.')));}
     }
   }
   const _WeaponPerkLine({required this.weapon,required this.state});
@@ -515,7 +579,7 @@ class _WeaponPerkLine extends StatelessWidget {
             for(final p in research)DropdownMenuItem<String?>(value:p.id,child:Text(p.perk,overflow:TextOverflow.ellipsis))],
           onChanged:(id) async {
             try {await ArcAmplificationRepository().update((s)=>s.planPerk(weapon,id));}
-            catch(error){if(context.mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Could not save perk choice: $error')));}
+            catch(_){if(context.mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Perk selection not saved. Try again.')));}
           },)),
         if(marked!=null)Icon(installed?Icons.verified:state.completed.contains(marked.id)?Icons.lock_open_rounded:Icons.lock_outline,
           color:installed?ArcUiTokens.success:ArcUiTokens.warning),
