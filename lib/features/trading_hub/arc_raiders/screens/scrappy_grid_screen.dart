@@ -600,11 +600,9 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
       case ArcScrappyTrackerMode.bench:
         if (items.isEmpty) return;
         final station = items.first.category;
-        final level = _progressionEngine.benchLevelForItems(items);
-        if (station.trim().isEmpty || level <= 0) return;
-        await _progressionRepository.confirmBenchUpgrade(
+        if (station.trim().isEmpty) return;
+        await _progressionRepository.confirmCompletedBenchLevels(
           station: station,
-          level: level,
           scrappyStates: completedStates,
         );
         return;
@@ -622,13 +620,18 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
           return current.collectedCount < item.neededCount;
         })
         .toList(growable: false);
-    if (incompleteItems.isEmpty) return;
+    if (incompleteItems.isEmpty && _mode != ArcScrappyTrackerMode.bench) {
+      return;
+    }
 
     final confirmed = await UagDialogs.confirm(
       context: context,
       title: 'Complete $title?',
-      message:
-          'This will set ${incompleteItems.length} unfinished ${_modeWord()} item${incompleteItems.length == 1 ? '' : 's'} to their required target and persist the confirmation for this season.',
+      message: incompleteItems.isEmpty
+          ? 'Save completed bench levels to your Command Centre?'
+          : _mode == ArcScrappyTrackerMode.bench
+          ? 'Complete the remaining bench materials and update the Command Centre levels.'
+          : 'Complete ${incompleteItems.length} unfinished ${_modeWord()} items?',
       titleColor: _modeAccent(),
       confirmLabel: 'Confirm Complete',
       confirmBackgroundColor: _modeAccent(),
@@ -653,39 +656,6 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Could not complete $title. Try again.')),
-      );
-    }
-  }
-
-  Future<void> _confirmInGameBenchUpgrade(List<ArcScrappyItem> items) async {
-    if (items.isEmpty) return;
-    final station = items.first.category;
-    final level = _progressionEngine.benchLevelForItems(items);
-    if (station.trim().isEmpty || level <= 0) return;
-    final approved = await UagDialogs.confirm(
-      context: context,
-      title: 'Upgrade $station to Lv.$level?',
-      message: 'Confirm only if this bench is already Lv.$level in ARC Raiders. This updates your Command Centre without changing collected materials.',
-      confirmLabel: 'Confirm upgraded',
-      titleColor: ArcUiTokens.primaryAccent,
-      confirmBackgroundColor: ArcUiTokens.primaryAccent,
-      confirmForegroundColor: ArcUiTokens.background,
-      borderColor: ArcUiTokens.primaryAccent,
-    );
-    if (approved != true || !mounted) return;
-    try {
-      final updated = await _progressionRepository.setBenchBaseline(
-        station: station,
-        level: level,
-      );
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(updated ? '$station Lv.$level saved.' : '$station level already recorded.'),
-      ));
-    } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Bench level not saved. Try again.')),
       );
     }
   }
@@ -793,7 +763,8 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                   width: double.infinity,
                   height: 30,
                   child: OutlinedButton.icon(
-                    onPressed: wantedTotal == 0
+                    onPressed: wantedTotal == 0 &&
+                            _mode != ArcScrappyTrackerMode.bench
                         ? null
                         : () => _confirmMarkSectionComplete(
                             title: title,
@@ -806,25 +777,13 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                           : Icons.task_alt_rounded,
                       size: 17,
                     ),
-                    label: Text(wantedTotal == 0 ? 'DONE' : 'COMPLETE'),
+                    label: Text(wantedTotal == 0 ? (_mode == ArcScrappyTrackerMode.bench ? 'SYNC LEVEL' : 'DONE') : 'COMPLETE'),
                     style: ArcUiTokens.textButtonStyle(accent: color).copyWith(
                       padding: const WidgetStatePropertyAll(EdgeInsets.zero),
                     ),
                   ),
                 ),
               ),
-              if (_mode == ArcScrappyTrackerMode.bench) ...[
-                const SizedBox(height: 5),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: () => _confirmInGameBenchUpgrade(items),
-                    icon: const Icon(Icons.upgrade_rounded, size: 17),
-                    label: const Text('CONFIRM UPGRADED IN-GAME'),
-                    style: ArcUiTokens.textButtonStyle(accent: ArcUiTokens.success),
-                  ),
-                ),
-              ],
               const SizedBox(height: 7),
               child ?? _buildAdaptiveTileWrap(items, states),
             ],
@@ -1348,13 +1307,11 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
             SizedBox(
               height: 30,
               child: OutlinedButton.icon(
-                onPressed: allComplete
-                    ? null
-                    : () => _confirmMarkSectionComplete(
-                        title: '$selected bench',
-                        items: stationItems,
-                        states: states,
-                      ),
+                onPressed: () => _confirmMarkSectionComplete(
+                  title: '$selected bench',
+                  items: stationItems,
+                  states: states,
+                ),
                 icon: const Icon(Icons.done_all_rounded, size: 15),
                 label: const Text('COMPLETE ALL'),
                 style:

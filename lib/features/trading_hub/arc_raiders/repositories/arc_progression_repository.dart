@@ -391,6 +391,87 @@ class ArcProgressionRepository {
     return true;
   }
 
+  /// A confirmed COMPLETE / COMPLETE ALL action records every consecutive
+  /// fully-completed bench tier, not just the first tier in the UI list.
+  /// The transaction is monotonic across devices and makes completed tiers
+  /// visible to the Command Centre through the existing bench-record stream.
+  Future<int> confirmCompletedBenchLevels({
+    required String station,
+    required Map<String, ArcScrappyState> scrappyStates,
+  }) async {
+    final uid = _uid;
+    final canonical = station.trim();
+    if (uid == null) throw StateError('Sign in to save bench upgrades.');
+    if (!_engine.benchDefinitions.any((d) => d.station == canonical)) {
+      throw ArgumentError.value(station, 'station', 'Unknown bench');
+    }
+    final benchId = ArcProgressionEngine.benchIdFor(canonical);
+    final ref = _benchProgressRef(uid).doc(benchId);
+    final newlyCompleted = await _firestore.runTransaction<List<int>>(
+      (transaction) async {
+        // All reads occur before the write, as required by Firestore.
+        final seasonSnapshot = await transaction.get(_seasonRef(uid));
+        final seasonId = _seasonIdFrom(seasonSnapshot.data());
+        final snapshot = await transaction.get(ref);
+        final saved = snapshot.exists
+            ? ArcBenchProgressionRecord.fromMap(
+                benchId,
+                _normalizeMap(snapshot.data()),
+              )
+            : ArcBenchProgressionRecord(
+                benchId: benchId,
+                station: canonical,
+                seasonId: seasonId,
+              );
+        final current = saved.seasonId == seasonId
+            ? saved
+            : ArcBenchProgressionRecord(
+                benchId: benchId,
+                station: canonical,
+                seasonId: seasonId,
+                historicalMaximumLevel: saved.historicalMaximumLevel,
+              );
+        final levels = _engine.completedBenchLevels(
+          station: canonical,
+          currentLevel: current.currentLevel,
+          scrappyStates: scrappyStates,
+        );
+        if (levels.isEmpty) return <int>[];
+        final updated = current.copyWith(
+          currentLevel: levels.last,
+          maximumLevelReachedThisSeason: math.max(
+            current.maximumLevelReachedThisSeason,
+            levels.last,
+          ),
+          historicalMaximumLevel: math.max(
+            current.historicalMaximumLevel,
+            levels.last,
+          ),
+          completedLevelIds: {
+            ...current.completedLevelIds,
+            for (final level in levels) '$benchId-lv-$level',
+          },
+          updatedAt: DateTime.now().toUtc(),
+        );
+        transaction.set(ref, updated.toMap(), SetOptions(merge: true));
+        return levels;
+      },
+    );
+    // Events are secondary to progression persistence. A failure to write an
+    // analytics event must not make a successful bench upgrade look failed.
+    for (final level in newlyCompleted) {
+      try {
+        await _operations.recordBenchUpgradeCompleted(
+          benchId: benchId,
+          level: level,
+        );
+      } catch (_) {
+        // The bench record was already committed and is authoritative.
+      }
+    }
+    return newlyCompleted.length;
+  }
+
   Future<bool> confirmBenchUpgrade({
     required String station,
     required int level,

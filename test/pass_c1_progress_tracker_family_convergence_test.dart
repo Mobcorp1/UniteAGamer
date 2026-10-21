@@ -99,7 +99,7 @@ void main() {
     expect(text, contains('Showing your last loaded tracker progress'));
   });
 
-  test('C1 preserves progression write authorities', () {
+  test('C1 preserves progression write authorities including multi-tier benches', () {
     final text = source(
       'lib/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart',
     );
@@ -108,7 +108,15 @@ void main() {
     expect(text, contains('_repository.resetAllScrappyStates('));
     expect(text, contains('confirmQuestCompleted('));
     expect(text, contains('confirmScrappyUpgrade('));
-    expect(text, contains('confirmBenchUpgrade('));
+    expect(text, contains('confirmCompletedBenchLevels('));
+    expect(text, isNot(contains('_confirmInGameBenchUpgrade(')));
+
+    final repository = source(
+      'lib/features/trading_hub/arc_raiders/repositories/'
+      'arc_progression_repository.dart',
+    );
+    expect(repository, contains('Future<int> confirmCompletedBenchLevels('));
+    expect(repository, contains('_firestore.runTransaction<List<int>>('));
   });
 
   test('C1 preserves Scrappy Bench Quest routes', () {

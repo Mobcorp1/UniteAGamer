@@ -504,6 +504,35 @@ class ArcProgressionEngine {
 
   static String benchIdFor(String station) => 'bench-${_slug(station)}';
 
+  /// Consecutive bench tiers whose full requirements have been explicitly
+  /// completed in the tracker. A later tier cannot skip an incomplete one.
+  /// The caller records these levels only after a confirmed Complete action.
+  List<int> completedBenchLevels({
+    required String station,
+    required int currentLevel,
+    required Map<String, ArcScrappyState> scrappyStates,
+  }) {
+    final definitions = benchDefinitions
+        .where((definition) => definition.station == station)
+        .toList(growable: false)
+      ..sort((left, right) => left.level.compareTo(right.level));
+    var level = currentLevel;
+    final completed = <int>[];
+    for (final definition in definitions) {
+      if (definition.level <= level) continue;
+      if (definition.level != level + 1) break;
+      if (definition.objectives.isEmpty ||
+          definition.objectives.any((objective) =>
+              (scrappyStates[objective.id]?.collectedCount ?? 0) <
+              objective.requiredCount)) {
+        break;
+      }
+      level = definition.level;
+      completed.add(level);
+    }
+    return List<int>.unmodifiable(completed);
+  }
+
   List<ArcProgressionObjective> _objectivesWithProgress(
     List<ArcProgressionObjective> objectives,
     Map<String, ArcScrappyState> scrappyStates, [
