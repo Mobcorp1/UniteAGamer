@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/amplification/arc_amplification_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/amplification/arc_amplification_workspace.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_loadout_bridge.dart';
@@ -1442,8 +1443,6 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                               ],
                               _buildCompactLoadoutHeader(blueprintStates),
                               const SizedBox(height: 6),
-                              ArcAmplificationLoadoutPanel(primary: _primaryWeapon, secondary: _secondaryWeapon),
-                              const SizedBox(height: 6),
                               _buildPortraitInGameBoard(blueprintStates),
                               const SizedBox(height: 6),
                               _buildLoadoutIntelGrid(
@@ -1468,8 +1467,6 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                               ],
                               _buildCompactLoadoutHeader(blueprintStates),
                               const SizedBox(height: 6),
-                              ArcAmplificationLoadoutPanel(primary: _primaryWeapon, secondary: _secondaryWeapon),
-                              const SizedBox(height: 6),
                               _buildCompactMobileBoard(blueprintStates),
                             ],
                           ),
@@ -1486,7 +1483,6 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                             const SizedBox(height: 10),
                           ],
                           _buildHero(blueprintStates),
-                          ArcAmplificationLoadoutPanel(primary: _primaryWeapon, secondary: _secondaryWeapon),
                           const SizedBox(height: 8),
                           const ArcBlueprintWorkspaceBar(
                             current: ArcBlueprintWorkspace.loadout,
@@ -1724,7 +1720,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         final attachmentStrip = Wrap(
           spacing: 5,
           runSpacing: 5,
-          children: List.generate(weapon.slots.length, (index) {
+          children: List<Widget>.generate(weapon.slots.length, (index) {
             final slotLabel = weapon.slots[index];
             final label =
                 index < attachments.length && attachments[index] != 'Empty Slot'
@@ -1770,7 +1766,18 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                 ),
               ),
             );
-          }),
+          }) + <Widget>[
+            if (ArcAmplificationCatalog.moduleByWeapon.containsKey(weapon.name))
+              ArcAmplificationAttachmentSlot(
+                key: Key(primary
+                    ? 'favourite-loadout-primary-amplification-slot'
+                    : 'favourite-loadout-secondary-amplification-slot'),
+                weapon: weapon.name,
+                accent: accent,
+                compact: true,
+                size: attachmentSize,
+              ),
+          ],
         );
 
         return Container(
@@ -1791,7 +1798,8 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     lead,
-                    if (weapon.slots.isNotEmpty) ...[
+                    if (weapon.slots.isNotEmpty ||
+                        ArcAmplificationCatalog.moduleByWeapon.containsKey(weapon.name)) ...[
                       const SizedBox(height: 6),
                       attachmentStrip,
                     ],
@@ -1800,7 +1808,8 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
               : Row(
                   children: [
                     Expanded(flex: 5, child: lead),
-                    if (weapon.slots.isNotEmpty) ...[
+                    if (weapon.slots.isNotEmpty ||
+                        ArcAmplificationCatalog.moduleByWeapon.containsKey(weapon.name)) ...[
                       const SizedBox(width: 8),
                       Expanded(flex: 6, child: attachmentStrip),
                     ],
@@ -2742,7 +2751,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
             Wrap(
               spacing: 7,
               runSpacing: 7,
-              children: List.generate(weapon.slots.length.clamp(0, 6).toInt(), (
+              children: List<Widget>.generate(weapon.slots.length.clamp(0, 6).toInt(), (
                 index,
               ) {
                 final slotLabel = index < weapon.slots.length
@@ -2779,7 +2788,25 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                   ),
                   onTap: () => _pickAttachment(primary: primary, index: index),
                 );
-              }),
+              }) + <Widget>[
+                if (ArcAmplificationCatalog.moduleByWeapon.containsKey(weapon.name))
+                  ArcAmplificationAttachmentSlot(
+                    key: Key(primary
+                        ? 'favourite-loadout-primary-amplification-slot'
+                        : 'favourite-loadout-secondary-amplification-slot'),
+                    weapon: weapon.name,
+                    accent: accent,
+                  ),
+              ],
+            ),
+          ] else if (ArcAmplificationCatalog.moduleByWeapon.containsKey(weapon.name)) ...[
+            const SizedBox(height: 8),
+            ArcAmplificationAttachmentSlot(
+              key: Key(primary
+                  ? 'favourite-loadout-primary-amplification-slot'
+                  : 'favourite-loadout-secondary-amplification-slot'),
+              weapon: weapon.name,
+              accent: accent,
             ),
           ] else ...[
             const SizedBox(height: 8),

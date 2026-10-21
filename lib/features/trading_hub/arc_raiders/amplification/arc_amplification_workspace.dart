@@ -177,40 +177,297 @@ class _ArcAmplificationWorkspaceState extends State<ArcAmplificationWorkspace> {
   }
 }
 
-/// Compact, independent read-only preview; does not alter any locked
-/// Favourite Loadout attachment, slot or ownership behavior.
-class ArcAmplificationLoadoutPanel extends StatefulWidget {
-  const ArcAmplificationLoadoutPanel({super.key,required this.primary,required this.secondary});
-  final String primary;
-  final String secondary;
+/// One distinct Amplification Mod slot beside each weapon's regular attachments.
+/// The slot does not modify the original attachment list or saved-loadout schema.
+/// Perk planning and actual in-game application live in the shared research state.
+class ArcAmplificationAttachmentSlot extends StatefulWidget {
+  const ArcAmplificationAttachmentSlot({
+    super.key,
+    required this.weapon,
+    required this.accent,
+    this.compact = false,
+    this.size = 46,
+    this.progressStream,
+  });
+
+  final String weapon;
+  final Color accent;
+  final bool compact;
+  final double size;
+  /// Optional deterministic progress source for widget testing.
+  final Stream<ArcAmplificationState>? progressStream;
+
   @override
-  State<ArcAmplificationLoadoutPanel> createState()=>_ArcAmplificationLoadoutPanelState();
+  State<ArcAmplificationAttachmentSlot> createState() =>
+      _ArcAmplificationAttachmentSlotState();
 }
-class _ArcAmplificationLoadoutPanelState extends State<ArcAmplificationLoadoutPanel> {
+
+class _ArcAmplificationAttachmentSlotState
+    extends State<ArcAmplificationAttachmentSlot> {
   late final Stream<ArcAmplificationState> _progress;
+  ArcAmplificationState? _lastState;
+
   @override
-  void initState(){super.initState();_progress=ArcAmplificationRepository().watch();}
+  void initState() {
+    super.initState();
+    // The attachment chip and its bottom sheet can be mounted at the same
+    // time. Keep one upstream listener, even when a test passes Stream.value
+    // (a single-subscription stream) as the deterministic progress source.
+    _progress = (widget.progressStream ?? ArcAmplificationRepository().watch())
+        .asBroadcastStream(onCancel: (subscription) => subscription.cancel());
+  }
+
+  Future<void> _openEditor() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => Padding(
+        padding: const EdgeInsets.all(12),
+        child: Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.82,
+          ),
+          decoration: ArcUiTokens.surfaceDecoration(
+            role: ArcSurfaceRole.overlay,
+            accent: widget.accent,
+            radius: ArcUiTokens.radiusXL,
+            borderOpacity: 0.35,
+          ),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '${widget.weapon.toUpperCase()} · AMPLIFICATION MOD',
+                        style: ArcUiTokens.sectionTitle(
+                          fontSize: 20,
+                          color: widget.accent,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.of(sheetContext).pop(),
+                      icon: const Icon(
+                        Icons.close_rounded,
+                        color: ArcUiTokens.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Choose a planned amplification. Research unlock and '
+                  'installation on this weapon are tracked separately.',
+                  style: ArcUiTokens.bodySmall(
+                    color: ArcUiTokens.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                StreamBuilder<ArcAmplificationState>(
+                  // Broadcast streams do not replay their last event for a
+                  // newly opened sheet. Seed it from the chip's last value.
+                  initialData: _lastState,
+                  stream: _progress,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      return const Text(
+                        'Research sync unavailable. Check your account or connection.',
+                        style: TextStyle(color: ArcUiTokens.warning),
+                      );
+                    }
+                    if (!snapshot.hasData) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    return _WeaponPerkLine(
+                      weapon: widget.weapon,
+                      state: snapshot.data!,
+                    );
+                  },
+                ),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: () {
+                      Navigator.of(sheetContext).pop();
+                      Navigator.of(context).pushNamed(
+                        '/trading-hub/arc-raiders/research-workstation',
+                      );
+                    },
+                    icon: const Icon(Icons.science_outlined),
+                    label: const Text('Open Research Station'),
+                  ),
+                ),
+                Text(
+                  'Only confirm applied upgrades after installing them in-game. '
+                  'Ordinary attachment slots and compatibility remain unchanged.',
+                  style: ArcUiTokens.bodySmall(
+                    color: ArcUiTokens.textTertiary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
-  Widget build(BuildContext context)=>StreamBuilder<ArcAmplificationState>(
-    stream:_progress,builder:(context,snapshot){
-      final progress=snapshot.data;
-      return Container(
-        padding:const EdgeInsets.all(10),
-        decoration:BoxDecoration(color:ArcUiTokens.surfacePanel,border:Border.all(color:ArcUiTokens.secondaryAccent.withValues(alpha:.32)),borderRadius:BorderRadius.circular(10)),
-        child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-          Row(children:[
-            Expanded(child:Text('AMPLIFIED WEAPON RESEARCH',style:ArcUiTokens.display(fontSize:17,color:ArcUiTokens.secondaryAccent))),
-            TextButton(onPressed:()=>Navigator.of(context).pushNamed('/trading-hub/arc-raiders/research-workstation'),child:const Text('Research Station')),
-          ]),
-          if(snapshot.hasError)const Text('Research sync unavailable',style:TextStyle(color:ArcUiTokens.warning))
-          else if(progress==null)const LinearProgressIndicator()
-          else for(final weapon in <String>{widget.primary,widget.secondary}) if(ArcAmplificationCatalog.moduleByWeapon.containsKey(weapon))
-            _WeaponPerkLine(weapon:weapon,state:progress),
-          const Text('Research unlock and installed weapon perks are separate. Weapon upgrades must be confirmed manually.',style:TextStyle(color:ArcUiTokens.textTertiary,fontSize:11)),
-        ]),
-      );
-    });
+  Widget build(BuildContext context) {
+    if (!ArcAmplificationCatalog.moduleByWeapon.containsKey(widget.weapon)) {
+      return const SizedBox.shrink();
+    }
+
+    return StreamBuilder<ArcAmplificationState>(
+      stream: _progress,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) _lastState = snapshot.data;
+        final state = snapshot.data;
+        final selected = state?.plannedPerks[widget.weapon];
+        final perk = selected == null
+            ? null
+            : ArcAmplificationCatalog.project(selected);
+        final installed = selected != null &&
+            (state?.installedPerks[widget.weapon]?.contains(selected) ?? false);
+        final unlocked = perk != null &&
+            (state?.completed.contains(perk.id) ?? false);
+        final status = snapshot.hasError
+            ? 'Sync error'
+            : state == null
+                ? 'Loading'
+                : installed
+                    ? 'Applied'
+                    : unlocked
+                        ? 'Unlocked'
+                        : perk == null
+                            ? 'Not set'
+                            : 'Research';
+        final statusColor = installed
+            ? ArcUiTokens.success
+            : perk == null
+                ? widget.accent
+                : ArcUiTokens.warning;
+
+        return Tooltip(
+          message: 'Amplification Mod: ${perk?.perk ?? 'Empty'} · $status',
+          child: Semantics(
+            button: true,
+            label: 'Edit ${widget.weapon} Amplification Mod',
+            child: InkWell(
+              onTap: snapshot.hasError ? null : _openEditor,
+              borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
+              child: widget.compact
+                  ? Container(
+                      width: widget.size,
+                      height: widget.size,
+                      padding: const EdgeInsets.all(3),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.22),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: statusColor.withValues(alpha: 0.42),
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            installed
+                                ? Icons.verified_rounded
+                                : Icons.bolt_rounded,
+                            color: statusColor,
+                            size: widget.size * 0.43,
+                          ),
+                          Text(
+                            'AMP',
+                            style: TextStyle(
+                              color: widget.accent,
+                              fontSize: 8,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : Container(
+                      width: 148,
+                      padding: const EdgeInsets.all(7),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.22),
+                        borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
+                        border: Border.all(
+                          color: statusColor.withValues(alpha: 0.42),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: 34,
+                            height: 34,
+                            child: Icon(
+                              installed
+                                  ? Icons.verified_rounded
+                                  : Icons.bolt_rounded,
+                              color: statusColor,
+                              size: 29,
+                            ),
+                          ),
+                          const SizedBox(width: 7),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'AMPLIFICATION',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: ArcUiTokens.label(
+                                    color: widget.accent,
+                                  ).copyWith(fontSize: 8),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  perk?.perk ?? 'Empty',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: ArcUiTokens.textPrimary,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                                Text(
+                                  status,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: statusColor,
+                                    fontSize: 8.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
+
 class _WeaponPerkLine extends StatelessWidget {
   Future<void> _editStock(BuildContext context,String name,int current) async {
     final controller=TextEditingController(text:current.toString());
