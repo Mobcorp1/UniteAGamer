@@ -17,6 +17,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_na
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_stencil_catalogue.dart';
 
 enum ArcCollectionView { all, needed, duplicates }
+enum ArcCollectionTileAction { add, clear, intel }
 
 /// Independent permanent visual collection page for Stencils and Designs.
 /// All ownership imports are explicitly reviewed. Dupes are manually entered.
@@ -30,6 +31,7 @@ class ArcAdditionalCollectionsScreen extends StatefulWidget {
     this.adBanner,
     this.designNameLoader,
     this.designNameSaver,
+    this.clearer,
   });
 
   final ArcNativeCollectionKind initialKind;
@@ -42,6 +44,9 @@ class ArcAdditionalCollectionsScreen extends StatefulWidget {
   final Widget? adBanner;
   final Future<Map<int, String>> Function()? designNameLoader;
   final Future<void> Function(int, String)? designNameSaver;
+  /// Optional clearing seam for widget tests; production uses a transaction.
+  final Future<ArcAdditionalCollectionState> Function(
+      ArcNativeCollectionKind, int)? clearer;
 
   @override
   State<ArcAdditionalCollectionsScreen> createState() =>
@@ -302,8 +307,102 @@ class _ArcAdditionalCollectionsScreenState
     }
   }
 
-  Future<void> _details(int slot) async {
+  Future<void> _setOwned(int slot, {required bool owned}) async {
+    if (_busy || !_loaded) return;
+    final kind = _kind;
+    setState(() { _busy = true; _message = null; });
+    try {
+      final result = owned
+          ? (widget.saver == null
+              ? await _repository.save(kind: kind, addOwned: <int>{slot})
+              : await widget.saver!(kind, <int>{slot}, const <int, int>{}))
+          : (widget.clearer == null
+              ? await _repository.save(kind: kind,
+                  addOwned: const <int>{}, clearOwned: <int>{slot})
+              : await widget.clearer!(kind, slot));
+      if (!mounted || kind != _kind) return;
+      setState(() {
+        _saved = result;
+        _pendingDupes.remove(slot);
+        // An in-progress screenshot must not silently restore a cleared card.
+        if (_reviewStates.length == kind.slots) {
+          final next = List<ArcNativeSlotState>.from(_reviewStates);
+          next[slot - 1] = ArcNativeSlotState.missing;
+          _reviewStates = next;
+        }
+        _message = owned ? '${_name(slot)} added.' : '${_name(slot)} cleared.';
+      });
+    } catch (_) {
+      if (mounted) {
+        setState(() => _message = 'Could not update collection. Try again.');
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  // Community-maintained item source guidance. Not a guaranteed drop location.
+  static String _stencilSource(int slot) {
+    if (slot == 9) return 'Collector Set DLC';
+    if (<int>{4, 8, 10, 11, 12}.contains(slot)) {
+      return 'Frozen Trail Premium Reward Pass';
+    }
+    return 'Topside containers (random drop)';
+  }
+
+  Future<void> _showCollectionIntel(int slot) async {
+    final name = _name(slot);
+    final isDesign = _kind == ArcNativeCollectionKind.designs;
+    final verifiedName = !isDesign || _assignedDesignNames.containsKey(slot);
     await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: uag_pass14_theme.AppTheme.cardBackgroundDeep,
+      isScrollControlled: true,
+      builder: (ctx) => SafeArea(child: Padding(
+        padding: const EdgeInsets.fromLTRB(18, 14, 18, 24),
+        child: Column(mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('INTEL · $name', key: const Key('collections-intel-title'),
+            style: const TextStyle(color: uag_pass14_theme.AppTheme.neonCyan,
+              fontWeight: FontWeight.bold, fontSize: 18)),
+          const SizedBox(height: 8),
+          Text('${_kind.title} · Slot $slot',
+            style: const TextStyle(color: Colors.white70)),
+          const SizedBox(height: 14),
+          Text(isDesign
+            ? (verifiedName ? 'No item-specific source confirmed.'
+                : 'Assign the in-game Design name to identify it correctly.')
+            : _stencilSource(slot),
+            key: const Key('collections-intel-status'),
+            style: const TextStyle(color: Colors.white)),
+          const SizedBox(height: 8),
+          Text(isDesign
+            ? 'Outpost, Topside and Reward Pass Designs have different sources.'
+            : 'Community-reported acquisition type. No guaranteed map location.',
+            style: const TextStyle(color: Colors.white60, fontSize: 12)),
+          if (isDesign && !verifiedName) ...[
+            const SizedBox(height: 10),
+            OutlinedButton.icon(
+              key: const Key('collections-intel-assign-name'),
+              onPressed: () {
+                Navigator.pop(ctx);
+                _pickDesignName(slot);
+              },
+              icon: const Icon(Icons.edit_outlined),
+              label: const Text('Assign Design name'),
+            ),
+          ],
+          const SizedBox(height: 12),
+          Align(alignment: Alignment.centerRight,
+            child: TextButton(onPressed: () => Navigator.pop(ctx),
+              child: const Text('Close'))),
+        ]),
+      )),
+    );
+  }
+
+  Future<void> _details(int slot) async {
+    final picked = await showModalBottomSheet<ArcCollectionTileAction>(
       context: context,
       isScrollControlled: true,
       backgroundColor: uag_pass14_theme.AppTheme.cardBackgroundDeep,
@@ -317,6 +416,30 @@ class _ArcAdditionalCollectionsScreenState
               Text(_name(slot), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 19)),
               Text('${_kind.title} · Position $slot · ${owned ? 'Owned' : 'Needed'}',
                   style: const TextStyle(color: uag_pass14_theme.AppTheme.neonCyan)),
+              const SizedBox(height: 10),
+              Wrap(spacing: 8, runSpacing: 8, children: [
+                OutlinedButton.icon(
+                  key: const Key('collections-action-add'),
+                  onPressed: _busy || owned ? null : () =>
+                    Navigator.pop(ctx, ArcCollectionTileAction.add),
+                  icon: const Icon(Icons.add_circle_outline),
+                  label: const Text('ADD'),
+                ),
+                OutlinedButton.icon(
+                  key: const Key('collections-action-clear'),
+                  onPressed: _busy || !owned ? null : () =>
+                    Navigator.pop(ctx, ArcCollectionTileAction.clear),
+                  icon: const Icon(Icons.remove_circle_outline),
+                  label: const Text('CLEAR'),
+                ),
+                OutlinedButton.icon(
+                  key: const Key('collections-action-intel'),
+                  onPressed: () =>
+                    Navigator.pop(ctx, ArcCollectionTileAction.intel),
+                  icon: const Icon(Icons.radar_outlined),
+                  label: const Text('INTEL'),
+                ),
+              ]),
               const SizedBox(height: 8),
               if (_reviewStates.length == _kind.slots) ...[
                 TextButton.icon(
@@ -362,6 +485,14 @@ class _ArcAdditionalCollectionsScreenState
         );
       }),
     );
+    if (!mounted || picked == null) return;
+    if (picked == ArcCollectionTileAction.add) {
+      await _setOwned(slot, owned: true);
+    } else if (picked == ArcCollectionTileAction.clear) {
+      await _setOwned(slot, owned: false);
+    } else if (picked == ArcCollectionTileAction.intel) {
+      await _showCollectionIntel(slot);
+    }
   }
 
   Future<void> _saveAndContinue() async {
