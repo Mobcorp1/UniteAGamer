@@ -5,6 +5,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raider_network_workspace_bar.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_frozen_trail_collection_catalogue.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_scrappy_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_drop_report.dart';
@@ -23,7 +24,9 @@ import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 class ArcMarketIntelligenceScreen extends StatefulWidget {
   static const routeName = '/trading-hub/arc-raiders/market';
 
-  const ArcMarketIntelligenceScreen({super.key});
+  const ArcMarketIntelligenceScreen({super.key, this.focusBlueprintId});
+
+  final String? focusBlueprintId;
 
   @override
   State<ArcMarketIntelligenceScreen> createState() =>
@@ -117,8 +120,27 @@ class _ArcMarketIntelligenceScreenState
       );
     }
 
-    final blueprints = [...ArcBlueprintSeedData.blueprints]
-      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    // Resolve intel against the SAME verified 91-slot identity catalogue as
+    // Collections Tracker. Unidentified cells are not selectable targets.
+    final seedById = {
+      for (final item in ArcBlueprintSeedData.blueprints) item.id: item,
+    };
+    final blueprints = <ArcBlueprint>[
+      for (final entry in ArcFrozenTrailCollectionCatalogue.blueprintEntries)
+        if (entry.slot != null)
+          ArcBlueprint(
+            id: entry.id,
+            name: entry.name,
+            category: seedById[entry.id]?.category ?? 'Frozen Trail',
+            group: seedById[entry.id]?.group ?? 'Blueprint',
+            sortOrder: entry.slot!,
+            rarity: seedById[entry.id]?.rarity ?? ArcBlueprintRarity.rare,
+            icon: seedById[entry.id]?.icon ?? Icons.auto_awesome_outlined,
+            imageAssetPath: seedById[entry.id]?.imageAssetPath ??
+                ArcFrozenTrailCollectionCatalogue.frozenTrailArtworkPaths[entry.id],
+            intelHint: seedById[entry.id]?.intelHint ?? '',
+          ),
+    ]..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
     final List<ArcScrappyItem> scrappyItems =
         ArcScrappySeedData.items.whereType<ArcScrappyItem>().toList()
           ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
@@ -169,6 +191,31 @@ class _ArcMarketIntelligenceScreenState
           priorityCount: priorityBlueprints.length,
           wantedResourceCount: wantedResources.length,
         ),
+        if (widget.focusBlueprintId != null) ...[
+          const SizedBox(height: AppTheme.spaceM),
+          Builder(builder: (context) {
+            final selected = blueprints.where(
+              (item) => item.id == widget.focusBlueprintId,
+            );
+            if (selected.isEmpty) return const SizedBox.shrink();
+            final blueprint = selected.first;
+            final state = blueprintStates[blueprint.id] ??
+                ArcBlueprintState.empty(blueprint.id);
+            return CollapsibleSectionCard(
+              title: '${blueprint.name} · ${state.owned ? 'Owned' : 'Missing'}',
+              initiallyExpanded: true,
+              titleColor: AppTheme.neonCyan,
+              child: _buildBlueprintIntelCard(
+                context,
+                blueprint: blueprint,
+                intel: intelByBlueprintId[blueprint.id] ??
+                    ArcDropIntel.empty(blueprint.id),
+                state: state,
+                reportsForBlueprint: _reportsForBlueprint(reports, blueprint.id),
+              ),
+            );
+          }),
+        ],
         const SizedBox(height: AppTheme.spaceM),
         CollapsibleSectionCard(
           title: 'Priority 5 Targets',
@@ -241,7 +288,7 @@ class _ArcMarketIntelligenceScreenState
         const SizedBox(height: AppTheme.spaceM),
         CollapsibleSectionCard(
           title: 'Best Next Missing Blueprints',
-          initiallyExpanded: false,
+          initiallyExpanded: true,
           titleColor: AppTheme.neonPink,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

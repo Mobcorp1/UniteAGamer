@@ -78,9 +78,7 @@ class BlueprintProgressHeader extends StatelessWidget {
             ],
           ),
           Text(
-            landscape
-                ? 'Tap a missing blueprint to mark it owned. You can then choose to add a drop report and duplicates.'
-                : 'Tap a missing blueprint to mark it owned, then choose whether to add a report or duplicates.',
+            'Tap any blueprint for Add, Clear and Intel. Missing intel targets are selected from your collection automatically.',
             style: Theme.of(
               context,
             ).textTheme.bodyMedium?.copyWith(color: Colors.white70),

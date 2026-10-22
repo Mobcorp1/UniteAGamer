@@ -27,12 +27,14 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_fr
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_filter.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_drop_intel.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_smart_build_hunt_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_saved_loadout_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_blueprint_drop_report_sheet.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_blueprint_quick_actions_sheet.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_beta_first_run.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/blueprint_tile.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/blueprint_progress_header.dart';
@@ -523,69 +525,179 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     });
   }
 
-  Future<bool?> _askYesNo({
-    required String title,
-    required String message,
-    String yesLabel = 'Yes',
-    String noLabel = 'No',
-  }) {
-    return UagDialogs.confirm(
-      context: context,
-      title: title,
-      message: message,
-      confirmLabel: yesLabel,
-      cancelLabel: noLabel,
-      borderColor: AppTheme.neonCyan,
-    );
-  }
-
+  // A tile tap must never mutate collection ownership. The player chooses
+  // Add, Clear or Intel explicitly in the contextual action sheet.
   Future<void> _markMissingAsOwned(
     ArcBlueprint blueprint,
     ArcBlueprintState currentState,
   ) async {
-    final ownedState = currentState.copyWith(
-      owned: true,
-      dupesOwned: 0,
-      ownershipSource:
-          currentState.ownershipSource == ArcBlueprintOwnershipSource.scan
-          ? ArcBlueprintOwnershipSource.scan
-          : ArcBlueprintOwnershipSource.manual,
-      updatedAt: DateTime.now(),
-    );
+    await _openBlueprintQuickActions(blueprint, currentState);
+  }
 
-    await _blueprintRepository.saveBlueprintState(ownedState);
-
+  Future<void> _openBlueprintQuickActions(
+    ArcBlueprint blueprint,
+    ArcBlueprintState currentState,
+  ) async {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${blueprint.name} marked as owned.')),
+    final action = await showModalBottomSheet<ArcBlueprintQuickAction>(
+      context: context,
+      useSafeArea: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => ArcBlueprintQuickActionsSheet(
+        blueprint: blueprint,
+        state: currentState,
+      ),
     );
-    _returnToFullGridView();
+    if (!mounted || action == null) return;
 
-    final wantsReport = await _askYesNo(
-      title: 'Add drop report?',
-      message: 'Do you want to add a drop report for ${blueprint.name} now?',
-    );
-
-    if (!mounted) return;
-    if (wantsReport == true) {
-      await _openBlueprintEditor(blueprint, ownedState);
+    switch (action) {
+      case ArcBlueprintQuickAction.add:
+        if (currentState.owned) return;
+        try {
+          final ownedState = currentState.copyWith(
+            owned: true,
+            dupesOwned: 0,
+            priorityRank: 0,
+            ownershipSource: ArcBlueprintOwnershipSource.manual,
+            updatedAt: DateTime.now(),
+          );
+          await _blueprintRepository.saveBlueprintState(ownedState);
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${blueprint.name} added to collection.')),
+          );
+        } catch (_) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Could not add ${blueprint.name}. Try again.')),
+          );
+        }
+        return;
+      case ArcBlueprintQuickAction.clear:
+        await _confirmClearSingleBlueprint(blueprint, currentState);
+        return;
+      case ArcBlueprintQuickAction.intel:
+        await _openFocusedBlueprintIntel(blueprint, currentState);
+        return;
+      case ArcBlueprintQuickAction.addDuplicate:
+      case ArcBlueprintQuickAction.removeDuplicate:
+        if (!currentState.owned) return;
+        final delta = action == ArcBlueprintQuickAction.addDuplicate ? 1 : -1;
+        final count = (currentState.dupesOwned + delta).clamp(0, 999);
+        if (count == currentState.dupesOwned) return;
+        try {
+          await _blueprintRepository.saveBlueprintState(
+            currentState.copyWith(
+              dupesOwned: count,
+              updatedAt: DateTime.now(),
+            ),
+          );
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${blueprint.name}: $count spare copies.')),
+          );
+        } catch (_) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Could not update duplicates.')),
+          );
+        }
+        return;
+      case ArcBlueprintQuickAction.addReport:
+        await _openBlueprintEditor(blueprint, currentState);
+        return;
     }
+  }
 
-    if (!mounted) return;
-    final wantsDupes = await _askYesNo(
-      title: 'Add duplicates?',
-      message: 'Do you want to add duplicates for ${blueprint.name} now?',
+  Future<void> _openFocusedBlueprintIntel(
+    ArcBlueprint blueprint,
+    ArcBlueprintState currentState,
+  ) async {
+    final fallback = ArcBlueprintIntelLibrary.resolve(blueprint);
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: const Color(0xFF0C1B26),
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(blueprint.name.toUpperCase(),
+                  style: AppTheme.tradingHeading(fontSize: 22, color: AppTheme.neonCyan)),
+                const SizedBox(height: 6),
+                Text(currentState.owned ? 'OWNED' : 'MISSING · INTEL TARGET',
+                  style: const TextStyle(color: AppTheme.neonPink)),
+                const SizedBox(height: 12),
+                StreamBuilder<ArcDropIntel>(
+                  stream: _blueprintRepository.watchIntelForBlueprint(blueprint.id),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      return const Text('Recent intel is unavailable. Try again later.',
+                        style: TextStyle(color: Colors.white70));
+                    }
+                    final intel = snapshot.data;
+                    if (intel == null) {
+                      return const LinearProgressIndicator(color: AppTheme.neonCyan);
+                    }
+                    if (!intel.hasReports) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('No confirmed community reports for this blueprint yet.',
+                            style: TextStyle(color: Colors.white70)),
+                          const SizedBox(height: 8),
+                          Text(fallback.tip, style: const TextStyle(color: Colors.white70)),
+                        ],
+                      );
+                    }
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('${intel.totalReports} community reports',
+                          style: const TextStyle(color: AppTheme.neonCyan, fontWeight: FontWeight.bold)),
+                        if (intel.topMapLabel != null)
+                          _buildIntelLine(icon: Icons.map_rounded, label: 'Map',
+                            value: intel.topMapLabel!, color: AppTheme.neonCyan),
+                        if (intel.topAreaLabel != null)
+                          _buildIntelLine(icon: Icons.place_rounded, label: 'Area',
+                            value: intel.topAreaLabel!, color: AppTheme.neonPink),
+                        if (intel.topContainerLabel != null)
+                          _buildIntelLine(icon: Icons.inventory_2_rounded, label: 'Source',
+                            value: intel.topContainerLabel!, color: Colors.amberAccent),
+                        if (intel.topConditionLabel != null)
+                          _buildIntelLine(icon: Icons.cloud_outlined, label: 'Conditions',
+                            value: intel.topConditionLabel!, color: Colors.white70),
+                      ],
+                    );
+                  },
+                ),
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.of(sheetContext).pop();
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => ArcMarketIntelligenceScreen(
+                          focusBlueprintId: blueprint.id,
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.radar_rounded),
+                  label: const Text('OPEN COMMUNITY INTEL'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
-
-    if (!mounted) return;
-    if (wantsDupes == true) {
-      final refreshed =
-          (await _blueprintRepository
-              .watchMyBlueprintStates()
-              .first)[blueprint.id] ??
-          ownedState;
-      await _openBlueprintEditor(blueprint, refreshed);
-    }
   }
 
   Future<void> _applyBulkOwned(Map<String, ArcBlueprintState> states) async {
@@ -728,7 +840,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
       context: context,
       title: 'Clear ${blueprint.name}?',
       message:
-          'This will remove the owned state and dupes for this single blueprint and reset it back to missing.',
+          'Remove ownership, spare copies and any priority for this blueprint?',
       titleColor: Colors.redAccent,
       confirmLabel: 'Clear',
       confirmBackgroundColor: Colors.redAccent,
@@ -740,7 +852,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
 
     try {
       await _blueprintRepository.saveBlueprintState(
-        currentState.copyWith(owned: false, dupesOwned: 0),
+        currentState.copyWith(owned: false, dupesOwned: 0, priorityRank: 0),
       );
 
       if (!mounted) return;
@@ -1555,91 +1667,13 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     );
   }
 
-  // Owned cards are trading actions; acquisition intel is only useful when missing.
+  // Retain the original _buildGrid() tap routing, but open the same explicit
+  // Add / Clear / Intel actions for owned and missing blueprints.
   Future<void> _openOwnedBlueprintDupeActions(
     ArcBlueprint blueprint,
     ArcBlueprintState state,
   ) async {
-    if (!mounted || !state.owned) return;
-    var displayed = state.dupesOwned;
-    var saving = false;
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: const Color(0xFF0C1B26),
-      builder: (sheetContext) => StatefulBuilder(
-        builder: (sheetContext, refresh) => SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(18),
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              Text(blueprint.name, textAlign: TextAlign.center,
-                style: AppTheme.tradingHeading(fontSize: 22, color: AppTheme.neonCyan)),
-              const SizedBox(height: 5),
-              Text('Owned  ·  $displayed spare ${displayed == 1 ? 'copy' : 'copies'}',
-                style: const TextStyle(color: Colors.white70)),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                key: const Key('blueprint-quick-add-dupe'),
-                icon: const Icon(Icons.add_circle_outline),
-                label: const Text('ADD DUPE +1'),
-                onPressed: saving || displayed >= 999 ? null : () async {
-                  refresh(() => saving = true);
-                  try {
-                    final latest = state.copyWith(
-                      owned: true,
-                      dupesOwned: displayed + 1,
-                      updatedAt: DateTime.now(),
-                    );
-                    await _blueprintRepository.saveBlueprintState(latest);
-                    displayed = latest.dupesOwned;
-                    if (sheetContext.mounted) Navigator.of(sheetContext).pop();
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('${blueprint.name}: $displayed spare copies saved.')));
-                    }
-                  } catch (_) {
-                    if (sheetContext.mounted) {
-                      ScaffoldMessenger.of(sheetContext).showSnackBar(
-                        const SnackBar(content: Text('Could not save duplicate. Try again.')));
-                    }
-                  } finally {
-                    if (sheetContext.mounted) refresh(() => saving = false);
-                  }
-                },
-              ),
-              Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                TextButton.icon(
-                  key: const Key('blueprint-quick-remove-dupe'),
-                  icon: const Icon(Icons.remove_circle_outline),
-                  label: const Text('REMOVE ONE'),
-                  onPressed: saving || displayed <= 0 ? null : () async {
-                    refresh(() => saving = true);
-                    try {
-                      final latest = state.copyWith(dupesOwned: displayed - 1,
-                        updatedAt: DateTime.now());
-                      await _blueprintRepository.saveBlueprintState(latest);
-                      displayed = latest.dupesOwned;
-                      if (sheetContext.mounted) Navigator.of(sheetContext).pop();
-                    } catch (_) {
-                      if (sheetContext.mounted) {
-                        ScaffoldMessenger.of(sheetContext).showSnackBar(
-                          const SnackBar(content: Text('Could not save duplicate change.')));
-                      }
-                    } finally {
-                      if (sheetContext.mounted) refresh(() => saving = false);
-                    }
-                  },
-                ),
-                TextButton(
-                  onPressed: saving ? null : () => Navigator.of(sheetContext).pop(),
-                  child: const Text('DONE'),
-                ),
-              ]),
-            ]),
-          ),
-        ),
-      ),
-    );
+    await _openBlueprintQuickActions(blueprint, state);
   }
 
   Future<void> _openBlueprintPreview(
