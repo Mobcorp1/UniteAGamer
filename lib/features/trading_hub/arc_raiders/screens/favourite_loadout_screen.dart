@@ -7,6 +7,9 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bl
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_unlock_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_item_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_collection_slot_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_native_collection_screenshot_recognizer.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_stencil_catalogue.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_asset_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_compatibility_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_intelligence_engine.dart';
@@ -35,6 +38,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_modal_surface.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -85,6 +89,10 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
   String _shield = 'Medium Shield';
   String _primaryWeapon = 'Anvil';
   String _secondaryWeapon = 'Stitcher';
+  int? _primaryStencilSlot;
+  int? _secondaryStencilSlot;
+  final ArcCollectionSlotRepository _stencilRepository =
+      ArcCollectionSlotRepository();
   final List<String> _primaryAttachments = <String>['Empty Slot', 'Empty Slot'];
   final List<String> _secondaryAttachments = <String>[
     'Empty Slot',
@@ -294,6 +302,8 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         weaponName: _secondaryWeapon,
         savedAttachments: _secondaryAttachments,
       ),
+      primaryStencilSlot: _primaryStencilSlot,
+      secondaryStencilSlot: _secondaryStencilSlot,
       equipment: equipment,
       consumables: consumables,
       quickUse: List<String>.unmodifiable(quickUse),
@@ -311,6 +321,8 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       _shield = ArcLoadoutRepairCatalog.migrateLegacyShield(loadout.shield);
       _primaryWeapon = loadout.primaryWeapon;
       _secondaryWeapon = loadout.secondaryWeapon;
+      _primaryStencilSlot = loadout.primaryStencilSlot;
+      _secondaryStencilSlot = loadout.secondaryStencilSlot;
       _primaryAttachments
         ..clear()
         ..addAll(
@@ -456,6 +468,8 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         _shield = 'Medium Shield';
         _primaryWeapon = 'Anvil';
         _secondaryWeapon = 'Stitcher';
+        _primaryStencilSlot = null;
+        _secondaryStencilSlot = null;
         _primaryAttachments
           ..clear()
           ..addAll(
@@ -494,6 +508,10 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         _shield = selected.shield ?? 'Medium Shield';
         _primaryWeapon = selected.primaryWeapon;
         _secondaryWeapon = selected.secondaryWeapon;
+        // Preset seeds do not carry player-owned cosmetics. Start clean;
+        // saved personal builds restore their own per-weapon Stencil slots.
+        _primaryStencilSlot = null;
+        _secondaryStencilSlot = null;
         _primaryAttachments
           ..clear()
           ..addAll(
@@ -924,6 +942,8 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       _playStyle = plan.focus.playStyle;
       _primaryWeapon = plan.primaryWeapon;
       _secondaryWeapon = plan.secondaryWeapon;
+      _primaryStencilSlot = null;
+      _secondaryStencilSlot = null;
       _primaryAttachments
         ..clear()
         ..addAll(plan.primaryAttachments);
@@ -1047,6 +1067,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
               previousAttachments: _primaryAttachments,
             );
         _primaryWeapon = selected.name;
+        _primaryStencilSlot = null;
         _primaryAttachments
           ..clear()
           ..addAll(nextAttachments);
@@ -1058,11 +1079,182 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
               previousAttachments: _secondaryAttachments,
             );
         _secondaryWeapon = selected.name;
+        _secondaryStencilSlot = null;
         _secondaryAttachments
           ..clear()
           ..addAll(nextAttachments);
       }
     });
+  }
+
+  Future<void> _pickStencil(bool primary) async {
+    Set<int> owned;
+    try {
+      owned = await _stencilRepository.readOwned(
+        ArcNativeCollectionKind.stencils,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not load owned Stencils. Check account access.'),
+        ),
+      );
+      return;
+    }
+    if (!mounted) return;
+    final current = primary ? _primaryStencilSlot : _secondaryStencilSlot;
+    final selected = await showModalBottomSheet<int>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (sheetContext) => ArcModalSurface(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 10, 8, 4),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'WEAPON STENCIL',
+                      style: ArcUiTokens.sectionTitle(
+                        fontSize: 21,
+                        color: ArcUiTokens.primaryAccent,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Close stencil picker',
+                    onPressed: () => Navigator.pop(sheetContext),
+                    icon: const Icon(
+                      Icons.close_rounded,
+                      color: Colors.white70,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: ArcStencilCatalogue.names.length + 1,
+                itemBuilder: (context, index) {
+                  if (index == 0) {
+                    return ListTile(
+                      key: const Key('loadout-stencil-clear'),
+                      leading: const Icon(
+                        Icons.remove_circle_outline,
+                        color: Colors.white70,
+                      ),
+                      title: const Text(
+                        'No Stencil',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      trailing: current == null
+                          ? const Icon(
+                              Icons.check_circle,
+                              color: ArcUiTokens.primaryAccent,
+                            )
+                          : null,
+                      onTap: () => Navigator.pop(sheetContext, 0),
+                    );
+                  }
+                  final name = ArcStencilCatalogue.nameAt(index);
+                  final isOwned = owned.contains(index);
+                  return ListTile(
+                    key: Key('loadout-stencil-$index'),
+                    enabled: isOwned,
+                    leading: Image.asset(
+                      ArcStencilCatalogue.assetAt(index),
+                      width: 46,
+                      height: 46,
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, _, _) => Icon(
+                        Icons.palette_outlined,
+                        color: isOwned
+                            ? ArcUiTokens.primaryAccent
+                            : Colors.white30,
+                      ),
+                    ),
+                    title: Text(
+                      name,
+                      style: TextStyle(
+                        color: isOwned ? Colors.white : Colors.white38,
+                      ),
+                    ),
+                    subtitle: Text(
+                      isOwned ? 'OWNED' : 'NOT OWNED',
+                      style: ArcUiTokens.bodySmall(
+                        color: isOwned
+                            ? ArcUiTokens.success
+                            : ArcUiTokens.textTertiary,
+                      ),
+                    ),
+                    trailing: current == index
+                        ? const Icon(
+                            Icons.check_circle,
+                            color: ArcUiTokens.primaryAccent,
+                          )
+                        : isOwned
+                        ? const Icon(Icons.chevron_right, color: Colors.white54)
+                        : const Icon(Icons.lock_outline, color: Colors.white30),
+                    onTap: isOwned
+                        ? () => Navigator.pop(sheetContext, index)
+                        : null,
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (!mounted || selected == null) return;
+    setState(() {
+      if (primary) {
+        _primaryStencilSlot = selected == 0 ? null : selected;
+      } else {
+        _secondaryStencilSlot = selected == 0 ? null : selected;
+      }
+    });
+  }
+
+  Widget _stencilAction(bool primary, Color accent, double size) {
+    final slot = primary ? _primaryStencilSlot : _secondaryStencilSlot;
+    final valid =
+        slot != null && slot >= 1 && slot <= ArcStencilCatalogue.names.length;
+    final label = valid ? ArcStencilCatalogue.nameAt(slot) : 'Stencil';
+    return Tooltip(
+      message: valid ? 'Stencil: $label' : 'Choose owned Stencil',
+      child: InkWell(
+        key: Key(
+          primary ? 'loadout-primary-stencil' : 'loadout-secondary-stencil',
+        ),
+        onTap: () => _pickStencil(primary),
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          width: size,
+          height: size,
+          padding: const EdgeInsets.all(3),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.22),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: accent.withValues(alpha: 0.42)),
+          ),
+          child: valid
+              ? Image.asset(
+                  ArcStencilCatalogue.assetAt(slot),
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, _, _) =>
+                      Icon(Icons.palette_outlined, color: accent),
+                )
+              : Icon(Icons.palette_outlined, color: accent, size: size * 0.55),
+        ),
+      ),
+    );
   }
 
   Future<void> _pickShield() async {
@@ -1720,64 +1912,95 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         final attachmentStrip = Wrap(
           spacing: 5,
           runSpacing: 5,
-          children: List<Widget>.generate(weapon.slots.length, (index) {
-            final slotLabel = weapon.slots[index];
-            final label =
-                index < attachments.length && attachments[index] != 'Empty Slot'
-                ? attachments[index]
-                : slotLabel;
-            final attachment = _attachmentSpecForName(label);
-            final assigned = label != slotLabel && label != 'Empty Slot';
-            final attachmentOwned =
-                !assigned ||
-                _isOwnedOrNotBlueprint(
-                  itemName: label,
-                  blueprintBased: _blueprintForName(label) != null,
-                  states: states,
+          children:
+              List<Widget>.generate(weapon.slots.length, (index) {
+                final slotLabel = weapon.slots[index];
+                final label =
+                    index < attachments.length &&
+                        attachments[index] != 'Empty Slot'
+                    ? attachments[index]
+                    : slotLabel;
+                final attachment = _attachmentSpecForName(label);
+                final assigned = label != slotLabel && label != 'Empty Slot';
+                final attachmentOwned =
+                    !assigned ||
+                    _isOwnedOrNotBlueprint(
+                      itemName: label,
+                      blueprintBased: _blueprintForName(label) != null,
+                      states: states,
+                    );
+                return Tooltip(
+                  message: assigned
+                      ? '$slotLabel: $label'
+                      : '$slotLabel: Empty',
+                  child: InkWell(
+                    onTap: () =>
+                        _pickAttachment(primary: primary, index: index),
+                    child: Container(
+                      width: attachmentSize,
+                      height: attachmentSize,
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.22),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: accent.withValues(
+                            alpha: assigned ? 0.40 : 0.18,
+                          ),
+                        ),
+                      ),
+                      child: _itemImage(
+                        imageAsset: _assetForLoadoutItem(
+                          label,
+                          ArcLoadoutAssetKind.attachment,
+                          explicitAssetPath: attachment?.imageAssetPath,
+                        ),
+                        accent: accent,
+                        owned: attachmentOwned,
+                        icon: assigned
+                            ? Icons.construction_rounded
+                            : Icons.add_rounded,
+                        size: attachmentSize - 4,
+                      ),
+                    ),
+                  ),
                 );
-            return Tooltip(
-              message: assigned ? '$slotLabel: $label' : '$slotLabel: Empty',
-              child: InkWell(
-                onTap: () => _pickAttachment(primary: primary, index: index),
-                child: Container(
-                  width: attachmentSize,
-                  height: attachmentSize,
-                  padding: const EdgeInsets.all(2),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.22),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: accent.withValues(alpha: assigned ? 0.40 : 0.18),
+              }) +
+              <Widget>[
+                _stencilAction(primary, accent, attachmentSize),
+                if ((primary ? _primaryStencilSlot : _secondaryStencilSlot) !=
+                    null)
+                  ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: narrow ? 180 : 120),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        ArcStencilCatalogue.nameAt(
+                          (primary
+                              ? _primaryStencilSlot
+                              : _secondaryStencilSlot)!,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: ArcUiTokens.label(color: accent),
+                      ),
                     ),
                   ),
-                  child: _itemImage(
-                    imageAsset: _assetForLoadoutItem(
-                      label,
-                      ArcLoadoutAssetKind.attachment,
-                      explicitAssetPath: attachment?.imageAssetPath,
+                if (ArcAmplificationCatalog.moduleByWeapon.containsKey(
+                  weapon.name,
+                ))
+                  ArcAmplificationAttachmentSlot(
+                    key: Key(
+                      primary
+                          ? 'favourite-loadout-primary-amplification-slot'
+                          : 'favourite-loadout-secondary-amplification-slot',
                     ),
+                    weapon: weapon.name,
                     accent: accent,
-                    owned: attachmentOwned,
-                    icon: assigned
-                        ? Icons.construction_rounded
-                        : Icons.add_rounded,
-                    size: attachmentSize - 4,
+                    compact: true,
+                    size: attachmentSize,
                   ),
-                ),
-              ),
-            );
-          }) + <Widget>[
-            if (ArcAmplificationCatalog.moduleByWeapon.containsKey(weapon.name))
-              ArcAmplificationAttachmentSlot(
-                key: Key(primary
-                    ? 'favourite-loadout-primary-amplification-slot'
-                    : 'favourite-loadout-secondary-amplification-slot'),
-                weapon: weapon.name,
-                accent: accent,
-                compact: true,
-                size: attachmentSize,
-              ),
-          ],
+              ],
         );
 
         return Container(
@@ -1796,23 +2019,13 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           child: narrow
               ? Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    lead,
-                    if (weapon.slots.isNotEmpty ||
-                        ArcAmplificationCatalog.moduleByWeapon.containsKey(weapon.name)) ...[
-                      const SizedBox(height: 6),
-                      attachmentStrip,
-                    ],
-                  ],
+                  children: [lead, const SizedBox(height: 6), attachmentStrip],
                 )
               : Row(
                   children: [
                     Expanded(flex: 5, child: lead),
-                    if (weapon.slots.isNotEmpty ||
-                        ArcAmplificationCatalog.moduleByWeapon.containsKey(weapon.name)) ...[
-                      const SizedBox(width: 8),
-                      Expanded(flex: 6, child: attachmentStrip),
-                    ],
+                    const SizedBox(width: 8),
+                    Expanded(flex: 6, child: attachmentStrip),
                   ],
                 ),
         );
@@ -2746,65 +2959,98 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
             onTap: () => _pickWeapon(primary: primary, states: states),
             imageSize: 62,
           ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              _stencilAction(primary, accent, 46),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  (primary ? _primaryStencilSlot : _secondaryStencilSlot) ==
+                          null
+                      ? 'Choose owned Stencil'
+                      : ArcStencilCatalogue.nameAt(
+                          (primary
+                              ? _primaryStencilSlot
+                              : _secondaryStencilSlot)!,
+                        ),
+                  style: ArcUiTokens.bodySmall(color: accent),
+                ),
+              ),
+            ],
+          ),
           if (weapon.slots.isNotEmpty) ...[
             const SizedBox(height: 8),
             Wrap(
               spacing: 7,
               runSpacing: 7,
-              children: List<Widget>.generate(weapon.slots.length.clamp(0, 6).toInt(), (
-                index,
-              ) {
-                final slotLabel = index < weapon.slots.length
-                    ? weapon.slots[index]
-                    : 'Attachment';
-                final label =
-                    index < attachments.length &&
-                        attachments[index] != 'Empty Slot'
-                    ? attachments[index]
-                    : slotLabel;
-                final attachment = _attachmentSpecForName(label);
-                final assigned = label != slotLabel && label != 'Empty Slot';
-                final attachmentOwned =
-                    !assigned ||
-                    _isOwnedOrNotBlueprint(
-                      itemName: label,
-                      blueprintBased: _blueprintForName(label) != null,
-                      states: states,
-                    );
-                return _attachmentChip(
-                  label: label,
-                  slotLabel: slotLabel,
-                  imageAsset: _assetForLoadoutItem(
-                    label,
-                    ArcLoadoutAssetKind.attachment,
-                    explicitAssetPath: attachment?.imageAssetPath,
-                  ),
-                  accent: accent,
-                  owned: attachmentOwned,
-                  compatibilityLabel: _attachmentCompatibilityStatus(
-                    weaponName: weapon.name,
-                    slotLabel: slotLabel,
-                    attachmentName: label,
-                  ),
-                  onTap: () => _pickAttachment(primary: primary, index: index),
-                );
-              }) + <Widget>[
-                if (ArcAmplificationCatalog.moduleByWeapon.containsKey(weapon.name))
-                  ArcAmplificationAttachmentSlot(
-                    key: Key(primary
-                        ? 'favourite-loadout-primary-amplification-slot'
-                        : 'favourite-loadout-secondary-amplification-slot'),
-                    weapon: weapon.name,
-                    accent: accent,
-                  ),
-              ],
+              children:
+                  List<Widget>.generate(
+                    weapon.slots.length.clamp(0, 6).toInt(),
+                    (index) {
+                      final slotLabel = index < weapon.slots.length
+                          ? weapon.slots[index]
+                          : 'Attachment';
+                      final label =
+                          index < attachments.length &&
+                              attachments[index] != 'Empty Slot'
+                          ? attachments[index]
+                          : slotLabel;
+                      final attachment = _attachmentSpecForName(label);
+                      final assigned =
+                          label != slotLabel && label != 'Empty Slot';
+                      final attachmentOwned =
+                          !assigned ||
+                          _isOwnedOrNotBlueprint(
+                            itemName: label,
+                            blueprintBased: _blueprintForName(label) != null,
+                            states: states,
+                          );
+                      return _attachmentChip(
+                        label: label,
+                        slotLabel: slotLabel,
+                        imageAsset: _assetForLoadoutItem(
+                          label,
+                          ArcLoadoutAssetKind.attachment,
+                          explicitAssetPath: attachment?.imageAssetPath,
+                        ),
+                        accent: accent,
+                        owned: attachmentOwned,
+                        compatibilityLabel: _attachmentCompatibilityStatus(
+                          weaponName: weapon.name,
+                          slotLabel: slotLabel,
+                          attachmentName: label,
+                        ),
+                        onTap: () =>
+                            _pickAttachment(primary: primary, index: index),
+                      );
+                    },
+                  ) +
+                  <Widget>[
+                    if (ArcAmplificationCatalog.moduleByWeapon.containsKey(
+                      weapon.name,
+                    ))
+                      ArcAmplificationAttachmentSlot(
+                        key: Key(
+                          primary
+                              ? 'favourite-loadout-primary-amplification-slot'
+                              : 'favourite-loadout-secondary-amplification-slot',
+                        ),
+                        weapon: weapon.name,
+                        accent: accent,
+                      ),
+                  ],
             ),
-          ] else if (ArcAmplificationCatalog.moduleByWeapon.containsKey(weapon.name)) ...[
+          ] else if (ArcAmplificationCatalog.moduleByWeapon.containsKey(
+            weapon.name,
+          )) ...[
             const SizedBox(height: 8),
             ArcAmplificationAttachmentSlot(
-              key: Key(primary
-                  ? 'favourite-loadout-primary-amplification-slot'
-                  : 'favourite-loadout-secondary-amplification-slot'),
+              key: Key(
+                primary
+                    ? 'favourite-loadout-primary-amplification-slot'
+                    : 'favourite-loadout-secondary-amplification-slot',
+              ),
               weapon: weapon.name,
               accent: accent,
             ),
@@ -3213,8 +3459,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       return _statusLine(
         icon: Icons.fact_check_outlined,
         label: '$weaponName IV Repair',
-        value:
-            'Repair materials currently unavailable.',
+        value: 'Repair materials currently unavailable.',
         color: Colors.amberAccent,
       );
     }

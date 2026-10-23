@@ -13,13 +13,22 @@ void main() {
       'lib/features/trading_hub/arc_raiders/widgets/arc_blueprint_quick_actions_sheet.dart',
     );
     final directTapFlow = RegExp(
-      r'if \(!state\.owned\)\s*\{\s*await _markMissingAsOwned\(blueprint, state\);\s*return;\s*\}\s*await _openOwnedBlueprintDupeActions\(blueprint, state\);',
+      r'if\s*\(!state\.owned\)\s*\{\s*await\s+_markMissingAsOwned\(\s*blueprint\s*,\s*state\s*,?\s*\);\s*return;\s*\}\s*await\s+_openOwnedBlueprintDupeActions\(\s*blueprint\s*,\s*state\s*,?\s*\);',
       multiLine: true,
     );
     expect(directTapFlow.allMatches(grid), hasLength(2));
-    expect(grid, contains('await _openBlueprintQuickActions(blueprint, currentState);'));
-    expect(grid, contains('await _openBlueprintQuickActions(blueprint, state);'));
-    expect(grid, contains('await _openFocusedBlueprintIntel(blueprint, currentState);'));
+    expect(
+      grid,
+      contains('await _openBlueprintQuickActions(blueprint, currentState);'),
+    );
+    expect(
+      grid,
+      contains('await _openBlueprintQuickActions(blueprint, state);'),
+    );
+    expect(
+      grid,
+      contains('await _openFocusedBlueprintIntel(blueprint, currentState);'),
+    );
     // The reusable button factory creates Key(keyName) from each action's
     // explicit keyName. Check both ends of that contract; dynamic widget
     // tests separately verify each key exists on the rendered button.
@@ -27,7 +36,10 @@ void main() {
     expect(sheet, contains("keyName: 'blueprint-action-add'"));
     expect(sheet, contains("keyName: 'blueprint-action-clear'"));
     expect(sheet, contains("keyName: 'blueprint-action-intel'"));
-    expect(grid, contains('await _blueprintRepository.saveBlueprintState(ownedState);'));
+    expect(
+      grid,
+      contains('await _blueprintRepository.saveBlueprintState(ownedState);'),
+    );
   });
 
   test(

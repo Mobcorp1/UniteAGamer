@@ -210,6 +210,51 @@ class ArcAdminMapEditorRepository {
     );
   }
 
+  /// One Blueprint can be attached to independent records on any map, layer,
+  /// named location or loot container. Only an effectively identical report
+  /// is a duplicate; repeating a blueprintId alone must never collide.
+  static bool isExactBlueprintLocationDuplicate(
+    ArcAdminMapMarker incoming,
+    ArcAdminMapMarker existing,
+  ) {
+    if (incoming.id == existing.id ||
+        incoming.kind != existing.kind ||
+        incoming.blueprintId == null ||
+        incoming.blueprintId != existing.blueprintId ||
+        incoming.mapId != existing.mapId ||
+        incoming.layer != existing.layer) {
+      return false;
+    }
+    String key(String raw) => raw.trim().toLowerCase();
+    return (incoming.point.x - existing.point.x).abs() < 0.00001 &&
+        (incoming.point.y - existing.point.y).abs() < 0.00001 &&
+        key(incoming.name) == key(existing.name) &&
+        key(incoming.description) == key(existing.description) &&
+        key(incoming.conditionLabel) == key(existing.conditionLabel) &&
+        key(incoming.sourceLabel) == key(existing.sourceLabel);
+  }
+
+  /// Player-safe published-only reads. Composite Firestore index is bundled.
+  Stream<List<ArcAdminMapMarker>> watchPublishedBlueprintLocations(
+    String blueprintId,
+  ) {
+    return _firestore
+        .collection(collectionName)
+        .where('blueprintId', isEqualTo: blueprintId)
+        .where('state', isEqualTo: ArcAdminMapMarkerState.published.name)
+        .snapshots()
+        .map((snapshot) {
+          final locations = _markersFromSnapshot(
+            snapshot,
+          ).where((marker) => marker.isPublished).toList(growable: false);
+          locations.sort((a, b) {
+            final mapOrder = a.mapId.compareTo(b.mapId);
+            return mapOrder != 0 ? mapOrder : a.name.compareTo(b.name);
+          });
+          return locations;
+        });
+  }
+
   static List<ArcAdminMapMarker> prepareDraftMarkersForSave({
     required String mapId,
     required ArcRaidMapLayer layer,
@@ -544,6 +589,7 @@ const _editableMarkerFields = [
   'name',
   'aliases',
   'description',
+  'conditionLabel',
   'subtypeId',
   'subtypeLabel',
   'itemId',

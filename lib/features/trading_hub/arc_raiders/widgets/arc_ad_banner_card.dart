@@ -13,11 +13,16 @@ class ArcBlueprintBannerSlot extends StatelessWidget {
   final ValueListenable<bool>? eligibility;
   final Widget? banner;
 
+  // A stable lane prevents grid resizing as the native creative loads or fails.
+  // The creative itself is always tightly framed by UagTacticalBannerAd.
   Widget _slot(bool eligible) => eligible
       ? SizedBox(
           key: const Key('blueprint-banner-slot'),
           height: 74,
-          child: banner ?? const ArcAdBannerCard(),
+          child: Align(
+            alignment: Alignment.center,
+            child: banner ?? const ArcAdBannerCard(),
+          ),
         )
       : const SizedBox.shrink();
 
@@ -72,7 +77,7 @@ class ArcAdBannerCard extends StatelessWidget {
         tier: tier,
         showForTraderPro: showForTraderPro,
       ),
-      margin: const EdgeInsets.fromLTRB(10, 6, 10, 8),
+      margin: const EdgeInsets.symmetric(vertical: 6),
     );
   }
 }

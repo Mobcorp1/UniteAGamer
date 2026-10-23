@@ -18,14 +18,7 @@ void main() {
         'lib/features/trading_hub/arc_raiders/screens/trading_blueprint_watches_screen.dart',
       );
 
-      expect(
-        tracker,
-        matches(
-          RegExp(
-            r'ArcCollectionsCategoryBar\(',
-          ),
-        ),
-      );
+      expect(tracker, matches(RegExp(r'ArcCollectionsCategoryBar\(')));
       expect(
         watches,
         matches(
@@ -58,7 +51,14 @@ void main() {
         'lib/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart',
       );
 
-      expect(source, contains('math.min(widthScale, heightScale)'));
+      expect(
+        source,
+        matches(
+          RegExp(
+            r'math\s*\.\s*min\s*\(\s*widthScale\s*,\s*heightScale\s*,?\s*\)',
+          ),
+        ),
+      );
       expect(source, contains('0.05,'));
       expect(source, contains('constrained: !isLandscape'));
       expect(source, contains('final viewportWidth = fittedWidth;'));

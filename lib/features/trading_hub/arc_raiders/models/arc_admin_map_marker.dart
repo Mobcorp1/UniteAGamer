@@ -162,6 +162,7 @@ class ArcAdminMapMarker {
     required this.point,
     this.aliases = const <String>[],
     this.description = '',
+    this.conditionLabel = '',
     this.subtypeId,
     this.subtypeLabel,
     this.itemId,
@@ -201,6 +202,9 @@ class ArcAdminMapMarker {
   final String name;
   final List<String> aliases;
   final String description;
+
+  /// Optional source-supported map condition; absent on legacy markers.
+  final String conditionLabel;
   final String? subtypeId;
   final String? subtypeLabel;
 
@@ -271,6 +275,7 @@ class ArcAdminMapMarker {
     String? name,
     List<String>? aliases,
     String? description,
+    String? conditionLabel,
     String? subtypeId,
     bool clearSubtypeId = false,
     String? subtypeLabel,
@@ -328,6 +333,7 @@ class ArcAdminMapMarker {
       name: name ?? this.name,
       aliases: aliases ?? this.aliases,
       description: description ?? this.description,
+      conditionLabel: conditionLabel ?? this.conditionLabel,
       subtypeId: clearSubtypeId ? null : (subtypeId ?? this.subtypeId),
       subtypeLabel: clearSubtypeLabel
           ? null
@@ -393,6 +399,7 @@ class ArcAdminMapMarker {
       'name': name,
       'aliases': aliases,
       'description': description,
+      'conditionLabel': conditionLabel,
       'subtypeId': subtypeId,
       'subtypeLabel': subtypeLabel,
       'itemId': itemId,
@@ -457,6 +464,7 @@ class ArcAdminMapMarker {
       name: map['name']?.toString() ?? 'Unnamed marker',
       aliases: _stringListFrom(map['aliases']),
       description: map['description']?.toString() ?? '',
+      conditionLabel: map['conditionLabel']?.toString() ?? '',
       subtypeId: map['subtypeId']?.toString(),
       subtypeLabel: map['subtypeLabel']?.toString(),
       itemId: map['itemId']?.toString(),

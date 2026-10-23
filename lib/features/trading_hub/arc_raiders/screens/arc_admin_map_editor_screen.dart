@@ -1053,11 +1053,14 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
           marker.layer == _layer &&
           marker.name.trim().toLowerCase() == result.name.toLowerCase(),
     );
-    if (duplicateName && result.kind != ArcAdminMapMarkerKind.questLocation) {
+    // Shared names are valid for separate drawers/containers and repeat finds.
+    // Exact records are checked below using their full location identity.
+    if (duplicateName &&
+        result.kind != ArcAdminMapMarkerKind.blueprint &&
+        result.kind != ArcAdminMapMarkerKind.questLocation) {
       _message('A marker with this name already exists on this layer.');
     }
 
-    _snapshotUndo();
     const uuid = Uuid();
     final marker = ArcAdminMapMarker(
       id: 'admin_${_mapId}_${_layer.name}_${uuid.v4()}',
@@ -1067,6 +1070,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
       name: result.name,
       aliases: result.aliases,
       description: result.description,
+      conditionLabel: result.conditionLabel,
       subtypeId: result.subtypeId,
       subtypeLabel: result.subtypeLabel,
       itemId: result.itemId,
@@ -1077,6 +1081,17 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
       point: point,
       state: ArcAdminMapMarkerState.draft,
     );
+    if (_markers.any(
+      (existing) =>
+          ArcAdminMapEditorRepository.isExactBlueprintLocationDuplicate(
+            marker,
+            existing,
+          ),
+    )) {
+      _message('This Blueprint location has already been recorded.');
+      return;
+    }
+    _snapshotUndo();
     setState(() {
       _markers = [..._markers, marker]
         ..sort((a, b) => a.name.compareTo(b.name));
@@ -1110,6 +1125,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
       name: result.name,
       aliases: result.aliases,
       description: result.description,
+      conditionLabel: result.conditionLabel,
       subtypeId: result.subtypeId,
       clearSubtypeId: result.subtypeId == null,
       subtypeLabel: result.subtypeLabel,
@@ -1200,6 +1216,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
       name: '${selected.name} Copy',
       aliases: selected.aliases,
       description: selected.description,
+      conditionLabel: selected.conditionLabel,
       subtypeId: selected.subtypeId,
       subtypeLabel: selected.subtypeLabel,
       itemId: selected.itemId,
@@ -2775,6 +2792,7 @@ class _NewMarkerResult {
     required this.aliases,
     required this.description,
     required this.sourceLabel,
+    this.conditionLabel = '',
     required this.confidence,
     this.subtypeId,
     this.subtypeLabel,
@@ -2789,6 +2807,7 @@ class _NewMarkerResult {
   final String name;
   final List<String> aliases;
   final String description;
+  final String conditionLabel;
   final String sourceLabel;
   final ArcRaidIntelConfidence confidence;
   final String? subtypeId;
@@ -2831,6 +2850,7 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
   final _name = TextEditingController();
   final _aliases = TextEditingController();
   final _description = TextEditingController();
+  final _condition = TextEditingController();
   final _customSubtype = TextEditingController();
   late final TextEditingController _source;
   ArcAdminMapMarkerKind _kind = ArcAdminMapMarkerKind.customIntel;
@@ -2852,6 +2872,7 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
       _name.text = initial.name;
       _aliases.text = initial.aliases.join(', ');
       _description.text = initial.description;
+      _condition.text = initial.conditionLabel;
       _source.text = initial.sourceLabel;
       _subtypeId = initial.upgradeResource?.subtypeId ?? initial.subtypeId;
       _customSubtype.text = initial.subtypeLabel ?? '';
@@ -2866,6 +2887,7 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
     _name.dispose();
     _aliases.dispose();
     _description.dispose();
+    _condition.dispose();
     _customSubtype.dispose();
     _source.dispose();
     super.dispose();
@@ -2911,9 +2933,21 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
         : selectedSubtype?.id;
 
     return AlertDialog(
-      backgroundColor: uag_pass14_theme.AppTheme.cardBackgroundDeep,
+      backgroundColor: ArcUiTokens.surfaceOverlay,
       surfaceTintColor: Colors.transparent,
-      title: Text(widget.title),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
+        side: BorderSide(
+          color: ArcUiTokens.primaryAccent.withValues(alpha: .34),
+        ),
+      ),
+      title: Text(
+        widget.title.toUpperCase(),
+        style: ArcUiTokens.sectionTitle(
+          fontSize: 21,
+          color: ArcUiTokens.primaryAccent,
+        ),
+      ),
       content: SizedBox(
         width: 520,
         child: SingleChildScrollView(
@@ -3091,6 +3125,14 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
               ),
               const SizedBox(height: 10),
               TextField(
+                controller: _condition,
+                decoration: const InputDecoration(
+                  labelText: 'Map condition (optional)',
+                  hintText: 'Only when supported by evidence',
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
                 controller: _source,
                 decoration: const InputDecoration(labelText: 'Intel source'),
               ),
@@ -3205,6 +3247,7 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
                           _description.text == widget.initialMarker?.description
                           ? widget.initialMarker!.description
                           : _description.text.trim(),
+                      conditionLabel: _condition.text.trim(),
                       subtypeId:
                           widget.initialMarker?.kind == _kind &&
                               _subtypeId == widget.initialMarker?.subtypeId &&

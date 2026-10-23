@@ -952,6 +952,20 @@
         }
       ],
       "density": "SPARSE_ALL"
+    },
+    {
+      "collectionGroup": "arc_admin_map_markers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "blueprintId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "state",
+          "order": "ASCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": []

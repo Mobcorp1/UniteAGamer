@@ -35,6 +35,8 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositorie
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_saved_loadout_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_blueprint_drop_report_sheet.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_blueprint_quick_actions_sheet.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_blueprint_locations_panel.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_modal_surface.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_beta_first_run.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/blueprint_tile.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/blueprint_progress_header.dart';
@@ -570,7 +572,9 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
         } catch (_) {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Could not add ${blueprint.name}. Try again.')),
+            SnackBar(
+              content: Text('Could not add ${blueprint.name}. Try again.'),
+            ),
           );
         }
         return;
@@ -588,10 +592,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
         if (count == currentState.dupesOwned) return;
         try {
           await _blueprintRepository.saveBlueprintState(
-            currentState.copyWith(
-              dupesOwned: count,
-              updatedAt: DateTime.now(),
-            ),
+            currentState.copyWith(dupesOwned: count, updatedAt: DateTime.now()),
           );
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
@@ -619,8 +620,8 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: const Color(0xFF0C1B26),
-      builder: (sheetContext) => SafeArea(
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => ArcModalSurface(
         child: Padding(
           padding: const EdgeInsets.all(18),
           child: SingleChildScrollView(
@@ -628,55 +629,96 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(blueprint.name.toUpperCase(),
-                  style: AppTheme.tradingHeading(fontSize: 22, color: AppTheme.neonCyan)),
+                Text(
+                  blueprint.name.toUpperCase(),
+                  style: AppTheme.tradingHeading(
+                    fontSize: 22,
+                    color: AppTheme.neonCyan,
+                  ),
+                ),
                 const SizedBox(height: 6),
-                Text(currentState.owned ? 'OWNED' : 'MISSING · INTEL TARGET',
-                  style: const TextStyle(color: AppTheme.neonPink)),
+                Text(
+                  currentState.owned ? 'OWNED' : 'MISSING · INTEL TARGET',
+                  style: const TextStyle(color: AppTheme.neonPink),
+                ),
                 const SizedBox(height: 12),
                 StreamBuilder<ArcDropIntel>(
-                  stream: _blueprintRepository.watchIntelForBlueprint(blueprint.id),
+                  stream: _blueprintRepository.watchIntelForBlueprint(
+                    blueprint.id,
+                  ),
                   builder: (context, snapshot) {
                     if (snapshot.hasError) {
-                      return const Text('Recent intel is unavailable. Try again later.',
-                        style: TextStyle(color: Colors.white70));
+                      return const Text(
+                        'Recent intel is unavailable. Try again later.',
+                        style: TextStyle(color: Colors.white70),
+                      );
                     }
                     final intel = snapshot.data;
                     if (intel == null) {
-                      return const LinearProgressIndicator(color: AppTheme.neonCyan);
+                      return const LinearProgressIndicator(
+                        color: AppTheme.neonCyan,
+                      );
                     }
                     if (!intel.hasReports) {
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('No confirmed community reports for this blueprint yet.',
-                            style: TextStyle(color: Colors.white70)),
+                          const Text(
+                            'No confirmed community reports for this blueprint yet.',
+                            style: TextStyle(color: Colors.white70),
+                          ),
                           const SizedBox(height: 8),
-                          Text(fallback.tip, style: const TextStyle(color: Colors.white70)),
+                          Text(
+                            fallback.tip,
+                            style: const TextStyle(color: Colors.white70),
+                          ),
                         ],
                       );
                     }
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('${intel.totalReports} community reports',
-                          style: const TextStyle(color: AppTheme.neonCyan, fontWeight: FontWeight.bold)),
+                        Text(
+                          '${intel.totalReports} community reports',
+                          style: const TextStyle(
+                            color: AppTheme.neonCyan,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         if (intel.topMapLabel != null)
-                          _buildIntelLine(icon: Icons.map_rounded, label: 'Map',
-                            value: intel.topMapLabel!, color: AppTheme.neonCyan),
+                          _buildIntelLine(
+                            icon: Icons.map_rounded,
+                            label: 'Map',
+                            value: intel.topMapLabel!,
+                            color: AppTheme.neonCyan,
+                          ),
                         if (intel.topAreaLabel != null)
-                          _buildIntelLine(icon: Icons.place_rounded, label: 'Area',
-                            value: intel.topAreaLabel!, color: AppTheme.neonPink),
+                          _buildIntelLine(
+                            icon: Icons.place_rounded,
+                            label: 'Area',
+                            value: intel.topAreaLabel!,
+                            color: AppTheme.neonPink,
+                          ),
                         if (intel.topContainerLabel != null)
-                          _buildIntelLine(icon: Icons.inventory_2_rounded, label: 'Source',
-                            value: intel.topContainerLabel!, color: Colors.amberAccent),
+                          _buildIntelLine(
+                            icon: Icons.inventory_2_rounded,
+                            label: 'Source',
+                            value: intel.topContainerLabel!,
+                            color: Colors.amberAccent,
+                          ),
                         if (intel.topConditionLabel != null)
-                          _buildIntelLine(icon: Icons.cloud_outlined, label: 'Conditions',
-                            value: intel.topConditionLabel!, color: Colors.white70),
+                          _buildIntelLine(
+                            icon: Icons.cloud_outlined,
+                            label: 'Conditions',
+                            value: intel.topConditionLabel!,
+                            color: Colors.white70,
+                          ),
                       ],
                     );
                   },
                 ),
+                const SizedBox(height: 16),
+                ArcBlueprintLocationsPanel(blueprintId: blueprint.id),
                 const SizedBox(height: 16),
                 OutlinedButton.icon(
                   onPressed: () {
@@ -1198,12 +1240,14 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
           const SizedBox(height: 8),
           if (_showProgressHeader && !compactBlueprintToolsLandscape) ...[
             BlueprintProgressHeader(
-              completion: (counts[ArcBlueprintFilter.owned] ?? 0) /
+              completion:
+                  (counts[ArcBlueprintFilter.owned] ?? 0) /
                   ArcFrozenTrailCollectionCatalogue.blueprintGrid.totalSlots,
               ownedCount: counts[ArcBlueprintFilter.owned] ?? 0,
               missingCount: counts[ArcBlueprintFilter.missing] ?? 0,
               dupesCount: counts[ArcBlueprintFilter.duplicates] ?? 0,
-              totalCount: ArcFrozenTrailCollectionCatalogue.blueprintGrid.totalSlots,
+              totalCount:
+                  ArcFrozenTrailCollectionCatalogue.blueprintGrid.totalSlots,
               landscape:
                   MediaQuery.of(context).orientation == Orientation.landscape,
               onClose: () => setState(() => _showProgressHeader = false),
@@ -1618,13 +1662,16 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
   }
 
   Future<void> _adjustBlueprintSearchDupe(
-    ArcBlueprint blueprint, ArcBlueprintState current, int delta,
+    ArcBlueprint blueprint,
+    ArcBlueprintState current,
+    int delta,
   ) async {
     if (delta > 0 && !current.owned) {
       final confirm = await UagDialogs.confirm(
         context: context,
         title: 'Own ${blueprint.name}?',
-        message: 'This Blueprint is marked missing. Confirm you own one AND have a spare copy before adding +1.',
+        message:
+            'This Blueprint is marked missing. Confirm you own one AND have a spare copy before adding +1.',
         confirmLabel: 'Own it + add spare',
         cancelLabel: 'Cancel',
         borderColor: AppTheme.neonCyan,
@@ -1637,7 +1684,8 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
       owned: current.owned || delta > 0,
       dupesOwned: next,
       ownershipSource: current.owned
-          ? current.ownershipSource : ArcBlueprintOwnershipSource.manual,
+          ? current.ownershipSource
+          : ArcBlueprintOwnershipSource.manual,
       updatedAt: DateTime.now(),
     );
     await _blueprintRepository.saveBlueprintState(update);
@@ -1649,20 +1697,29 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
   ) {
     return ArcCollectionDupeManager(
       collection: 'Blueprints',
-      entries: [for (final blueprint in allBlueprints)
-        ArcCollectionDupeEntry(
-          id: blueprint.id,
-          name: blueprint.name,
-          owned: (states[blueprint.id] ?? ArcBlueprintState.empty(blueprint.id)).owned,
-          spares: (states[blueprint.id] ?? ArcBlueprintState.empty(blueprint.id)).dupesOwned,
-          detail: blueprint.category,
-          imageAssetPath: blueprint.imageAssetPath,
-          icon: blueprint.icon,
-        )],
+      entries: [
+        for (final blueprint in allBlueprints)
+          ArcCollectionDupeEntry(
+            id: blueprint.id,
+            name: blueprint.name,
+            owned:
+                (states[blueprint.id] ?? ArcBlueprintState.empty(blueprint.id))
+                    .owned,
+            spares:
+                (states[blueprint.id] ?? ArcBlueprintState.empty(blueprint.id))
+                    .dupesOwned,
+            detail: blueprint.category,
+            imageAssetPath: blueprint.imageAssetPath,
+            icon: blueprint.icon,
+          ),
+      ],
       onAdjust: (id, delta) {
         final blueprint = allBlueprints.firstWhere((item) => item.id == id);
         return _adjustBlueprintSearchDupe(
-          blueprint, states[id] ?? ArcBlueprintState.empty(id), delta);
+          blueprint,
+          states[id] ?? ArcBlueprintState.empty(id),
+          delta,
+        );
       },
     );
   }
@@ -1927,7 +1984,11 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     final hydration = _lastHydration;
     if (hydration == null || !hydration.hasConfirmedLoad) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Wait for saved Blueprint ownership to load before sharing.')),
+        const SnackBar(
+          content: Text(
+            'Wait for saved Blueprint ownership to load before sharing.',
+          ),
+        ),
       );
       return;
     }
@@ -1937,7 +1998,9 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     final mapped = _frozenTrailBlueprints();
     for (final blueprint in mapped) {
       if (_isUnknownGridCell(blueprint)) continue;
-      final state = hydration.states[blueprint.id] ?? ArcBlueprintState.empty(blueprint.id);
+      final state =
+          hydration.states[blueprint.id] ??
+          ArcBlueprintState.empty(blueprint.id);
       final item = ArcCollectionShareItem(
         id: blueprint.id,
         label: blueprint.name,
@@ -1945,8 +2008,14 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
         assetPath: blueprint.imageAssetPath,
         spares: state.dupesOwned,
       );
-      if (state.owned) { owned.add(item); } else { needed.add(item); }
-      if (state.dupesOwned > 0) { spares.add(item); }
+      if (state.owned) {
+        owned.add(item);
+      } else {
+        needed.add(item);
+      }
+      if (state.dupesOwned > 0) {
+        spares.add(item);
+      }
     }
     if (!mounted) return;
     await ArcCollectionVisualShare.show(
@@ -2253,42 +2322,69 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                 final controls = <Widget>[
                   updateButton(width: verticalPrimaryWidth, height: 38),
                   commandButton(
-                    icon: Icons.apps_rounded, tooltip: 'Show all blueprints',
-                    accent: AppTheme.neonCyan, label: 'ALL',
-                    width: verticalPrimaryWidth, height: 33,
+                    icon: Icons.apps_rounded,
+                    tooltip: 'Show all blueprints',
+                    accent: AppTheme.neonCyan,
+                    label: 'ALL',
+                    width: verticalPrimaryWidth,
+                    height: 33,
                     selected: _selectedFilter == ArcBlueprintFilter.all,
-                    onTap: () => setState(() => _selectedFilter = ArcBlueprintFilter.all),
+                    onTap: () => setState(
+                      () => _selectedFilter = ArcBlueprintFilter.all,
+                    ),
                   ),
                   commandButton(
-                    icon: Icons.help_outline_rounded, tooltip: 'Show needed blueprints',
-                    accent: AppTheme.neonCyan, label: 'NEEDED',
-                    width: verticalPrimaryWidth, height: 33,
+                    icon: Icons.help_outline_rounded,
+                    tooltip: 'Show needed blueprints',
+                    accent: AppTheme.neonCyan,
+                    label: 'NEEDED',
+                    width: verticalPrimaryWidth,
+                    height: 33,
                     selected: _selectedFilter == ArcBlueprintFilter.missing,
-                    onTap: () => setState(() => _selectedFilter = ArcBlueprintFilter.missing),
+                    onTap: () => setState(
+                      () => _selectedFilter = ArcBlueprintFilter.missing,
+                    ),
                   ),
                   commandButton(
-                    icon: Icons.copy_all_rounded, tooltip: 'Show duplicate blueprints',
-                    accent: AppTheme.neonPink, label: 'DUPES',
-                    width: verticalPrimaryWidth, height: 33,
+                    icon: Icons.copy_all_rounded,
+                    tooltip: 'Show duplicate blueprints',
+                    accent: AppTheme.neonPink,
+                    label: 'DUPES',
+                    width: verticalPrimaryWidth,
+                    height: 33,
                     selected: _selectedFilter == ArcBlueprintFilter.duplicates,
-                    onTap: () => setState(() => _selectedFilter = ArcBlueprintFilter.duplicates),
+                    onTap: () => setState(
+                      () => _selectedFilter = ArcBlueprintFilter.duplicates,
+                    ),
                   ),
                   commandButton(
-                    icon: Icons.share_outlined, tooltip: 'Share selected Blueprint list',
-                    accent: AppTheme.neonCyan, label: 'SHARE',
-                    width: verticalPrimaryWidth, height: 33,
+                    icon: Icons.share_outlined,
+                    tooltip: 'Share selected Blueprint list',
+                    accent: AppTheme.neonCyan,
+                    label: 'SHARE',
+                    width: verticalPrimaryWidth,
+                    height: 33,
                     onTap: _shareBlueprintCollection,
                   ),
                   commandButton(
                     icon: Icons.more_horiz_rounded,
-                    tooltip: 'Advanced grid controls', accent: AppTheme.neonCyan,
-                    label: 'MORE', width: verticalPrimaryWidth, height: 32,
-                    onTap: () => setState(() =>
-                        _advancedGridControlsVisible = !_advancedGridControlsVisible),
+                    tooltip: 'Advanced grid controls',
+                    accent: AppTheme.neonCyan,
+                    label: 'MORE',
+                    width: verticalPrimaryWidth,
+                    height: 32,
+                    onTap: () => setState(
+                      () => _advancedGridControlsVisible =
+                          !_advancedGridControlsVisible,
+                    ),
                   ),
                   if (_advancedGridControlsVisible) ...[
-                    inGameButton(), fullGridButton(),
-                    zoomOutButton(), resetViewButton(), zoomInButton(), clearGridButton(),
+                    inGameButton(),
+                    fullGridButton(),
+                    zoomOutButton(),
+                    resetViewButton(),
+                    zoomInButton(),
+                    clearGridButton(),
                   ],
                 ];
 
@@ -2331,33 +2427,75 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                       height: 43,
                       child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
-                        child: Row(children: [
-                          updateButton(width: 50, height: 38),
-                          const SizedBox(width: 6),
-                          commandButton(icon: Icons.apps_rounded, tooltip: 'All',
-                            accent: AppTheme.neonCyan, label: 'ALL', width: 85, height: 38,
-                            selected: _selectedFilter == ArcBlueprintFilter.all,
-                            onTap: () => setState(() => _selectedFilter = ArcBlueprintFilter.all)),
-                          const SizedBox(width: 6),
-                          commandButton(icon: Icons.help_outline_rounded, tooltip: 'Needed',
-                            accent: AppTheme.neonCyan, label: 'NEEDED', width: 112, height: 38,
-                            selected: _selectedFilter == ArcBlueprintFilter.missing,
-                            onTap: () => setState(() => _selectedFilter = ArcBlueprintFilter.missing)),
-                          const SizedBox(width: 6),
-                          commandButton(icon: Icons.copy_all_rounded, tooltip: 'Duplicates',
-                            accent: AppTheme.neonPink, label: 'DUPES', width: 105, height: 38,
-                            selected: _selectedFilter == ArcBlueprintFilter.duplicates,
-                            onTap: () => setState(() => _selectedFilter = ArcBlueprintFilter.duplicates)),
-                          const SizedBox(width: 6),
-                          commandButton(icon: Icons.share_outlined, tooltip: 'Share collection',
-                            accent: AppTheme.neonCyan, label: 'SHARE', width: 106, height: 38,
-                            onTap: _shareBlueprintCollection),
-                          const SizedBox(width: 6),
-                          commandButton(icon: Icons.more_horiz_rounded,
-                            tooltip: 'More', accent: AppTheme.neonCyan,
-                            width: 50, height: 38,
-                            onTap: () => setState(() => _toolsOpen = true)),
-                        ]),
+                        child: Row(
+                          children: [
+                            updateButton(width: 50, height: 38),
+                            const SizedBox(width: 6),
+                            commandButton(
+                              icon: Icons.apps_rounded,
+                              tooltip: 'All',
+                              accent: AppTheme.neonCyan,
+                              label: 'ALL',
+                              width: 85,
+                              height: 38,
+                              selected:
+                                  _selectedFilter == ArcBlueprintFilter.all,
+                              onTap: () => setState(
+                                () => _selectedFilter = ArcBlueprintFilter.all,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            commandButton(
+                              icon: Icons.help_outline_rounded,
+                              tooltip: 'Needed',
+                              accent: AppTheme.neonCyan,
+                              label: 'NEEDED',
+                              width: 112,
+                              height: 38,
+                              selected:
+                                  _selectedFilter == ArcBlueprintFilter.missing,
+                              onTap: () => setState(
+                                () => _selectedFilter =
+                                    ArcBlueprintFilter.missing,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            commandButton(
+                              icon: Icons.copy_all_rounded,
+                              tooltip: 'Duplicates',
+                              accent: AppTheme.neonPink,
+                              label: 'DUPES',
+                              width: 105,
+                              height: 38,
+                              selected:
+                                  _selectedFilter ==
+                                  ArcBlueprintFilter.duplicates,
+                              onTap: () => setState(
+                                () => _selectedFilter =
+                                    ArcBlueprintFilter.duplicates,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            commandButton(
+                              icon: Icons.share_outlined,
+                              tooltip: 'Share collection',
+                              accent: AppTheme.neonCyan,
+                              label: 'SHARE',
+                              width: 106,
+                              height: 38,
+                              onTap: _shareBlueprintCollection,
+                            ),
+                            const SizedBox(width: 6),
+                            commandButton(
+                              icon: Icons.more_horiz_rounded,
+                              tooltip: 'More',
+                              accent: AppTheme.neonCyan,
+                              width: 50,
+                              height: 38,
+                              onTap: () => setState(() => _toolsOpen = true),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     if (!_viewModeLoaded)
@@ -2412,21 +2550,28 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                 child: ArcCollectionsCategoryBar(
                   selected: ArcCollectionsCategory.blueprints,
                   showDupes: true,
-                  dupesSelected: _selectedFilter == ArcBlueprintFilter.duplicates,
-                  onDupesSelected: () => setState(() =>
-                    _selectedFilter = ArcBlueprintFilter.duplicates),
+                  dupesSelected:
+                      _selectedFilter == ArcBlueprintFilter.duplicates,
+                  onDupesSelected: () => setState(
+                    () => _selectedFilter = ArcBlueprintFilter.duplicates,
+                  ),
                   onSelected: (category) {
                     if (category == ArcCollectionsCategory.blueprints) {
                       if (_selectedFilter == ArcBlueprintFilter.duplicates) {
-                        setState(() => _selectedFilter = ArcBlueprintFilter.all);
+                        setState(
+                          () => _selectedFilter = ArcBlueprintFilter.all,
+                        );
                       }
                       return;
                     }
                     Navigator.of(context).push<bool>(
                       MaterialPageRoute<bool>(
-                        settings: const RouteSettings(name: BlueprintGridScreen.routeName),
+                        settings: const RouteSettings(
+                          name: BlueprintGridScreen.routeName,
+                        ),
                         builder: (_) => ArcAdditionalCollectionsScreen(
-                          initialKind: category == ArcCollectionsCategory.stencils
+                          initialKind:
+                              category == ArcCollectionsCategory.stencils
                               ? ArcNativeCollectionKind.stencils
                               : ArcNativeCollectionKind.designs,
                         ),
@@ -2653,7 +2798,10 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                               await _markMissingAsOwned(blueprint, state);
                               return;
                             }
-                            await _openOwnedBlueprintDupeActions(blueprint, state);
+                            await _openOwnedBlueprintDupeActions(
+                              blueprint,
+                              state,
+                            );
                           },
                           onLongPress: () =>
                               _openBlueprintLoadoutActions(blueprint, state),
@@ -2838,10 +2986,10 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
 
               // Display all six physical rows within the available
               // landscape viewport at initial zoom. Pinch/pan still work.
-              final fittedScale = math.min(widthScale, heightScale).clamp(
-                0.05,
-                1.35,
-              ).toDouble();
+              final fittedScale = math
+                  .min(widthScale, heightScale)
+                  .clamp(0.05, 1.35)
+                  .toDouble();
               final fittedHeight = metrics.naturalHeight * fittedScale;
               final fittedWidth = metrics.naturalWidth * fittedScale;
               final viewportHeight = isLandscape
@@ -2908,7 +3056,8 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
             return Padding(
               key: const Key('blueprint-authoritative-grid'),
               padding: const EdgeInsets.only(top: 2),
-              child: _viewMode == ArcBlueprintGridViewMode.inGameFramed &&
+              child:
+                  _viewMode == ArcBlueprintGridViewMode.inGameFramed &&
                       !compactNativeLandscape
                   ? buildFramedGrid()
                   : buildFullOverviewGrid(),
@@ -3230,11 +3379,19 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                                     ),
                                   ),
                                 Expanded(
-                                  child: !_isFavouriteLoadoutTargetPickMode &&
-                                      _selectedFilter == ArcBlueprintFilter.duplicates
-                                    ? _buildBlueprintDupeSearch(allBlueprints, states)
-                                    : _buildOverviewGrid(
-                                        context, filtered, states),
+                                  child:
+                                      !_isFavouriteLoadoutTargetPickMode &&
+                                          _selectedFilter ==
+                                              ArcBlueprintFilter.duplicates
+                                      ? _buildBlueprintDupeSearch(
+                                          allBlueprints,
+                                          states,
+                                        )
+                                      : _buildOverviewGrid(
+                                          context,
+                                          filtered,
+                                          states,
+                                        ),
                                 ),
                               ],
                             ),

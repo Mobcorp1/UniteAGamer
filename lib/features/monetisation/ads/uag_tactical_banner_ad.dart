@@ -98,44 +98,60 @@ class _UagTacticalBannerAdState extends State<UagTacticalBannerAd> {
     if (!widget.enabled || !UagAdService.instance.canShowBanner) {
       return const SizedBox.shrink();
     }
-    return Container(
-      margin: widget.margin,
-      padding: const EdgeInsets.all(1),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        gradient: LinearGradient(
-          colors: [
-            AppTheme.neonCyan.withValues(alpha: 0.72),
-            AppTheme.neonPink.withValues(alpha: 0.46),
-          ],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.neonCyan.withValues(alpha: 0.16),
-            blurRadius: 18,
-            spreadRadius: 1,
+    // AdSize.banner has a 320 x 50 logical-pixel creative. The frame must
+    // never expand into a page-wide empty panel or scale the AdWidget.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const frameWidth = 322.0;
+        final outerMargin = widget.margin.resolve(Directionality.of(context));
+        if (constraints.maxWidth < frameWidth + outerMargin.horizontal) {
+          return const SizedBox.shrink();
+        }
+        return Align(
+          alignment: Alignment.center,
+          child: Container(
+            width: frameWidth,
+            height: 52,
+            margin: widget.margin,
+            padding: const EdgeInsets.all(1),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              gradient: LinearGradient(
+                colors: [
+                  AppTheme.neonCyan.withValues(alpha: 0.72),
+                  AppTheme.neonPink.withValues(alpha: 0.46),
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.neonCyan.withValues(alpha: 0.16),
+                  blurRadius: 18,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+            child: Container(
+              height: 50,
+              decoration: BoxDecoration(
+                color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.94),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(15),
+                child: _isLoaded && _bannerAd != null
+                    ? Center(
+                        child: SizedBox(
+                          width: _bannerAd!.size.width.toDouble(),
+                          height: _bannerAd!.size.height.toDouble(),
+                          child: AdWidget(ad: _bannerAd!),
+                        ),
+                      )
+                    : const _UagTacticalAdLoadingStrip(),
+              ),
+            ),
           ),
-        ],
-      ),
-      child: Container(
-        height: 58,
-        decoration: BoxDecoration(
-          color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.94),
-          borderRadius: BorderRadius.circular(15),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(15),
-          child: _isLoaded && _bannerAd != null
-              ? Center(
-                  child: SizedBox(
-                    width: _bannerAd!.size.width.toDouble(),
-                    height: _bannerAd!.size.height.toDouble(),
-                    child: AdWidget(ad: _bannerAd!),
-                  ),
-                )
-              : const _UagTacticalAdLoadingStrip(),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -182,7 +198,7 @@ class UagAdAwareBottomDock extends StatelessWidget {
             if (shouldShowAd)
               const Padding(
                 padding: EdgeInsets.fromLTRB(10, 4, 10, 6),
-                child: UagTacticalBannerAd(),
+                child: UagTacticalBannerAd(margin: EdgeInsets.zero),
               )
             else if (reserveAdSpace)
               const SizedBox.shrink(),
