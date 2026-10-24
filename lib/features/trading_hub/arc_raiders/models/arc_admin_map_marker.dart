@@ -179,6 +179,8 @@ class ArcAdminMapMarker {
     this.sourceUrl,
     this.sourcePermission = ArcAdminMapMarkerSourcePermission.permitted,
     this.sourceLayerId,
+    this.poiId,
+    this.containerTypeIds = const <String>[],
     this.originalPoint,
     this.coordinateSpace,
     this.importBatchId,
@@ -226,6 +228,10 @@ class ArcAdminMapMarker {
   final String? sourceUrl;
   final ArcAdminMapMarkerSourcePermission sourcePermission;
   final String? sourceLayerId;
+
+  /// Identified POI for approximate bulk intelligence, never an exact pin.
+  final String? poiId;
+  final List<String> containerTypeIds;
   final ArcNormalizedPoint? originalPoint;
   final String? coordinateSpace;
   final String? importBatchId;
@@ -302,6 +308,8 @@ class ArcAdminMapMarker {
     bool clearSourceUrl = false,
     ArcAdminMapMarkerSourcePermission? sourcePermission,
     String? sourceLayerId,
+    String? poiId,
+    List<String>? containerTypeIds,
     bool clearSourceLayerId = false,
     ArcNormalizedPoint? originalPoint,
     bool clearOriginalPoint = false,
@@ -356,6 +364,8 @@ class ArcAdminMapMarker {
           : (sourceAttribution ?? this.sourceAttribution),
       sourceUrl: clearSourceUrl ? null : (sourceUrl ?? this.sourceUrl),
       sourcePermission: sourcePermission ?? this.sourcePermission,
+      poiId: poiId ?? this.poiId,
+      containerTypeIds: containerTypeIds ?? this.containerTypeIds,
       sourceLayerId: clearSourceLayerId
           ? null
           : (sourceLayerId ?? this.sourceLayerId),
@@ -417,6 +427,8 @@ class ArcAdminMapMarker {
       'sourceUrl': sourceUrl,
       'sourcePermission': sourcePermission.name,
       'sourceLayerId': sourceLayerId,
+      'poiId': poiId,
+      'containerTypeIds': containerTypeIds,
       'originalPoint': originalPoint?.toMap(),
       'coordinateSpace': coordinateSpace,
       'importBatchId': importBatchId,
@@ -494,6 +506,8 @@ class ArcAdminMapMarker {
         map['sourcePermission']?.toString(),
       ),
       sourceLayerId: map['sourceLayerId']?.toString(),
+      poiId: map['poiId']?.toString(),
+      containerTypeIds: _stringListFrom(map['containerTypeIds']),
       originalPoint: map['originalPoint'] is Map
           ? _pointFromMapUnclamped(
               Map<String, dynamic>.from(map['originalPoint'] as Map),

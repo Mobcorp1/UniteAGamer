@@ -411,6 +411,12 @@ service cloud.firestore {
       allow create, update, delete: if isAdminOrDev();
     }
 
+    // Unlocated, map-wide admin intelligence: no fake pins or public drafts.
+    match /arc_admin_map_area_intel/{areaId} {
+      allow read: if isAdminOrDev() || resource.data.state == 'published';
+      allow create, update, delete: if isAdminOrDev();
+    }
+
     match /arc_map_marker_evidence/{evidenceId} {
       allow read, create, update, delete: if isAdminOrDev();
     }

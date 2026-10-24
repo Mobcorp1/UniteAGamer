@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 
 /// Reusable, keyboard-safe ARC overlay shell. Keeps actions and scrolling
@@ -37,17 +38,25 @@ class ArcModalSurface extends StatelessWidget {
                   .clamp(0.0, double.infinity)
                   .toDouble(),
             ),
-            child: DecoratedBox(
-              decoration: ArcUiTokens.surfaceDecoration(
-                role: ArcSurfaceRole.overlay,
-                accent: accent,
-                borderOpacity: 0.38,
-                radius: ArcUiTokens.radiusXL,
-                glow: true,
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
-                child: child,
+            // Keep the moving cyan/pink charge OUTSIDE the clipped modal.
+            // The four-point perimeter inset leaves room for the glow without
+            // changing the maximum width or height constraints of the sheet.
+            child: ElectricChargeBorder(
+              active: true,
+              radius: ArcUiTokens.radiusXL + 4,
+              padding: const EdgeInsets.all(4),
+              child: DecoratedBox(
+                decoration: ArcUiTokens.surfaceDecoration(
+                  role: ArcSurfaceRole.overlay,
+                  accent: accent,
+                  borderOpacity: 0.38,
+                  radius: ArcUiTokens.radiusXL,
+                  glow: true,
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
+                  child: child,
+                ),
               ),
             ),
           ),

@@ -1967,25 +1967,36 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                 );
               }) +
               <Widget>[
-                _stencilAction(primary, accent, attachmentSize),
-                if ((primary ? _primaryStencilSlot : _secondaryStencilSlot) !=
-                    null)
-                  ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: narrow ? 180 : 120),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        ArcStencilCatalogue.nameAt(
-                          (primary
+                // Keep the stencil label attached to its own box, never in the
+                // attachment flow beside it. The cosmetic slot stays independent.
+                SizedBox(
+                  width: narrow ? 100 : 112,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      _stencilAction(primary, accent, attachmentSize),
+                      if ((primary
                               ? _primaryStencilSlot
-                              : _secondaryStencilSlot)!,
+                              : _secondaryStencilSlot) !=
+                          null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 3),
+                          child: Text(
+                            ArcStencilCatalogue.nameAt(
+                              (primary
+                                  ? _primaryStencilSlot
+                                  : _secondaryStencilSlot)!,
+                            ),
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: ArcUiTokens.label(color: accent),
+                          ),
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: ArcUiTokens.label(color: accent),
-                      ),
-                    ),
+                    ],
                   ),
+                ),
                 if (ArcAmplificationCatalog.moduleByWeapon.containsKey(
                   weapon.name,
                 ))

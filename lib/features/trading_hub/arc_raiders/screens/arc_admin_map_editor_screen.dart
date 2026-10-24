@@ -3,6 +3,8 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart' as uag_pass14_theme;
 import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
@@ -11,6 +13,7 @@ import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_admin_marker_subtype_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_admin_marker_visual_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bulk_map_intel_plan.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_asset_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_coordinate_projection.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_filter_icon_registry.dart';
@@ -30,6 +33,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositorie
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_map_filter_icon.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_precision_map_pin.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_admin_workspace_bar.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_admin_bulk_intel_dialog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/arc_layout_system.dart';
@@ -220,6 +224,8 @@ class _SubtypeIconLabel extends StatelessWidget {
 
 class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
   late final ArcAdminMapEditorRepository _repository;
+  late final Future<bool> _adminAccess;
+  bool _rapidPlacement = false;
   final _importAdapter = const ArcPermittedJsonMapMarkerImportAdapter();
   final _importEngine = const ArcMapMarkerImportEngine();
   final _alignmentEngine = const ArcMapMarkerAlignmentEngine();
@@ -269,6 +275,9 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
   void initState() {
     super.initState();
     _repository = widget.repository ?? ArcAdminMapEditorRepository();
+    _adminAccess = widget.repository != null
+        ? Future<bool>.value(true)
+        : _verifyAdminAccess();
     final maps = ArcRaidIntelligenceSeedData.maps
         .where((item) => item.availableLayers.isNotEmpty)
         .toList(growable: false);
@@ -287,6 +296,20 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
     _transformationController.dispose();
     _searchController.dispose();
     super.dispose();
+  }
+
+  Future<bool> _verifyAdminAccess() async {
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) return false;
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .get();
+      return doc.data()?['isAdmin'] == true || doc.data()?['isDev'] == true;
+    } catch (_) {
+      return false; // Fail closed, including when Firestore is unavailable.
+    }
   }
 
   Future<void> _load() async {
@@ -922,6 +945,163 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
       ..sort((a, b) => a.name.compareTo(b.name));
   }
 
+  Future<void> _bulkAddIntel() async {
+    if (_saving || _loading) {
+      return;
+    }
+    if (_dirty) {
+      _message('Save your current map edits before bulk adding intel.');
+      return;
+    }
+    if (!(await _adminAccess) || !mounted) {
+      return;
+    }
+    final request = await showDialog<ArcBulkIntelRequest>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => ArcAdminBulkIntelDialog(initialMapId: _mapId),
+    );
+    if (request == null || !mounted) {
+      return;
+    }
+    final plan = ArcBulkIntelPlan.build(request);
+    if (plan.total == 0) {
+      return;
+    }
+    setState(() => _saving = true);
+    try {
+      final count = await _repository.createBulkIntelDrafts(plan);
+      if (!mounted) return;
+      setState(() => _saving = false);
+      await _load(); // Reload active map, preserving other maps in Firestore.
+      if (mounted) {
+        _message(
+          '$count admin-only drafts created: ${plan.markers.length} POI markers and ${plan.unlocated.length} map-wide records. None published.',
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(() => _saving = false);
+        _message('Bulk save rejected: $error');
+      }
+    }
+  }
+
+  Future<void> _showMapWideIntel() async {
+    if (!(await _adminAccess) || !mounted) {
+      return;
+    }
+    var records = await _repository.loadAreaIntelForMap(_mapId);
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, refresh) => AlertDialog(
+          backgroundColor: ArcUiTokens.surfaceOverlay,
+          title: const Text(
+            'MAP-WIDE INTEL (NO PIN)',
+            style: TextStyle(color: ArcUiTokens.secondaryAccent),
+          ),
+          content: SizedBox(
+            width: 540,
+            height: (MediaQuery.sizeOf(dialogContext).height - 225)
+                .clamp(90.0, 520.0)
+                .toDouble(),
+            child: records.isEmpty
+                ? const Text('No unlocated intel for this map.')
+                : ListView(
+                    children: [
+                      for (final record in records)
+                        ListTile(
+                          title: Text(
+                            record['name']?.toString() ?? 'Unlocated intel',
+                          ),
+                          subtitle: Text(
+                            '${record['kind']} · ${record['state']} · ${record['containerTypeIds'] ?? []}',
+                          ),
+                          trailing: PopupMenuButton<ArcAdminMapMarkerState>(
+                            tooltip: 'Change publication state',
+                            itemBuilder: (_) => const [
+                              PopupMenuItem(
+                                value: ArcAdminMapMarkerState.published,
+                                child: Text('Publish'),
+                              ),
+                              PopupMenuItem(
+                                value: ArcAdminMapMarkerState.draft,
+                                child: Text('Return to Draft'),
+                              ),
+                              PopupMenuItem(
+                                value: ArcAdminMapMarkerState.archived,
+                                child: Text('Archive'),
+                              ),
+                            ],
+                            onSelected: (state) async {
+                              try {
+                                await _repository.setAreaIntelState(
+                                  record['id'].toString(),
+                                  state,
+                                );
+                                records = await _repository.loadAreaIntelForMap(
+                                  _mapId,
+                                );
+                                if (dialogContext.mounted) {
+                                  refresh(() {});
+                                }
+                              } catch (error) {
+                                if (mounted) {
+                                  _message(
+                                    'Cannot update map-wide intel: $error',
+                                  );
+                                }
+                              }
+                            },
+                          ),
+                        ),
+                    ],
+                  ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Close'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _beginRapidPlacement() async {
+    if (_saving) {
+      return;
+    }
+    final result = await showDialog<_NewMarkerResult>(
+      context: context,
+      builder: (context) => _NewMarkerDialog(
+        title: 'Rapid Place Markers',
+        actionLabel: 'Place Multiple Pins',
+        mapName: _map.displayName,
+        initialKind: ArcAdminMapMarkerKind.poi,
+        includeSeedKinds: true,
+        initialSourceLabel: 'UAG Admin Rapid Placement',
+      ),
+    );
+    if (result == null || !mounted) {
+      return;
+    }
+    _beginMarkerPlacement(
+      kind: result.kind,
+      label: result.name,
+      sourceLabel: result.sourceLabel,
+      dialogTitle: 'Rapid Place Markers',
+      pendingPoi: result,
+    );
+    setState(() => _rapidPlacement = true);
+    _message(
+      'Rapid placement active. Tap multiple positions, then Stop and Save Changes.',
+    );
+  }
+
   void _beginPoiPlacement() {
     _beginMarkerPlacement(
       kind: ArcAdminMapMarkerKind.poi,
@@ -1013,6 +1193,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
     _placementRequiresBlueprint = false;
     _placementDialogTitle = 'Create POI';
     _placementSourceLabel = 'UAG Manual Location';
+    _rapidPlacement = false;
   }
 
   Future<void> _createMarkerAt(ArcNormalizedPoint point) async {
@@ -1096,7 +1277,11 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
       _markers = [..._markers, marker]
         ..sort((a, b) => a.name.compareTo(b.name));
       _selected = marker;
-      _resetPlacementFields();
+      if (!_rapidPlacement) {
+        _resetPlacementFields();
+      } else {
+        _saveStatus = 'Rapid placement: tap another position or stop';
+      }
       _showCustomIntel = true;
       _markDirty();
     });
@@ -1329,6 +1514,29 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
 
   @override
   Widget build(BuildContext context) {
+    return FutureBuilder<bool>(
+      future: _adminAccess,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (snapshot.data != true) {
+          return const Scaffold(
+            body: Center(
+              child: Text(
+                'Admin Map & Intel Editor is restricted to admin and dev accounts.',
+              ),
+            ),
+          );
+        }
+        return _buildAuthorisedEditor(context);
+      },
+    );
+  }
+
+  Widget _buildAuthorisedEditor(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar:
@@ -1833,6 +2041,15 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
                   label: const Text('Add Blueprint Location'),
                 ),
                 OutlinedButton.icon(
+                  key: const Key('admin-bulk-add-intel'),
+                  onPressed: _saving ? null : _bulkAddIntel,
+                  icon: const Icon(
+                    Icons.layers_rounded,
+                    color: ArcUiTokens.secondaryAccent,
+                  ),
+                  label: const Text('Bulk Add Intel'),
+                ),
+                OutlinedButton.icon(
                   onPressed: _selected == null || _saving
                       ? null
                       : _editSelected,
@@ -1871,7 +2088,49 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
                 _MapEditorExpandableSection(
                   title: 'ADD MARKERS',
                   initiallyExpanded: true,
-                  child: _markerPaletteCard(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _markerPaletteCard(),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          OutlinedButton.icon(
+                            key: const Key('admin-bulk-map-wide-list'),
+                            onPressed: _saving ? null : _showMapWideIntel,
+                            icon: const Icon(Icons.public_rounded),
+                            label: const Text('Map-wide Intel'),
+                          ),
+                          OutlinedButton.icon(
+                            key: const Key('admin-rapid-place-markers'),
+                            onPressed: _saving
+                                ? null
+                                : (_rapidPlacement
+                                      ? () {
+                                          setState(
+                                            () => _resetPlacementFields(),
+                                          );
+                                          _message(
+                                            'Rapid placement stopped. Save Changes to keep drafts.',
+                                          );
+                                        }
+                                      : _beginRapidPlacement),
+                            icon: Icon(
+                              _rapidPlacement
+                                  ? Icons.stop_circle_outlined
+                                  : Icons.add_location_alt_rounded,
+                            ),
+                            label: Text(
+                              _rapidPlacement
+                                  ? 'Stop Rapid Placement'
+                                  : 'Rapid Place',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 10),
                 _MapEditorExpandableSection(

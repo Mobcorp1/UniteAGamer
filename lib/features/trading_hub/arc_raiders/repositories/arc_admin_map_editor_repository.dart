@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_asset_registry.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bulk_map_intel_plan.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_map_marker.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_drop_report.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_community_intel_report.dart';
@@ -23,6 +24,7 @@ class ArcAdminMapEditorRepository {
   static const _draftKeyPrefix = 'arc_admin_map_editor_drafts_v1';
   static const _importCacheKeyPrefix = 'arc_admin_map_import_cache_v1';
   static const collectionName = 'arc_admin_map_markers';
+  static const areaIntelCollectionName = 'arc_admin_map_area_intel';
   static const blueprintReportCollectionName = 'arc_blueprint_drop_reports';
   static const communityIntelCollectionName = 'arc_community_intel_reports';
   static const coverageCollectionName = 'arc_map_marker_coverage_reports';
@@ -208,6 +210,84 @@ class ArcAdminMapEditorRepository {
       savedCount: values.length,
       savedAt: savedAt,
     );
+  }
+
+  /// Admin-only atomic bulk creation. Reject existing identities rather than
+  /// changing manually verified markers or any previously published records.
+  Future<int> createBulkIntelDrafts(ArcBulkIntelPlan plan) async {
+    if (plan.total == 0 || plan.total > 200) {
+      throw ArgumentError('Expected between 1 and 200 bulk draft records.');
+    }
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) throw StateError('Admin sign-in is required.');
+    final account = await _firestore.collection('users').doc(uid).get();
+    final data = account.data() ?? const <String, dynamic>{};
+    if (data['isAdmin'] != true && data['isDev'] != true) {
+      throw StateError(
+        'Bulk map intelligence is restricted to admin and dev accounts.',
+      );
+    }
+    final refs = <DocumentReference<Map<String, dynamic>>>[
+      for (final marker in plan.markers)
+        _firestore.collection(collectionName).doc(marker.id),
+      for (final area in plan.unlocated)
+        _firestore.collection(areaIntelCollectionName).doc(area.id),
+    ];
+    await _firestore.runTransaction((transaction) async {
+      for (final ref in refs) {
+        if ((await transaction.get(ref)).exists) {
+          throw StateError(
+            'A matching intelligence draft already exists. Nothing was overwritten.',
+          );
+        }
+      }
+      for (var index = 0; index < plan.markers.length; index++) {
+        transaction.set(refs[index], {
+          ...plan.markers[index].toMap(),
+          'createdByUid': uid,
+          'updatedByUid': uid,
+          'createdAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+      for (var index = 0; index < plan.unlocated.length; index++) {
+        transaction.set(refs[plan.markers.length + index], {
+          ...plan.unlocated[index].toMap(),
+          'createdByUid': uid,
+          'updatedByUid': uid,
+          'createdAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+    });
+    return plan.total;
+  }
+
+  /// This collection never exposes coordinates; it does not render as a pin.
+  Future<List<Map<String, dynamic>>> loadAreaIntelForMap(String mapId) async {
+    final snapshot = await _firestore
+        .collection(areaIntelCollectionName)
+        .where('mapId', isEqualTo: mapId)
+        .get();
+    return snapshot.docs.map((doc) => {...doc.data(), 'id': doc.id}).toList();
+  }
+
+  Future<void> setAreaIntelState(
+    String id,
+    ArcAdminMapMarkerState state,
+  ) async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) throw StateError('Admin sign-in required.');
+    final account = await _firestore.collection('users').doc(uid).get();
+    if (account.data()?['isAdmin'] != true &&
+        account.data()?['isDev'] != true) {
+      throw StateError('Admin-only operation.');
+    }
+    await _firestore.collection(areaIntelCollectionName).doc(id).update({
+      'state': state.name,
+      'updatedAt': FieldValue.serverTimestamp(),
+      'updatedByUid': uid,
+    });
   }
 
   /// One Blueprint can be attached to independent records on any map, layer,
@@ -597,6 +677,8 @@ const _editableMarkerFields = [
   'blueprintId',
   'sourceLabel',
   'confidence',
+  'poiId',
+  'containerTypeIds',
 ];
 
 bool _markerValueEquals(dynamic a, dynamic b) {
