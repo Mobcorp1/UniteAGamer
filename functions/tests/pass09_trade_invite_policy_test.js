@@ -1,7 +1,7 @@
 'use strict';
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { tokenDigest, safeAlias, inviteFromUri, isValidInvite } = require('../uag_trade_invite_gateway');
+const { tokenDigest, publicInviteUrl, safeAlias, inviteFromUri, isValidInvite } = require('../uag_trade_invite_gateway');
 const { rewardTier, evaluateVerifiedConversions } = require('../uag_trade_referral_incentives');
 test('opaque URL never embeds Firebase UID and cannot be guessed from digest', () => {
   const token = 'Abc123_-'.repeat(6);
@@ -25,4 +25,11 @@ test('paid conversions deduplicate people and exclude refunds', () => {
   assert.equal(rewardTier(3, 1200), 'essential');
   assert.equal(rewardTier(6, 3000), 'premium');
   assert.equal(rewardTier(3, 1100), null);
+});
+
+test('new personalised invitation URLs use the canonical uniteagamer.com domain', () => {
+  const token = 'Abc123_-'.repeat(6);
+  assert.equal(publicInviteUrl(token), `https://uniteagamer.com/t/${token}`);
+  assert.equal(inviteFromUri(publicInviteUrl(token)), token);
+  assert.throws(() => publicInviteUrl('not-a-valid-token'));
 });

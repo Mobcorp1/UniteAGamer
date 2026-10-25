@@ -4,8 +4,7 @@
 class ArcTradeShareCopy {
   const ArcTradeShareCopy._();
 
-  static const String headline =
-      '⚡ ARC RAIDERS: THESE BLUEPRINTS ARE UP FOR TRADE';
+  static const String headline = '⚡ ARC RAIDERS BLUEPRINTS FOR TRADE';
 
   static const String hashtags =
       '#ArcRaiders #BlueprintTrading #ArcRaidersTrading #UniteAGamer #FYP';
@@ -13,35 +12,25 @@ class ArcTradeShareCopy {
   static String _displayName(String name) {
     final normalized = name.replaceAll(RegExp(r'\s+'), ' ').trim();
     if (normalized.isEmpty) return 'a UAG Raider';
-    return normalized.length > 42 ? '${normalized.substring(0, 42)}…' : normalized;
+    return normalized.length > 42
+        ? '${normalized.substring(0, 42)}…'
+        : normalized;
   }
 
-  /// Short invite for WhatsApp and direct messages: link resolves to the
-  /// original Raider after authentication and mandatory onboarding.
+  /// Short direct-message caption; personal invitation resolves after sign-in.
   static String whatsApp({required String raider, required String link}) =>
       '🎮 ARC RAIDERS — TRADE WITH ${_displayName(raider)}\n\n'
-      'See what I have available. To find out what I need in return, open my '
-      'personal Raider link, sign in or join UAG and complete your Raider '
-      'setup. Compare collections and send me an offer inside UAG.\n\n'
+      'I’ve got spare Blueprints. Fancy a trade?\n\n'
+      'Check my trade card. Sign up or log in at uniteagamer.com to see what '
+      'I need and make an offer.\n\n'
       '🔗 $link';
 
-  /// Long social caption. Use with the cinematic artwork, not a text inventory.
-  /// Up to five relevant hashtags, including #FYP, and no assumed social handle.
+  /// Brief social post: no public inventory, no private wants or false offers.
   static String social({required String raider, required String link}) =>
       '$headline\n\n'
-      'I have spare ARC Raiders Blueprints ready to trade. Take a look at the '
-      'available items on my share card. What am I looking for? '
-      'That part stays inside UAG.\n\n'
-      'I’m ${_displayName(raider)}, and I’m trading through the UAG ARC Raiders Hub. '
-      'Take a look at my personal Raider trading page, compare what works for '
-      'your collection and send me an offer directly. Whether you are trying '
-      'to finish your Blueprint grid, gear up for your next raid or complete '
-      'a favourite loadout, a good trade beats another night of blind grinding.\n\n'
-      'No endless back-and-forth listing every item in the comments. Open the '
-      'link, create your free account or sign in, finish the required Raider '
-      'setup and you will be brought straight back to my trading page. '
-      'From there, propose a trade and arrange the exchange through UAG.\n\n'
-      '👇 SEE WHAT I NEED AND SEND AN OFFER IN UAG\n'
+      'I’ve got spare Blueprints. Fancy a trade? 🎮\n\n'
+      'Check out my trade card! Sign up or log in at uniteagamer.com to '
+      'see what I need and make an offer.\n\n'
       '🔗 $link\n\n'
       '$hashtags';
 }

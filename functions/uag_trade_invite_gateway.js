@@ -7,6 +7,11 @@ const INVITE_PATTERN = /^[A-Za-z0-9_-]{28,96}$/;
 const MAX_ISSUES_PER_DAY = 25;
 const SIGNUP_GRACE_MS = 15 * 60 * 1000;
 
+function publicInviteUrl(token) {
+  if (!INVITE_PATTERN.test(token)) throw new Error('Invalid trade token');
+  return `https://uniteagamer.com/t/${token}`;
+}
+
 function tokenDigest(token) {
   return crypto.createHash('sha256').update(token, 'utf8').digest('hex');
 }
@@ -141,7 +146,7 @@ function buildGateway({ admin, db, auth }) {
             source: 'uag_trade_invite', createdAt: stamp(), expiresAt: time(now + INVITE_LIFETIME_MS) });
         });
         if (limited) { res.status(429).json({ error: 'Daily sharing limit reached' }); return; }
-        res.status(200).json({ url: `https://unite-a-gamer.web.app/t/${token}`, alias: name,
+        res.status(200).json({ url: publicInviteUrl(token), alias: name,
           expiresAt: new Date(now + INVITE_LIFETIME_MS).toISOString() });
         return;
       }
@@ -205,4 +210,4 @@ function buildGateway({ admin, db, auth }) {
   };
 }
 
-module.exports = { tokenDigest, safeAlias, inviteFromUri, isValidInvite, buildGateway };
+module.exports = { tokenDigest, publicInviteUrl, safeAlias, inviteFromUri, isValidInvite, buildGateway };
