@@ -10,6 +10,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bl
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_collection_slot_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_native_collection_screenshot_recognizer.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_stencil_catalogue.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_weapon_stencil_compatibility.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_asset_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_compatibility_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_intelligence_engine.dart';
@@ -321,8 +322,14 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       _shield = ArcLoadoutRepairCatalog.migrateLegacyShield(loadout.shield);
       _primaryWeapon = loadout.primaryWeapon;
       _secondaryWeapon = loadout.secondaryWeapon;
-      _primaryStencilSlot = loadout.primaryStencilSlot;
-      _secondaryStencilSlot = loadout.secondaryStencilSlot;
+      _primaryStencilSlot = ArcWeaponStencilCompatibility.compatibleSavedSlot(
+        weaponName: _primaryWeapon,
+        slot: loadout.primaryStencilSlot,
+      );
+      _secondaryStencilSlot = ArcWeaponStencilCompatibility.compatibleSavedSlot(
+        weaponName: _secondaryWeapon,
+        slot: loadout.secondaryStencilSlot,
+      );
       _primaryAttachments
         ..clear()
         ..addAll(
@@ -1104,6 +1111,10 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     }
     if (!mounted) return;
     final current = primary ? _primaryStencilSlot : _secondaryStencilSlot;
+    final weaponName = primary ? _primaryWeapon : _secondaryWeapon;
+    final compatibleSlots = ArcWeaponStencilCompatibility.slotsForWeapon(
+      weaponName,
+    );
     final selected = await showModalBottomSheet<int>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -1140,7 +1151,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
             Flexible(
               child: ListView.builder(
                 shrinkWrap: true,
-                itemCount: ArcStencilCatalogue.names.length + 1,
+                itemCount: compatibleSlots.length + 1,
                 itemBuilder: (context, index) {
                   if (index == 0) {
                     return ListTile(
@@ -1162,13 +1173,14 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                       onTap: () => Navigator.pop(sheetContext, 0),
                     );
                   }
-                  final name = ArcStencilCatalogue.nameAt(index);
-                  final isOwned = owned.contains(index);
+                  final slot = compatibleSlots[index - 1];
+                  final name = ArcWeaponStencilCompatibility.displayName(slot);
+                  final isOwned = owned.contains(slot);
                   return ListTile(
-                    key: Key('loadout-stencil-$index'),
+                    key: Key('loadout-stencil-$slot'),
                     enabled: isOwned,
                     leading: Image.asset(
-                      ArcStencilCatalogue.assetAt(index),
+                      ArcStencilCatalogue.assetAt(slot),
                       width: 46,
                       height: 46,
                       fit: BoxFit.contain,
@@ -1193,7 +1205,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                             : ArcUiTokens.textTertiary,
                       ),
                     ),
-                    trailing: current == index
+                    trailing: current == slot
                         ? const Icon(
                             Icons.check_circle,
                             color: ArcUiTokens.primaryAccent,
@@ -1202,7 +1214,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                         ? const Icon(Icons.chevron_right, color: Colors.white54)
                         : const Icon(Icons.lock_outline, color: Colors.white30),
                     onTap: isOwned
-                        ? () => Navigator.pop(sheetContext, index)
+                        ? () => Navigator.pop(sheetContext, slot)
                         : null,
                   );
                 },
@@ -1213,6 +1225,13 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       ),
     );
     if (!mounted || selected == null) return;
+    if (selected != 0 &&
+        !ArcWeaponStencilCompatibility.isCompatible(
+          weaponName: weaponName,
+          slot: selected,
+        )) {
+      return;
+    }
     setState(() {
       if (primary) {
         _primaryStencilSlot = selected == 0 ? null : selected;
@@ -1224,9 +1243,13 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
 
   Widget _stencilAction(bool primary, Color accent, double size) {
     final slot = primary ? _primaryStencilSlot : _secondaryStencilSlot;
-    final valid =
-        slot != null && slot >= 1 && slot <= ArcStencilCatalogue.names.length;
-    final label = valid ? ArcStencilCatalogue.nameAt(slot) : 'Stencil';
+    final valid = ArcWeaponStencilCompatibility.isCompatible(
+      weaponName: primary ? _primaryWeapon : _secondaryWeapon,
+      slot: slot,
+    );
+    final label = valid
+        ? ArcWeaponStencilCompatibility.displayName(slot!)
+        : 'Stencil';
     return Tooltip(
       message: valid ? 'Stencil: $label' : 'Choose owned Stencil',
       child: InkWell(
@@ -1246,7 +1269,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           ),
           child: valid
               ? Image.asset(
-                  ArcStencilCatalogue.assetAt(slot),
+                  ArcStencilCatalogue.assetAt(slot!),
                   fit: BoxFit.contain,
                   errorBuilder: (_, _, _) =>
                       Icon(Icons.palette_outlined, color: accent),
@@ -1983,7 +2006,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                         Padding(
                           padding: const EdgeInsets.only(top: 3),
                           child: Text(
-                            ArcStencilCatalogue.nameAt(
+                            ArcWeaponStencilCompatibility.displayName(
                               (primary
                                   ? _primaryStencilSlot
                                   : _secondaryStencilSlot)!,
@@ -2980,7 +3003,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                   (primary ? _primaryStencilSlot : _secondaryStencilSlot) ==
                           null
                       ? 'Choose owned Stencil'
-                      : ArcStencilCatalogue.nameAt(
+                      : ArcWeaponStencilCompatibility.displayName(
                           (primary
                               ? _primaryStencilSlot
                               : _secondaryStencilSlot)!,
