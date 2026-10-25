@@ -88,8 +88,10 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
       _expeditionStateManager.watchState();
   late final Stream<Map<String, ArcBlueprintState>> _blueprintStatesStream =
       _blueprintRepository.watchMyBlueprintStates();
-  late final Stream<List<ArcSavedLoadout>> _loadoutsStream = _loadoutRepository
-      .watchSavedLoadouts();
+  // The editor saves exactly this document. Querying the entire collection
+  // with orderBy('updatedAt') can omit older documents or fail independently.
+  late final Stream<ArcSavedLoadout?> _favouriteLoadoutStream =
+      _loadoutRepository.watchFavouriteLoadout();
   late final Stream<ArcOperationsUserState> _operationsStateStream =
       _operationsRepository.watchUserState();
   late final Stream<ArcScrappyRepositoryState<Map<String, ArcScrappyState>>>
@@ -120,6 +122,8 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
   Map<String, ArcBlueprintState> _cachedBlueprintStates =
       <String, ArcBlueprintState>{};
   List<ArcSavedLoadout> _cachedLoadouts = const <ArcSavedLoadout>[];
+  bool _favouriteLoadoutResolved = false;
+  bool _favouriteLoadoutReadFailed = false;
   ArcOperationsUserState _cachedOperationsState = ArcOperationsUserState.empty;
   ArcScrappyRepositoryState<Map<String, ArcScrappyState>> _cachedScrappyState =
       const ArcScrappyRepositoryState<Map<String, ArcScrappyState>>(
@@ -313,11 +317,21 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
                           _cachedBlueprintStates = blueprintSnapshot.data!;
                         }
                         final blueprintStates = _cachedBlueprintStates;
-                        return StreamBuilder<List<ArcSavedLoadout>>(
-                          stream: _loadoutsStream,
+                        return StreamBuilder<ArcSavedLoadout?>(
+                          stream: _favouriteLoadoutStream,
                           builder: (context, loadoutSnapshot) {
-                            if (loadoutSnapshot.hasData) {
-                              _cachedLoadouts = loadoutSnapshot.data!;
+                            if (loadoutSnapshot.hasError) {
+                              _favouriteLoadoutReadFailed = true;
+                            } else if (loadoutSnapshot.connectionState ==
+                                ConnectionState.active) {
+                              // A resolved null is genuinely not saved; a
+                              // pending/failed read is not proof of absence.
+                              final favourite = loadoutSnapshot.data;
+                              _cachedLoadouts = favourite == null
+                                  ? const <ArcSavedLoadout>[]
+                                  : <ArcSavedLoadout>[favourite];
+                              _favouriteLoadoutResolved = true;
+                              _favouriteLoadoutReadFailed = false;
                             }
                             final loadouts = _cachedLoadouts;
                             return StreamBuilder<ArcOperationsUserState>(
@@ -540,6 +554,10 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
         child: ArcCommandCentreContent(
           expeditionState: expeditionState,
           commandState: commandState,
+          loadoutPending:
+              !_favouriteLoadoutResolved && !_favouriteLoadoutReadFailed,
+          loadoutUnavailable:
+              _favouriteLoadoutReadFailed && _cachedLoadouts.isEmpty,
           tradeActivity: tradeActivity,
           checklistState: _checklistState,
           onAction: _handleAction,
@@ -560,6 +578,10 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
         child: ArcCommandCentreContent(
           expeditionState: expeditionState,
           commandState: commandState,
+          loadoutPending:
+              !_favouriteLoadoutResolved && !_favouriteLoadoutReadFailed,
+          loadoutUnavailable:
+              _favouriteLoadoutReadFailed && _cachedLoadouts.isEmpty,
           tradeActivity: tradeActivity,
           checklistState: _checklistState,
           onAction: _handleAction,
@@ -577,6 +599,10 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
       child: ArcCommandCentreContent(
         expeditionState: expeditionState,
         commandState: commandState,
+        loadoutPending:
+            !_favouriteLoadoutResolved && !_favouriteLoadoutReadFailed,
+        loadoutUnavailable:
+            _favouriteLoadoutReadFailed && _cachedLoadouts.isEmpty,
         tradeActivity: tradeActivity,
         checklistState: _checklistState,
         onAction: _handleAction,
