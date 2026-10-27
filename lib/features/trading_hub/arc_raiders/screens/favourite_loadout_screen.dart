@@ -12,6 +12,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_na
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_stencil_catalogue.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_weapon_stencil_compatibility.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_asset_registry.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_weapon_blueprint_ownership.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_compatibility_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_integration_engine.dart';
@@ -127,9 +128,9 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     String itemName,
     Map<String, ArcBlueprintState> states,
   ) {
-    final blueprint = _blueprintForName(itemName);
-    if (blueprint == null) return ArcBlueprintState.empty(itemName);
-    return states[blueprint.id] ?? ArcBlueprintState.empty(blueprint.id);
+    final id = ArcWeaponBlueprintOwnership.blueprintIdForName(itemName);
+    if (id == null) return ArcBlueprintState.empty(itemName);
+    return states[id] ?? ArcBlueprintState.empty(id);
   }
 
   bool _isOwnedOrNotBlueprint({
@@ -1023,15 +1024,8 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       items: ArcLoadoutSeedData.weapons,
       labelBuilder: (weapon) => weapon.name,
       subtitleBuilder: (weapon) {
-        final owned = _isOwnedOrNotBlueprint(
-          itemName: weapon.name,
-          blueprintBased: weapon.blueprintBased,
-          states: states,
-        );
         final availability = weapon.blueprintBased
-            ? owned
-                  ? 'Blueprint owned'
-                  : 'Missing blueprint - selectable for planning'
+            ? ArcWeaponBlueprintOwnership.ownershipLabel(weapon.name, states)
             : weapon.craftable
             ? weapon.gunsmithLevel == null
                   ? 'Bench craftable'
@@ -1092,6 +1086,74 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           ..addAll(nextAttachments);
       }
     });
+    if (ArcWeaponBlueprintOwnership.isSupplemental(selected.name)) {
+      await _confirmSupplementalBlueprint(selected.name, states);
+    }
+  }
+
+  Future<void> _confirmSupplementalBlueprint(
+    String weaponName,
+    Map<String, ArcBlueprintState> states,
+  ) async {
+    final id = ArcWeaponBlueprintOwnership.blueprintIdForName(weaponName);
+    if (id == null || !mounted) return;
+    final learned = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text('$weaponName Blueprint'),
+        content: const Text(
+          'Have you learned this Blueprint in ARC Raiders? '
+          'This updates your UAG Blueprint ownership record; '
+          'it does not change the fixed Blueprint grid.',
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Keep status'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Not learned'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Learned'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || learned == null) return;
+    try {
+      final current = states[id] ?? ArcBlueprintState.empty(id);
+      await _blueprintRepository.saveBlueprintState(
+        current.copyWith(
+          owned: learned,
+          dupesOwned: learned ? current.dupesOwned : 0,
+          ownershipSource: learned
+              ? ArcBlueprintOwnershipSource.manual
+              : ArcBlueprintOwnershipSource.unknown,
+        ),
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            learned
+                ? '$weaponName Blueprint marked learned.'
+                : '$weaponName Blueprint marked not learned.',
+          ),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Blueprint status could not sync. Check your connection.',
+          ),
+        ),
+      );
+    }
   }
 
   Future<void> _pickStencil(bool primary) async {
@@ -2988,7 +3050,13 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
             accent: accent,
             owned: owned,
             lockedLabel: weapon.blueprintBased && !owned
-                ? 'MISSING BLUEPRINT'
+                ? ArcWeaponBlueprintOwnership.isSupplemental(weapon.name) &&
+                          !ArcWeaponBlueprintOwnership.hasTrackedRecord(
+                            weapon.name,
+                            states,
+                          )
+                      ? 'BLUEPRINT NOT TRACKED'
+                      : 'MISSING BLUEPRINT'
                 : null,
             onTap: () => _pickWeapon(primary: primary, states: states),
             imageSize: 62,

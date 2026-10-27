@@ -41,6 +41,9 @@ class ArcLoadoutSeedData {
       category: 'Hand Cannon',
       role: 'High-impact raider stopping power',
       slots: ['Muzzle Mod'],
+
+      craftable: true,
+      gunsmithLevel: 2,
       blueprintBased: true,
     ),
     ArcLoadoutWeaponSpec(
@@ -48,6 +51,7 @@ class ArcLoadoutSeedData {
       category: 'Hand Cannon',
       role: 'Frozen Trail heavy-ammo double-action revolver',
       slots: [],
+
       craftable: true,
       gunsmithLevel: 1,
       blueprintBased: true,
@@ -57,6 +61,9 @@ class ArcLoadoutSeedData {
       category: 'Weapon',
       role: 'Attachment layout verified in-game',
       slots: ['Underbarrel Mod', 'Stock Mod'],
+      craftable: true,
+      gunsmithLevel: 3,
+      blueprintBased: true,
     ),
     ArcLoadoutWeaponSpec(
       name: 'Arpeggio',
@@ -68,13 +75,19 @@ class ArcLoadoutSeedData {
         'Medium Magazine Mod',
         'Stock Mod',
       ],
-      blueprintBased: true,
+
+      craftable: true,
+      gunsmithLevel: 2,
+      blueprintBased: false,
     ),
     ArcLoadoutWeaponSpec(
       name: 'Bettina',
       category: 'Weapon',
       role: 'Attachment layout verified in-game',
       slots: ['Muzzle Mod', 'Underbarrel Mod', 'Stock Mod'],
+      craftable: true,
+      gunsmithLevel: 3,
+      blueprintBased: true,
     ),
     ArcLoadoutWeaponSpec(
       name: 'Bobcat',
@@ -86,6 +99,9 @@ class ArcLoadoutSeedData {
         'Light Magazine Mod',
         'Stock Mod',
       ],
+
+      craftable: true,
+      gunsmithLevel: 3,
       blueprintBased: true,
     ),
     ArcLoadoutWeaponSpec(
@@ -93,6 +109,9 @@ class ArcLoadoutSeedData {
       category: 'Pistol',
       role: 'Light backup sidearm',
       slots: ['Muzzle Mod', 'Light Magazine Mod'],
+      craftable: true,
+      gunsmithLevel: 1,
+      blueprintBased: true,
     ),
     ArcLoadoutWeaponSpec(
       name: 'Canto',
@@ -104,32 +123,44 @@ class ArcLoadoutSeedData {
         'Medium Magazine Mod',
         'Stock Mod',
       ],
+      craftable: true,
+      gunsmithLevel: 3,
+      blueprintBased: true,
     ),
     ArcLoadoutWeaponSpec(
       name: 'Equalizer',
       category: 'Weapon',
       role: 'No attachment slots',
       slots: [],
+      craftable: true,
+      gunsmithLevel: 3,
+      blueprintBased: true,
     ),
     ArcLoadoutWeaponSpec(
       name: 'Ferro',
       category: 'Battle Rifle',
       role: 'Heavy precision damage',
       slots: ['Muzzle Mod', 'Underbarrel Mod', 'Stock Mod'],
+
       craftable: true,
-      gunsmithLevel: 2,
+      blueprintBased: false,
     ),
     ArcLoadoutWeaponSpec(
       name: 'Hairpin',
       category: 'Pistol',
       role: 'Compact sidearm',
       slots: ['Light Magazine Mod'],
+      craftable: true,
+      blueprintBased: false,
     ),
     ArcLoadoutWeaponSpec(
       name: 'Hullcracker',
       category: 'Weapon',
       role: 'Attachment layout verified in-game',
       slots: ['Underbarrel Mod', 'Stock Mod'],
+      craftable: true,
+      gunsmithLevel: 3,
+      blueprintBased: true,
     ),
     ArcLoadoutWeaponSpec(
       name: 'Il Toro',
@@ -141,6 +172,9 @@ class ArcLoadoutSeedData {
         'Shotgun Magazine Mod',
         'Stock Mod',
       ],
+
+      craftable: true,
+      gunsmithLevel: 1,
       blueprintBased: true,
     ),
     ArcLoadoutWeaponSpec(
@@ -148,6 +182,9 @@ class ArcLoadoutSeedData {
       category: 'Weapon',
       role: 'No attachment slots',
       slots: [],
+      craftable: true,
+      gunsmithLevel: 3,
+      blueprintBased: true,
     ),
     ArcLoadoutWeaponSpec(
       name: 'Kettle',
@@ -159,8 +196,9 @@ class ArcLoadoutSeedData {
         'Light Magazine Mod',
         'Stock Mod',
       ],
+
       craftable: true,
-      gunsmithLevel: 1,
+      blueprintBased: false,
     ),
     ArcLoadoutWeaponSpec(
       name: 'Osprey',
@@ -172,6 +210,9 @@ class ArcLoadoutSeedData {
         'Medium Magazine Mod',
         'Stock Mod',
       ],
+
+      craftable: true,
+      gunsmithLevel: 2,
       blueprintBased: true,
     ),
     ArcLoadoutWeaponSpec(
@@ -179,27 +220,36 @@ class ArcLoadoutSeedData {
       category: 'Weapon',
       role: 'No attachment slots',
       slots: [],
+      craftable: true,
+      gunsmithLevel: 2,
+      blueprintBased: true,
     ),
     ArcLoadoutWeaponSpec(
       name: 'Rattler',
       category: 'Assault Rifle',
       role: 'Reliable automatic mid-range control',
       slots: ['Stock Mod', 'Converter'],
+
       craftable: true,
-      gunsmithLevel: 2,
+      gunsmithLevel: 1,
+      blueprintBased: false,
     ),
     ArcLoadoutWeaponSpec(
       name: 'Renegade',
       category: 'Battle Rifle',
       role: 'Heavy sustained raider pressure',
       slots: ['Muzzle Mod', 'Underbarrel Mod', 'Stock Mod'],
-      blueprintBased: true,
+
+      craftable: true,
+      gunsmithLevel: 3,
+      blueprintBased: false,
     ),
     ArcLoadoutWeaponSpec(
       name: 'Stiletto',
       category: 'Battle Rifle',
       role: 'Frozen Trail light-ammo semi-auto precision rifle',
       slots: ['Muzzle Mod', 'Underbarrel Mod', 'Stock Mod'],
+
       craftable: true,
       gunsmithLevel: 1,
       blueprintBased: true,
@@ -214,14 +264,18 @@ class ArcLoadoutSeedData {
         'Light Magazine Mod',
         'Stock Mod',
       ],
+
       craftable: true,
-      gunsmithLevel: 2,
+      blueprintBased: false,
     ),
     ArcLoadoutWeaponSpec(
       name: 'Tempest',
       category: 'Assault Rifle',
       role: 'Aggressive automatic PvP pressure',
       slots: ['Muzzle Mod', 'Underbarrel Mod', 'Medium Magazine Mod'],
+
+      craftable: true,
+      gunsmithLevel: 3,
       blueprintBased: true,
     ),
     ArcLoadoutWeaponSpec(
@@ -229,6 +283,9 @@ class ArcLoadoutSeedData {
       category: 'LMG',
       role: 'Sustained squad suppression',
       slots: ['Muzzle Mod', 'Medium Magazine Mod', 'Stock Mod'],
+
+      craftable: true,
+      gunsmithLevel: 2,
       blueprintBased: true,
     ),
     ArcLoadoutWeaponSpec(
@@ -236,6 +293,9 @@ class ArcLoadoutSeedData {
       category: 'Pistol',
       role: 'Medium sidearm pressure',
       slots: ['Underbarrel Mod', 'Medium Magazine Mod'],
+
+      craftable: true,
+      gunsmithLevel: 2,
       blueprintBased: true,
     ),
     ArcLoadoutWeaponSpec(
@@ -248,6 +308,9 @@ class ArcLoadoutSeedData {
         'Shotgun Magazine Mod',
         'Stock Mod',
       ],
+
+      craftable: true,
+      gunsmithLevel: 3,
       blueprintBased: true,
     ),
   ];
