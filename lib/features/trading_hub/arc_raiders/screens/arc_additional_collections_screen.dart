@@ -71,6 +71,7 @@ class _ArcAdditionalCollectionsScreenState
   final _repository = ArcCollectionSlotRepository();
   final _designNames = ArcDesignSlotNamesRepository();
   Map<int, String> _assignedDesignNames = <int, String>{};
+  Map<String, String> _designArtworkByFilename = <String, String>{};
   final _recognizer = const ArcNativeCollectionScreenshotRecognizer();
   late ArcNativeCollectionKind _kind;
   ArcCollectionView _view = ArcCollectionView.all;
@@ -85,6 +86,7 @@ class _ArcAdditionalCollectionsScreenState
   @override
   void initState() {
     super.initState();
+    _loadDesignArtwork();
     _kind = widget.initialKind;
     _loadSaved();
     if (_kind == ArcNativeCollectionKind.designs) {
@@ -116,6 +118,33 @@ class _ArcAdditionalCollectionsScreenState
       });
     }
   }
+
+  Future<void> _loadDesignArtwork() async {
+    try {
+      final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
+      final found = <String, String>{};
+      for (final path in manifest.listAssets()) {
+        if (!path.startsWith('assets/arc_raiders/') ||
+            !path.toLowerCase().endsWith('.webp')) {
+          continue;
+        }
+        final filename = path.split('/').last.toLowerCase();
+        // Only references explicitly bundled in pubspec are eligible.
+        found.putIfAbsent(filename, () => path);
+      }
+      if (mounted) setState(() => _designArtworkByFilename = found);
+    } catch (_) {
+      // Missing optional artwork must never block Design grid ownership.
+    }
+  }
+
+  // Do not display a single generic image in both Study Armchair slots;
+  // slot 37 vs 87 rarity is unverified. Per-user rarity confirmation wins.
+  String? _designArtworkForName(String name) => name == 'Study Armchair'
+      ? null
+      : _designArtworkByFilename[ArcDesignReferenceCatalogue.artworkFilenameForName(
+          name,
+        )];
 
   Future<void> _loadDesignNames() async {
     try {
@@ -344,11 +373,8 @@ class _ArcAdditionalCollectionsScreenState
   String _name(int slot) => _kind == ArcNativeCollectionKind.stencils
       ? ArcStencilCatalogue.nameAt(slot)
       : (_assignedDesignNames[slot] ??
-            switch (slot) {
-              1 => 'Printed Lab Sofa',
-              4 => 'Multicolored Geometric Sofa',
-              _ => 'Design slot $slot',
-            });
+            ArcDesignReferenceCatalogue.nameAt(slot) ??
+            'Design slot $slot');
 
   void _cycleReview(int slot) {
     if (_reviewStates.length != _kind.slots || _busy) {
@@ -863,11 +889,7 @@ class _ArcAdditionalCollectionsScreenState
         _reviewStates.length == _kind.slots &&
         _reviewStates[slot - 1] == ArcNativeSlotState.review;
     final name = _name(slot);
-    final cardName =
-        _kind == ArcNativeCollectionKind.designs &&
-            !_assignedDesignNames.containsKey(slot)
-        ? '#${slot.toString().padLeft(2, '0')}'
-        : name;
+    final cardName = name;
     return Opacity(
       opacity: relevant ? 1 : .21,
       child: InkWell(
@@ -1194,7 +1216,7 @@ class _ArcAdditionalCollectionsScreenState
             spares: _dupCount(slot),
             imageAssetPath: _kind == ArcNativeCollectionKind.stencils
                 ? ArcStencilCatalogue.assetAt(slot)
-                : null,
+                : _designArtworkForName(_name(slot)),
             icon: Icons.weekend_outlined,
             detail: _kind == ArcNativeCollectionKind.designs
                 ? 'Game slot $slot'
@@ -1296,6 +1318,17 @@ class _ArcAdditionalCollectionsScreenState
                                       ? Colors.cyanAccent
                                       : Colors.white38,
                                 ),
+                                if (_designArtworkForName(name)
+                                    case final String artwork)
+                                  Positioned.fill(
+                                    child: Image.asset(
+                                      artwork,
+                                      fit: BoxFit.contain,
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                              const SizedBox.shrink(),
+                                    ),
+                                  ),
                                 if (copies > 0)
                                   Positioned(
                                     right: 0,
