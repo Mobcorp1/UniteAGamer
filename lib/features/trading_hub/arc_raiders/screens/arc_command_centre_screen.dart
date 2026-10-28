@@ -2,6 +2,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blu
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_smart_build_trade_draft_screen.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
@@ -90,8 +91,14 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
       _blueprintRepository.watchMyBlueprintStates();
   // The editor saves exactly this document. Querying the entire collection
   // with orderBy('updatedAt') can omit older documents or fail independently.
-  late final Stream<ArcSavedLoadout?> _favouriteLoadoutStream =
-      _loadoutRepository.watchFavouriteLoadout();
+  // Follow the authenticated session rather than capturing the account at
+  // the first Command Centre build. A pre-auth subscription otherwise becomes
+  // a permanent Stream.value(null) even after the user signs in.
+  late final Stream<User?> _favouriteLoadoutAuthStream = FirebaseAuth.instance
+      .authStateChanges();
+  String? _favouriteLoadoutUid;
+  int _favouriteLoadoutRevision = 0;
+  Stream<ArcSavedLoadout?>? _favouriteLoadoutStream;
   late final Stream<ArcOperationsUserState> _operationsStateStream =
       _operationsRepository.watchUserState();
   late final Stream<ArcScrappyRepositoryState<Map<String, ArcScrappyState>>>
@@ -156,6 +163,58 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
   @override
   bool get wantKeepAlive => true;
 
+  // Never reuse a previous account's saved-loadout state or subscription.
+  // Binding happens when authStateChanges provides a concrete user ID.
+  void _bindFavouriteLoadoutSession(String? uid) {
+    if (_favouriteLoadoutUid == uid) {
+      return;
+    }
+    _favouriteLoadoutUid = uid;
+    _favouriteLoadoutRevision++;
+    _cachedLoadouts = const <ArcSavedLoadout>[];
+    _favouriteLoadoutResolved = false;
+    _favouriteLoadoutReadFailed = false;
+    _favouriteLoadoutStream = uid == null
+        ? null
+        : _loadoutRepository.watchFavouriteLoadout();
+  }
+
+  // A real document read after returning from the editor provides a second
+  // route to freshness if the original stream missed the write. Read errors
+  // are never interpreted as evidence that the user's saved kit is absent.
+  Future<void> _refreshFavouriteAfterEditor() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null || uid != _favouriteLoadoutUid) {
+      return;
+    }
+    try {
+      final saved = await _loadoutRepository.loadFavouriteLoadout();
+      if (!mounted || uid != _favouriteLoadoutUid) {
+        return;
+      }
+      setState(() {
+        _cachedLoadouts = saved == null
+            ? const <ArcSavedLoadout>[]
+            : <ArcSavedLoadout>[saved];
+        _favouriteLoadoutResolved = true;
+        _favouriteLoadoutReadFailed = false;
+        // Force a fresh listener. Otherwise StreamBuilder can replay its old
+        // active-null snapshot and immediately overwrite this successful read.
+        _favouriteLoadoutRevision++;
+        _favouriteLoadoutStream = _loadoutRepository.watchFavouriteLoadout();
+      });
+    } catch (_) {
+      if (!mounted || uid != _favouriteLoadoutUid) {
+        return;
+      }
+      setState(() {
+        _favouriteLoadoutReadFailed = true;
+        _favouriteLoadoutRevision++;
+        _favouriteLoadoutStream = _loadoutRepository.watchFavouriteLoadout();
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -190,9 +249,18 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
       bottomNavigationBar: const ArcCompanionBottomDock(activeLabel: 'run'),
       body: ArcRaidersScreenShell(
         showAdBanner: true,
-        child: KeyedSubtree(
-          key: const PageStorageKey('arc-command-centre-shell'),
-          child: _buildLiveCommandCentre(),
+        child: StreamBuilder<User?>(
+          stream: _favouriteLoadoutAuthStream,
+          builder: (context, authSnapshot) {
+            final user = authSnapshot.connectionState == ConnectionState.waiting
+                ? FirebaseAuth.instance.currentUser
+                : authSnapshot.data;
+            _bindFavouriteLoadoutSession(user?.uid);
+            return KeyedSubtree(
+              key: const PageStorageKey('arc-command-centre-shell'),
+              child: _buildLiveCommandCentre(),
+            );
+          },
         ),
       ),
     );
@@ -226,9 +294,17 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
           context,
         ).pushNamed(routeName, arguments: action.routeArguments);
       case ArcCommandActionIntent.favouriteLoadout:
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const FavouriteLoadoutScreen()),
-        );
+        Navigator.of(context)
+            .push<void>(
+              MaterialPageRoute<void>(
+                builder: (_) => const FavouriteLoadoutScreen(),
+              ),
+            )
+            .then((_) {
+              if (mounted) {
+                unawaited(_refreshFavouriteAfterEditor());
+              }
+            });
       case ArcCommandActionIntent.toolDeck:
         Navigator.of(context).pushNamed(MyHubScreen.toolDeckRouteName);
       case ArcCommandActionIntent.smartTrade:
@@ -318,6 +394,9 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
                         }
                         final blueprintStates = _cachedBlueprintStates;
                         return StreamBuilder<ArcSavedLoadout?>(
+                          key: ValueKey<String>(
+                            'command-centre-favourite-${_favouriteLoadoutUid ?? 'signed-out'}-$_favouriteLoadoutRevision',
+                          ),
                           stream: _favouriteLoadoutStream,
                           builder: (context, loadoutSnapshot) {
                             if (loadoutSnapshot.hasError) {
@@ -555,9 +634,12 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
           expeditionState: expeditionState,
           commandState: commandState,
           loadoutPending:
-              !_favouriteLoadoutResolved && !_favouriteLoadoutReadFailed,
+              _favouriteLoadoutUid != null &&
+              !_favouriteLoadoutResolved &&
+              !_favouriteLoadoutReadFailed,
           loadoutUnavailable:
-              _favouriteLoadoutReadFailed && _cachedLoadouts.isEmpty,
+              (_favouriteLoadoutUid == null || _favouriteLoadoutReadFailed) &&
+              _cachedLoadouts.isEmpty,
           tradeActivity: tradeActivity,
           checklistState: _checklistState,
           onAction: _handleAction,
@@ -579,9 +661,12 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
           expeditionState: expeditionState,
           commandState: commandState,
           loadoutPending:
-              !_favouriteLoadoutResolved && !_favouriteLoadoutReadFailed,
+              _favouriteLoadoutUid != null &&
+              !_favouriteLoadoutResolved &&
+              !_favouriteLoadoutReadFailed,
           loadoutUnavailable:
-              _favouriteLoadoutReadFailed && _cachedLoadouts.isEmpty,
+              (_favouriteLoadoutUid == null || _favouriteLoadoutReadFailed) &&
+              _cachedLoadouts.isEmpty,
           tradeActivity: tradeActivity,
           checklistState: _checklistState,
           onAction: _handleAction,
@@ -600,9 +685,12 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
         expeditionState: expeditionState,
         commandState: commandState,
         loadoutPending:
-            !_favouriteLoadoutResolved && !_favouriteLoadoutReadFailed,
+            _favouriteLoadoutUid != null &&
+            !_favouriteLoadoutResolved &&
+            !_favouriteLoadoutReadFailed,
         loadoutUnavailable:
-            _favouriteLoadoutReadFailed && _cachedLoadouts.isEmpty,
+            (_favouriteLoadoutUid == null || _favouriteLoadoutReadFailed) &&
+            _cachedLoadouts.isEmpty,
         tradeActivity: tradeActivity,
         checklistState: _checklistState,
         onAction: _handleAction,
