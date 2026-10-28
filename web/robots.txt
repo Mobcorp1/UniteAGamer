@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://unite-a-gamer.web.app/sitemap.xml
+Sitemap: https://uniteagamer.com/sitemap.xml
