@@ -97,7 +97,6 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
   late final Stream<User?> _favouriteLoadoutAuthStream = FirebaseAuth.instance
       .authStateChanges();
   String? _favouriteLoadoutUid;
-  int _favouriteLoadoutRevision = 0;
   Stream<ArcSavedLoadout?>? _favouriteLoadoutStream;
   late final Stream<ArcOperationsUserState> _operationsStateStream =
       _operationsRepository.watchUserState();
@@ -170,7 +169,6 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
       return;
     }
     _favouriteLoadoutUid = uid;
-    _favouriteLoadoutRevision++;
     _cachedLoadouts = const <ArcSavedLoadout>[];
     _favouriteLoadoutResolved = false;
     _favouriteLoadoutReadFailed = false;
@@ -200,7 +198,6 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
         _favouriteLoadoutReadFailed = false;
         // Force a fresh listener. Otherwise StreamBuilder can replay its old
         // active-null snapshot and immediately overwrite this successful read.
-        _favouriteLoadoutRevision++;
         _favouriteLoadoutStream = _loadoutRepository.watchFavouriteLoadout();
       });
     } catch (_) {
@@ -209,7 +206,6 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
       }
       setState(() {
         _favouriteLoadoutReadFailed = true;
-        _favouriteLoadoutRevision++;
         _favouriteLoadoutStream = _loadoutRepository.watchFavouriteLoadout();
       });
     }
@@ -394,9 +390,6 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
                         }
                         final blueprintStates = _cachedBlueprintStates;
                         return StreamBuilder<ArcSavedLoadout?>(
-                          key: ValueKey<String>(
-                            'command-centre-favourite-${_favouriteLoadoutUid ?? 'signed-out'}-$_favouriteLoadoutRevision',
-                          ),
                           stream: _favouriteLoadoutStream,
                           builder: (context, loadoutSnapshot) {
                             if (loadoutSnapshot.hasError) {

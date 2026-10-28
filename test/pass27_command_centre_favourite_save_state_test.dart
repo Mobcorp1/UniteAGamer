@@ -1,4 +1,7 @@
+import 'dart:async';
 import 'dart:io';
+
+import 'package:flutter/material.dart';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_command_centre_engine.dart';
@@ -57,14 +60,20 @@ void main() {
       binding.indexOf('_cachedLoadouts ='),
       lessThan(binding.indexOf('watchFavouriteLoadout()')),
     );
-    expect(screen, contains('command-centre-favourite-'));
-    expect(screen, contains('_favouriteLoadoutRevision++'));
+    expect(screen, isNot(contains('command-centre-favourite-')));
+    expect(screen, isNot(contains('_favouriteLoadoutRevision')));
   });
 
   test('PASS27 rereads the same document when returning from the editor', () {
     expect(screen, contains('unawaited(_refreshFavouriteAfterEditor())'));
     expect(screen, contains('_loadoutRepository.loadFavouriteLoadout()'));
-    expect(screen, contains('_favouriteLoadoutRevision++;'));
+    // Replacing the stream in setState keeps existing nested subscriptions.
+    expect(
+      RegExp(
+        r'_favouriteLoadoutStream\s*=\s*_loadoutRepository\.watchFavouriteLoadout\(\);',
+      ).allMatches(screen).length,
+      2,
+    );
     expect(screen, contains('uid != _favouriteLoadoutUid'));
     expect(repository, contains("doc('favourite-loadout').get()"));
     expect(repository, contains(".doc(loadout.id)"));
@@ -97,6 +106,116 @@ void main() {
       3,
       reason: 'All render paths must distinguish unavailable from unsaved.',
     );
+  });
+
+  test(
+    'PASS27 R4 refreshes the favourite stream without remounting the Operations subtree',
+    () {
+      final start = screen.indexOf('return StreamBuilder<ArcSavedLoadout?>(');
+      expect(start, greaterThan(0));
+      final end = screen.indexOf('builder: (context, loadoutSnapshot)', start);
+      expect(end, greaterThan(start));
+      final header = screen.substring(start, end);
+      expect(header, contains('stream: _favouriteLoadoutStream,'));
+      expect(header, isNot(contains('key:')));
+      expect(screen, isNot(contains('_favouriteLoadoutRevision')));
+
+      // The existing Operations repository uses a single-subscription stream.
+      // Recreating the nested StreamBuilder would re-listen and throw at runtime.
+      final operations = File(
+        'lib/features/trading_hub/arc_raiders/repositories/arc_operations_repository.dart',
+      ).readAsStringSync();
+      expect(
+        RegExp(
+          r'StreamController<ArcOperationsUserState>\s*\(',
+        ).hasMatch(operations),
+        isTrue,
+      );
+    },
+  );
+
+  testWidgets('PASS27 R7 refresh keeps the existing Operations subscription', (
+    tester,
+  ) async {
+    // A synchronous controller removes frame/microtask timing ambiguity. The
+    // regression under test is whether operations.stream gets listened to
+    // *again* after the favourite stream is replaced, not the event schedule.
+    var listenCount = 0;
+    var cancelCount = 0;
+    final operations = StreamController<int>(
+      sync: true,
+      onListen: () {
+        listenCount++;
+      },
+      onCancel: () {
+        cancelCount++;
+      },
+    );
+    // The favourite streams need no manual teardown. Closing a single-
+    // subscription controller after StreamBuilder cancelled its listener can
+    // yield a close() future that never completes (the R5 test timeout).
+    final favouriteStream = ValueNotifier<Stream<int>>(Stream<int>.value(1));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ValueListenableBuilder<Stream<int>>(
+          valueListenable: favouriteStream,
+          builder: (context, stream, child) => StreamBuilder<int>(
+            stream: stream,
+            builder: (context, favouriteSnapshot) => StreamBuilder<int>(
+              stream: operations.stream,
+              builder: (context, operationsSnapshot) =>
+                  Text('operations=${operationsSnapshot.data ?? 0}'),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(listenCount, 1);
+    expect(cancelCount, 0);
+    expect(operations.hasListener, isTrue);
+    operations.add(1);
+    await tester.pump();
+    expect(find.text('operations=1'), findsOneWidget);
+
+    // This reproduces the PASS27 refresh mechanism without changing a key on
+    // the parent StreamBuilder. A forced key would unmount the child and
+    // attempt a second, illegal listen to the single-subscription stream.
+    favouriteStream.value = Stream<int>.value(2);
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    expect(
+      listenCount,
+      1,
+      reason: 'Refreshing favourite must not subscribe to Operations again.',
+    );
+    expect(
+      cancelCount,
+      0,
+      reason: 'Operations should not be torn down during a favourite refresh.',
+    );
+    expect(operations.hasListener, isTrue);
+
+    operations.add(2);
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    expect(find.text('operations=2'), findsOneWidget);
+    expect(listenCount, 1);
+
+    // Unmount first. In testWidgets fake async, awaiting close() while the
+    // StreamBuilder still owns the listener can deadlock until another pump,
+    // which cannot run because close() is being awaited (R5/R6 timeout).
+    // A single-subscription controller needs no close once its subscriber is
+    // cancelled; there are no timers or external resources in this fixture.
+    await tester.pumpWidget(const SizedBox.shrink());
+    expect(
+      cancelCount,
+      1,
+      reason: 'Operations must cancel on normal teardown.',
+    );
+    expect(operations.hasListener, isFalse);
+    favouriteStream.dispose();
   });
 
   test(
