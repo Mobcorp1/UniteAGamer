@@ -121,6 +121,9 @@ if ($LASTEXITCODE -ne 0) {
 $versionPath = Join-Path $repo "build\web\version.json"
 $metadata = Invoke-WebReleaseMetadata -VersionPath $versionPath -ExpectedBuildId $buildId
 
+Copy-Item "web\ads.txt" "build\web\ads.txt" -Force
+& "$PSScriptRoot\verify_adsense_release.ps1"
+if ($LASTEXITCODE -ne 0) { throw 'AdSense release verification failed.' }
 Copy-Item "web\uag_update_manager.js" "build\web\uag_update_manager.js" -Force
 if (Test-Path "web\firebase-messaging-sw.js") {
     Copy-Item "web\firebase-messaging-sw.js" "build\web\firebase-messaging-sw.js" -Force
