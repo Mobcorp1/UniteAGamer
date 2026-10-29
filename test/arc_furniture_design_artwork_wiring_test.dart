@@ -48,6 +48,23 @@ void main() {
       ),
       isNull,
     );
+    // These two existing grid labels must now show their supplied artwork.
+    expect(
+      ArcDesignReferenceCatalogue.artworkForDisplaySlot(1, const {}),
+      'assets/arc_raiders/blueprints/printed_lab_sofa.webp',
+    );
+    expect(
+      ArcDesignReferenceCatalogue.artworkForDisplaySlot(4, const {}),
+      'assets/arc_raiders/blueprints/multicolored_geometric_sofa.webp',
+    );
+    expect(ArcDesignReferenceCatalogue.artworkForDisplaySlot(7, const {}), isNull);
+    expect(
+      ArcDesignReferenceCatalogue.artworkForDisplaySlot(
+        1,
+        const <int, String>{1: 'Diner Sofa'},
+      ),
+      'assets/arc_raiders/blueprints/diner_sofa.webp',
+    );
   });
 
   test('Verdigris and Sacrifice stay in Stencils, not furniture', () {
@@ -103,13 +120,34 @@ void main() {
       'assets/arc_raiders/blueprints/diner_sofa.webp',
     );
 
-    // The legacy non-authoritative slot-1 caption must not imply a
-    // player-verified positional assignment.
-    final unassigned = find.descendant(
-      of: find.byKey(const Key('collections-saved-slot-1')),
+    // Existing slot 1 and 4 captions resolve their corresponding images.
+    for (final entry in const <int, String>{
+      1: 'printed_lab_sofa.webp',
+      4: 'multicolored_geometric_sofa.webp',
+    }.entries) {
+      final image = tester.widget<Image>(
+        find.descendant(
+          of: find.byKey(Key('collections-saved-slot-${entry.key}')),
+          matching: find.byType(Image),
+        ),
+      );
+      expect(
+        (image.image as AssetImage).assetName,
+        'assets/arc_raiders/blueprints/${entry.value}',
+      );
+    }
+
+    // Other available furniture previews are visible but cannot be assigned
+    // to arbitrary game slots or mark items owned automatically.
+    expect(
+      find.byKey(const Key('collections-design-artwork-preview')),
+      findsOneWidget,
+    );
+    final unknown = find.descendant(
+      of: find.byKey(const Key('collections-saved-slot-2')),
       matching: find.byType(Image),
     );
-    expect(unassigned, findsNothing);
+    expect(unknown, findsNothing);
     expect(tester.takeException(), isNull);
   });
 }
