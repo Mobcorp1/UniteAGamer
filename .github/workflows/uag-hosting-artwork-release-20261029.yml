@@ -1,0 +1,80 @@
+name: UAG Hosting Artwork Release 29 Oct 2026
+
+on:
+  push:
+    branches:
+      - codex/raid-setup-endpoints-20261005
+    paths:
+      - .github/workflows/uag-hosting-artwork-release-20261029.yml
+
+permissions:
+  contents: read
+  checks: write
+
+concurrency:
+  group: uag-artwork-hosting-live
+  cancel-in-progress: false
+
+jobs:
+  deploy-hosting:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout release source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Configure Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.41.0'
+          cache: true
+
+      - name: Install Flutter dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos
+
+      - name: Verify new research and collection bindings
+        run: |
+          flutter test --reporter expanded \
+            test/arc_furniture_design_artwork_wiring_test.dart \
+            test/arc_research_resource_assets_test.dart
+
+      - name: Build production website
+        run: flutter build web --release --no-wasm-dry-run
+
+      - name: Verify research and collection images in output
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in \
+            blueprints/diner_sofa.webp \
+            blueprints/draped_debris_f.webp \
+            blueprints/multicolored_geometric_sofa.webp \
+            blueprints/polished_wardrobe.webp \
+            blueprints/printed_lab_sofa.webp \
+            blueprints/winter_table.webp \
+            blueprints/sacrifice.webp \
+            blueprints/verdigris.webp \
+            items/planks.webp \
+            items/battered_paperbacks.webp \
+            items/calculators.webp \
+            items/skulker_targeters.webp \
+            items/differential_microphones.webp \
+            items/bully_fragmenters.webp
+          do
+            test -s "build/web/assets/assets/arc_raiders/$file" || { echo "Missing $file"; exit 1; }
+          done
+          test -s build/web/main.dart.js
+
+      - name: Deploy UAG Firebase Hosting live (no Firestore or Functions)
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_UNITEAGAME }}
+          projectId: unite-a-gamer
+          channelId: live
