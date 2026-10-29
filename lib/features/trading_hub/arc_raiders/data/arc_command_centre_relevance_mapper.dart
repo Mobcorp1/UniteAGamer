@@ -48,6 +48,7 @@ class ArcCommandCentreRelevanceMapper {
       personalisation,
       featureForSnapshot,
       (item) => item.status,
+      alwaysVisible: (item) => item.label == 'Favourite Loadout',
     );
 
     return ArcCommandCentreState(
@@ -267,15 +268,19 @@ class ArcCommandCentreRelevanceMapper {
     List<T> items,
     ArcUserPersonalisationProfile personalisation,
     ArcPersonalisationFeature Function(T item) featureFor,
-    ArcCommandStatus Function(T item) statusFor,
-  ) {
+    ArcCommandStatus Function(T item) statusFor, {
+    bool Function(T item)? alwaysVisible,
+  }) {
     final indexed = <_RankedCommandItem<T>>[];
     for (var i = 0; i < items.length; i++) {
       final item = items[i];
       final status = statusFor(item);
       final feature = featureFor(item);
       final level = personalisation.interestFor(feature);
-      if (personalisation.reduceNoise && !level.isVisible && _canHide(status)) {
+      if (personalisation.reduceNoise &&
+          !level.isVisible &&
+          _canHide(status) &&
+          !(alwaysVisible?.call(item) ?? false)) {
         continue;
       }
       indexed.add(
