@@ -132,6 +132,25 @@ class ArcDesignReferenceCatalogue {
     Map<int, String> verifiedAssignments,
   ) => artworkForName(inGameNameForSlot(slot, verifiedAssignments));
 
+  // These two slot labels are already present in the existing collection UI.
+  // No extra positions are inferred from the alphabetical reference list.
+  static const Map<int, String> knownDisplaySlots = <int, String>{
+    1: 'Printed Lab Sofa',
+    4: 'Multicolored Geometric Sofa',
+  };
+
+  static String? displayNameForSlot(
+    int slot,
+    Map<int, String> userAssignments,
+  ) => slot < 1 || slot > 100
+      ? null
+      : (userAssignments[slot] ?? knownDisplaySlots[slot]);
+
+  static String? artworkForDisplaySlot(
+    int slot,
+    Map<int, String> userAssignments,
+  ) => artworkForName(displayNameForSlot(slot, userAssignments));
+
   static String? inGameNameForSlot(int slot, Map<int,String> verifiedAssignments) =>
     slot >= 1 && slot <= 100 ? verifiedAssignments[slot] : null;
 }
