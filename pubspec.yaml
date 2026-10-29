@@ -81,6 +81,7 @@ flutter:
     - assets/arc_raiders/items/
     - assets/arc_raiders/map_filter_icons/
     - assets/arc_raiders/operations/
+    - assets/arc_raiders/conditions/
     - assets/arc_raiders/operations/badges/
     - assets/arc_raiders/maps/blue_gate/
     - assets/arc_raiders/maps/buried_city/
