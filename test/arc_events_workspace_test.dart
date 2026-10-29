@@ -100,6 +100,9 @@ void main() {
         ),
         findsNWidgets(2),
       );
+      expect(find.text('EVENTS FOR YOU'), findsOneWidget);
+      expect(find.text('OPERATIONS'), findsOneWidget);
+      expect(find.text('NOMADIC TRADER'), findsOneWidget);
       expect(
         tester.getSize(find.byType(ArcEventsWorkspace)).height,
         lessThan(360),
