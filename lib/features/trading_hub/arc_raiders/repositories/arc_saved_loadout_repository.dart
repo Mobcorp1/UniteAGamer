@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -25,34 +27,83 @@ class ArcSavedLoadoutRepository {
         .collection('arc_saved_loadouts');
   }
 
-  Stream<List<ArcSavedLoadout>> watchSavedLoadouts() {
-    final collection = _collection;
-    if (collection == null) {
-      return Stream<List<ArcSavedLoadout>>.value(const <ArcSavedLoadout>[]);
-    }
-
-    return collection
-        .orderBy('updatedAt', descending: true)
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => ArcSavedLoadout.fromMap(doc.id, doc.data()))
-              .toList(growable: false),
-        );
+  // Keep Firestore listeners bound to the active signed-in account. Creating
+  // a stream before Firebase restores Auth must not freeze its value at [].
+  Stream<T> _watchAuthenticated<T>({
+    required T signedOutValue,
+    required Stream<T> Function(String uid) observe,
+  }) {
+    StreamSubscription<User?>? authSubscription;
+    StreamSubscription<T>? dataSubscription;
+    var generation = 0;
+    late StreamController<T> controller;
+    controller = StreamController<T>(
+      onListen: () {
+        authSubscription = _auth.authStateChanges().listen((user) async {
+          final currentGeneration = ++generation;
+          await dataSubscription?.cancel();
+          dataSubscription = null;
+          if (controller.isClosed || currentGeneration != generation) return;
+          if (user == null) {
+            controller.add(signedOutValue);
+            return;
+          }
+          dataSubscription = observe(user.uid).listen(
+            (value) {
+              if (!controller.isClosed && currentGeneration == generation) {
+                controller.add(value);
+              }
+            },
+            onError: (Object error, StackTrace stackTrace) {
+              if (!controller.isClosed && currentGeneration == generation) {
+                controller.addError(error, stackTrace);
+              }
+            },
+          );
+        }, onError: (Object error, StackTrace stackTrace) {
+          if (!controller.isClosed) controller.addError(error, stackTrace);
+        });
+      },
+      onCancel: () async {
+        generation++;
+        await authSubscription?.cancel();
+        await dataSubscription?.cancel();
+      },
+    );
+    return controller.stream;
   }
 
-  Stream<ArcSavedLoadout?> watchFavouriteLoadout() {
-    final collection = _collection;
-    if (collection == null) {
-      return Stream<ArcSavedLoadout?>.value(null);
-    }
+  Stream<List<ArcSavedLoadout>> watchSavedLoadouts() =>
+      _watchAuthenticated<List<ArcSavedLoadout>>(
+        signedOutValue: const <ArcSavedLoadout>[],
+        observe: (uid) => _firestore
+            .collection('users')
+            .doc(uid)
+            .collection('arc_saved_loadouts')
+            // No orderBy: old saved records without updatedAt must not
+            // disappear from Command Centre's persisted loadout query.
+            .snapshots()
+            .map((snapshot) => snapshot.docs
+                .map((doc) => ArcSavedLoadout.fromMap(doc.id, doc.data()))
+                .toList(growable: false)),
+      );
 
-    return collection.doc('favourite-loadout').snapshots().map((snapshot) {
-      final data = snapshot.data();
-      if (!snapshot.exists || data == null) return null;
-      return ArcSavedLoadout.fromMap(snapshot.id, data);
-    });
-  }
+  Stream<ArcSavedLoadout?> watchFavouriteLoadout() =>
+      _watchAuthenticated<ArcSavedLoadout?>(
+        signedOutValue: null,
+        observe: (uid) => _firestore
+            .collection('users')
+            .doc(uid)
+            .collection('arc_saved_loadouts')
+            .doc('favourite-loadout')
+            .snapshots()
+            .map((snapshot) {
+              final data = snapshot.data();
+              return snapshot.exists && data != null
+                  ? ArcSavedLoadout.fromMap(snapshot.id, data)
+                  : null;
+            }),
+      );
 
   Future<ArcSavedLoadout?> loadFavouriteLoadout() async {
     final collection = _collection;
@@ -83,10 +134,16 @@ class ArcSavedLoadoutRepository {
     await collection
         .doc(loadout.id)
         .set(loadout.toMap(), SetOptions(merge: true));
-    await ArcOperationsRepository(
-      firestore: _firestore,
-      auth: _auth,
-    ).recordFavouriteLoadoutSaved();
+    // Saving the actual loadout succeeds independently of optional operations
+    // telemetry. A telemetry outage must not report a successful save as failed.
+    try {
+      await ArcOperationsRepository(
+        firestore: _firestore,
+        auth: _auth,
+      ).recordFavouriteLoadoutSaved();
+    } on FirebaseException {
+      // The user's saved document is already committed.
+    }
   }
 
   Future<void> deleteLoadout(String id) async {
