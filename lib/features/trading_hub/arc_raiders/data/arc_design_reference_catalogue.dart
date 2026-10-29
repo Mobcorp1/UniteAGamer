@@ -107,6 +107,31 @@ class ArcDesignReferenceCatalogue {
     'Winter Table',
     'Work Light',
   ];
+  /// Artwork supplied for named furniture designs. This list is not a
+  /// positional grid: the native Design collection uses independently verified
+  /// 1-based slot assignments.
+  static const Map<String, String> suppliedArtwork = <String, String>{
+    'Diner Sofa': 'assets/arc_raiders/blueprints/diner_sofa.webp',
+    'Draped Debris F': 'assets/arc_raiders/blueprints/draped_debris_f.webp',
+    'Multicolored Geometric Sofa':
+        'assets/arc_raiders/blueprints/multicolored_geometric_sofa.webp',
+    'Polished Wardrobe':
+        'assets/arc_raiders/blueprints/polished_wardrobe.webp',
+    'Printed Lab Sofa':
+        'assets/arc_raiders/blueprints/printed_lab_sofa.webp',
+    'Winter Table': 'assets/arc_raiders/blueprints/winter_table.webp',
+  };
+
+  static String? artworkForName(String? name) =>
+      name == null ? null : suppliedArtwork[name];
+
+  /// Do not infer in-game position from an alphabetical Design name.
+  /// Only explicitly verified user slot assignments may display artwork.
+  static String? artworkForVerifiedSlot(
+    int slot,
+    Map<int, String> verifiedAssignments,
+  ) => artworkForName(inGameNameForSlot(slot, verifiedAssignments));
+
   static String? inGameNameForSlot(int slot, Map<int,String> verifiedAssignments) =>
     slot >= 1 && slot <= 100 ? verifiedAssignments[slot] : null;
 }
