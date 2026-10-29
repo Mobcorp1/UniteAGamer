@@ -135,10 +135,31 @@ class _ArcAdditionalCollectionsScreenState
                   style: TextStyle(color: Colors.white60, fontSize: 11))),
               Expanded(child: ListView.builder(
                 itemCount: matches.length,
-                itemBuilder: (_, i) => ListTile(
-                  title: Text(matches[i], style: const TextStyle(color: Colors.white)),
-                  onTap: () => Navigator.pop(sheetContext, matches[i]),
-                ),
+                itemBuilder: (_, i) {
+                  final name = matches[i];
+                  final artwork = ArcDesignReferenceCatalogue.artworkForName(name);
+                  return ListTile(
+                    leading: artwork == null
+                        ? const SizedBox(
+                            width: 44,
+                            height: 44,
+                            child: Icon(Icons.weekend_outlined, color: Colors.white38),
+                          )
+                        : Image.asset(
+                            artwork,
+                            width: 44,
+                            height: 44,
+                            fit: BoxFit.contain,
+                            errorBuilder: (_, _, _) => const SizedBox(
+                              width: 44,
+                              height: 44,
+                              child: Icon(Icons.weekend_outlined, color: Colors.white38),
+                            ),
+                          ),
+                    title: Text(name, style: const TextStyle(color: Colors.white)),
+                    onTap: () => Navigator.pop(sheetContext, name),
+                  );
+                },
               )),
             ]),
           ));
@@ -247,6 +268,14 @@ class _ArcAdditionalCollectionsScreenState
           _ => 'Design slot $slot',
         });
 
+  String? _artworkAtSlot(int slot) =>
+      _kind == ArcNativeCollectionKind.stencils
+          ? ArcStencilCatalogue.assetAt(slot)
+          : ArcDesignReferenceCatalogue.artworkForVerifiedSlot(
+              slot,
+              _assignedDesignNames,
+            );
+
   void _cycleReview(int slot) {
     if (_reviewStates.length != _kind.slots || _busy) return;
     final states = List<ArcNativeSlotState>.of(_reviewStates);
@@ -304,6 +333,7 @@ class _ArcAdditionalCollectionsScreenState
       backgroundColor: const Color(0xFF111B26),
       builder: (ctx) => StatefulBuilder(builder: (ctx, refresh) {
         final owned = _displayOwned.contains(slot);
+        final artwork = _artworkAtSlot(slot);
         return SafeArea(
           child: SingleChildScrollView(
             padding: EdgeInsets.fromLTRB(
@@ -313,6 +343,24 @@ class _ArcAdditionalCollectionsScreenState
               Text('${_kind.title} · Position $slot · ${owned ? 'Owned' : 'Needed'}',
                   style: const TextStyle(color: Color(0xFF75DBE5))),
               const SizedBox(height: 8),
+              if (artwork != null) ...[
+                Center(
+                  child: SizedBox(
+                    height: 120,
+                    width: 120,
+                    child: Image.asset(
+                      artwork,
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, _, _) => const Icon(
+                        Icons.image_not_supported_outlined,
+                        size: 48,
+                        color: Colors.white30,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
               if (_reviewStates.length == _kind.slots) ...[
                 TextButton.icon(
                   key: const Key('collections-review-cycle'),
@@ -408,8 +456,7 @@ class _ArcAdditionalCollectionsScreenState
     if (!_loaded) return;
     ArcCollectionShareItem itemAt(int slot) => ArcCollectionShareItem(
       label: _name(slot),
-      assetPath: _kind == ArcNativeCollectionKind.stencils
-          ? ArcStencilCatalogue.assetAt(slot) : null,
+      assetPath: _artworkAtSlot(slot),
       spares: _saved.duplicateCounts[slot] ?? 0,
     );
     final owned = <ArcCollectionShareItem>[
@@ -442,6 +489,7 @@ class _ArcAdditionalCollectionsScreenState
         (_view == ArcCollectionView.duplicates && dupes > 0);
     final review = _reviewStates.length == _kind.slots && _reviewStates[slot-1] == ArcNativeSlotState.review;
     final name = _name(slot);
+    final artwork = _artworkAtSlot(slot);
     final cardName = _kind == ArcNativeCollectionKind.designs &&
         !_assignedDesignNames.containsKey(slot)
         ? '#${slot.toString().padLeft(2, '0')}' : name;
@@ -461,8 +509,8 @@ class _ArcAdditionalCollectionsScreenState
           ),
           child: Column(children: [
             Expanded(child: Stack(fit: StackFit.expand, children: [
-              if (_kind == ArcNativeCollectionKind.stencils)
-                Image.asset(ArcStencilCatalogue.assetAt(slot), fit: BoxFit.contain,
+              if (artwork != null)
+                Image.asset(artwork, fit: BoxFit.contain,
                   errorBuilder: (_, _, _) => Icon(
                     owned ? Icons.palette_outlined : Icons.lock_outline,
                     color: owned ? Colors.cyanAccent : Colors.white30, size: 18))
@@ -609,8 +657,7 @@ class _ArcAdditionalCollectionsScreenState
           name: _name(slot),
           owned: _displayOwned.contains(slot),
           spares: _dupCount(slot),
-          imageAssetPath: _kind == ArcNativeCollectionKind.stencils
-              ? ArcStencilCatalogue.assetAt(slot) : null,
+          imageAssetPath: _artworkAtSlot(slot),
           icon: Icons.weekend_outlined,
           detail: _kind == ArcNativeCollectionKind.designs ? 'Game slot $slot' : null,
         )],
@@ -648,6 +695,7 @@ class _ArcAdditionalCollectionsScreenState
           itemBuilder: (context, index) {
             final slot = index + 1;
             final name = _name(slot);
+            final artwork = _artworkAtSlot(slot);
             final owned = _displayOwned.contains(slot);
             final copies = _dupCount(slot);
             final matchesFilter = _view == ArcCollectionView.all ||
@@ -674,9 +722,19 @@ class _ArcAdditionalCollectionsScreenState
                       Text(slot.toString().padLeft(2, '0'),
                         style: const TextStyle(fontSize: 9, color: Color(0xFF65E6F2))),
                       Expanded(child: Stack(alignment: Alignment.center, children: [
-                        Icon(owned ? Icons.weekend_outlined : Icons.lock_outline,
-                          size: cardWidth < 42 ? 17 : 24,
-                          color: owned ? Colors.cyanAccent : Colors.white38),
+                        if (artwork == null)
+                          Icon(owned ? Icons.weekend_outlined : Icons.lock_outline,
+                            size: cardWidth < 42 ? 17 : 24,
+                            color: owned ? Colors.cyanAccent : Colors.white38)
+                        else Image.asset(
+                          artwork,
+                          fit: BoxFit.contain,
+                          errorBuilder: (_, _, _) => Icon(
+                            owned ? Icons.weekend_outlined : Icons.lock_outline,
+                            size: cardWidth < 42 ? 17 : 24,
+                            color: owned ? Colors.cyanAccent : Colors.white38,
+                          ),
+                        ),
                         if (copies > 0) Positioned(right: 0, bottom: 0,
                           child: Text('+$copies', style: const TextStyle(
                             fontSize: 8, color: Color(0xFFFF8FC1)))),
