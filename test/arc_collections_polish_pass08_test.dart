@@ -30,8 +30,16 @@ void main() {
     expect(find.byKey(const Key('collections-saved-slot-1')), findsOneWidget);
     expect(find.byKey(const Key('collections-saved-slot-4')), findsOneWidget);
     expect(find.byKey(const Key('collections-saved-slot-18')), findsOneWidget);
-    expect(find.text('Printed Lab Sofa'), findsOneWidget);
-    expect(find.text('Multicolored Geometric Sofa'), findsOneWidget);
+    // The artwork preview also names these Designs; assert the in-grid
+    // labels specifically rather than counting gallery previews as duplicates.
+    expect(find.descendant(
+      of: find.byKey(const Key('collections-design-readable-gallery')),
+      matching: find.text('Printed Lab Sofa'),
+    ), findsOneWidget);
+    expect(find.descendant(
+      of: find.byKey(const Key('collections-design-readable-gallery')),
+      matching: find.text('Multicolored Geometric Sofa'),
+    ), findsOneWidget);
     expect(find.text('TEST AD SLOT'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
