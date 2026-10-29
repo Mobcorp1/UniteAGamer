@@ -48,6 +48,8 @@ jobs:
         run: |
           flutter test --reporter expanded \
             test/arc_furniture_design_artwork_wiring_test.dart \
+            test/arc_command_centre_loadout_restore_regression_test.dart \
+            test/arc_command_centre_engine_test.dart \
             test/arc_research_resource_assets_test.dart \
             test/arc_collections_polish_pass08_test.dart \
             test/arc_collections_unified_ux_test.dart \
