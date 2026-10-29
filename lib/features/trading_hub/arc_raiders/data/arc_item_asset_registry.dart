@@ -4,6 +4,18 @@ class ArcItemAssetRegistry {
   static const String runtimeBase = 'assets/arc_raiders/scrappy_resources/';
   static const String targetCanonicalBase = 'assets/arc_raiders/items/';
 
+  // New research artwork is kept in the canonical item directory.
+  static const String planks = '${targetCanonicalBase}planks.webp';
+  static const String batteredPaperbacks =
+      '${targetCanonicalBase}battered_paperbacks.webp';
+  static const String calculators = '${targetCanonicalBase}calculators.webp';
+  static const String skulkerTargeters =
+      '${targetCanonicalBase}skulker_targeters.webp';
+  static const String differentialMicrophones =
+      '${targetCanonicalBase}differential_microphones.webp';
+  static const String bullyFragmenters =
+      '${targetCanonicalBase}bully_fragmenters.webp';
+
   // Const-safe Scrappy paths.
   static const String dogCollar = '${runtimeBase}dog_collar.webp';
   static const String lemons = '${runtimeBase}lemons.webp';
@@ -34,16 +46,30 @@ class ArcItemAssetRegistry {
     'advanced-electrical-component': 'advanced-electrical-components',
     'advanced-mechanical-component': 'advanced-mechanical-components',
     'wire': 'wires',
+    'plank': 'planks',
+    'battered-paperback': 'battered-paperbacks',
+    'calculator': 'calculators',
+    'skulker-targeter': 'skulker-targeters',
+    'differential-microphone': 'differential-microphones',
+    'bully-fragmenter': 'bully-fragmenters',
   };
 
   static String canonicalId(String itemId) {
-    final clean = itemId.trim().toLowerCase();
+    final clean = itemId.trim().toLowerCase().replaceAll(RegExp(r'[_\s]+'), '-');
     return _aliases[clean] ?? clean;
   }
 
-  // These resource IDs are valid upgrade requirements, but individual
-  // artwork has not been supplied yet. Use one explicitly labelled neutral
-  // fallback rather than a broken image or a different item's picture.
+  // Known source artwork is available in the canonical items directory.
+  static const Set<String> _canonicalArtworkItemIds = <String>{
+    'planks',
+    'battered-paperbacks',
+    'calculators',
+    'skulker-targeters',
+    'differential-microphones',
+    'bully-fragmenters',
+  };
+
+  // Keep an explicit neutral placeholder for resources still awaiting artwork.
   static const String upgradeArtworkPending =
       '${runtimeBase}upgrade_resource_art_pending.webp';
 
@@ -51,15 +77,9 @@ class ArcItemAssetRegistry {
     'arc-data-modules',
     'radial-presses',
     'emperor-modulators',
-    'planks',
-    'battered-paperbacks',
     'mini-pumps',
-    'calculators',
     'raider-logbooks',
-    'skulker-targeters',
-    'differential-microphones',
     'exodus-technical-handbooks',
-    'bully-fragmenters',
     'thermal-shakers',
     'frigate-inductors',
   };
@@ -69,6 +89,9 @@ class ArcItemAssetRegistry {
     // Existing confirmed singular artwork; do not duplicate under a fake name.
     if (id == 'magnetic-accelerators') {
       return '${runtimeBase}magnetic_accelerator.webp';
+    }
+    if (_canonicalArtworkItemIds.contains(id)) {
+      return targetItemAssetPathForId(id);
     }
     if (_pendingArtworkItemIds.contains(id)) {
       return upgradeArtworkPending;
