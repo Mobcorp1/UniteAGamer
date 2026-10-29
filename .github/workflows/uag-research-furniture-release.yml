@@ -1,0 +1,102 @@
+name: UAG Research + Furniture Website/Sony Release
+
+on:
+  push:
+    branches:
+      - codex/raid-setup-endpoints-20261005
+    paths:
+      - .github/workflows/uag-research-furniture-release.yml
+
+permissions:
+  contents: read
+  checks: write
+
+concurrency:
+  group: uag-research-furniture-release
+  cancel-in-progress: false
+
+jobs:
+  verify-build-and-deploy-hosting:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - name: Check out verified research branch
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Configure Java for Android debug APK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Configure Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.41.0'
+          cache: true
+
+      - name: Install Flutter packages
+        run: flutter pub get
+
+      - name: Analyze Dart code (baseline info lint nonfatal)
+        run: flutter analyze --no-fatal-infos
+
+      - name: Test research and collections changes
+        run: |
+          flutter test --reporter expanded \
+            test/arc_furniture_design_artwork_wiring_test.dart \
+            test/arc_research_resource_assets_test.dart \
+            test/arc_collections_polish_pass08_test.dart \
+            test/arc_collections_unified_ux_test.dart \
+            test/arc_collections_persistent_grid_test.dart \
+            test/arc_frozen_trail_collection_catalogue_test.dart \
+            test/pass11_bench_stencil_artwork_contract_test.dart
+
+      - name: Build website release
+        run: flutter build web --release --no-wasm-dry-run
+
+      - name: Verify all newly mapped images are bundled
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in \
+            assets/arc_raiders/blueprints/diner_sofa.webp \
+            assets/arc_raiders/blueprints/draped_debris_f.webp \
+            assets/arc_raiders/blueprints/multicolored_geometric_sofa.webp \
+            assets/arc_raiders/blueprints/polished_wardrobe.webp \
+            assets/arc_raiders/blueprints/printed_lab_sofa.webp \
+            assets/arc_raiders/blueprints/winter_table.webp \
+            assets/arc_raiders/blueprints/sacrifice.webp \
+            assets/arc_raiders/blueprints/verdigris.webp \
+            assets/arc_raiders/items/planks.webp \
+            assets/arc_raiders/items/battered_paperbacks.webp \
+            assets/arc_raiders/items/calculators.webp \
+            assets/arc_raiders/items/skulker_targeters.webp \
+            assets/arc_raiders/items/differential_microphones.webp \
+            assets/arc_raiders/items/bully_fragmenters.webp
+          do
+            test -s "build/web/assets/$file" || { echo "Missing bundled image: $file"; exit 1; }
+          done
+          test -s build/web/main.dart.js
+
+      - name: Build Sony Xperia Android debug APK
+        run: flutter build apk --debug
+
+      - name: Upload Sony APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: uag-sony-xperia-debug-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 14
+          if-no-files-found: error
+
+      - name: Deploy Firebase Hosting only
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_UNITEAGAME }}
+          projectId: unite-a-gamer
+          channelId: live
