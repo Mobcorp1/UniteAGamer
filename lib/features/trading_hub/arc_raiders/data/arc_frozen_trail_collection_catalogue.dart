@@ -313,6 +313,24 @@ class ArcFrozenTrailCollectionCatalogue {
 
   static const stencilEntries = <ArcCollectionEntry>[
     ArcCollectionEntry(
+      id: 'verdigris',
+      name: 'Verdigris',
+      type: ArcCollectionType.stencils,
+      slot: 1,
+      confidence: ArcCollectionSlotConfidence.verifiedInGame,
+      duplicateStatus: ArcCollectionEconomyStatus.unknown,
+      tradeStatus: ArcCollectionEconomyStatus.unknown,
+    ),
+    ArcCollectionEntry(
+      id: 'sacrifice',
+      name: 'Sacrifice',
+      type: ArcCollectionType.stencils,
+      slot: 4,
+      confidence: ArcCollectionSlotConfidence.verifiedInGame,
+      duplicateStatus: ArcCollectionEconomyStatus.unknown,
+      tradeStatus: ArcCollectionEconomyStatus.unknown,
+    ),
+    ArcCollectionEntry(
       id: 'milky-terracotta',
       name: 'Milky Terracotta',
       type: ArcCollectionType.stencils,
@@ -545,6 +563,8 @@ class ArcFrozenTrailCollectionCatalogue {
   /// These names match the incoming PNG-to-WebP asset workflow; no new assets
   /// are required at install time. Asset display must be wired in the live UI.
   static const frozenTrailArtworkPaths = <String, String>{
+    'verdigris': 'assets/arc_raiders/blueprints/verdigris.webp',
+    'sacrifice': 'assets/arc_raiders/blueprints/sacrifice.webp',
     'fortuna': 'assets/arc_raiders/blueprints/fortuna.webp',
     'garnet': 'assets/arc_raiders/blueprints/garnet.webp',
     'ochre': 'assets/arc_raiders/blueprints/ochre.webp',
