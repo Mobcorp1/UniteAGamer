@@ -1,3 +1,4 @@
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_item_asset_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_item_intelligence_models.dart';
 
 /// Frozen Trail 2.0 vetted delta. Unknown recipes intentionally stay empty.
@@ -443,7 +444,7 @@ class ArcFrozenTrailTwoContent {
       name: "Calculator",
       type: "Topside Material",
       rarity: 'Unknown',
-      imageAsset: pendingImage,
+      imageAsset: ArcItemAssetRegistry.calculators,
       primaryStation: 'Field Craft',
       stationIds: <String>[],
       stationLevel: null,
@@ -471,7 +472,7 @@ class ArcFrozenTrailTwoContent {
       name: "Battered Paperback",
       type: "Topside Material",
       rarity: 'Unknown',
-      imageAsset: pendingImage,
+      imageAsset: ArcItemAssetRegistry.batteredPaperbacks,
       primaryStation: 'Field Craft',
       stationIds: <String>[],
       stationLevel: null,
@@ -485,7 +486,7 @@ class ArcFrozenTrailTwoContent {
       name: "Differential Microphone",
       type: "Topside Material",
       rarity: 'Unknown',
-      imageAsset: pendingImage,
+      imageAsset: ArcItemAssetRegistry.differentialMicrophones,
       primaryStation: 'Field Craft',
       stationIds: <String>[],
       stationLevel: null,
@@ -555,7 +556,7 @@ class ArcFrozenTrailTwoContent {
       name: "Bully Fragmenter",
       type: "Topside Material",
       rarity: 'Unknown',
-      imageAsset: pendingImage,
+      imageAsset: ArcItemAssetRegistry.bullyFragmenters,
       primaryStation: 'Field Craft',
       stationIds: <String>[],
       stationLevel: null,
@@ -569,7 +570,7 @@ class ArcFrozenTrailTwoContent {
       name: "Skulker Targeter",
       type: "Topside Material",
       rarity: 'Unknown',
-      imageAsset: pendingImage,
+      imageAsset: ArcItemAssetRegistry.skulkerTargeters,
       primaryStation: 'Field Craft',
       stationIds: <String>[],
       stationLevel: null,
@@ -751,7 +752,7 @@ class ArcFrozenTrailTwoContent {
       name: "Planks",
       type: "Topside Material",
       rarity: 'Unknown',
-      imageAsset: pendingImage,
+      imageAsset: ArcItemAssetRegistry.planks,
       primaryStation: 'Field Craft',
       stationIds: <String>[],
       stationLevel: null,
