@@ -1,5 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../data/arc_event_artwork.dart';
+import '../screens/operations_command_screen.dart';
+import '../screens/nomadic_trader_screen.dart';
+import 'arc_event_art_thumbnail.dart';
 import '../data/arc_event_relevance.dart';
 import '../raid_planner/data/arc_regional_map_conditions.dart';
 import '../raid_planner/data/raid_planner_event_schedule.dart';
@@ -120,7 +124,7 @@ class _ArcEventsWorkspaceState extends State<ArcEventsWorkspace> {
               spacing: 8,
               children: [
                 Text(
-                  widget.compact ? 'EVENTS' : 'OPERATIONS SCHEDULE',
+                  widget.compact ? 'EVENTS FOR YOU' : 'OPERATIONS SCHEDULE',
                   style: AppTheme.tradingHeading(
                     fontSize: 18,
                     color: AppTheme.neonCyan,
@@ -143,6 +147,11 @@ class _ArcEventsWorkspaceState extends State<ArcEventsWorkspace> {
                 widget.contextNotice!,
                 style: const TextStyle(color: Colors.amber, fontSize: 12),
               ),
+            if (widget.compact) ...[
+              const SizedBox(height: 7),
+              _quickLinks(),
+              const SizedBox(height: 7),
+            ],
             if (!widget.compact) ...[
               Wrap(
                 spacing: 8,
@@ -240,38 +249,118 @@ class _ArcEventsWorkspaceState extends State<ArcEventsWorkspace> {
     ),
   );
 
+
+  Widget _quickLinks() => Row(
+    children: [
+      Expanded(
+        child: _quickLink(
+          label: 'OPERATIONS',
+          assetPath: ArcEventArtwork.operations,
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const OperationsCommandScreen(),
+            ),
+          ),
+        ),
+      ),
+      const SizedBox(width: 8),
+      Expanded(
+        child: _quickLink(
+          label: 'NOMADIC TRADER',
+          assetPath: ArcEventArtwork.nomadicTrader,
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const NomadicTraderScreen(),
+            ),
+          ),
+        ),
+      ),
+    ],
+  );
+
+  Widget _quickLink({
+    required String label,
+    required String assetPath,
+    required VoidCallback onTap,
+  }) => Material(
+    color: const Color(0xFF141631),
+    borderRadius: BorderRadius.circular(10),
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        height: 65,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.30)),
+        ),
+        child: Row(
+          children: [
+            ArcEventArtThumbnail(assetPath: assetPath, width: 47, height: 63),
+            const SizedBox(width: 5),
+            Expanded(
+              child: Text(
+                label,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: AppTheme.tradingHeading(
+                  fontSize: 12,
+                  color: AppTheme.neonCyan,
+                ),
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded, size: 15),
+          ],
+        ),
+      ),
+    ),
+  );
+
   Widget _event(ArcEventMatch event) => Container(
     key: ValueKey(
       'event-${event.slot.mapName}-${event.slot.eventName}-${event.startUtc}',
     ),
-    padding: const EdgeInsets.symmetric(vertical: 8),
+    padding: const EdgeInsets.symmetric(vertical: 6),
     decoration: const BoxDecoration(
       border: Border(bottom: BorderSide(color: Colors.white12)),
     ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(
-          '${event.isActive(_now) ? 'ACTIVE' : 'NEXT'} · ${event.slot.eventName} · ${event.slot.mapName}',
-          maxLines: widget.compact ? 2 : null,
-          overflow: widget.compact ? TextOverflow.ellipsis : null,
-          style: const TextStyle(
-            fontSize: 13,
-            height: 1.25,
-            fontWeight: FontWeight.bold,
-          ),
+        ArcEventArtThumbnail(
+          assetPath: ArcEventArtwork.forCondition(event.slot.eventName),
+          width: widget.compact ? 70 : 86,
+          height: widget.compact ? 61 : 68,
         ),
-        Text(
-          '${_time(event.startUtc)} – ${_time(event.endUtc)}',
-          style: const TextStyle(fontSize: 12, color: Colors.white70),
-        ),
-        Text(
-          event.reason,
-          maxLines: widget.compact ? 2 : null,
-          overflow: widget.compact ? TextOverflow.ellipsis : null,
-          style: TextStyle(
-            fontSize: 12,
-            color: event.score > 0 ? AppTheme.neonCyan : Colors.white60,
+        const SizedBox(width: 9),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${event.isActive(_now) ? 'ACTIVE' : 'NEXT'} · ${event.slot.eventName} · ${event.slot.mapName}',
+                maxLines: widget.compact ? 2 : null,
+                overflow: widget.compact ? TextOverflow.ellipsis : null,
+                style: const TextStyle(
+                  fontSize: 13,
+                  height: 1.25,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                '${_time(event.startUtc)} – ${_time(event.endUtc)}',
+                style: const TextStyle(fontSize: 12, color: Colors.white70),
+              ),
+              Text(
+                event.reason,
+                maxLines: widget.compact ? 2 : null,
+                overflow: widget.compact ? TextOverflow.ellipsis : null,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: event.score > 0 ? AppTheme.neonCyan : Colors.white60,
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -363,24 +452,37 @@ class _ArcEventsWorkspaceState extends State<ArcEventsWorkspace> {
         for (final entry in entries)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 6),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text(
-                  '${entry.windowFor(_region)!.isActiveAt(_now) ? 'CURRENT' : 'UPCOMING'}${stale ? ' · UNVERIFIED' : ''} · ${entry.conditionName} · ${entry.mapDisplayName}',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    height: 1.25,
-                    fontWeight: FontWeight.bold,
+                ArcEventArtThumbnail(
+                  assetPath: ArcEventArtwork.forCondition(entry.conditionName),
+                  width: 86,
+                  height: 69,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${entry.windowFor(_region)!.isActiveAt(_now) ? 'CURRENT' : 'UPCOMING'}${stale ? ' · UNVERIFIED' : ''} · ${entry.conditionName} · ${entry.mapDisplayName}',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          height: 1.25,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        '${_time(entry.windowFor(_region)!.startUtc)} – ${_time(entry.windowFor(_region)!.endUtc)}',
+                        style: const TextStyle(fontSize: 12, color: Colors.white70),
+                      ),
+                      Text(
+                        _regionalReason(entry),
+                        style: const TextStyle(fontSize: 12, color: Colors.white70),
+                      ),
+                    ],
                   ),
-                ),
-                Text(
-                  '${_time(entry.windowFor(_region)!.startUtc)} – ${_time(entry.windowFor(_region)!.endUtc)}',
-                  style: const TextStyle(fontSize: 12, color: Colors.white70),
-                ),
-                Text(
-                  _regionalReason(entry),
-                  style: const TextStyle(fontSize: 12, color: Colors.white70),
                 ),
               ],
             ),
