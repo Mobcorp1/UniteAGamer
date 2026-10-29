@@ -43,12 +43,22 @@ class ArcCommandCentreRelevanceMapper {
       featureForRecommendation,
       (_) => ArcCommandStatus.neutral,
     );
-    final snapshots = _rankAndFilter(
+    // PASS27 R8: the pinned Favourite Loadout briefing card must receive
+    // the canonical saved status even when Reduce Noise hides its feature.
+    // Keep generic noise filtering for all other snapshot metrics.
+    final filteredSnapshots = _rankAndFilter(
       state.snapshots,
       personalisation,
       featureForSnapshot,
       (item) => item.status,
     );
+    final snapshots = <ArcCommandSnapshotMetric>[
+      ...filteredSnapshots,
+      for (final metric in state.snapshots)
+        if (metric.label == 'Favourite Loadout' &&
+            !filteredSnapshots.any((visible) => visible.label == metric.label))
+          metric,
+    ];
 
     return ArcCommandCentreState(
       priority: _priorityFor(state.priority, objectives, personalisation),
