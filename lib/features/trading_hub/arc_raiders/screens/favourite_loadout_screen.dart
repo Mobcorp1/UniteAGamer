@@ -75,6 +75,8 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
 
   final ArcSavedLoadoutRepository _savedLoadoutRepository =
       ArcSavedLoadoutRepository();
+  late final Stream<ArcSavedLoadout?> _savedFavouriteStream =
+      _savedLoadoutRepository.watchFavouriteLoadout();
   final ArcBlueprintRepository _blueprintRepository = ArcBlueprintRepository();
 
   String _buildName = 'Favourite Raider Build';
@@ -1404,7 +1406,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         showAdBanner: false,
         child: SafeArea(
           child: StreamBuilder<ArcSavedLoadout?>(
-            stream: _savedLoadoutRepository.watchFavouriteLoadout(),
+            stream: _savedFavouriteStream,
             builder: (context, savedSnapshot) {
               final savedLoadout = savedSnapshot.data;
               if (!_loadedSavedState && savedLoadout != null) {
