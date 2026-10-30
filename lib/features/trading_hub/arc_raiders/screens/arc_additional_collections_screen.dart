@@ -667,72 +667,6 @@ class _ArcAdditionalCollectionsScreenState
     );
   }
 
-  Widget _designArtworkStrip() {
-    final previews = ArcDesignReferenceCatalogue.suppliedArtwork.entries;
-    return SizedBox(
-      height: 89,
-      child: Row(
-        children: <Widget>[
-          const SizedBox(
-            width: 112,
-            child: Text(
-              'DESIGN ARTWORK\nTap to link a slot',
-              style: TextStyle(color: Color(0xFF65E6F2), fontSize: 10),
-            ),
-          ),
-          Expanded(
-            child: ListView(
-              key: const Key('collections-design-artwork-preview'),
-              scrollDirection: Axis.horizontal,
-              children: <Widget>[
-                for (final preview in previews)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: Tooltip(
-                      message: '${preview.key} · Assign to a game slot',
-                      child: InkWell(
-                        key: Key('collections-design-art-${preview.key}'),
-                        onTap: _busy
-                            ? null
-                            : () => _assignDesignFromDupeSearch(preview.key),
-                        child: SizedBox(
-                          width: 100,
-                          child: Column(
-                            children: <Widget>[
-                              Expanded(
-                                child: Image.asset(
-                                  preview.value,
-                                  fit: BoxFit.contain,
-                                  errorBuilder: (_, _, _) => const Icon(
-                                    Icons.weekend_outlined,
-                                    color: Colors.white38,
-                                  ),
-                                ),
-                              ),
-                              Text(
-                                preview.key,
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontSize: 9,
-                                  color: Colors.white70,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _grid() {
     if (_kind == ArcNativeCollectionKind.designs) {
       return LayoutBuilder(builder: (context, constraints) {
@@ -942,9 +876,6 @@ class _ArcAdditionalCollectionsScreenState
               ),
             ]),
           const SizedBox(height: 4),
-          if (_kind == ArcNativeCollectionKind.designs &&
-              _view != ArcCollectionView.duplicates)
-            _designArtworkStrip(),
           // PASS05: full-height in-game order grid + slim trade-action rail.
           Expanded(child: Row(children: [
             Expanded(child: _view == ArcCollectionView.duplicates
