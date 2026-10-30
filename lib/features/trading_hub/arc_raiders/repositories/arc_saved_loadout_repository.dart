@@ -95,8 +95,7 @@ class ArcSavedLoadoutRepository {
             .collection('users')
             .doc(uid)
             .collection('arc_saved_loadouts')
-            .doc('favourite-loadout')
-            .snapshots()
+            .doc('favourite-loadout').snapshots()
             .map((snapshot) {
               final data = snapshot.data();
               return snapshot.exists && data != null
