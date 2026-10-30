@@ -58,7 +58,10 @@ void main() {
     )));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('collections-saved-slot-7')));
-    await tester.pumpAndSettle();
+    // PASS26 uses continuing cinematic animation in the modal; do not wait
+    // for every animation to settle before checking its interactive controls.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 450));
     expect(find.byKey(const Key('collections-increase-dupes')), findsOneWidget);
     expect(find.byKey(const Key('collections-decrease-dupes')), findsOneWidget);
     expect(find.textContaining('Cosmetic tradeability'), findsNothing);

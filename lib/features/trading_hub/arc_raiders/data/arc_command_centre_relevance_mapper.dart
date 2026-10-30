@@ -43,13 +43,22 @@ class ArcCommandCentreRelevanceMapper {
       featureForRecommendation,
       (_) => ArcCommandStatus.neutral,
     );
-    final snapshots = _rankAndFilter(
+    // PASS27 R8: the pinned Favourite Loadout briefing card must receive
+    // the canonical saved status even when Reduce Noise hides its feature.
+    // Keep generic noise filtering for all other snapshot metrics.
+    final filteredSnapshots = _rankAndFilter(
       state.snapshots,
       personalisation,
       featureForSnapshot,
       (item) => item.status,
-      alwaysVisible: (item) => item.label == 'Favourite Loadout',
     );
+    final snapshots = <ArcCommandSnapshotMetric>[
+      ...filteredSnapshots,
+      for (final metric in state.snapshots)
+        if (metric.label == 'Favourite Loadout' &&
+            !filteredSnapshots.any((visible) => visible.label == metric.label))
+          metric,
+    ];
 
     return ArcCommandCentreState(
       priority: _priorityFor(state.priority, objectives, personalisation),
@@ -268,19 +277,15 @@ class ArcCommandCentreRelevanceMapper {
     List<T> items,
     ArcUserPersonalisationProfile personalisation,
     ArcPersonalisationFeature Function(T item) featureFor,
-    ArcCommandStatus Function(T item) statusFor, {
-    bool Function(T item)? alwaysVisible,
-  }) {
+    ArcCommandStatus Function(T item) statusFor,
+  ) {
     final indexed = <_RankedCommandItem<T>>[];
     for (var i = 0; i < items.length; i++) {
       final item = items[i];
       final status = statusFor(item);
       final feature = featureFor(item);
       final level = personalisation.interestFor(feature);
-      if (personalisation.reduceNoise &&
-          !level.isVisible &&
-          _canHide(status) &&
-          !(alwaysVisible?.call(item) ?? false)) {
+      if (personalisation.reduceNoise && !level.isVisible && _canHide(status)) {
         continue;
       }
       indexed.add(

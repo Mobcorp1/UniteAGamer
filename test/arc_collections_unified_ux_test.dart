@@ -87,9 +87,12 @@ void main() {
     )));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('collections-saved-slot-2')));
-    await tester.pumpAndSettle();
+    // PASS26 modal has a continuous animated surface; use bounded pumps.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 450));
     await tester.tap(find.byKey(const Key('collections-quick-add-dupe')));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 450));
     expect(saved.ownedSlots, contains(2));
     expect(saved.ownedSlots.length, 1);
     expect(saved.duplicateCounts[2], 1);

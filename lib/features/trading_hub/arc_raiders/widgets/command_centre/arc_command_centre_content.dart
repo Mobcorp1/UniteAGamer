@@ -35,6 +35,8 @@ class ArcCommandCentreContent extends StatefulWidget {
     super.key,
     required this.expeditionState,
     required this.commandState,
+    this.loadoutPending = false,
+    this.loadoutUnavailable = false,
     this.tradeActivity = ArcCommandTradeActivity.empty,
     required this.checklistState,
     required this.onAction,
@@ -46,6 +48,8 @@ class ArcCommandCentreContent extends StatefulWidget {
 
   final ArcExpeditionStateSnapshot expeditionState;
   final ArcCommandCentreState commandState;
+  final bool loadoutPending;
+  final bool loadoutUnavailable;
   final ArcCommandTradeActivity tradeActivity;
   final Map<String, bool> checklistState;
   final ValueChanged<ArcCommandAction> onAction;
@@ -370,13 +374,25 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
 
     final loadoutCard = _briefingStatusCard(
       title: 'FAVOURITE LOADOUT',
-      value: loadout?.value ?? 'NOT SAVED',
-      detail: loadout?.detail ?? '',
+      value: widget.loadoutUnavailable
+          ? 'UNAVAILABLE'
+          : widget.loadoutPending
+          ? 'CHECKING'
+          : loadout?.value ?? 'NOT SAVED',
+      detail: widget.loadoutUnavailable
+          ? 'Cannot check saved loadout right now. Please try again.'
+          : widget.loadoutPending
+          ? 'Checking your saved Favourite Loadout...'
+          : loadout?.detail ?? '',
       action: const ArcCommandAction(
         label: 'Open Favourite Loadout',
         intent: ArcCommandActionIntent.favouriteLoadout,
       ),
-      status: loadout?.status ?? ArcCommandStatus.warning,
+      status: widget.loadoutUnavailable
+          ? ArcCommandStatus.warning
+          : widget.loadoutPending
+          ? ArcCommandStatus.neutral
+          : loadout?.status ?? ArcCommandStatus.warning,
       icon: Icons.tune_rounded,
       image: _operationAsset('finish_favourite_loadout_card.webp'),
     );

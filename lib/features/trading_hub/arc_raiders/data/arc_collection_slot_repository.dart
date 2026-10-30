@@ -9,17 +9,22 @@ class ArcAdditionalCollectionState {
   const ArcAdditionalCollectionState({
     this.ownedSlots = const <int>{},
     this.duplicateCounts = const <int, int>{},
+    this.clearedSlots = const <int>{},
   });
 
   final Set<int> ownedSlots;
   final Map<int, int> duplicateCounts;
+  /// Explicit user removals override any legacy additive import.
+  final Set<int> clearedSlots;
 
   int get duplicateTotal => duplicateCounts.values.fold<int>(0, (a, b) => a + b);
 
   static ArcAdditionalCollectionState decode(
       Object? raw, ArcNativeCollectionKind kind) {
     if (raw is! Map) return const ArcAdditionalCollectionState();
-    final owned = ArcCollectionSlotRepository.decodeOwned(raw['ownedSlots'], kind);
+    final cleared = ArcCollectionSlotRepository.decodeOwned(raw['clearedSlots'], kind);
+    final owned = ArcCollectionSlotRepository.decodeOwned(raw['ownedSlots'], kind)
+      ..removeAll(cleared);
     final dupes = <int, int>{};
     final rawDupes = raw['duplicateCounts'];
     if (rawDupes is Map) {
@@ -27,14 +32,17 @@ class ArcAdditionalCollectionState {
         final position = int.tryParse(key.toString());
         if (position != null && position >= 1 && position <= kind.slots &&
             value is num && value.toInt() > 0 && value.toInt() <= 999) {
-          dupes[position] = value.toInt();
-          owned.add(position);
+          if (!cleared.contains(position)) {
+            dupes[position] = value.toInt();
+            owned.add(position);
+          }
         }
       });
     }
     return ArcAdditionalCollectionState(
       ownedSlots: Set.unmodifiable(owned),
       duplicateCounts: Map.unmodifiable(dupes),
+      clearedSlots: Set.unmodifiable(cleared),
     );
   }
 
@@ -44,13 +52,25 @@ class ArcAdditionalCollectionState {
       ArcAdditionalCollectionState current,
       ArcNativeCollectionKind kind,
       Iterable<int> addOwned,
-      Map<int, int> editedDuplicates) {
+      Map<int, int> editedDuplicates, {
+      Iterable<int> clearOwned = const <int>{},
+      }) {
     final nextOwned = <int>{...current.ownedSlots};
+    final nextCleared = <int>{...current.clearedSlots};
+    for (final slot in clearOwned) {
+      if (slot < 1 || slot > kind.slots) {
+        throw RangeError('Invalid collection slot $slot');
+      }
+      nextOwned.remove(slot);
+      nextCleared.add(slot);
+    }
     for (final slot in addOwned) {
       if (slot < 1 || slot > kind.slots) throw RangeError('Invalid collection slot $slot');
       nextOwned.add(slot);
+      nextCleared.remove(slot);
     }
-    final nextDuplicates = <int, int>{...current.duplicateCounts};
+    final nextDuplicates = <int, int>{...current.duplicateCounts}
+      ..removeWhere((slot, _) => nextCleared.contains(slot));
     editedDuplicates.forEach((slot, quantity) {
       if (slot < 1 || slot > kind.slots || quantity < 0 || quantity > 999) {
         throw RangeError('Invalid duplicate count for slot $slot');
@@ -60,16 +80,19 @@ class ArcAdditionalCollectionState {
       } else {
         nextDuplicates[slot] = quantity;
         nextOwned.add(slot);
+        nextCleared.remove(slot);
       }
     });
     return ArcAdditionalCollectionState(
       ownedSlots: Set.unmodifiable(nextOwned),
       duplicateCounts: Map.unmodifiable(nextDuplicates),
+      clearedSlots: Set.unmodifiable(nextCleared),
     );
   }
 
   Map<String, dynamic> encode() => <String, dynamic>{
         'ownedSlots': ownedSlots.toList()..sort(),
+        'clearedSlots': clearedSlots.toList()..sort(),
         'duplicateCounts': <String, int>{
           for (final entry in duplicateCounts.entries) '${entry.key}': entry.value,
         },
@@ -117,7 +140,9 @@ class ArcCollectionSlotRepository {
     try {
       final legacy = await doc.collection('arc_collection_slots').doc(kind.key).get();
       state = ArcAdditionalCollectionState.merge(
-        state, kind, decodeOwned(legacy.data()?['ownedSlots'], kind), const {},
+        state, kind,
+        decodeOwned(legacy.data()?['ownedSlots'], kind)
+            .difference(state.clearedSlots), const {},
       );
     } on FirebaseException {
       // New subcollection could lack deployed permissions. Main owner document
@@ -133,11 +158,17 @@ class ArcCollectionSlotRepository {
     required ArcNativeCollectionKind kind,
     required Iterable<int> addOwned,
     Map<int, int> editedDuplicates = const <int, int>{},
+    Iterable<int> clearOwned = const <int>{},
   }) async {
     final additions = addOwned.toSet();
+    final removals = clearOwned.toSet();
+    if (additions.intersection(removals).isNotEmpty) {
+      throw ArgumentError('Cannot add and clear the same slot together.');
+    }
     // Validate before starting a transaction, including when no changes exist.
     ArcAdditionalCollectionState.merge(
       const ArcAdditionalCollectionState(), kind, additions, editedDuplicates,
+      clearOwned: removals,
     );
     final doc = _userDoc();
     // Read legacy before transaction, then merge it IN the transaction with
@@ -153,7 +184,9 @@ class ArcCollectionSlotRepository {
       final current = await txn.get(doc);
       final base = _stateFromUser(current.data(), kind);
       final result = ArcAdditionalCollectionState.merge(
-        base, kind, <int>{...legacyOwned, ...additions}, editedDuplicates,
+        base, kind,
+        <int>{...legacyOwned.difference(base.clearedSlots).difference(removals),
+          ...additions}, editedDuplicates, clearOwned: removals,
       );
       txn.set(doc, <String, dynamic>{
         'uagCollectionsV1': {kind.key: result.encode()},

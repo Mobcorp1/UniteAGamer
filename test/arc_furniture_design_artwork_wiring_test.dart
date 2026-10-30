@@ -13,82 +13,60 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('six furniture assets use existing verified-name catalogue', () {
-    const expected = <String, String>{
-      'Diner Sofa': 'diner_sofa.webp',
-      'Draped Debris F': 'draped_debris_f.webp',
-      'Multicolored Geometric Sofa': 'multicolored_geometric_sofa.webp',
-      'Polished Wardrobe': 'polished_wardrobe.webp',
-      'Printed Lab Sofa': 'printed_lab_sofa.webp',
-      'Winter Table': 'winter_table.webp',
-    };
+  const designs = <int, String>{
+    1: 'Printed Lab Sofa',
+    4: 'Multicolored Geometric Sofa',
+    5: 'Polished Wardrobe',
+    6: 'Diner Sofa',
+    7: 'Winter Table',
+    9: 'Draped Debris F',
+  };
 
-    expect(ArcDesignReferenceCatalogue.names.length, 100);
-    expect(ArcDesignReferenceCatalogue.suppliedArtwork.length, expected.length);
-    for (final item in expected.entries) {
-      expect(ArcDesignReferenceCatalogue.names, contains(item.key));
-      final asset = ArcDesignReferenceCatalogue.artworkForName(item.key);
-      expect(asset, 'assets/arc_raiders/blueprints/${item.value}');
-      expect(File(asset!).existsSync(), isTrue, reason: asset);
+  test('six furniture images match recovered PASS26 in-game positions', () {
+    expect(ArcDesignReferenceCatalogue.inGameOrder.length, 100);
+    for (final entry in designs.entries) {
+      expect(ArcDesignReferenceCatalogue.nameAt(entry.key), entry.value);
+      final filename =
+          ArcDesignReferenceCatalogue.artworkFilenameForName(entry.value);
+      final path = 'assets/arc_raiders/blueprints/$filename';
+      expect(File(path).existsSync(), isTrue, reason: path);
     }
-
-    expect(ArcDesignReferenceCatalogue.artworkForName('Other Design'), isNull);
-    expect(ArcDesignReferenceCatalogue.artworkForVerifiedSlot(1, const {}), isNull);
-    expect(
-      ArcDesignReferenceCatalogue.artworkForVerifiedSlot(
-        7,
-        const <int, String>{7: 'Diner Sofa'},
-      ),
-      'assets/arc_raiders/blueprints/diner_sofa.webp',
-    );
-    expect(
-      ArcDesignReferenceCatalogue.artworkForVerifiedSlot(
-        1,
-        const <int, String>{7: 'Diner Sofa'},
-      ),
-      isNull,
-    );
-    // These two existing grid labels must now show their supplied artwork.
-    expect(
-      ArcDesignReferenceCatalogue.artworkForDisplaySlot(1, const {}),
-      'assets/arc_raiders/blueprints/printed_lab_sofa.webp',
-    );
-    expect(
-      ArcDesignReferenceCatalogue.artworkForDisplaySlot(4, const {}),
-      'assets/arc_raiders/blueprints/multicolored_geometric_sofa.webp',
-    );
-    expect(ArcDesignReferenceCatalogue.artworkForDisplaySlot(7, const {}), isNull);
-    expect(
-      ArcDesignReferenceCatalogue.artworkForDisplaySlot(
-        1,
-        const <int, String>{1: 'Diner Sofa'},
-      ),
-      'assets/arc_raiders/blueprints/diner_sofa.webp',
-    );
+    expect(File('assets/arc_raiders/blueprints/sacrifice.webp').existsSync(), isTrue);
+    expect(File('assets/arc_raiders/blueprints/verdigris.webp').existsSync(), isTrue);
+    // Original position identities and owned/dupe data must not be remapped.
+    expect(ArcDesignReferenceCatalogue.nameAt(37), 'Study Armchair');
+    expect(ArcDesignReferenceCatalogue.nameAt(87), 'Study Armchair');
   });
 
-  test('Verdigris and Sacrifice stay in Stencils, not furniture', () {
-    const expected = <int, String>{1: 'verdigris', 4: 'sacrifice'};
-    for (final item in expected.entries) {
-      final asset = ArcStencilCatalogue.assetAt(item.key);
-      expect(asset, 'assets/arc_raiders/blueprints/${item.value}.webp');
-      expect(File(asset).existsSync(), isTrue, reason: asset);
-      expect(ArcStencilCatalogue.nameAt(item.key).toLowerCase(), item.value);
-      final entry = ArcFrozenTrailCollectionCatalogue.entryAtSlot(
-        ArcCollectionType.stencils,
-        item.key,
-      );
-      expect(entry?.id, item.value);
+  test('stencils remain in the stencil catalogue', () {
+    for (final entry in const <int, String>{
+      1: 'verdigris',
+      4: 'sacrifice',
+    }.entries) {
+      final path = ArcStencilCatalogue.assetAt(entry.key);
+      expect(path, 'assets/arc_raiders/blueprints/${entry.value}.webp');
       expect(
-        ArcFrozenTrailCollectionCatalogue.frozenTrailArtworkPaths[item.value],
-        asset,
+        ArcFrozenTrailCollectionCatalogue.entryAtSlot(
+          ArcCollectionType.stencils, entry.key,
+        )?.id,
+        entry.value,
       );
     }
-    expect(ArcFrozenTrailCollectionCatalogue.blueprintGrid.totalSlots, 91);
-    expect(ArcFrozenTrailCollectionCatalogue.designGrid.totalSlots, 100);
   });
 
-  testWidgets('Design grid shows artwork only for assigned game slots',
+  test('Design grid does not contain a second image strip or manual-link rail', () {
+    final source = File(
+      'lib/features/trading_hub/arc_raiders/screens/arc_additional_collections_screen.dart',
+    ).readAsStringSync();
+    expect(source, isNot(contains('_designArtworkStrip')));
+    expect(source, isNot(contains('Tap to link a slot')));
+    expect(source, contains('ArcDesignReferenceCatalogue.nameAt(slot)'));
+    expect(source, contains('_designArtworkForName(name)'));
+    expect(source, contains('crossAxisCount: columns'));
+    expect(source, contains('itemCount: _kind.slots'));
+  });
+
+  testWidgets('Designs grid displays six available furniture images in place',
       (tester) async {
     tester.view.physicalSize = const Size(1100, 600);
     tester.view.devicePixelRatio = 1;
@@ -96,58 +74,36 @@ void main() {
       tester.view.resetPhysicalSize();
       tester.view.resetDevicePixelRatio();
     });
-
     await tester.pumpWidget(MaterialApp(
       home: ArcAdditionalCollectionsScreen(
         initialKind: ArcNativeCollectionKind.designs,
-        loader: (_) async => const ArcAdditionalCollectionState(),
-        designNameLoader: () async => const <int, String>{
-          7: 'Diner Sofa',
-        },
         adBanner: const SizedBox(height: 60),
+        loader: (_) async => const ArcAdditionalCollectionState(),
+        designNameLoader: () async => const <int, String>{},
       ),
     ));
     await tester.pumpAndSettle();
-
-    final assigned = find.descendant(
-      of: find.byKey(const Key('collections-saved-slot-7')),
-      matching: find.byType(Image),
-    );
-    expect(assigned, findsOneWidget);
-    final image = tester.widget<Image>(assigned);
     expect(
-      (image.image as AssetImage).assetName,
-      'assets/arc_raiders/blueprints/diner_sofa.webp',
-    );
-
-    // Existing slot 1 and 4 captions resolve their corresponding images.
-    for (final entry in const <int, String>{
-      1: 'printed_lab_sofa.webp',
-      4: 'multicolored_geometric_sofa.webp',
-    }.entries) {
-      final image = tester.widget<Image>(
-        find.descendant(
-          of: find.byKey(Key('collections-saved-slot-${entry.key}')),
-          matching: find.byType(Image),
-        ),
-      );
-      expect(
-        (image.image as AssetImage).assetName,
-        'assets/arc_raiders/blueprints/${entry.value}',
-      );
-    }
-
-    // Other available furniture previews are visible but cannot be assigned
-    // to arbitrary game slots or mark items owned automatically.
-    expect(
-      find.byKey(const Key('collections-design-artwork-preview')),
+      find.byKey(const Key('collections-design-readable-gallery')),
       findsOneWidget,
     );
-    final unknown = find.descendant(
-      of: find.byKey(const Key('collections-saved-slot-2')),
-      matching: find.byType(Image),
-    );
-    expect(unknown, findsNothing);
+    for (final entry in designs.entries) {
+      final card = find.byKey(Key('collections-saved-slot-${entry.key}'));
+      expect(card, findsOneWidget);
+      final images = find.descendant(of: card, matching: find.byType(Image));
+      expect(images, findsWidgets);
+      final filename =
+          ArcDesignReferenceCatalogue.artworkFilenameForName(entry.value);
+      expect(
+        images.evaluate().map((e) => e.widget).whereType<Image>().any(
+          (img) => img.image is AssetImage &&
+              (img.image as AssetImage).assetName ==
+                  'assets/arc_raiders/blueprints/$filename',
+        ),
+        isTrue,
+        reason: 'Missing artwork for Design slot ${entry.key}',
+      );
+    }
     expect(tester.takeException(), isNull);
   });
 }
