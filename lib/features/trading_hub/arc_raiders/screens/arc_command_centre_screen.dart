@@ -88,8 +88,8 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
       _expeditionStateManager.watchState();
   late final Stream<Map<String, ArcBlueprintState>> _blueprintStatesStream =
       _blueprintRepository.watchMyBlueprintStates();
-  late final Stream<List<ArcSavedLoadout>> _loadoutsStream = _loadoutRepository
-      .watchSavedLoadouts();
+  late final Stream<ArcSavedLoadout?> _favouriteLoadoutStream =
+      _loadoutRepository.watchFavouriteLoadout();
   late final Stream<ArcOperationsUserState> _operationsStateStream =
       _operationsRepository.watchUserState();
   late final Stream<ArcScrappyRepositoryState<Map<String, ArcScrappyState>>>
@@ -313,11 +313,15 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
                           _cachedBlueprintStates = blueprintSnapshot.data!;
                         }
                         final blueprintStates = _cachedBlueprintStates;
-                        return StreamBuilder<List<ArcSavedLoadout>>(
-                          stream: _loadoutsStream,
+                        return StreamBuilder<ArcSavedLoadout?>(
+                          stream: _favouriteLoadoutStream,
                           builder: (context, loadoutSnapshot) {
-                            if (loadoutSnapshot.hasData) {
-                              _cachedLoadouts = loadoutSnapshot.data!;
+                            if (loadoutSnapshot.connectionState == ConnectionState.active &&
+                                !loadoutSnapshot.hasError) {
+                              final savedFavourite = loadoutSnapshot.data;
+                              _cachedLoadouts = savedFavourite == null
+                                  ? const <ArcSavedLoadout>[]
+                                  : <ArcSavedLoadout>[savedFavourite];
                             }
                             final loadouts = _cachedLoadouts;
                             return StreamBuilder<ArcOperationsUserState>(
