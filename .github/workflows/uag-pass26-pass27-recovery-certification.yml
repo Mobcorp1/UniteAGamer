@@ -74,4 +74,5 @@ jobs:
           retention-days: 14
           if-no-files-found: error
 
+      # Verified PASS26 collection repository API restored.
       # No Firebase deploy, production merge, or Firestore writes in this job.
