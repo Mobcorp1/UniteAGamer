@@ -1,4 +1,4 @@
-name: UAG Hosting Artwork Release 29 Oct 2026
+name: UAG Recovered PASS26 PASS27 Website Release
 
 on:
   push:
@@ -38,10 +38,14 @@ jobs:
       - name: Analyze
         run: flutter analyze --no-fatal-infos
 
-      - name: Verify new research and collection bindings
+      - name: Certify original PASS26/PASS27 and research artwork
         run: |
           flutter test --reporter expanded \
+            test/pass26_furniture_design_grid_order_test.dart \
+            test/pass27_favourite_snapshot_relevance_regression_test.dart \
+            test/pass23_command_centre_favourite_loadout_sync_test.dart \
             test/arc_furniture_design_artwork_wiring_test.dart \
+            test/arc_command_centre_loadout_restore_regression_test.dart \
             test/arc_research_resource_assets_test.dart
 
       - name: Build production website
