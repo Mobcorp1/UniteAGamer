@@ -1064,7 +1064,7 @@ class _ArcAdditionalCollectionsScreenState
         ),
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final iconOnly = constraints.maxWidth < 730;
+            final iconOnly = constraints.maxWidth < 610;
             // Keep full 320-pixel AdMob creative in an independent 326-344px lane.
             final adWidth = math.min(
               344.0,
