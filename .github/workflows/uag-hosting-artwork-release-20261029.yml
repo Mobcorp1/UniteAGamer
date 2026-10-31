@@ -1,4 +1,4 @@
-name: UAG PASS31 Designs Artwork Website Release
+name: UAG PASS32 Stencils Bottom Ad Website Release
 
 on:
   push:
@@ -38,9 +38,10 @@ jobs:
       - name: Analyze
         run: flutter analyze --no-fatal-infos
 
-      - name: Certify PASS31 card artwork, PASS30 layout and locked grids
+      - name: Certify PASS32 Stencils, PASS31 Designs and locked grids
         run: |
           flutter test --reporter expanded \
+            test/pass32_stencils_bottom_ad_layout_test.dart \
             test/pass31_designs_artwork_fill_test.dart \
             test/pass30_designs_landscape_layout_test.dart \
             test/arc_collections_polish_pass08_test.dart \
