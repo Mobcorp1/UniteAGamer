@@ -1427,7 +1427,7 @@ class _ArcAdditionalCollectionsScreenState
       return LayoutBuilder(
         builder: (context, constraints) {
           // Authoritative game order: 17 columns, six rows (final row partial).
-          // Show about three rows at a time; the remaining slots scroll vertically.
+          // Show exactly two full rows at a time; the remaining slots scroll vertically.
           // Do not reorder, filter out or remap any saved slot identity.
           const columns = 17;
           const gap = 3.0;
@@ -1435,9 +1435,10 @@ class _ArcAdditionalCollectionsScreenState
           final cardWidth =
               (constraints.maxWidth - (inset * 2) - gap * (columns - 1)) /
               columns;
-          final rowHeight = (constraints.maxHeight / 3.08)
-              .clamp(92.0, 156.0)
-              .toDouble();
+          final rowHeight = math.max(
+            1.0,
+            (constraints.maxHeight - inset * 2 - gap) / 2,
+          );
           return GridView.builder(
             key: const Key('collections-design-readable-gallery'),
             padding: const EdgeInsets.all(inset),
@@ -1470,7 +1471,7 @@ class _ArcAdditionalCollectionsScreenState
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 2,
-                        vertical: 3,
+                        vertical: 2,
                       ),
                       decoration: BoxDecoration(
                         color: owned
@@ -1487,13 +1488,6 @@ class _ArcAdditionalCollectionsScreenState
                       ),
                       child: Column(
                         children: [
-                          Text(
-                            slot.toString().padLeft(2, '0'),
-                            style: const TextStyle(
-                              fontSize: 9,
-                              color: uag_pass14_theme.AppTheme.neonCyan,
-                            ),
-                          ),
                           Expanded(
                             child: Stack(
                               alignment: Alignment.center,
@@ -1502,7 +1496,7 @@ class _ArcAdditionalCollectionsScreenState
                                   owned
                                       ? Icons.weekend_outlined
                                       : Icons.lock_outline,
-                                  size: cardWidth < 42 ? 17 : 24,
+                                  size: cardWidth < 42 ? 17 : 28,
                                   color: owned
                                       ? Colors.cyanAccent
                                       : Colors.white38,
@@ -1535,21 +1529,21 @@ class _ArcAdditionalCollectionsScreenState
                             ),
                           ),
                           SizedBox(
-                            height: rowHeight * 0.42,
+                            height: math.min(54.0, rowHeight * 0.28),
                             child: Center(
                               child: Text(
                                 name,
                                 textAlign: TextAlign.center,
-                                maxLines: 5,
+                                maxLines: 4,
                                 softWrap: true,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: cardWidth >= 58
+                                  fontSize: cardWidth >= 78
+                                      ? 10
+                                      : cardWidth >= 52
                                       ? 9
-                                      : cardWidth >= 40
-                                      ? 8
-                                      : 7,
+                                      : 8,
                                   height: 1.05,
                                 ),
                               ),
@@ -1710,14 +1704,21 @@ class _ArcAdditionalCollectionsScreenState
           const SizedBox(width: 8),
         ],
       ),
-      bottomNavigationBar: widget.adBanner ?? const ArcBlueprintBannerSlot(),
+      bottomNavigationBar: _kind == ArcNativeCollectionKind.designs
+          ? _designsBottomDock(hasPending)
+          : widget.adBanner ?? const ArcBlueprintBannerSlot(),
       body: SafeArea(
         top: false,
         bottom: false,
         right: true,
         left: true,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(6, 2, 18, 4),
+          padding: EdgeInsets.fromLTRB(
+            6,
+            2,
+            _kind == ArcNativeCollectionKind.designs ? 6 : 18,
+            4,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -1765,7 +1766,7 @@ class _ArcAdditionalCollectionsScreenState
                   ],
                 ),
               const SizedBox(height: 4),
-              // PASS05: full-height in-game order grid + slim trade-action rail.
+              // Designs use the balanced bottom dock; Stencils keep the original rail.
               Expanded(
                 child: Row(
                   children: [
@@ -1774,8 +1775,10 @@ class _ArcAdditionalCollectionsScreenState
                           ? _buildCollectionDupeSearch()
                           : _grid(),
                     ),
-                    const SizedBox(width: 6),
-                    SizedBox(width: 113, child: _toolsRail(hasPending)),
+                    if (_kind != ArcNativeCollectionKind.designs) ...[
+                      const SizedBox(width: 6),
+                      SizedBox(width: 113, child: _toolsRail(hasPending)),
+                    ],
                   ],
                 ),
               ),
