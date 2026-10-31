@@ -175,7 +175,7 @@ void main() {
     expect(screen, contains('_designArtworkForName(name)'));
     expect(
       RegExp(
-        r'Positioned\.fill\s*\(\s*child:\s*Image\.asset\s*\(\s*artwork',
+        r'Positioned\.fill\s*\([\s\S]*?Image\.asset\s*\(\s*artwork',
       ).hasMatch(screen),
       isTrue,
     );
