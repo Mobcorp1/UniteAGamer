@@ -1,4 +1,4 @@
-name: UAG Recovered PASS26 PASS27 Website Release
+name: UAG PASS29 Blueprint Intel Website Release
 
 on:
   push:
@@ -38,9 +38,13 @@ jobs:
       - name: Analyze
         run: flutter analyze --no-fatal-infos
 
-      - name: Certify original PASS26/PASS27 and research artwork
+      - name: Certify Blueprint Intel and original PASS26/PASS27
         run: |
           flutter test --reporter expanded \
+            test/blueprint_intel_entry_restoration_test.dart \
+            test/blueprint_grid_screen_regression_test.dart \
+            test/arc_blueprint_canonical_grid_test.dart \
+            test/arc_blueprint_drop_report_legacy_payload_test.dart \
             test/pass26_furniture_design_grid_order_test.dart \
             test/pass27_favourite_snapshot_relevance_regression_test.dart \
             test/pass23_command_centre_favourite_loadout_sync_test.dart \
