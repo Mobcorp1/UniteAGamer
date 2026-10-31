@@ -1350,6 +1350,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     final action = await showModalBottomSheet<String>(
       context: context,
       useSafeArea: true,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) {
         final accent = _rarityColor(blueprint.rarity);
@@ -1387,8 +1388,12 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: accent.withValues(alpha: 0.38)),
               ),
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.88,
+              ),
               child: SafeArea(
-                child: Column(
+                child: SingleChildScrollView(
+                  child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Padding(
@@ -1451,6 +1456,12 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                       subtitle: 'Open Trading to look for swaps or offers.',
                     ),
                     actionTile(
+                      value: 'report',
+                      icon: Icons.add_location_alt_rounded,
+                      title: 'Add Intel / Drop Report',
+                      subtitle: 'Record a blueprint find with its source and location.',
+                    ),
+                    actionTile(
                       value: 'intel',
                       icon: Icons.radar_rounded,
                       title: 'View Intel',
@@ -1464,6 +1475,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                     ),
                     const SizedBox(height: 8),
                   ],
+                  ),
                 ),
               ),
             ),
@@ -1492,6 +1504,9 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
         return;
       case 'trade':
         Navigator.of(context).pushNamed(TraderHubScreen.routeName);
+        return;
+      case 'report':
+        await _openBlueprintEditor(blueprint, state);
         return;
       case 'intel':
         Navigator.of(context).pushNamed(ArcMarketIntelligenceScreen.routeName);
@@ -1625,6 +1640,16 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                     } finally {
                       if (sheetContext.mounted) refresh(() => saving = false);
                     }
+                  },
+                ),
+                TextButton.icon(
+                  key: const Key('blueprint-quick-add-intel'),
+                  icon: const Icon(Icons.add_location_alt_rounded),
+                  label: const Text('ADD INTEL'),
+                  onPressed: saving ? null : () async {
+                    Navigator.of(sheetContext).pop();
+                    if (!mounted) return;
+                    await _openBlueprintEditor(blueprint, state);
                   },
                 ),
                 TextButton(
@@ -1832,20 +1857,23 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                             },
                           ),
                         _buildBlueprintActionButton(
-                          label: state.owned ? 'Add Intel' : 'Mark Owned',
-                          icon: state.owned
-                              ? Icons.add_location_alt_rounded
-                              : Icons.check_circle_rounded,
-                          color: state.owned
-                              ? AppTheme.neonCyan
-                              : AppTheme.neonPink,
+                          label: 'Add Intel',
+                          icon: Icons.add_location_alt_rounded,
+                          color: AppTheme.neonCyan,
                           onTap: () async {
                             Navigator.of(sheetContext).pop();
-                            if (state.owned) {
-                              await _openBlueprintEditor(blueprint, state);
-                            } else {
-                              await _markMissingAsOwned(blueprint, state);
-                            }
+                            if (!mounted) return;
+                            await _openBlueprintEditor(blueprint, state);
+                          },
+                        ),
+                        if (!state.owned) _buildBlueprintActionButton(
+                          label: 'Mark Owned',
+                          icon: Icons.check_circle_rounded,
+                          color: AppTheme.neonPink,
+                          onTap: () async {
+                            Navigator.of(sheetContext).pop();
+                            if (!mounted) return;
+                            await _markMissingAsOwned(blueprint, state);
                           },
                         ),
                         _buildBlueprintActionButton(
