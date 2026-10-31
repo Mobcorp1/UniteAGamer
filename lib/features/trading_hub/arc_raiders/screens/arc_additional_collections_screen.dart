@@ -1486,6 +1486,9 @@ class _ArcAdditionalCollectionsScreenState
                         ),
                       ),
                       child: Column(
+                        // Force the artwork Stack to use the card's entire
+                        // available width rather than the 17/28px fallback icon.
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Expanded(
                             child: Stack(
