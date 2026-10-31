@@ -1,4 +1,4 @@
-name: UAG PASS29 Blueprint Intel Website Release
+name: UAG PASS30 Designs Landscape Website Release
 
 on:
   push:
@@ -38,9 +38,13 @@ jobs:
       - name: Analyze
         run: flutter analyze --no-fatal-infos
 
-      - name: Certify Blueprint Intel and original PASS26/PASS27
+      - name: Certify Designs layout, Blueprint Intel and locked grids
         run: |
           flutter test --reporter expanded \
+            test/pass30_designs_landscape_layout_test.dart \
+            test/arc_collections_polish_pass08_test.dart \
+            test/arc_collections_persistent_grid_test.dart \
+            test/arc_collections_unified_ux_test.dart \
             test/blueprint_intel_entry_restoration_test.dart \
             test/blueprint_grid_screen_regression_test.dart \
             test/arc_blueprint_canonical_grid_test.dart \
