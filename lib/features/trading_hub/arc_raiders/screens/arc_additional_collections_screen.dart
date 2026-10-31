@@ -1469,10 +1469,9 @@ class _ArcAdditionalCollectionsScreenState
                     key: Key('collections-saved-slot-$slot'),
                     onTap: () => _details(slot),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 2,
-                        vertical: 2,
-                      ),
+                      // Full-bleed artwork: reclaim 2px on every edge. This
+                      // adds 4px to image width and the same 4px to its height.
+                      padding: EdgeInsets.zero,
                       decoration: BoxDecoration(
                         color: owned
                             ? uag_pass14_theme.AppTheme.cardBackgroundAlt
@@ -1504,12 +1503,20 @@ class _ArcAdditionalCollectionsScreenState
                                 if (_designArtworkForName(name)
                                     case final String artwork)
                                   Positioned.fill(
-                                    child: Image.asset(
-                                      artwork,
-                                      fit: BoxFit.contain,
-                                      errorBuilder:
-                                          (context, error, stackTrace) =>
-                                              const SizedBox.shrink(),
+                                    child: ClipRect(
+                                      key: Key('collections-design-artwork-frame-$slot'),
+                                      child: Transform.scale(
+                                        // Fills more of transparent furniture
+                                        // canvases without changing card geometry.
+                                        scale: 1.10,
+                                        child: Image.asset(
+                                          artwork,
+                                          fit: BoxFit.contain,
+                                          errorBuilder:
+                                              (context, error, stackTrace) =>
+                                                  const SizedBox.shrink(),
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 if (copies > 0)
@@ -1530,9 +1537,13 @@ class _ArcAdditionalCollectionsScreenState
                           ),
                           SizedBox(
                             height: math.min(54.0, rowHeight * 0.28),
-                            child: Center(
+                            child: Align(
+                              // Text starts immediately under the artwork,
+                              // rather than floating halfway down its lane.
+                              alignment: Alignment.topCenter,
                               child: Text(
                                 name,
+                                key: Key('collections-design-name-$slot'),
                                 textAlign: TextAlign.center,
                                 maxLines: 4,
                                 softWrap: true,
