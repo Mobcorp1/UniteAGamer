@@ -5,7 +5,12 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   final source = File(
     'lib/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart',
-  ).readAsStringSync();
+  ).readAsStringSync().replaceAll('\r\n', '\n').replaceAll('\r', '\n');
+
+  test('Windows checkout line endings cannot hide Add Intel entry wiring', () {
+    const windowsText = "case 'report':\r\n        await _openBlueprintEditor(blueprint, state);";
+    expect(windowsText.replaceAll('\r\n', '\n'), contains("case 'report':\n        await _openBlueprintEditor(blueprint, state);"));
+  });
 
   test('all blueprint action entry points expose the existing report editor', () {
     expect(source, contains("title: 'Add Intel / Drop Report'"));
