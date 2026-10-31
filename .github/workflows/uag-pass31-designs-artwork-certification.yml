@@ -32,7 +32,7 @@ jobs:
         run: flutter pub get
       - name: Analyze full Dart project
         run: flutter analyze --no-fatal-infos
-      - name: Test PASS31 artwork, PASS30 layout and locked regressions
+      - name: Verify full-width PASS31 artwork and locked grid regressions
         run: |
           flutter test --reporter expanded \
             test/pass31_designs_artwork_fill_test.dart \
