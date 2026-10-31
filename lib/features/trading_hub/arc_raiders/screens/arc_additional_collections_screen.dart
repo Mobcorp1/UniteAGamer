@@ -988,9 +988,9 @@ class _ArcAdditionalCollectionsScreenState
   }
 
 
-  /// Designs only: compact controls either side of an actual 320x50 ad.
-  /// The entitlement-aware banner still governs whether an ad may appear.
-  Widget _designsBottomDock(bool hasPending) {
+  /// Shared Designs / Stencils command dock. Controls flank the 320x50 ad;
+  /// the entitlement-aware banner continues to control ad visibility.
+  Widget _collectionsBottomDock(bool hasPending) {
     Widget action({
       required Key key,
       required String label,
@@ -1052,7 +1052,9 @@ class _ArcAdditionalCollectionsScreenState
     return SafeArea(
       top: false,
       child: Container(
-        key: const Key('collections-designs-bottom-dock'),
+        key: Key(_kind == ArcNativeCollectionKind.designs
+            ? 'collections-designs-bottom-dock'
+            : 'collections-stencils-bottom-dock'),
         padding: const EdgeInsets.fromLTRB(7, 2, 7, 2),
         decoration: BoxDecoration(
           color: uag_pass14_theme.AppTheme.darkBackground,
@@ -1102,7 +1104,9 @@ class _ArcAdditionalCollectionsScreenState
                         const SizedBox(height: 6),
                         Text(
                           '${_saved.ownedSlots.length}/${_kind.slots} OWNED',
-                          key: const Key('collections-design-owned-count'),
+                          key: Key(_kind == ArcNativeCollectionKind.designs
+                              ? 'collections-design-owned-count'
+                              : 'collections-stencil-owned-count'),
                           style: const TextStyle(
                             color: uag_pass14_theme.AppTheme.neonCyan,
                             fontSize: 10,
@@ -1113,7 +1117,9 @@ class _ArcAdditionalCollectionsScreenState
                   ),
                   const SizedBox(width: 6),
                   SizedBox(
-                    key: const Key('collections-design-fitted-ad'),
+                    key: Key(_kind == ArcNativeCollectionKind.designs
+                        ? 'collections-design-fitted-ad'
+                        : 'collections-stencil-fitted-ad'),
                     width: adWidth,
                     height: 74,
                     child: Center(
@@ -1171,130 +1177,6 @@ class _ArcAdditionalCollectionsScreenState
             );
           },
         ),
-      ),
-    );
-  }
-
-  Widget _toolsRail(bool hasPending) {
-    Widget action({
-      required Key key,
-      required String title,
-      required IconData icon,
-      required VoidCallback? onTap,
-      bool selected = false,
-      bool camera = false,
-    }) => SizedBox(
-      width: double.infinity,
-      height: 43,
-      child: OutlinedButton.icon(
-        key: key,
-        style: OutlinedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 5),
-          foregroundColor: camera
-              ? uag_pass14_theme.AppTheme.darkBackground
-              : selected
-              ? uag_pass14_theme.AppTheme.neonCyan
-              : Colors.white70,
-          backgroundColor: camera
-              ? uag_pass14_theme.AppTheme.neonPink
-              : selected
-              ? uag_pass14_theme.AppTheme.cardBackgroundAlt
-              : uag_pass14_theme.AppTheme.cardBackground,
-          side: BorderSide(
-            color: camera
-                ? uag_pass14_theme.AppTheme.neonCyan
-                : selected
-                ? uag_pass14_theme.AppTheme.neonCyan
-                : uag_pass14_theme.AppTheme.neonCyan.withValues(alpha: 0.25),
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        onPressed: onTap,
-        icon: Icon(
-          icon,
-          size: 20,
-          color: camera ? uag_pass14_theme.AppTheme.darkBackground : null,
-        ),
-        label: title.isEmpty
-            ? const SizedBox.shrink()
-            : Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.fade,
-                style: const TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-      ),
-    );
-    return Container(
-      decoration: BoxDecoration(
-        color: uag_pass14_theme.AppTheme.cardBackgroundDeep.withValues(
-          alpha: 0.87,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: uag_pass14_theme.AppTheme.neonCyan.withValues(alpha: 0.28),
-        ),
-      ),
-      padding: const EdgeInsets.all(6),
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          action(
-            key: const Key('collections-upload-native-screenshot'),
-            title: '',
-            icon: Icons.camera_alt_outlined,
-            onTap: _busy ? null : _upload,
-            camera: true,
-          ),
-          const SizedBox(height: 8),
-          action(
-            key: const Key('collections-filter-all'),
-            title: 'ALL',
-            icon: Icons.apps_rounded,
-            onTap: () => setState(() => _view = ArcCollectionView.all),
-            selected: _view == ArcCollectionView.all,
-          ),
-          const SizedBox(height: 7),
-          action(
-            key: const Key('collections-filter-needed'),
-            title: 'NEEDED',
-            icon: Icons.help_outline_rounded,
-            onTap: () => setState(() => _view = ArcCollectionView.needed),
-            selected: _view == ArcCollectionView.needed,
-          ),
-          const SizedBox(height: 7),
-          // Dupe navigation is in the top bar. The rail remains compact.
-          action(
-            key: const Key('collections-share'),
-            title: 'SHARE',
-            icon: Icons.share_outlined,
-            onTap: _loaded && !_busy ? _share : null,
-          ),
-          if (hasPending) ...[
-            const SizedBox(height: 7),
-            action(
-              key: const Key('collections-save-continue'),
-              title: 'SAVE',
-              icon: Icons.save_outlined,
-              onTap: _loaded && !_busy ? _saveAndContinue : null,
-            ),
-          ],
-          const SizedBox(height: 8),
-          Center(
-            child: Text(
-              '${_saved.ownedSlots.length}/${_kind.slots}',
-              style: const TextStyle(
-                color: uag_pass14_theme.AppTheme.neonCyan,
-                fontSize: 10,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -1718,21 +1600,14 @@ class _ArcAdditionalCollectionsScreenState
           const SizedBox(width: 8),
         ],
       ),
-      bottomNavigationBar: _kind == ArcNativeCollectionKind.designs
-          ? _designsBottomDock(hasPending)
-          : widget.adBanner ?? const ArcBlueprintBannerSlot(),
+      bottomNavigationBar: _collectionsBottomDock(hasPending),
       body: SafeArea(
         top: false,
         bottom: false,
         right: true,
         left: true,
         child: Padding(
-          padding: EdgeInsets.fromLTRB(
-            6,
-            2,
-            _kind == ArcNativeCollectionKind.designs ? 6 : 18,
-            4,
-          ),
+          padding: const EdgeInsets.fromLTRB(6, 2, 6, 4),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -1780,21 +1655,12 @@ class _ArcAdditionalCollectionsScreenState
                   ],
                 ),
               const SizedBox(height: 4),
-              // Designs use the balanced bottom dock; Stencils keep the original rail.
+              // Both collection grids now have the full width; action controls
+              // sit beside the bounded ad in the shared bottom dock.
               Expanded(
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _view == ArcCollectionView.duplicates
-                          ? _buildCollectionDupeSearch()
-                          : _grid(),
-                    ),
-                    if (_kind != ArcNativeCollectionKind.designs) ...[
-                      const SizedBox(width: 6),
-                      SizedBox(width: 113, child: _toolsRail(hasPending)),
-                    ],
-                  ],
-                ),
+                child: _view == ArcCollectionView.duplicates
+                    ? _buildCollectionDupeSearch()
+                    : _grid(),
               ),
             ],
           ),
