@@ -9,7 +9,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('Designs retains 17 game-ordered columns and scrolls after three rows', (tester) async {
+  testWidgets('Designs retains 17 game-ordered columns and scrolls after two rows', (tester) async {
     tester.view.physicalSize = const Size(1100, 600);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
