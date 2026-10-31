@@ -74,7 +74,7 @@ void main() {
     });
   }
 
-  testWidgets('PASS30 keeps Stencils original tools rail untouched',
+  testWidgets('PASS32 Stencils reuse shared bottom dock without changing stencil grid',
       (tester) async {
     tester.view.physicalSize = const Size(1100, 600);
     tester.view.devicePixelRatio = 1;
@@ -88,8 +88,9 @@ void main() {
       ),
     ));
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('collections-designs-bottom-dock')),
-        findsNothing);
+    expect(find.byKey(const Key('collections-designs-bottom-dock')), findsNothing);
+    expect(find.byKey(const Key('collections-stencils-bottom-dock')), findsOneWidget);
+    expect(find.byKey(const Key('collections-stencil-fitted-ad')), findsOneWidget);
     expect(find.byKey(const Key('collections-pinch-zoom-grid')),
         findsOneWidget);
     expect(find.byKey(const Key('collections-filter-all')), findsOneWidget);
