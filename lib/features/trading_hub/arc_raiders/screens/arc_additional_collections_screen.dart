@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_collection_visual_share.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_ad_banner_card.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/ads/uag_tactical_banner_ad.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_modal_surface.dart';
 
@@ -986,6 +987,194 @@ class _ArcAdditionalCollectionsScreenState
     );
   }
 
+
+  /// Designs only: compact controls either side of an actual 320x50 ad.
+  /// The entitlement-aware banner still governs whether an ad may appear.
+  Widget _designsBottomDock(bool hasPending) {
+    Widget action({
+      required Key key,
+      required String label,
+      required IconData icon,
+      required VoidCallback? onTap,
+      required bool iconOnly,
+      bool selected = false,
+      bool camera = false,
+    }) => Expanded(
+      child: Tooltip(
+        message: label,
+        child: SizedBox(
+          height: hasPending ? 34 : 42,
+          child: OutlinedButton(
+            key: key,
+            onPressed: onTap,
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 2),
+              backgroundColor: camera
+                  ? uag_pass14_theme.AppTheme.neonPink
+                  : selected
+                  ? uag_pass14_theme.AppTheme.cardBackgroundAlt
+                  : uag_pass14_theme.AppTheme.cardBackground,
+              foregroundColor: camera
+                  ? uag_pass14_theme.AppTheme.darkBackground
+                  : selected
+                  ? uag_pass14_theme.AppTheme.neonCyan
+                  : Colors.white70,
+              side: BorderSide(
+                color: camera || selected
+                    ? uag_pass14_theme.AppTheme.neonCyan
+                    : uag_pass14_theme.AppTheme.neonCyan.withValues(alpha: 0.34),
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(icon, size: 17),
+                  if (!iconOnly) ...[
+                    const SizedBox(width: 4),
+                    Text(
+                      label,
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    return SafeArea(
+      top: false,
+      child: Container(
+        key: const Key('collections-designs-bottom-dock'),
+        padding: const EdgeInsets.fromLTRB(7, 2, 7, 2),
+        decoration: BoxDecoration(
+          color: uag_pass14_theme.AppTheme.darkBackground,
+          border: Border(
+            top: BorderSide(
+              color: uag_pass14_theme.AppTheme.neonCyan.withValues(alpha: 0.25),
+            ),
+          ),
+        ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final iconOnly = constraints.maxWidth < 610;
+            // Keep full 320-pixel AdMob creative in an independent 326-344px lane.
+            final adWidth = math.min(
+              344.0,
+              math.max(326.0, constraints.maxWidth * 0.43),
+            );
+            return SizedBox(
+              height: 74,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Row(
+                          children: [
+                            action(
+                              key: const Key('collections-filter-all'),
+                              label: 'ALL',
+                              icon: Icons.apps_rounded,
+                              iconOnly: iconOnly,
+                              selected: _view == ArcCollectionView.all,
+                              onTap: () => setState(() => _view = ArcCollectionView.all),
+                            ),
+                            const SizedBox(width: 4),
+                            action(
+                              key: const Key('collections-filter-needed'),
+                              label: 'NEEDED',
+                              icon: Icons.help_outline_rounded,
+                              iconOnly: iconOnly,
+                              selected: _view == ArcCollectionView.needed,
+                              onTap: () => setState(() => _view = ArcCollectionView.needed),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          '${_saved.ownedSlots.length}/${_kind.slots} OWNED',
+                          key: const Key('collections-design-owned-count'),
+                          style: const TextStyle(
+                            color: uag_pass14_theme.AppTheme.neonCyan,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  SizedBox(
+                    key: const Key('collections-design-fitted-ad'),
+                    width: adWidth,
+                    height: 74,
+                    child: Center(
+                      child: widget.adBanner ??
+                          const ArcBlueprintBannerSlot(
+                            banner: UagTacticalBannerAd(
+                              margin: EdgeInsets.fromLTRB(2, 6, 2, 8),
+                            ),
+                          ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Row(
+                          children: [
+                            action(
+                              key: const Key('collections-upload-native-screenshot'),
+                              label: 'CAMERA',
+                              icon: Icons.camera_alt_outlined,
+                              onTap: _busy ? null : _upload,
+                              iconOnly: iconOnly,
+                              camera: true,
+                            ),
+                            const SizedBox(width: 4),
+                            action(
+                              key: const Key('collections-share'),
+                              label: 'SHARE',
+                              icon: Icons.share_outlined,
+                              onTap: _loaded && !_busy ? _share : null,
+                              iconOnly: iconOnly,
+                            ),
+                          ],
+                        ),
+                        if (hasPending) ...[
+                          const SizedBox(height: 4),
+                          SizedBox(
+                            height: 30,
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              key: const Key('collections-save-continue'),
+                              onPressed: _loaded && !_busy ? _saveAndContinue : null,
+                              icon: const Icon(Icons.save_outlined, size: 14),
+                              label: const Text('SAVE', style: TextStyle(fontSize: 11)),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   Widget _toolsRail(bool hasPending) {
     Widget action({
       required Key key,
@@ -1238,7 +1427,7 @@ class _ArcAdditionalCollectionsScreenState
       return LayoutBuilder(
         builder: (context, constraints) {
           // Authoritative game order: 17 columns, six rows (final row partial).
-          // Show about three rows at a time; the remaining slots scroll vertically.
+          // Show exactly two full rows at a time; the remaining slots scroll vertically.
           // Do not reorder, filter out or remap any saved slot identity.
           const columns = 17;
           const gap = 3.0;
@@ -1246,9 +1435,10 @@ class _ArcAdditionalCollectionsScreenState
           final cardWidth =
               (constraints.maxWidth - (inset * 2) - gap * (columns - 1)) /
               columns;
-          final rowHeight = (constraints.maxHeight / 3.08)
-              .clamp(92.0, 156.0)
-              .toDouble();
+          final rowHeight = math.max(
+            1.0,
+            (constraints.maxHeight - inset * 2 - gap) / 2,
+          );
           return GridView.builder(
             key: const Key('collections-design-readable-gallery'),
             padding: const EdgeInsets.all(inset),
@@ -1281,7 +1471,7 @@ class _ArcAdditionalCollectionsScreenState
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 2,
-                        vertical: 3,
+                        vertical: 2,
                       ),
                       decoration: BoxDecoration(
                         color: owned
@@ -1298,13 +1488,6 @@ class _ArcAdditionalCollectionsScreenState
                       ),
                       child: Column(
                         children: [
-                          Text(
-                            slot.toString().padLeft(2, '0'),
-                            style: const TextStyle(
-                              fontSize: 9,
-                              color: uag_pass14_theme.AppTheme.neonCyan,
-                            ),
-                          ),
                           Expanded(
                             child: Stack(
                               alignment: Alignment.center,
@@ -1313,7 +1496,7 @@ class _ArcAdditionalCollectionsScreenState
                                   owned
                                       ? Icons.weekend_outlined
                                       : Icons.lock_outline,
-                                  size: cardWidth < 42 ? 17 : 24,
+                                  size: cardWidth < 42 ? 17 : 28,
                                   color: owned
                                       ? Colors.cyanAccent
                                       : Colors.white38,
@@ -1346,21 +1529,21 @@ class _ArcAdditionalCollectionsScreenState
                             ),
                           ),
                           SizedBox(
-                            height: rowHeight * 0.42,
+                            height: math.min(54.0, rowHeight * 0.28),
                             child: Center(
                               child: Text(
                                 name,
                                 textAlign: TextAlign.center,
-                                maxLines: 5,
+                                maxLines: 4,
                                 softWrap: true,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: cardWidth >= 58
+                                  fontSize: cardWidth >= 78
+                                      ? 10
+                                      : cardWidth >= 52
                                       ? 9
-                                      : cardWidth >= 40
-                                      ? 8
-                                      : 7,
+                                      : 8,
                                   height: 1.05,
                                 ),
                               ),
@@ -1521,14 +1704,21 @@ class _ArcAdditionalCollectionsScreenState
           const SizedBox(width: 8),
         ],
       ),
-      bottomNavigationBar: widget.adBanner ?? const ArcBlueprintBannerSlot(),
+      bottomNavigationBar: _kind == ArcNativeCollectionKind.designs
+          ? _designsBottomDock(hasPending)
+          : widget.adBanner ?? const ArcBlueprintBannerSlot(),
       body: SafeArea(
         top: false,
         bottom: false,
         right: true,
         left: true,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(6, 2, 18, 4),
+          padding: EdgeInsets.fromLTRB(
+            6,
+            2,
+            _kind == ArcNativeCollectionKind.designs ? 6 : 18,
+            4,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -1576,7 +1766,7 @@ class _ArcAdditionalCollectionsScreenState
                   ],
                 ),
               const SizedBox(height: 4),
-              // PASS05: full-height in-game order grid + slim trade-action rail.
+              // Designs use the balanced bottom dock; Stencils keep the original rail.
               Expanded(
                 child: Row(
                   children: [
@@ -1585,8 +1775,10 @@ class _ArcAdditionalCollectionsScreenState
                           ? _buildCollectionDupeSearch()
                           : _grid(),
                     ),
-                    const SizedBox(width: 6),
-                    SizedBox(width: 113, child: _toolsRail(hasPending)),
+                    if (_kind != ArcNativeCollectionKind.designs) ...[
+                      const SizedBox(width: 6),
+                      SizedBox(width: 113, child: _toolsRail(hasPending)),
+                    ],
                   ],
                 ),
               ),
