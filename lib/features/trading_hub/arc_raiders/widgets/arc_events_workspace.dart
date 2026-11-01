@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../data/arc_event_relevance.dart';
+import '../data/arc_drop_report_region_store.dart';
 import '../raid_planner/data/arc_regional_map_conditions.dart';
 import '../raid_planner/data/raid_planner_event_schedule.dart';
 import '../raid_planner/screens/raid_planner_screen.dart';
@@ -45,11 +46,31 @@ class _ArcEventsWorkspaceState extends State<ArcEventsWorkspace> {
   @override
   void initState() {
     super.initState();
-    if (!widget.compact) _refresh();
+    _restoreRegion();
+    _refresh();
     if (widget.nowUtc == null) {
       _timer = Timer.periodic(const Duration(seconds: 30), (_) {
         if (mounted) setState(() {});
       });
+    }
+  }
+
+  Future<void> _restoreRegion() async {
+    try {
+      final region = await ArcDropReportRegionStore.load();
+      if (mounted) setState(() => _region = region);
+    } catch (_) {
+      // Guest or unavailable preference store: keep the explicit Europe default.
+    }
+  }
+
+  Future<void> _selectRegion(ArcServerRegion region) async {
+    setState(() => _region = region);
+    try {
+      await ArcDropReportRegionStore.saveAndSyncProfile(region);
+    } catch (_) {
+      // The current selection still applies while offline.
+      try { await ArcDropReportRegionStore.save(region); } catch (_) {}
     }
   }
 
@@ -62,7 +83,7 @@ class _ArcEventsWorkspaceState extends State<ArcEventsWorkspace> {
     try {
       final result =
           await (widget.conditionsSource?.call() ??
-              ArcRegionalMapConditionsService.load(forceRefresh: true));
+              ArcRegionalMapConditionsService.load());
       if (!mounted || request != _request) return;
       setState(() {
         // Keep the last live result if a refresh returns the captured fallback.
@@ -94,18 +115,31 @@ class _ArcEventsWorkspaceState extends State<ArcEventsWorkspace> {
 
   @override
   Widget build(BuildContext context) {
-    final ranked = widget.relevance.rank(
-      nowUtc: _now,
-      slots: widget.slots,
-      showAll: _showAll,
-    );
-    final filtered = ranked
-        .where(
-          (event) => '${event.slot.eventName} ${event.slot.mapName}'
-              .toLowerCase()
-              .contains(_query.toLowerCase()),
-        )
-        .toList();
+    final snapshot = _conditions;
+    final stale = snapshot == null || !snapshot.isOfficialLive || _failed ||
+        _now.difference(snapshot.loadedAtUtc) > const Duration(minutes: 10);
+    final filtered = (snapshot?.entries ?? const <ArcRegionalMapConditionEntry>[])
+        .where((entry) {
+          final window = entry.windowFor(_region);
+          return window != null && window.endUtc.isAfter(_now) &&
+              '${entry.conditionName} ${entry.mapDisplayName}'
+                  .toLowerCase().contains(_query.toLowerCase());
+        }).toList();
+    filtered.sort((a, b) {
+      final aw = a.windowFor(_region)!;
+      final bw = b.windowFor(_region)!;
+      if (aw.isActiveAt(_now) != bw.isActiveAt(_now)) {
+        return aw.isActiveAt(_now) ? -1 : 1;
+      }
+      if (!_showAll && !widget.relevance.showEverything) {
+        int score(ArcRegionalMapConditionEntry e) => widget.relevance
+            .reasonsFor(e.conditionName, e.mapDisplayName).values
+            .fold<int>(0, (best, n) => n > best ? n : best);
+        final comparison = score(b).compareTo(score(a));
+        if (comparison != 0) return comparison;
+      }
+      return aw.startUtc.compareTo(bw.startUtc);
+    });
     final events = widget.compact ? filtered.take(2).toList() : filtered;
     return DefaultTextStyle.merge(
       style: const TextStyle(fontSize: 13, height: 1.25),
@@ -194,38 +228,51 @@ class _ArcEventsWorkspaceState extends State<ArcEventsWorkspace> {
               _regionalSection(),
               const SizedBox(height: 12),
             ],
-            Text(
-              widget.compact
-                  ? 'Saved schedule · Not live verified'
-                  : 'STANDARD SCHEDULE · Saved times · Not live verified',
-              style: const TextStyle(fontSize: 11, color: Colors.amber),
-            ),
-            if (events.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Text(
-                  widget.slots.isEmpty
-                      ? 'No standard schedule available.'
-                      : 'No events match this search.',
-                ),
-              ),
             if (widget.compact) ...[
-              for (final event in events) _event(event),
+              Text('ARC server: ${_region.label} · ${stale ? 'UNVERIFIED' : 'Official live schedule'}',
+                style: TextStyle(fontSize: 11,
+                  color: stale ? Colors.amber : AppTheme.neonCyan)),
+              Row(children: [
+                const Text('Region', style: TextStyle(fontSize: 11)),
+                const SizedBox(width: 8),
+                Expanded(child: DropdownButton<ArcServerRegion>(
+                  value: _region, isExpanded: true,
+                  items: [for (final region in ArcServerRegion.values)
+                    DropdownMenuItem(value: region, child: Text(region.label))],
+                  onChanged: (value) { if (value != null) _selectRegion(value); },
+                )),
+                IconButton(onPressed: _loading ? null : _refresh,
+                  icon: const Icon(Icons.refresh), tooltip: 'Refresh conditions'),
+              ]),
+              if (_loading && events.isEmpty) const LinearProgressIndicator(),
+              if (events.isEmpty && !_loading)
+                const Text('No verified current or upcoming regional conditions.'),
+              for (final entry in events) _regionalEvent(entry, stale),
             ] else ...[
-              _heading('ACTIVE / CURRENT'),
-              if (!events.any((event) => event.isActive(_now)))
-                const Text('No active standard events.'),
-              for (final event in events.where((event) => event.isActive(_now)))
-                _event(event),
-              _heading('UPCOMING · NEXT 24 HOURS'),
-              for (final event in events.where(
-                (event) => !event.isActive(_now),
-              ))
-                _event(event),
+              if (events.isEmpty && !_loading)
+                const Text('No current or upcoming conditions for this region.'),
             ],
           ],
         ),
       ),
+    );
+  }
+
+  Widget _regionalEvent(ArcRegionalMapConditionEntry entry, bool stale) {
+    final window = entry.windowFor(_region)!;
+    return Container(
+      key: ValueKey('event-${entry.mapDisplayName}-${entry.conditionName}-${window.startUtc}'),
+      padding: EdgeInsets.symmetric(vertical: widget.compact ? 1 : 8),
+      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Colors.white12))),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text('${window.isActiveAt(_now) ? 'CURRENT' : 'UPCOMING'}${stale ? ' · UNVERIFIED' : ''} · ${entry.conditionName} · ${entry.mapDisplayName}',
+          maxLines: 2, overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+        Text('${_time(window.startUtc)} – ${_time(window.endUtc)}',
+          style: const TextStyle(fontSize: 12, color: Colors.white70)),
+        Text(_regionalReason(entry), maxLines: 2, overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 12, color: Colors.white70)),
+      ]),
     );
   }
 
@@ -237,44 +284,6 @@ class _ArcEventsWorkspaceState extends State<ArcEventsWorkspace> {
         fontWeight: FontWeight.bold,
         color: Colors.white70,
       ),
-    ),
-  );
-
-  Widget _event(ArcEventMatch event) => Container(
-    key: ValueKey(
-      'event-${event.slot.mapName}-${event.slot.eventName}-${event.startUtc}',
-    ),
-    padding: const EdgeInsets.symmetric(vertical: 8),
-    decoration: const BoxDecoration(
-      border: Border(bottom: BorderSide(color: Colors.white12)),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          '${event.isActive(_now) ? 'ACTIVE' : 'NEXT'} · ${event.slot.eventName} · ${event.slot.mapName}',
-          maxLines: widget.compact ? 2 : null,
-          overflow: widget.compact ? TextOverflow.ellipsis : null,
-          style: const TextStyle(
-            fontSize: 13,
-            height: 1.25,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        Text(
-          '${_time(event.startUtc)} – ${_time(event.endUtc)}',
-          style: const TextStyle(fontSize: 12, color: Colors.white70),
-        ),
-        Text(
-          event.reason,
-          maxLines: widget.compact ? 2 : null,
-          overflow: widget.compact ? TextOverflow.ellipsis : null,
-          style: TextStyle(
-            fontSize: 12,
-            color: event.score > 0 ? AppTheme.neonCyan : Colors.white60,
-          ),
-        ),
-      ],
     ),
   );
 
@@ -331,7 +340,7 @@ class _ArcEventsWorkspaceState extends State<ArcEventsWorkspace> {
                     DropdownMenuItem(value: region, child: Text(region.label)),
                 ],
                 onChanged: (value) {
-                  if (value != null) setState(() => _region = value);
+                  if (value != null) _selectRegion(value);
                 },
               ),
             ),

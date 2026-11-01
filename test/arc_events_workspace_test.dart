@@ -13,6 +13,21 @@ void main() {
       ArcRegionalMapConditionsSnapshot(
         entries: [
           ArcRegionalMapConditionEntry(
+            conditionName: 'New Official Event',
+            mapDisplayName: 'Riven Tides',
+            duration: const Duration(hours: 1),
+            regionWindows: {
+              ArcServerRegion.europe: ArcRegionalConditionWindow(
+                startUtc: now,
+                endUtc: now.add(const Duration(hours: 1)),
+              ),
+              ArcServerRegion.northAmerica: ArcRegionalConditionWindow(
+                startUtc: now.add(const Duration(hours: 3)),
+                endUtc: now.add(const Duration(hours: 4)),
+              ),
+            },
+          ),
+          ArcRegionalMapConditionEntry(
             conditionName: 'Hurricane',
             mapDisplayName: 'Dam Battlegrounds',
             duration: const Duration(hours: 1),
@@ -89,6 +104,7 @@ void main() {
           relevance: const ArcEventRelevance(),
           nowUtc: now,
           compact: true,
+          conditionsSource: () async => snapshot(),
         ),
         size,
       );
@@ -104,6 +120,7 @@ void main() {
         tester.getSize(find.byType(ArcEventsWorkspace)).height,
         lessThan(360),
       );
+      expect(find.textContaining('New Official Event'), findsWidgets);
       expect(tester.takeException(), isNull);
       await tester.tap(find.text('OPEN RAID PLANNER'));
       await tester.pumpAndSettle();
@@ -126,7 +143,7 @@ void main() {
         const Size(1280, 900),
       );
       expect(find.byType(LinearProgressIndicator), findsOneWidget);
-      expect(find.text('No standard schedule available.'), findsOneWidget);
+      expect(find.text('No current or upcoming conditions for this region.'), findsNothing);
       future.completeError(StateError('offline'));
       await tester.pump();
       expect(
@@ -169,6 +186,6 @@ void main() {
       findsOneWidget,
     );
     expect(find.textContaining('STALE'), findsOneWidget);
-    expect(find.textContaining('UNVERIFIED'), findsOneWidget);
+    expect(find.textContaining('UNVERIFIED'), findsNWidgets(2));
   });
 }

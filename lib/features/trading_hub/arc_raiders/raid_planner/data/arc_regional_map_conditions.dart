@@ -244,7 +244,7 @@ class ArcRegionalMapConditionsService {
       throw StateError('ARC Raiders returned HTTP ${response.statusCode}.');
     } catch (error) {
       final fallback = _capturedFallback(now, error.toString());
-      _cached = fallback;
+      // Never cache a failed fetch as if it were a fresh official schedule.
       return fallback;
     }
   }

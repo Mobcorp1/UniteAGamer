@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_drop_report_region_store.dart';
 
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_subscription_tier.dart';
@@ -112,6 +113,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
   void initState() {
     super.initState();
     _plannerNowUtc = DateTime.now().toUtc();
+    _restoreRegion();
     _regionalConditionsFuture =
         widget.regionalSource?.call() ?? ArcRegionalMapConditionsService.load();
     _eventFinderController = TextEditingController();
@@ -122,6 +124,24 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
         _plannerNowUtc = DateTime.now().toUtc();
       });
     });
+  }
+
+  Future<void> _restoreRegion() async {
+    try {
+      final region = await ArcDropReportRegionStore.load();
+      if (mounted) setState(() => _selectedServerRegion = region);
+    } catch (_) {}
+  }
+
+  Future<void> _changeRegion(ArcServerRegion region) async {
+    setState(() => _selectedServerRegion = region);
+    try {
+      await ArcDropReportRegionStore.saveAndSyncProfile(region);
+    } catch (_) {
+      try {
+        await ArcDropReportRegionStore.save(region);
+      } catch (_) {}
+    }
   }
 
   void _onEventFinderChanged() {
@@ -873,7 +893,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
                       ],
                       onChanged: (value) {
                         if (value == null) return;
-                        setState(() => _selectedServerRegion = value);
+                        _changeRegion(value);
                       },
                     ),
                   ),

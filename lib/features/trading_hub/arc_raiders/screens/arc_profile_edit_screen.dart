@@ -1,5 +1,6 @@
 // ignore_for_file: unused_element
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_drop_report_region_store.dart';
 import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -242,6 +243,12 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
           createdAt: _createdAt,
         ),
       );
+      final selectedRegion = ArcDropReportRegionStore.fromProfilePreference(
+        _serverPreference,
+      );
+      if (selectedRegion != null) {
+        await ArcDropReportRegionStore.save(selectedRegion);
+      }
       if (!mounted) return;
       Navigator.of(context).pop(true);
     } finally {
