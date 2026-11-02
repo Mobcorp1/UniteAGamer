@@ -45,14 +45,7 @@ jobs:
             mkdir -p "bundle/$(dirname "$file")"
             cp "$file" "bundle/$file"
           done
-          cat > bundle/README.txt <<'EOF'
-UAG PASS05 regression-contract repair.
-This package includes 9 Dart test updates and no production app changes.
-Fixes stale exact-string checks and legacy ad-layout checks from the 2026-11-02 full test log.
-Preserves new fitted bottom dock, no alteration of Blueprint grid, tile logic or ad runtime.
-Review target: current Windows working tree fix/arc-regional-event-scheduling.
-Do not deploy merely because these tests pass.
-EOF
+          printf '%s\n' "UAG PASS05 regression-contract repair." "This package includes 9 Dart test updates and no production app changes." "Fixes stale exact-string and legacy ad-layout checks from 2026-11-02 Flutter log." "Preserves the fitted bottom dock; no Blueprint grid, tile logic or ad runtime changes." "Review target: local Windows working tree fix/arc-regional-event-scheduling." "Do not deploy merely because these tests pass." > bundle/README.txt
           test "$(find bundle -type f | wc -l)" -eq 10
       - uses: actions/upload-artifact@v4
         with:
