@@ -58,7 +58,7 @@ void main() {
         'lib/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart',
       );
 
-      expect(source, contains('math.min(widthScale, heightScale)'));
+      expect(source, matches(RegExp(r'math\s*\.min\(widthScale,\s*heightScale\)')));
       expect(source, contains('0.05,'));
       expect(source, contains('constrained: !isLandscape'));
       expect(source, contains('final viewportWidth = fittedWidth;'));

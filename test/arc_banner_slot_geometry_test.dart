@@ -72,11 +72,19 @@ void main() {
         if (compactLandscape) {
           expect(appDock, findsNothing);
           expect(banner, findsOneWidget);
-          expect(
-            find.byKey(const Key('blueprint-landscape-static-ad')),
-            findsOneWidget,
-          );
-          expect(before.overlaps(tester.getRect(banner)), isFalse);
+          final fittedDock = find.byKey(const Key('blueprint-landscape-fitted-dock'));
+          if (fittedDock.evaluate().isNotEmpty) {
+            final fittedAd = find.byKey(const Key('blueprint-dock-fitted-ad'));
+            expect(fittedDock, findsOneWidget);
+            expect(fittedAd, findsOneWidget);
+            expect(tester.getRect(fittedAd).contains(tester.getCenter(banner)), isTrue);
+            expect(before.overlaps(tester.getRect(fittedAd)), isFalse);
+          } else {
+            expect(
+              find.byKey(const Key('blueprint-landscape-static-ad')),
+              findsOneWidget,
+            );
+          }
           expect(before.overlaps(tester.getRect(banner)), isFalse);
         } else {
           expect(appDock, findsOneWidget);

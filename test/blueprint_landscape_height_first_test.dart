@@ -47,7 +47,7 @@ void main() {
           const Key('blueprint-grid-vertical-command-rail'),
         );
         expect(viewport, findsOneWidget);
-        expect(rail, findsOneWidget);
+        final modernDock = find.byKey(const Key('blueprint-landscape-fitted-dock'));
         expect(
           find.byKey(const Key('blueprint-grid-horizontal-command-bar')),
           findsNothing,
@@ -55,14 +55,25 @@ void main() {
         expect(find.byType(ArcCompanionBottomDock), findsNothing);
 
         final viewportRect = tester.getRect(viewport);
-        final railRect = tester.getRect(rail);
-        expect(viewportRect.overlaps(railRect), isFalse);
         expect(viewportRect.height, greaterThan(size.height * 0.65));
 
-        final staticAd = find.byKey(const Key('blueprint-landscape-static-ad'));
         final ad = find.text('Creative');
-        expect(staticAd, findsOneWidget);
         expect(ad, findsOneWidget);
+        if (modernDock.evaluate().isNotEmpty) {
+          expect(rail, findsNothing);
+          final fittedAd = find.byKey(const Key('blueprint-dock-fitted-ad'));
+          expect(modernDock, findsOneWidget);
+          expect(fittedAd, findsOneWidget);
+          expect(tester.getRect(fittedAd).contains(tester.getCenter(ad)), isTrue);
+          expect(viewportRect.overlaps(tester.getRect(fittedAd)), isFalse);
+          expect(find.byKey(const Key('blueprint-dock-camera')), findsOneWidget);
+          expect(find.byKey(const Key('blueprint-dock-share')), findsOneWidget);
+        } else {
+          expect(rail, findsOneWidget);
+          final railRect = tester.getRect(rail);
+          expect(viewportRect.overlaps(railRect), isFalse);
+          expect(find.byKey(const Key('blueprint-landscape-static-ad')), findsOneWidget);
+        }
         expect(viewportRect.overlaps(tester.getRect(ad)), isFalse);
         expect(find.byKey(const Key('blueprint-side-ad-right')), findsNothing);
 

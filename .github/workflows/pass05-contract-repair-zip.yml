@@ -1,0 +1,64 @@
+name: PASS 05 Regression Contract Repair and ZIP
+
+on:
+  push:
+    branches:
+      - fix/pass05-stale-test-contracts-20261102
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  certify-and-package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.41.0'
+          cache: true
+      - run: flutter pub get
+      - name: Test targeted contracts on pushed baseline
+        run: |
+          flutter test --reporter expanded \
+            test/arc_blueprint_bottom_workspace_layout_test.dart \
+            test/arc_banner_slot_geometry_test.dart \
+            test/blueprint_intel_entry_restoration_test.dart \
+            test/blueprint_tracker_view_convergence_test.dart \
+            test/blueprint_landscape_height_first_test.dart \
+            test/pass09_web_android_parity_release_test.dart \
+            test/pass11b_rev3_complete_resource_artwork_integrity_test.dart \
+            test/pass_220g_blueprint_tracker_wiring_test.dart \
+            test/pass_launch_blueprint_scanner_ui_polish_test.dart
+      - name: Package complete test updates
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p bundle
+          for file in "test/arc_blueprint_bottom_workspace_layout_test.dart" "test/arc_banner_slot_geometry_test.dart" "test/blueprint_intel_entry_restoration_test.dart" "test/blueprint_tracker_view_convergence_test.dart" "test/blueprint_landscape_height_first_test.dart" "test/pass09_web_android_parity_release_test.dart" "test/pass11b_rev3_complete_resource_artwork_integrity_test.dart" "test/pass_220g_blueprint_tracker_wiring_test.dart" "test/pass_launch_blueprint_scanner_ui_polish_test.dart"; do
+            test -s "$file"
+            mkdir -p "bundle/$(dirname "$file")"
+            cp "$file" "bundle/$file"
+          done
+          cat > bundle/README.txt <<'EOF'
+UAG PASS05 regression-contract repair.
+This package includes 9 Dart test updates and no production app changes.
+Fixes stale exact-string checks and legacy ad-layout checks from the 2026-11-02 full test log.
+Preserves new fitted bottom dock, no alteration of Blueprint grid, tile logic or ad runtime.
+Review target: current Windows working tree fix/arc-regional-event-scheduling.
+Do not deploy merely because these tests pass.
+EOF
+          test "$(find bundle -type f | wc -l)" -eq 10
+      - uses: actions/upload-artifact@v4
+        with:
+          name: UAG_PASS05_REGRESSION_REPAIR
+          path: bundle/
+          include-hidden-files: true
+          retention-days: 30
+          compression-level: 6
+          if-no-files-found: error

@@ -9,7 +9,7 @@ void main() {
     expect(grid, contains('ArcBlueprintGridViewMode _viewMode = ArcBlueprintGridViewMode.fullOverview'));
     expect(prefs, contains('arcBlueprintGridViewModeV3'));
     expect(prefs, contains('_ => ArcBlueprintGridViewMode.fullOverview'));
-    expect(grid, contains('math.min(widthScale, heightScale)'));
+    expect(grid, matches(RegExp(r'math\s*\.min\(widthScale,\s*heightScale\)')));
     expect(grid, contains('ArcFrozenTrailCollectionCatalogue.blueprintGrid.totalSlots'));
     expect(grid, contains('totalCount: ArcFrozenTrailCollectionCatalogue.blueprintGrid.totalSlots'));
     expect(grid, contains('_fullGridWithUnknownCells(filteredByState)'));

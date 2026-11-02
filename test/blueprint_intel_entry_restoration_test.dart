@@ -20,7 +20,7 @@ void main() {
       source,
       contains("label: 'Add Intel',\n                          icon: Icons.add_location_alt_rounded"),
     );
-    expect(source, contains("if (!state.owned) _buildBlueprintActionButton("));
+    expect(source, matches(RegExp(r'if\s*\(!state\.owned\)\s*_buildBlueprintActionButton\(')));
     expect(source, contains("label: 'Mark Owned'"));
     expect(source, contains("title: 'View Intel'"));
     expect(source, contains("case 'intel':"));
