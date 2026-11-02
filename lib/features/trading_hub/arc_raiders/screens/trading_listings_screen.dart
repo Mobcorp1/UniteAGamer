@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_research_workstation_screen.dart';
+
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/trade_items_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_trade_watch_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_beta_first_run.dart';
@@ -40,6 +44,8 @@ class TradingListingsScreen extends StatefulWidget {
 
 class _TradingListingsScreenState extends State<TradingListingsScreen> {
   final TradingRepository _repository = TradingRepository();
+  final ArcTradeWatchRepository _watchRepository = ArcTradeWatchRepository();
+  bool _showAllListings = false;
   final ArcBlueprintRepository _blueprintRepository = ArcBlueprintRepository();
   final ArcScrappyRepository _scrappyRepository = ArcScrappyRepository();
   final ArcTraderProfileRepository _profileRepository =
@@ -113,18 +119,19 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
   List<TradingListing> _applyFilters(
     List<TradingListing> listings,
     Set<String> missingBlueprintNames,
+    Set<String> wantedTradeItemIds,
   ) {
     final query = _searchController.text.trim().toLowerCase();
 
     return listings
         .where((listing) {
-          final hasOfferedMatch = missingBlueprintNames.isEmpty
-              ? true
-              : listing.offeredBlueprintNames
-                    .map((name) => name.toLowerCase())
-                    .any(missingBlueprintNames.contains);
+          final hasOfferedMatch = _showAllListings ||
+              listing.offeredBlueprintNames
+                  .map((name) => name.trim().toLowerCase())
+                  .any(missingBlueprintNames.contains) ||
+              listing.offeredTradeItemIds.any(wantedTradeItemIds.contains);
 
-          if (!hasOfferedMatch) {
+          if (listing.ownerUid == _repository.currentUid || !hasOfferedMatch) {
             return false;
           }
 
@@ -537,7 +544,7 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
           Text(
             wantedCount > 0
                 ? 'Showing listings offering blueprints you are still missing.'
-                : 'No missing blueprints detected yet, so all active listings are visible.',
+                : 'Automatic watches follow your missing blueprints. Add quest/build/material interests below, or show all listings.',
             style: TextStyle(color: AppTheme.tradingMutedText, height: 1.35),
           ),
           const SizedBox(height: AppTheme.spaceM),
@@ -573,6 +580,61 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _editTradeInterests(Set<String> current) async {
+    final options = ArcTradeItemsData.items
+        .where((item) => item.category != ArcTradeItemCategory.containerIntel)
+        .toList()
+      ..sort((a, b) => a.name.compareTo(b.name));
+    final selected = Set<String>.from(current);
+    final query = ValueNotifier<String>('');
+    try {
+      final result = await showDialog<Set<String>>(
+        context: context,
+        builder: (dialogContext) => StatefulBuilder(
+          builder: (context, refresh) => AlertDialog(
+            backgroundColor: AppTheme.cardBackground,
+            title: const Text('Trade Interests', style: TextStyle(color: Colors.white)),
+            content: SizedBox(
+              width: 440,
+              height: 440,
+              child: Column(children: [
+                TextField(
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(labelText: 'Search items, materials, weapons or keys'),
+                  onChanged: (value) { query.value = value.toLowerCase(); refresh(() {}); },
+                ),
+                Expanded(child: ListView.builder(
+                  itemCount: options.where((item) => item.name.toLowerCase().contains(query.value)).length,
+                  itemBuilder: (context, index) {
+                    final filtered = options.where((item) => item.name.toLowerCase().contains(query.value)).toList();
+                    final item = filtered[index];
+                    return CheckboxListTile(
+                      title: Text(item.name, style: const TextStyle(color: Colors.white)),
+                      subtitle: Text(item.categoryLabel, style: const TextStyle(color: Colors.white70)),
+                      value: selected.contains(item.id),
+                      onChanged: (checked) => refresh(() {
+                        if (checked == true) { selected.add(item.id); } else { selected.remove(item.id); }
+                      }),
+                    );
+                  },
+                )),
+              ]),
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+              TextButton(onPressed: () => Navigator.pop(context, selected), child: const Text('Save interests')),
+            ],
+          ),
+        ),
+      );
+      if (result != null) {
+        await _watchRepository.saveInterests(result);
+      }
+    } finally {
+      query.dispose();
+    }
   }
 
   @override
@@ -630,33 +692,26 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
                             final activeListings =
                                 listingsSnapshot.data ??
                                 const <TradingListing>[];
-                            final listings =
-                                _applyFilters(
-                                  activeListings,
-                                  missingBlueprintNames,
-                                )..sort((a, b) {
-                                  final aScore = _tradeIntelligenceEngine
-                                      .scoreListing(
-                                        listing: a,
-                                        blueprintStates: states,
-                                        currentUid: _repository.currentUid,
-                                      )
-                                      .score;
-                                  final bScore = _tradeIntelligenceEngine
-                                      .scoreListing(
-                                        listing: b,
-                                        blueprintStates: states,
-                                        currentUid: _repository.currentUid,
-                                      )
-                                      .score;
-                                  final scoreCompare = bScore.compareTo(aScore);
-                                  if (scoreCompare != 0) {
-                                    return scoreCompare;
-                                  }
-                                  return a.expiresAt.compareTo(b.expiresAt);
-                                });
 
-                            return Column(
+                            return StreamBuilder<Set<String>>(
+                              stream: _watchRepository.watchInterests(),
+                              builder: (context, interestsSnapshot) {
+                                final watchedItems = interestsSnapshot.data ?? const <String>{};
+                                final listings = _applyFilters(
+                                  activeListings, missingBlueprintNames, watchedItems,
+                                )..sort((a, b) {
+                                  final aScore = _tradeIntelligenceEngine.scoreListing(
+                                    listing: a, blueprintStates: states,
+                                    currentUid: _repository.currentUid,
+                                  ).score;
+                                  final bScore = _tradeIntelligenceEngine.scoreListing(
+                                    listing: b, blueprintStates: states,
+                                    currentUid: _repository.currentUid,
+                                  ).score;
+                                  final ranked = bScore.compareTo(aScore);
+                                  return ranked != 0 ? ranked : a.expiresAt.compareTo(b.expiresAt);
+                                });
+                                return Column(
                               children: [
                                 const ArcTradingWorkspaceBar(
                                   current: ArcTradingWorkspace.market,
@@ -692,6 +747,23 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
                                 ),
                                 const SizedBox(height: AppTheme.spaceM),
                                 _buildFilterPanel(missingBlueprintNames.length),
+                                Wrap(spacing: 8, runSpacing: 4, children: [
+                                  OutlinedButton.icon(
+                                    onPressed: () => _editTradeInterests(watchedItems),
+                                    icon: const Icon(Icons.tune),
+                                    label: Text('Trade interests (${watchedItems.length})'),
+                                  ),
+                                  OutlinedButton.icon(
+                                    onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const ArcResearchWorkstationScreen())),
+                                    icon: const Icon(Icons.science_outlined),
+                                    label: const Text('Research Station'),
+                                  ),
+                                  FilterChip(
+                                    label: const Text('Show all listings'),
+                                    selected: _showAllListings,
+                                    onSelected: (value) => setState(() => _showAllListings = value),
+                                  ),
+                                ]),
                                 const SizedBox(height: AppTheme.spaceM),
                                 Expanded(
                                   child: listings.isEmpty
@@ -740,6 +812,8 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
                                         ),
                                 ),
                               ],
+                                );
+                              },
                             );
                           },
                         );

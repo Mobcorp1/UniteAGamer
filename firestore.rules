@@ -1352,6 +1352,10 @@ service cloud.firestore {
       allow read: if isSignedIn();
       allow create, update, delete: if isAdminOrDev();
     }
+    match /trading_watch_preferences/{uid} {
+      allow read, create, update, delete: if isOwner(uid) || isAdminOrDev();
+    }
+
   }
 }
 

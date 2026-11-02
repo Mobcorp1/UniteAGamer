@@ -68,7 +68,7 @@ class ArcLoadoutSeedData {
         'Medium Magazine Mod',
         'Stock Mod',
       ],
-      blueprintBased: true,
+      blueprintBased: false,
     ),
     ArcLoadoutWeaponSpec(
       name: 'Bettina',

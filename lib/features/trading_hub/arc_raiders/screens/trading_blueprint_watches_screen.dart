@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_canonical_blueprint_catalogue.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
 
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_watch.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
@@ -28,9 +30,9 @@ class TradingBlueprintWatchesScreen extends StatefulWidget {
 class _TradingBlueprintWatchesScreenState
     extends State<TradingBlueprintWatchesScreen> {
   final TradingRepository _repository = TradingRepository();
-  late final List<ArcBlueprint> _blueprints = List<ArcBlueprint>.from(
-    ArcBlueprintSeedData.blueprints,
-  )..sort((a, b) => a.name.compareTo(b.name));
+  final ArcBlueprintRepository _blueprintRepository = ArcBlueprintRepository();
+  late final Stream<ArcBlueprintStateSnapshot> _ownershipStream =
+      _blueprintRepository.watchMyBlueprintStateSnapshot().asBroadcastStream();
 
   String _normalize(String value) {
     return value
@@ -60,6 +62,14 @@ class _TradingBlueprintWatchesScreenState
 
   Future<void> _createWatch(ArcBlueprint blueprint) async {
     try {
+      final states = await _blueprintRepository.loadMyBlueprintStates();
+      if (_blueprintRepository.currentUid == null) return;
+      if (states[blueprint.id]?.owned == true) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Already owned in Collections; watch not created.')),
+        );
+        return;
+      }
       await _repository.createOrReactivateBlueprintWatch(
         blueprintId: blueprint.id,
         blueprintDisplayName: blueprint.name,
@@ -72,113 +82,93 @@ class _TradingBlueprintWatchesScreenState
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not create watch. Try again.')),
+        const SnackBar(content: Text('Could not create watch. Try again.')),
       );
     }
   }
 
   Future<void> _showCreateSheet() async {
-    final controller = TextEditingController();
-    var filtered = List<ArcBlueprint>.from(_blueprints);
+    var searchQuery = '';
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
       backgroundColor: ArcUiTokens.surfaceOverlay,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(ArcUiTokens.radiusXL),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(ArcUiTokens.radiusXL)),
       ),
-      builder: (sheetContext) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            void updateFilter(String query) {
-              final normalized = query.trim().toLowerCase();
-              setModalState(() {
-                filtered = _blueprints
-                    .where(
-                      (blueprint) =>
-                          blueprint.name.toLowerCase().contains(normalized) ||
-                          blueprint.category.toLowerCase().contains(normalized),
-                    )
-                    .toList(growable: false);
-              });
-            }
-
-            return SafeArea(
-              child: Padding(
-                padding: EdgeInsets.only(
-                  left: AppTheme.spaceL,
-                  right: AppTheme.spaceL,
-                  top: AppTheme.spaceL,
-                  bottom:
-                      MediaQuery.of(context).viewInsets.bottom +
-                      AppTheme.spaceL,
-                ),
-                child: SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.78,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Add Blueprint Watch',
-                        style: ArcUiTokens.sectionTitle(
-                          fontSize: 22,
-                          color: ArcUiTokens.primaryAccent,
-                        ),
-                      ),
-                      const SizedBox(height: AppTheme.spaceM),
-                      TextField(
-                        controller: controller,
-                        onChanged: updateFilter,
-                        style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
-                        decoration: ArcUiTokens.inputDecoration(
-                          labelText: 'Search blueprints',
-                        ),
-                      ),
-                      const SizedBox(height: AppTheme.spaceM),
-                      Expanded(
-                        child: ListView.builder(
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setModalState) => SafeArea(
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: AppTheme.spaceL,
+              right: AppTheme.spaceL,
+              top: AppTheme.spaceL,
+              bottom: MediaQuery.of(context).viewInsets.bottom + AppTheme.spaceL,
+            ),
+            child: SizedBox(
+              height: MediaQuery.of(context).size.height * 0.78,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Add Missing Blueprint Watch', style: ArcUiTokens.sectionTitle(
+                    fontSize: 22, color: ArcUiTokens.primaryAccent)),
+                  const SizedBox(height: AppTheme.spaceM),
+                  TextField(
+                    onChanged: (value) => setModalState(() => searchQuery = value),
+                    style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+                    decoration: ArcUiTokens.inputDecoration(labelText: 'Search missing blueprints'),
+                  ),
+                  const SizedBox(height: AppTheme.spaceM),
+                  Expanded(
+                    child: StreamBuilder<ArcBlueprintStateSnapshot>(
+                      stream: _ownershipStream,
+                      builder: (context, snapshot) {
+                        final state = snapshot.data;
+                        if (state == null || !state.hasConfirmedLoad ||
+                            state.userId != _blueprintRepository.currentUid) {
+                          return Center(child: Text(
+                            state?.status == ArcBlueprintStateHydrationStatus.error
+                                ? 'Collections ownership unavailable. Close and retry.'
+                                : 'Synchronising Collections ownership...',
+                            style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+                          ));
+                        }
+                        final query = searchQuery.trim().toLowerCase();
+                        final filtered = ArcCanonicalBlueprintCatalogue.missing(state.states)
+                            .where((bp) => bp.name.toLowerCase().contains(query) ||
+                                bp.category.toLowerCase().contains(query))
+                            .toList()..sort((a,b) => a.name.compareTo(b.name));
+                        if (filtered.isEmpty) return Center(child: Text(
+                          query.isEmpty ? 'All catalogue blueprints are owned.' : 'No missing blueprints match your search.',
+                          style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+                        ));
+                        return ListView.builder(
                           itemCount: filtered.length,
                           itemBuilder: (context, index) {
-                            final blueprint = filtered[index];
+                            final bp = filtered[index];
                             return ListTile(
                               contentPadding: EdgeInsets.zero,
-                              title: Text(
-                                blueprint.name,
-                                style: ArcUiTokens.body(
-                                  color: ArcUiTokens.textPrimary,
-                                ),
-                              ),
-                              subtitle: Text(
-                                '${blueprint.rarityLabel} - ${blueprint.category}',
-                                style: ArcUiTokens.bodySmall(
-                                  color: ArcUiTokens.textTertiary,
-                                ),
-                              ),
-                              trailing: const Icon(
-                                Icons.add_alert_outlined,
-                                color: ArcUiTokens.secondaryAccent,
-                              ),
+                              title: Text(bp.name, style: ArcUiTokens.body(color: ArcUiTokens.textPrimary)),
+                              subtitle: Text(bp.category, style: ArcUiTokens.bodySmall(color: ArcUiTokens.textTertiary)),
+                              trailing: const Icon(Icons.add_alert_outlined, color: ArcUiTokens.secondaryAccent),
                               onTap: () async {
                                 Navigator.of(sheetContext).pop();
-                                await _createWatch(blueprint);
+                                await _createWatch(bp);
                               },
                             );
                           },
-                        ),
-                      ),
-                    ],
+                        );
+                      },
+                    ),
                   ),
-                ),
+                ],
               ),
-            );
-          },
-        );
-      },
+            ),
+          ),
+        ),
+      ),
     );
-    controller.dispose();
   }
 
   Future<void> _editWatch(ArcBlueprintWatch watch) async {

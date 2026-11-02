@@ -941,6 +941,19 @@ class _TradingCreateListingScreenState
       return;
     }
 
+    final currentStates = await _blueprintRepository.watchMyBlueprintStates().first;
+    final staleSelections = _selectedWantedBlueprints.where((blueprint) =>
+      currentStates[blueprint.id]?.owned == true).toList();
+    if (staleSelections.isNotEmpty) {
+      if (!mounted) return;
+      setState(() => _selectedWantedBlueprints.removeWhere((blueprint) =>
+        currentStates[blueprint.id]?.owned == true));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Owned blueprints removed from wanted selection. Review and save again.'),
+      ));
+      return;
+    }
+
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
 

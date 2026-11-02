@@ -113,7 +113,7 @@ void main() {
           expect(appDock, findsNothing);
           expect(
             find.byKey(const Key('blueprint-grid-vertical-command-rail')),
-            findsOneWidget,
+            findsNothing,
           );
         } else {
           expect(appDock, findsOneWidget);
@@ -154,17 +154,24 @@ void main() {
         // PASS05: controls are compact; preserve the explicit zoom regression
         // by opening More in landscape. Pinch below is still exercised.
         if (compactLandscape) {
-          expect(find.byTooltip('Show all blueprints'), findsOneWidget);
-          expect(find.byTooltip('Show needed blueprints'), findsOneWidget);
-          expect(find.byTooltip('Show duplicate blueprints'), findsOneWidget);
-          expect(find.byTooltip('Share selected Blueprint list'), findsOneWidget);
-          final advanced = find.byTooltip('Advanced grid controls');
-          expect(advanced, findsOneWidget);
-          await tester.tap(advanced);
-          await tester.pump();
-          expect(find.byTooltip('Zoom in'), findsOneWidget);
-          expect(find.byTooltip('Reset grid view'), findsOneWidget);
-          expect(find.byTooltip('Zoom out'), findsOneWidget);
+          expect(
+            find.byKey(const Key('blueprint-landscape-fitted-dock')),
+            findsOneWidget,
+          );
+          expect(
+            find.byKey(const Key('blueprint-dock-fitted-ad')),
+            findsOneWidget,
+          );
+          expect(find.byKey(const Key('blueprint-dock-all')), findsOneWidget);
+          expect(
+            find.byKey(const Key('blueprint-dock-needed')),
+            findsOneWidget,
+          );
+          expect(
+            find.byKey(const Key('blueprint-dock-camera')),
+            findsOneWidget,
+          );
+          expect(find.byKey(const Key('blueprint-dock-share')), findsOneWidget);
         } else {
           expect(find.byTooltip('All'), findsOneWidget);
           expect(find.byTooltip('Needed'), findsOneWidget);
@@ -195,13 +202,37 @@ void main() {
             matching: find.byType(PopupMenuItem<String>),
           );
           expect(multiSelectMenuItem, findsOneWidget);
+          expect(find.text('Duplicate Blueprints'), findsNothing);
+          expect(find.text('In-game View'), findsNothing);
+          expect(find.text('Full Grid View'), findsNothing);
+          expect(find.text('Zoom In'), findsOneWidget);
+          expect(find.text('Reset Grid View'), findsOneWidget);
+          expect(find.text('Zoom Out'), findsOneWidget);
+          await tester.ensureVisible(multiSelectMenuItem);
+          await tester.pumpAndSettle();
           await tester.tap(multiSelectMenuItem);
           await tester.pumpAndSettle();
           expect(
             find.byKey(const Key('blueprint-tools-panel')),
             findsOneWidget,
           );
+          final toolsScroll = find
+              .descendant(
+                of: find.byKey(const Key('blueprint-tools-panel')),
+                matching: find.byType(Scrollable),
+              )
+              .first;
+          await tester.scrollUntilVisible(
+            find.text('Select All Visible'),
+            90,
+            scrollable: toolsScroll,
+          );
           expect(find.text('Select All Visible'), findsOneWidget);
+          await tester.scrollUntilVisible(
+            find.text('Exit Selection'),
+            90,
+            scrollable: toolsScroll,
+          );
           expect(find.text('Exit Selection'), findsOneWidget);
         } else {
           await tester.tap(find.byTooltip('Blueprint tools'));

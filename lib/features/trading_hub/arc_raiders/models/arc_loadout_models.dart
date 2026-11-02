@@ -318,6 +318,8 @@ class ArcSavedLoadout {
     required this.primaryAttachments,
     required this.secondaryWeapon,
     required this.secondaryAttachments,
+    this.primaryStencilSlot,
+    this.secondaryStencilSlot,
     required this.equipment,
     required this.consumables,
     this.quickUse = const <String>[],
@@ -336,6 +338,10 @@ class ArcSavedLoadout {
   final List<String> primaryAttachments;
   final String secondaryWeapon;
   final List<String> secondaryAttachments;
+
+  /// Cosmetic 1-based catalogue slots, independent of attachment compatibility.
+  final int? primaryStencilSlot;
+  final int? secondaryStencilSlot;
   final List<String> equipment;
   final List<String> consumables;
   final List<String> quickUse;
@@ -354,6 +360,9 @@ class ArcSavedLoadout {
       'primaryAttachments': primaryAttachments,
       'secondaryWeapon': secondaryWeapon,
       'secondaryAttachments': secondaryAttachments,
+      // Explicit null clears a previously saved choice under Firestore merge.
+      'primaryStencilSlot': primaryStencilSlot,
+      'secondaryStencilSlot': secondaryStencilSlot,
       'equipment': equipment,
       'consumables': consumables,
       'quickUse': quickUse,
@@ -391,6 +400,11 @@ class ArcSavedLoadout {
       return const <String>[];
     }
 
+    int? parseStencilSlot(dynamic value) {
+      final slot = value is num ? value.toInt() : int.tryParse('$value');
+      return slot != null && slot >= 1 && slot <= 14 ? slot : null;
+    }
+
     String parseShield(dynamic value) {
       final raw = (value ?? 'Medium Shield').toString().trim();
       switch (raw.toLowerCase()) {
@@ -417,6 +431,8 @@ class ArcSavedLoadout {
       primaryAttachments: parseList(data['primaryAttachments']),
       secondaryWeapon: (data['secondaryWeapon'] ?? 'Stitcher').toString(),
       secondaryAttachments: parseList(data['secondaryAttachments']),
+      primaryStencilSlot: parseStencilSlot(data['primaryStencilSlot']),
+      secondaryStencilSlot: parseStencilSlot(data['secondaryStencilSlot']),
       equipment: parseList(data['equipment']),
       consumables: parseList(data['consumables']),
       quickUse: parseList(data['quickUse']),

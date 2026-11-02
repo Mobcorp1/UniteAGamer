@@ -4869,3 +4869,59 @@ const { evaluateAndGrant: evaluateUagTradeReferralIncentives } =
 exports.evaluateUagTradeReferralIncentives = onSchedule('every day 06:25', async () => {
   await evaluateUagTradeReferralIncentives({ db, admin });
 });
+
+const PASS38_BLUEPRINT_CATALOGUE = {"admin-expansion-blueprint-${index + 1}": "Future Blueprint ${index + 1}", "extended-shotgun-mag-iii": "Extended Shotgun Mag III", "angled-grip-iii": "Angled Grip III", "pulse-mine": "Pulse Mine", "silencer-ii": "Silencer II", "red-light-stick": "Red Light Stick", "tactical-mk-3-revival": "Tactical Mk. 3 (Revival)", "compensator-ii": "Compensator II", "muzzle-brake-iii": "Muzzle Brake III", "tactical-mk-3-defensive": "Tactical Mk. 3 (Defensive)", "vita-spray": "Vita Spray", "medium-gun-parts": "Medium Gun Parts", "tagging-grenade": "Tagging Grenade", "crash-mat": "Crash Mat", "bobcat": "Bobcat", "defibrillator": "Defibrillator", "jupiter": "Jupiter", "extended-medium-mag-ii": "Extended Medium Mag II", "tactical-mk-3-smoke": "Tactical Mk. 3 (Smoke)", "smoke-grenade": "Smoke Grenade", "dolabra": "Dolabra", "shotgun-silencer": "Shotgun Silencer", "white-flag": "White Flag", "extended-light-mag-ii": "Extended Light Mag II", "showstopper": "Showstopper", "remote-raider-flare": "Remote Raider Flare", "angled-grip-ii": "Angled Grip II", "stable-stock-iii": "Stable Stock III", "aphelion": "Aphelion", "tempest": "Tempest", "tactical-mk-3-healing": "Tactical Mk. 3 (Healing)", "vertical-grip-iii": "Vertical Grip III", "wolfpack": "Wolfpack", "combat-mk-3-flanking": "Combat Mk. 3 (Flanking)", "torrente": "Torrente", "jolt-mine": "Jolt Mine", "hullcracker": "Hullcracker", "vita-shot": "Vita Shot", "deadline": "Deadline", "shotgun-choke-ii": "Shotgun Choke II", "anvil": "Anvil", "osprey": "Osprey", "looting-mk-3-survivor": "Looting Mk. 3 (Survivor)", "extended-shotgun-mag-ii": "Extended Shotgun Mag II", "powered-descender": "Powered Descender", "compensator-iii": "Compensator III", "vulcano": "Vulcano", "lightweight-stock": "Lightweight Stock", "trailblazer": "Trailblazer", "barricade-kit": "Barricade Kit", "green-light-stick": "Green Light Stick", "extended-medium-mag-iii": "Extended Medium Mag III", "lure-grenade": "Lure Grenade", "combat-mk-3-aggressive": "Combat Mk. 3 (Aggressive)", "light-gun-parts": "Light Gun Parts", "extended-light-mag-iii": "Extended Light Mag III", "il-toro": "Il Toro", "padded-stock": "Padded Stock", "heavy-gun-parts": "Heavy Gun Parts", "rascal": "Rascal", "canto": "Canto", "bettina": "Bettina", "fireworks-box": "Fireworks Box", "gas-mine": "Gas Mine", "yellow-light-stick": "Yellow Light Stick", "looting-mk-3-safekeeper": "Looting Mk. 3 (Safekeeper)", "surge-coil": "Surge Coil", "complex-gun-parts": "Complex Gun Parts", "explosive-mine": "Explosive Mine", "venator": "Venator", "stable-stock-ii": "Stable Stock II", "blaze-grenade": "Blaze Grenade", "seeker-grenade": "Seeker Grenade", "silencer-i": "Silencer I", "shotgun-choke-iii": "Shotgun Choke III", "blue-light-stick": "Blue Light Stick", "vertical-grip-ii": "Vertical Grip II", "extended-barrel-ii": "Extended Barrel II", "muzzle-brake-ii": "Muzzle Brake II", "extended-barrel": "Extended Barrel", "burletta": "Burletta", "equalizer": "Equalizer", "snap-hook": "Snap Hook"};
+
+// PASS 38: Firestore-backed automatic trading alerts. Never trust a cached
+// missing/wanted flag: current blueprint ownership is checked per recipient.
+exports.notifyAutomaticTradingWatches = onDocumentCreated(
+  {document: 'trading_listings/{listingId}', region: 'us-central1'},
+  async (event) => {
+    const listing = event.data?.data();
+    if (!listing || listing.active === false) return;
+    const expiresAt = listing.expiresAt?.toDate?.();
+    if (expiresAt && expiresAt <= new Date()) return;
+    const offeredBlueprints = new Set((listing.offeredBlueprintNames || []).map(x => String(x).trim().toLowerCase()));
+    const offeredItems = new Set((listing.offeredTradeItemIds || []).map(String));
+    if (!offeredBlueprints.size && !offeredItems.size) return;
+    const ownerUid = String(listing.ownerUid || '');
+    // Bounded traversal. Future high-volume deployments can replace this with
+    // a materialized inverted index without changing the client contract.
+    let cursor = null;
+    for (;;) {
+      let query = db.collection('trading_watch_preferences').orderBy(admin.firestore.FieldPath.documentId()).limit(200);
+      if (cursor) query = query.startAfter(cursor);
+      const snapshot = await query.get();
+      if (snapshot.empty) break;
+      for (const preference of snapshot.docs) {
+        const uid = preference.id;
+        if (uid === ownerUid) continue;
+        const pref = preference.data() || {};
+        const matchedItem = [...(pref.tradeItemIds || []), ...(pref.researchTradeItemIds || [])].some(id => offeredItems.has(String(id)));
+        const states = await db.collection('users').doc(uid).collection('arc_blueprints').get();
+        const ownedIds = new Set(states.docs.filter(doc => {
+          const state = doc.data() || {};
+          return state.owned === true || Number(state.dupesOwned || 0) > 0;
+        }).map(doc => String(doc.data()?.blueprintId || doc.id)));
+        const missingNames = new Set(Object.entries(PASS38_BLUEPRINT_CATALOGUE)
+          .filter(([id]) => !ownedIds.has(id))
+          .map(([,name]) => name.trim().toLowerCase()));
+        const matchedBlueprint = [...offeredBlueprints].some(name => missingNames.has(name));
+        if (!matchedItem && !matchedBlueprint) continue;
+        const notificationId = `automatic_watch_${event.params.listingId}_${uid}`;
+        const ref = db.collection('trading_notifications').doc(notificationId);
+        await ref.create({
+          id: notificationId, targetUid: uid, actorUid: ownerUid,
+          title: 'New trading match',
+          body: 'A new listing matches one of your trading interests.',
+          type: 'duplicateMatch', listingId: event.params.listingId,
+          offerId: '', sessionId: '', read: false,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }).catch(error => { if (error.code !== 6 && error.code !== 'already-exists') throw error; });
+      }
+      cursor = snapshot.docs[snapshot.docs.length - 1];
+      if (snapshot.size < 200) break;
+    }
+  },
+);

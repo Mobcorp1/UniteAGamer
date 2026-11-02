@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/amplification/arc_amplification_workspace.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/research/uag_research_screen.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_frozen_trail_preview_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_item_asset_registry.dart';
@@ -8,14 +10,21 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
-class ArcResearchWorkstationScreen extends StatelessWidget {
+class ArcResearchWorkstationScreen extends StatefulWidget {
   const ArcResearchWorkstationScreen({super.key});
 
   static const routeName = '/trading-hub/arc-raiders/research-workstation';
 
   @override
+  State<ArcResearchWorkstationScreen> createState() => _ArcResearchWorkstationScreenState();
+}
+
+class _ArcResearchWorkstationScreenState extends State<ArcResearchWorkstationScreen> {
+  int _selectedTab = 0;
+  static const sections = <String>['Blueprints', 'Amplified Research', 'Designs', 'Overview'];
+
+  @override
   Widget build(BuildContext context) {
-    final research = ArcFrozenTrailPreviewData.researchWorkstation;
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -28,14 +37,59 @@ class ArcResearchWorkstationScreen extends StatelessWidget {
       ),
       body: ArcRaidersScreenShell(
         showAdBanner: true,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(12, 10, 12, 30),
+        child: Column(
           children: [
             const ArcProgressionWorkspaceBar(
               current: ArcProgressionWorkspace.research,
-              padding: EdgeInsets.zero,
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
-            const SizedBox(height: AppTheme.spaceM),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              child: Row(
+                children: [
+                  for (var i = 0; i < sections.length; i++)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ChoiceChip(
+                        label: Text(sections[i]),
+                        selected: _selectedTab == i,
+                        onSelected: (_) => setState(() => _selectedTab = i),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: switch (_selectedTab) {
+                0 => const UagResearchScreen(
+                    key: ValueKey('research-blueprints'),
+                    embedded: true,
+                    initialCategory: 'blueprint',
+                  ),
+                1 => const SingleChildScrollView(
+                    padding: EdgeInsets.fromLTRB(12, 12, 12, 30),
+                    child: ArcAmplificationWorkspace(),
+                  ),
+                2 => const UagResearchScreen(
+                    key: ValueKey('research-designs'),
+                    embedded: true,
+                    initialCategory: 'design',
+                  ),
+                _ => _overview(),
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _overview() {
+    final research = ArcFrozenTrailPreviewData.researchWorkstation;
+    return ListView(
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 30),
+          children: [
             _hero(research),
             const SizedBox(height: AppTheme.spaceM),
             _confirmed(),
@@ -44,9 +98,7 @@ class ArcResearchWorkstationScreen extends StatelessWidget {
             const SizedBox(height: AppTheme.spaceM),
             _pending(),
           ],
-        ),
-      ),
-    );
+        );
   }
 
   Widget _hero(ArcFrozenTrailContentItem research) {
