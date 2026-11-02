@@ -1,0 +1,27 @@
+name: UAG Public Calculator Validation
+
+on:
+  pull_request:
+    paths:
+      - 'web/tools/research-material-calculator/**'
+      - 'web/public-assets/research-planner.*'
+      - 'web/sitemap.xml'
+      - 'web/guides/**'
+      - 'web/tools/index.html'
+      - 'scripts/test_research_material_calculator.js'
+      - '.github/workflows/public-calculator-validation.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate public calculator and discoverability
+        run: node scripts/test_research_material_calculator.js
