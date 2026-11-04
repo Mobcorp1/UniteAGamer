@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_universal_intelligence_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_poi_personal_need_resolver.dart';
 
 enum ArcRaidMapPublicationState { draft, published, archived }
 
@@ -1399,6 +1401,9 @@ class ArcRaidIntelligenceState {
     required this.statusLabel,
     required this.recommendation,
     this.trackedObjectives = const <ArcRaidObjective>[],
+    this.poiNeedMatches = const <String, List<ArcPoiPersonalMatch>>{},
+    this.routeIntelMarkers = const <ArcRaidMapMarker>[],
+    this.mapRecommendations = const <ArcUniversalMapScore>[],
   });
 
   final ArcRaidMap map;
@@ -1411,4 +1416,7 @@ class ArcRaidIntelligenceState {
   final String statusLabel;
   final String recommendation;
   final List<ArcRaidObjective> trackedObjectives;
+  final Map<String, List<ArcPoiPersonalMatch>> poiNeedMatches;
+  final List<ArcRaidMapMarker> routeIntelMarkers;
+  final List<ArcUniversalMapScore> mapRecommendations;
 }

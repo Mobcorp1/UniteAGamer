@@ -1,4 +1,7 @@
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_personal_route_candidate_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_universal_intelligence_engine.dart';
 import '../data/arc_raid_endpoint_resolver.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_poi_personal_need_resolver.dart';
 import '../data/arc_quest_map_binding.dart';
 import '../data/arc_raid_time_budget.dart';
 import 'dart:async';
@@ -157,6 +160,8 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   ArcRegionalMapConditionsSnapshot? _regionalConditions;
   ArcRaidAutoRecommendation? _autoRecommendation;
   String? _goalRecommendedMapId;
+  StreamSubscription<List<ArcAdminMapMarker>>? _allPublishedSubscription;
+  List<ArcAdminMapMarker> _allPublishedMarkers = const <ArcAdminMapMarker>[];
   String? _recommendationSignature;
   bool _recommendationContextLoaded = false;
   bool _mapManuallySelected = false;
@@ -194,12 +199,29 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     if (_explicitInitialMapId != null) {
       _mapId = _explicitInitialMapId;
     }
+    // Shared published locations allow ranking Blue Gate against other maps.
+    // Tests supplying their own marker stream are unaffected by Firestore.
+    if (widget.publishedMarkers == null) {
+      try {
+        _allPublishedSubscription = _adminMapRepository.watchAllPublished().listen(
+          (markers) {
+            if (mounted) setState(() => _allPublishedMarkers = markers);
+          },
+          onError: (Object _) {
+            // Fall back to seed POIs and the selected map's published markers.
+          },
+        );
+      } catch (_) {
+        // Firebase may not be initialised in offline/widget test environments.
+      }
+    }
     _mapController.addListener(_onMapTransformChanged);
     unawaited(_initialiseScreen());
   }
 
   @override
   void dispose() {
+    unawaited(_allPublishedSubscription?.cancel());
     _panelScroll.dispose();
     _mapViewSaveTimer?.cancel();
     _mapController.removeListener(_onMapTransformChanged);
@@ -307,6 +329,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     List<ArcRaidObjective> trackedObjectives,
     ArcSavedLoadout? favouriteLoadout,
     List<ArcBlueprintDropReport> reports,
+    List<ArcUniversalMapScore> universalRankings,
   ) {
     if (!_recommendationContextLoaded) return;
     final snapshot = _regionalConditions;
@@ -322,7 +345,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
             trackedObjectives: trackedObjectives,
           );
     final goalMapId = next == null
-        ? _bestGoalMap(
+        ? (universalRankings.isNotEmpty ? universalRankings.first.mapId : null) ?? _bestGoalMap(
             states: states,
             favouriteLoadout: favouriteLoadout,
             trackedObjectives: trackedObjectives,
@@ -760,6 +783,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                                   dropReports: reports,
                                   communityReports: communityReports,
                                   adminMarkers: adminMarkers,
+                                  allPublishedMarkers: _allPublishedMarkers,
                                   filters: _filters,
                                   activeLayer: _activeLayer,
                                   activeRoute: _routePlan,
@@ -769,6 +793,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                                   intelligence.trackedObjectives,
                                   loadout,
                                   reports,
+                                  intelligence.mapRecommendations,
                                 );
                                 return Column(
                                   children: [
@@ -911,6 +936,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                 controller: _mapController,
                 selectedMarkerId: _selectedMarker?.id,
                 highlightedMarkerIds: {
+                  ...intelligence.poiNeedMatches.keys,
                   if (_spawn != null) 'endpoint_spawn_${_spawn!.id}',
                   if (_extraction != null) 'endpoint_exit_${_extraction!.id}',
                 },
@@ -1725,6 +1751,9 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       statusLabel: state.statusLabel,
       recommendation: state.recommendation,
       trackedObjectives: state.trackedObjectives,
+      poiNeedMatches: state.poiNeedMatches,
+      routeIntelMarkers: state.routeIntelMarkers,
+      mapRecommendations: state.mapRecommendations,
     );
   }
 
@@ -1880,6 +1909,24 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     }
   }
 
+  Widget _personalPoiIntel(List<ArcPoiPersonalMatch> matches) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('YOUR TRACKED NEEDS', style: ArcUiTokens.label()),
+          const SizedBox(height: 4),
+          for (final match in matches)
+            Text(
+              '• ${match.itemName} — ${match.isNamedPoiEvidence ? 'Named POI intel' : 'Possible loot pool'} (${match.reason})',
+              style: ArcUiTokens.bodySmall(),
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _selectedMarkerSection(ArcRaidIntelligenceState intelligence) {
     final marker = _selectedMarker;
     final stack = marker == null
@@ -1934,6 +1981,10 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                       ],
                     ),
                   ),
+                if (intelligence.poiNeedMatches[marker.id]?.isNotEmpty == true) ...[
+                  const SizedBox(height: 8),
+                  _personalPoiIntel(intelligence.poiNeedMatches[marker.id]!),
+                ],
                 if (stack.length > 1) ...[
                   const SizedBox(height: 10),
                   _stackedMarkerList(stack),
@@ -2299,9 +2350,26 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       _showSnack('Confirm the recommended extraction, or choose another one.');
       return;
     }
+    // Resolve goals against published POIs and ARC/resource pins independently
+    // of which visual marker filters the player has enabled.
+    final personalCandidates = const ArcPersonalRouteCandidateEngine().build(
+      map: intelligence.map,
+      layer: _activeLayer,
+      markers: intelligence.routeIntelMarkers,
+      personalMatches: intelligence.poiNeedMatches,
+      trackedObjectives: intelligence.trackedObjectives,
+    );
+    final routeClusters = <ArcRaidIntelCluster>[
+      ...intelligence.opportunityClusters,
+      ...personalCandidates.where((candidate) =>
+          !intelligence.opportunityClusters.any((existing) =>
+              existing.poiId != null &&
+              existing.poiId == candidate.poiId &&
+              existing.layer == candidate.layer)),
+    ];
     final route = _engine.generateRoute(
       map: intelligence.map,
-      clusters: intelligence.opportunityClusters,
+      clusters: routeClusters,
       spawn: spawn,
       extraction: resolvedExtraction,
       remainingMinutes: _remainingMinutes,

@@ -1,4 +1,6 @@
 import 'arc_raid_time_budget.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_universal_intelligence_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_poi_personal_need_resolver.dart';
 import 'dart:math' as math;
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_intel_seed.dart';
@@ -44,6 +46,7 @@ class ArcRaidIntelligenceEngine {
     List<ArcCommunityIntelReport> communityReports =
         const <ArcCommunityIntelReport>[],
     List<ArcAdminMapMarker> adminMarkers = const <ArcAdminMapMarker>[],
+    List<ArcAdminMapMarker> allPublishedMarkers = const <ArcAdminMapMarker>[],
     ArcRaidMapFilterState filters = ArcRaidMapFilterState.defaults,
     ArcRaidMapLayer activeLayer = ArcRaidMapLayer.surface,
     ArcRaidRoutePlan? activeRoute,
@@ -122,7 +125,7 @@ class ArcRaidIntelligenceEngine {
         .where((marker) => marker.mapId == map.id)
         .map(_markerForAdminMarker)
         .toList(growable: false);
-    final rawVisibleMarkers =
+    final routeIntelMarkers =
         _dedupeMarkers([
               ...map.markers,
               ...worldMarkers,
@@ -132,12 +135,43 @@ class ArcRaidIntelligenceEngine {
               ...routeMarkers,
             ])
             .where((marker) => marker.layer == resolvedLayer)
-            .where(filters.allows)
             .toList(growable: false)
           ..sort(_markerSort);
+    final rawVisibleMarkers = routeIntelMarkers.where(filters.allows).toList(growable: false);
     final visibleMarkers = const ArcMapMarkerClusterEngine().cluster(
       rawVisibleMarkers,
     )..sort(_markerSort);
+    final poiNeedMatches = const ArcPoiPersonalNeedResolver().matchVisibleMarkers(
+      markers: routeIntelMarkers,
+      trackedObjectives: trackedObjectives,
+      blueprintStates: blueprintStates,
+    );
+    final universeMapMarkers = <ArcRaidMapMarker>[
+      for (final seed in ArcRaidIntelligenceSeedData.maps) ...seed.markers,
+      for (final admin in {
+        for (final marker in [...allPublishedMarkers, ...adminMarkers])
+          if (marker.isPublished) marker.id: marker,
+      }.values) _markerForAdminMarker(admin),
+    ];
+    final priorityBlueprintGoals = <ArcRaidObjective>[
+      for (final blueprint in ArcBlueprintSeedData.blueprints)
+        if (blueprintStates[blueprint.id] != null &&
+            !blueprintStates[blueprint.id]!.owned &&
+            blueprintStates[blueprint.id]!.priorityRank > 0)
+          ArcRaidObjective(
+            id: 'priority-blueprint:${blueprint.id}',
+            label: blueprint.name,
+            reason: 'Prioritised missing Blueprint',
+            category: ArcRaidMapMarkerCategory.blueprintOpportunity,
+            system: 'Blueprint',
+            itemName: '${blueprint.name} Blueprint',
+            missingCount: 1,
+            weight: 1.4,
+          ),
+    ];
+    final mapRecommendations = const ArcUniversalIntelligenceEngine().rankMaps(
+      publishedMarkers: universeMapMarkers,
+      objectives: [...trackedObjectives, ...priorityBlueprintGoals]);
     final blueprintTargetCount = clusters
         .expand((cluster) => cluster.blueprintIds)
         .toSet()
@@ -170,6 +204,9 @@ class ArcRaidIntelligenceEngine {
           ? 'No current tracked objectives or evidence-backed Blueprint opportunities on ${map.displayName}.'
           : 'Generate a Smart Raid Run using ${clusters.length} relevant ${_plural(clusters.length, 'stop', 'stops')} for $mappedObjectiveCount mapped of $objectiveTargetCount tracked ${_plural(objectiveTargetCount, 'goal', 'goals')} and $blueprintTargetCount Blueprint ${_plural(blueprintTargetCount, 'target', 'targets')}.',
       trackedObjectives: trackedObjectives,
+      poiNeedMatches: poiNeedMatches,
+      routeIntelMarkers: routeIntelMarkers,
+      mapRecommendations: mapRecommendations,
     );
   }
 
@@ -219,6 +256,12 @@ class ArcRaidIntelligenceEngine {
       if (resource != null) resource.usageLabel,
       if (marker.subtypeLabel?.trim().isNotEmpty == true)
         marker.subtypeLabel!.trim(),
+      if (marker.subtypeId?.trim().isNotEmpty == true)
+        'uag:subtype:${marker.subtypeId}',
+      if (marker.itemId?.trim().isNotEmpty == true)
+        'uag:item:${marker.itemId}',
+      if (marker.questId?.trim().isNotEmpty == true)
+        'uag:quest:${marker.questId}',
       marker.confidence.label,
       if (marker.evidence.isNotEmpty)
         '${marker.evidence.length} evidence ${_plural(marker.evidence.length, 'record', 'records')}',

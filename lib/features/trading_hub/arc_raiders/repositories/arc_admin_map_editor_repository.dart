@@ -331,6 +331,18 @@ class ArcAdminMapEditorRepository {
         );
   }
 
+  /// Read-only published pins across all maps for cross-map objective ranking.
+  /// Drafts and archived markers are not exposed to player recommendations.
+  Stream<List<ArcAdminMapMarker>> watchAllPublished() {
+    return _firestore
+        .collection(collectionName)
+        .where('state', isEqualTo: ArcAdminMapMarkerState.published.name)
+        .snapshots()
+        .map((snapshot) => _markersFromSnapshot(snapshot)
+            .where((marker) => marker.isPublished)
+            .toList(growable: false));
+  }
+
   Stream<List<ArcAdminMapMarker>> watchLiveMarkers(
     String mapId,
     ArcRaidMapLayer layer,
