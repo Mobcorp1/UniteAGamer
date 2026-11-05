@@ -1,3 +1,4 @@
+import 'package:uag_arc_raiders_hub/widgets/arc_orientation_prompt.dart';
 import 'package:flutter/material.dart';
 
 import '../data/arc_frozen_trail_collection_catalogue.dart';
@@ -28,38 +29,10 @@ class _ArcCollectionsScreenState extends State<ArcCollectionsScreen> {
   Widget build(BuildContext context) {
     if (MediaQuery.orientationOf(context) == Orientation.portrait) {
       return const Scaffold(
-        backgroundColor: Color(0xFF07111B),
-        body: Center(
-          child: Padding(
-            padding: EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.screen_rotation_rounded,
-                  size: 72,
-                  color: ArcUiTokens.primaryAccent,
-                ),
-                SizedBox(height: 16),
-                Text(
-                  'ROTATE TO LANDSCAPE',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: ArcUiTokens.primaryAccent,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 10),
-                Text(
-                  'Blueprint collections use a 17-column layout. '
-                  'Rotate your device to continue.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white70),
-                ),
-              ],
-            ),
-          ),
+        backgroundColor: Colors.transparent,
+        body: ArcOrientationPrompt(
+          message: 'Blueprint collections use a 17-column layout. '
+              'Rotate your device to continue.',
         ),
       );
     }
