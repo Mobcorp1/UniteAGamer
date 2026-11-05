@@ -1,3 +1,4 @@
+import 'package:uag_arc_raiders_hub/widgets/arc_orientation_prompt.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -679,6 +680,13 @@ class _ArcBlueprintPhotoCaptureScreenState
               style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
             ),
             const SizedBox(height: 14),
+            if (MediaQuery.orientationOf(context) == Orientation.portrait) ...[
+              const ArcLandscapeAdvisory(
+                message: 'Landscape provides a larger view for matching '
+                    'Blueprint grid boundaries before importing.',
+              ),
+              const SizedBox(height: 10),
+            ],
             AspectRatio(
               // Both captured images contain five physical rows. The bottom
               // image includes the one-row overlap until registration removes
