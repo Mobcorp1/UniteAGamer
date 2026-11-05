@@ -147,6 +147,57 @@ class AppTheme {
           padding: WidgetStateProperty.all(buttonPadding),
         ),
       ),
+      // Global defaults also cover framework dialogs, menus and nested screens.
+      // Explicit ARC component styles can still override these when needed.
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: neonCyan,
+          textStyle: buttonTextStyle(color: neonCyan, fontSize: 14),
+          padding: buttonPadding,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(buttonRadius),
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: neonCyan,
+          side: BorderSide(color: neonCyan.withValues(alpha: 0.42)),
+          textStyle: buttonTextStyle(color: neonCyan, fontSize: 14),
+          padding: buttonPadding,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(buttonRadius),
+          ),
+        ),
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: cardBackgroundAlt,
+        selectedColor: neonCyan.withValues(alpha: 0.16),
+        checkmarkColor: neonCyan,
+        labelStyle: bodyTextStyle(fontSize: 12, color: Colors.white),
+        side: BorderSide(color: neonCyan.withValues(alpha: 0.22)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(buttonRadius),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: cardBackgroundDeep,
+        surfaceTintColor: Colors.transparent,
+        textStyle: bodyTextStyle(fontSize: 13, color: Colors.white),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(cardRadius),
+          side: BorderSide(color: glassBorder),
+        ),
+      ),
+      tooltipTheme: TooltipThemeData(
+        decoration: BoxDecoration(
+          color: cardBackgroundDeep,
+          borderRadius: BorderRadius.circular(buttonRadius),
+          border: Border.all(color: glassBorder),
+        ),
+        textStyle: bodyTextStyle(fontSize: 12, color: Colors.white),
+      ),
       checkboxTheme: CheckboxThemeData(
         checkColor: WidgetStateProperty.all(neonCyan),
         fillColor: WidgetStateProperty.resolveWith((states) {

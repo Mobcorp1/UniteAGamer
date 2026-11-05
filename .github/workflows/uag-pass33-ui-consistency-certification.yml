@@ -1,0 +1,86 @@
+name: UAG PASS33 UI Consistency Certification
+
+on:
+  push:
+    branches:
+      - codex/pass33-ui-consistency-orientation-20261105
+  pull_request:
+    branches:
+      - fix/pass05-stale-test-contracts-20261102
+    paths:
+      - '.github/workflows/uag-pass33-ui-consistency-certification.yml'
+      - 'lib/**'
+      - 'test/**'
+      - 'pubspec.yaml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pass33-ui-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  certify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Configure Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Configure Flutter 3.41
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.0'
+          channel: stable
+          cache: true
+      - name: Resolve dependencies
+        run: flutter pub get
+      - name: Verify PASS33 Dart formatting
+        run: |
+          dart format --output=none --set-exit-if-changed \
+            lib/widgets/arc_orientation_prompt.dart \
+            lib/widgets/theme.dart \
+            lib/features/trading_hub/arc_raiders/screens/arc_admin_map_editor_screen.dart \
+            lib/features/trading_hub/arc_raiders/screens/arc_blueprint_live_scanner_screen.dart \
+            lib/features/trading_hub/arc_raiders/screens/arc_blueprint_photo_capture_screen.dart \
+            lib/features/trading_hub/arc_raiders/screens/arc_collections_screen.dart \
+            lib/features/trading_hub/arc_raiders/screens/arc_frozen_trail_single_grid_capture_screen.dart \
+            lib/features/trading_hub/arc_raiders/screens/arc_map_filter_icon_review_screen.dart \
+            lib/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart \
+            lib/features/trading_hub/arc_raiders/widgets/arc_systems_page_wrapper.dart \
+            test/arc_ui_consistency_orientation_pass33_test.dart
+      - name: Analyze full Flutter application
+        run: flutter analyze --no-fatal-infos
+      - name: Test orientation and protected UI contracts
+        run: |
+          flutter test --reporter expanded \
+            test/arc_ui_consistency_orientation_pass33_test.dart \
+            test/arc_collections_polish_pass08_test.dart \
+            test/arc_collections_persistent_grid_test.dart \
+            test/arc_collections_unified_ux_test.dart \
+            test/pass26_furniture_design_grid_order_test.dart \
+            test/pass30_designs_landscape_layout_test.dart \
+            test/pass31_designs_artwork_fill_test.dart \
+            test/pass32_stencils_bottom_ad_layout_test.dart \
+            test/blueprint_grid_screen_regression_test.dart \
+            test/blueprint_intel_entry_restoration_test.dart \
+            test/pass27_favourite_snapshot_relevance_regression_test.dart
+      - name: Build web without deployment
+        run: flutter build web --release
+      - name: Build Sony Android debug APK
+        run: flutter build apk --debug
+      - name: Archive Android acceptance APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: pass33-ui-consistency-sony-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 14
+          if-no-files-found: error
+
+# Certification only. No Firebase deploy, signing, merging or entitlement writes.

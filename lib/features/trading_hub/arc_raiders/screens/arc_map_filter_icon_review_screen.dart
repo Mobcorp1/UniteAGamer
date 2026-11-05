@@ -1,3 +1,4 @@
+import 'package:uag_arc_raiders_hub/widgets/arc_orientation_prompt.dart';
 import 'package:flutter/material.dart';
 
 import 'package:uag_arc_raiders_hub/build/app_bar.dart';
@@ -44,6 +45,10 @@ class ArcMapFilterIconReviewScreen extends StatelessWidget {
                     padding: EdgeInsets.zero,
                   ),
                   SizedBox(height: AppTheme.spaceL),
+                  ArcLandscapeAdvisory(
+                    message: 'Rotate to landscape to compare more map icons '
+                        'side by side. Portrait review remains available.',
+                  ),
                   ArcMapFilterIconReviewAtlas(),
                 ],
               ),

@@ -1,3 +1,4 @@
+import 'package:uag_arc_raiders_hub/widgets/arc_orientation_prompt.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -1755,45 +1756,11 @@ class _RotateToLandscapePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: ArcUiTokens.background,
-      padding: const EdgeInsets.symmetric(horizontal: 32),
-      alignment: Alignment.center,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 460),
-        child: DecoratedBox(
-          decoration: ArcUiTokens.surfaceDecoration(
-            role: ArcSurfaceRole.overlay,
-            accent: ArcUiTokens.primaryAccent,
-            borderOpacity: 0.30,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.screen_rotation_rounded,
-                  color: ArcUiTokens.primaryAccent,
-                  size: 54,
-                ),
-                const SizedBox(height: 18),
-                Text(
-                  'Rotate your phone to landscape',
-                  textAlign: TextAlign.center,
-                  style: ArcUiTokens.sectionTitle(fontSize: 20),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  'The Blueprint Scanner is designed for landscape mode. Rotate your phone and continue.',
-                  textAlign: TextAlign.center,
-                  style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+    return const ArcOrientationPrompt(
+      title: 'Rotate your phone to landscape',
+      message: 'The Blueprint Scanner is designed for landscape mode. '
+          'Rotate your phone and continue.',
+      coverContent: true,
     );
   }
 }

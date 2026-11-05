@@ -1,3 +1,4 @@
+import 'package:uag_arc_raiders_hub/widgets/arc_orientation_prompt.dart';
 import '../data/arc_raid_endpoint_resolver.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -1331,6 +1332,14 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
                 ),
               ),
               const SizedBox(height: ArcUiTokens.gapM),
+              if (MediaQuery.orientationOf(context) == Orientation.portrait)
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  child: ArcLandscapeAdvisory(
+                    message: 'Landscape gives more room for precise map marker '
+                        'placement. Portrait editing remains available.',
+                  ),
+                ),
               Expanded(
                 child: _loading
                     ? const Center(

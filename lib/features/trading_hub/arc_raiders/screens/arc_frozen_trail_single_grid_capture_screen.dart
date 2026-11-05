@@ -1,3 +1,4 @@
+import 'package:uag_arc_raiders_hub/widgets/arc_orientation_prompt.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_blueprint_collection_overview_screen.dart';
 import 'package:camera/camera.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_additional_collections_screen.dart';
@@ -427,27 +428,9 @@ class _ArcFrozenTrailSingleGridCaptureScreenState
         foregroundColor: const Color(0xFF72EBEF),
       ),
       body: portrait
-          ? const Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.screen_rotation,
-                    size: 66,
-                    color: Color(0xFF72EBEF),
-                  ),
-                  SizedBox(height: 18),
-                  Text(
-                    'ROTATE TO LANDSCAPE',
-                    style: TextStyle(color: Color(0xFF72EBEF), fontSize: 22),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'The full 17-column Blueprint grid needs a wide screen.',
-                    style: TextStyle(color: Colors.white70),
-                  ),
-                ],
-              ),
+          ? const ArcOrientationPrompt(
+              message: 'The full 17-column Blueprint grid needs a wide screen.',
+              coverContent: true,
             )
           : ListView(
               padding: const EdgeInsets.all(16),
@@ -848,11 +831,9 @@ class _FrozenTrailAlignedCameraState extends State<_FrozenTrailAlignedCamera>
       backgroundColor: Colors.black,
       body: SafeArea(
         child: portrait
-            ? const Center(
-                child: Text(
-                  'ROTATE TO LANDSCAPE',
-                  style: TextStyle(color: Color(0xFF72EBEF), fontSize: 24),
-                ),
+            ? const ArcOrientationPrompt(
+                message: 'Rotate your device to capture the full Blueprint grid.',
+                coverContent: true,
               )
             : LayoutBuilder(
                 builder: (context, constraints) {
@@ -1092,12 +1073,9 @@ class _FrozenTrailPostCaptureAlignScreenState
           builder: (context, constraints) {
             final landscape = constraints.maxWidth > constraints.maxHeight;
             if (!landscape) {
-              return const Center(
-                child: Text(
-                  'ROTATE TO LANDSCAPE TO ALIGN THE GRID',
-                  style: TextStyle(color: Color(0xFF72EBEF), fontSize: 18),
-                  textAlign: TextAlign.center,
-                ),
+              return const ArcOrientationPrompt(
+                message: 'Rotate your device to align the Blueprint grid.',
+                coverContent: true,
               );
             }
 

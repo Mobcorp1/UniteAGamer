@@ -1,3 +1,4 @@
+import 'package:uag_arc_raiders_hub/widgets/arc_orientation_prompt.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_native_collection_screenshot_recognizer.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_additional_collections_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_collections_category_bar.dart';
@@ -2921,40 +2922,13 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
         media.size.height <= 720;
 
     // The canonical 17-column Frozen Trail view is landscape-only.
+    // Only the rotation presentation changes: grid logic remains locked.
     if (media.orientation == Orientation.portrait) {
       return const Scaffold(
-        backgroundColor: Color(0xFF07111B),
-        body: Center(
-          child: Padding(
-            padding: EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.screen_rotation_rounded,
-                  size: 72,
-                  color: AppTheme.neonCyan,
-                ),
-                SizedBox(height: 16),
-                Text(
-                  'ROTATE TO LANDSCAPE',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: AppTheme.neonCyan,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 10),
-                Text(
-                  'The Blueprint collection uses 17 columns. '
-                  'Rotate your device to view the full grid.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white70),
-                ),
-              ],
-            ),
-          ),
+        backgroundColor: Colors.transparent,
+        body: ArcOrientationPrompt(
+          message: 'The Blueprint collection uses 17 columns. '
+              'Rotate your device to view the full grid.',
         ),
       );
     }
