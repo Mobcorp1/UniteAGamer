@@ -1,0 +1,1509 @@
+{
+  "audit": "UAG ARC UI consistency static inventory",
+  "date": "2026-11-05",
+  "sourceBranch": "fix/pass05-stale-test-contracts-20261102",
+  "sourceCommit": "64a949f2189416ee469b064f166ae20e1c0983de",
+  "scope": "Dart screen, widget, route and app-shell files under lib/ (one file may contain multiple views/dialogs)",
+  "totalAppDartFiles": 732,
+  "totalUiFiles": 298,
+  "classification": {
+    "app-shell-auth": 14,
+    "other-screen": 27,
+    "feature-widget": 42,
+    "arc-screen": 66,
+    "arc-widget": 122,
+    "shared-widget": 27
+  },
+  "files": [
+    {
+      "path": "lib/build/animated_logo.dart",
+      "bytes": 4696,
+      "category": "app-shell-auth"
+    },
+    {
+      "path": "lib/build/animated_title.dart",
+      "bytes": 646,
+      "category": "app-shell-auth"
+    },
+    {
+      "path": "lib/build/animated_welcome_text.dart",
+      "bytes": 1162,
+      "category": "app-shell-auth"
+    },
+    {
+      "path": "lib/build/app_bar.dart",
+      "bytes": 6296,
+      "category": "app-shell-auth"
+    },
+    {
+      "path": "lib/build/app_drawer.dart",
+      "bytes": 38061,
+      "category": "app-shell-auth"
+    },
+    {
+      "path": "lib/build/app_entry_gate.dart",
+      "bytes": 295,
+      "category": "app-shell-auth"
+    },
+    {
+      "path": "lib/build/auth/auth_screen.dart",
+      "bytes": 49926,
+      "category": "app-shell-auth"
+    },
+    {
+      "path": "lib/build/auth/uag_auth_autofill.dart",
+      "bytes": 707,
+      "category": "app-shell-auth"
+    },
+    {
+      "path": "lib/build/drawer_item.dart",
+      "bytes": 1841,
+      "category": "app-shell-auth"
+    },
+    {
+      "path": "lib/build/home_screen.dart",
+      "bytes": 7987,
+      "category": "app-shell-auth"
+    },
+    {
+      "path": "lib/build/logo_particle_explosion.dart",
+      "bytes": 751,
+      "category": "app-shell-auth"
+    },
+    {
+      "path": "lib/build/models/trading_profile.dart",
+      "bytes": 5596,
+      "category": "app-shell-auth"
+    },
+    {
+      "path": "lib/build/splash_screen.dart",
+      "bytes": 5044,
+      "category": "app-shell-auth"
+    },
+    {
+      "path": "lib/build/trading_hub_screen.dart",
+      "bytes": 378,
+      "category": "app-shell-auth"
+    },
+    {
+      "path": "lib/features/legal/screens/arc_data_attribution_screen.dart",
+      "bytes": 2655,
+      "category": "other-screen"
+    },
+    {
+      "path": "lib/features/legal/screens/legal_hub_screen.dart",
+      "bytes": 9108,
+      "category": "other-screen"
+    },
+    {
+      "path": "lib/features/legal/screens/privacy_data_screen.dart",
+      "bytes": 15603,
+      "category": "other-screen"
+    },
+    {
+      "path": "lib/features/legal/screens/privacy_policy_screen.dart",
+      "bytes": 9205,
+      "category": "other-screen"
+    },
+    {
+      "path": "lib/features/legal/screens/subscription_refunds_screen.dart",
+      "bytes": 4289,
+      "category": "other-screen"
+    },
+    {
+      "path": "lib/features/legal/screens/support_screen.dart",
+      "bytes": 2648,
+      "category": "other-screen"
+    },
+    {
+      "path": "lib/features/legal/screens/terms_of_use_screen.dart",
+      "bytes": 9837,
+      "category": "other-screen"
+    },
+    {
+      "path": "lib/features/legal/screens/trader_code_of_conduct_screen.dart",
+      "bytes": 6690,
+      "category": "other-screen"
+    },
+    {
+      "path": "lib/features/legal/widgets/arc_legal_document_page.dart",
+      "bytes": 5058,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/legal/widgets/fan_disclaimer_dialog.dart",
+      "bytes": 1372,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/monetisation/screens/admin_monetisation_dashboard.dart",
+      "bytes": 27766,
+      "category": "other-screen"
+    },
+    {
+      "path": "lib/features/monetisation/screens/monetisation_screen.dart",
+      "bytes": 19232,
+      "category": "other-screen"
+    },
+    {
+      "path": "lib/features/monetisation/screens/uag_benefits_community_rewards_screen.dart",
+      "bytes": 10402,
+      "category": "other-screen"
+    },
+    {
+      "path": "lib/features/monetisation/screens/uag_creator_programme_screen.dart",
+      "bytes": 17497,
+      "category": "other-screen"
+    },
+    {
+      "path": "lib/features/monetisation/screens/uag_plans_screen.dart",
+      "bytes": 436,
+      "category": "other-screen"
+    },
+    {
+      "path": "lib/features/monetisation/widgets/uag_ad_admin_controls_card.dart",
+      "bytes": 5991,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/monetisation/widgets/uag_ad_gate.dart",
+      "bytes": 2391,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/monetisation/widgets/uag_beta_founder_admin_panel.dart",
+      "bytes": 28370,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/monetisation/widgets/uag_beta_founder_offer_panel.dart",
+      "bytes": 11071,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/monetisation/widgets/uag_commercial_campaign_admin_panel.dart",
+      "bytes": 10733,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/monetisation/widgets/uag_commercial_offers_panel.dart",
+      "bytes": 12750,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/monetisation/widgets/uag_community_growth_admin_panel.dart",
+      "bytes": 3185,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/monetisation/widgets/uag_community_growth_live_panel.dart",
+      "bytes": 2714,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/monetisation/widgets/uag_community_growth_panel.dart",
+      "bytes": 2047,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/monetisation/widgets/uag_creator_admin_panel.dart",
+      "bytes": 5628,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/monetisation/widgets/uag_creator_application_admin_panel.dart",
+      "bytes": 8749,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/monetisation/widgets/uag_creator_application_panel.dart",
+      "bytes": 10451,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/monetisation/widgets/uag_creator_campaign_discount_admin_panel.dart",
+      "bytes": 6232,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/monetisation/widgets/uag_creator_commercial_integrity_admin_panel.dart",
+      "bytes": 6801,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/monetisation/widgets/uag_creator_commission_admin_panel.dart",
+      "bytes": 7340,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/monetisation/widgets/uag_creator_commission_ledger_panel.dart",
+      "bytes": 5778,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/monetisation/widgets/uag_creator_commission_rate_panel.dart",
+      "bytes": 3328,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/monetisation/widgets/uag_creator_community_arsenal_panel.dart",
+      "bytes": 8865,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/monetisation/widgets/uag_creator_entitlement_bridge_admin_panel.dart",
+      "bytes": 7986,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/monetisation/widgets/uag_creator_reward_access_panel.dart",
+      "bytes": 5614,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/monetisation/widgets/uag_creator_reward_admin_panel.dart",
+      "bytes": 8392,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/monetisation/widgets/uag_entitlement_test_mode_card.dart",
+      "bytes": 6778,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/monetisation/widgets/uag_hub_rewards_overview_panel.dart",
+      "bytes": 9503,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/monetisation/widgets/uag_impact_pots_panel.dart",
+      "bytes": 2100,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/monetisation/widgets/uag_match_intelligence_comparison_card.dart",
+      "bytes": 4461,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/monetisation/widgets/uag_operation_completion_panel.dart",
+      "bytes": 5040,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/monetisation/widgets/uag_premium_access_pass_panel.dart",
+      "bytes": 3894,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/monetisation/widgets/uag_programme_section.dart",
+      "bytes": 2450,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/monetisation/widgets/uag_raider_mark_panel.dart",
+      "bytes": 8960,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/monetisation/widgets/uag_refer_a_raider_panel.dart",
+      "bytes": 11639,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/monetisation/widgets/uag_referral_challenge_panel.dart",
+      "bytes": 7930,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/monetisation/widgets/uag_referral_progress_panel.dart",
+      "bytes": 2704,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/monetisation/widgets/uag_referral_reward_locker_panel.dart",
+      "bytes": 6299,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/monetisation/widgets/uag_referral_validation_admin_panel.dart",
+      "bytes": 3785,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/monetisation/widgets/uag_usage_gate.dart",
+      "bytes": 3519,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/notifications/widgets/uag_admin_broadcast_panel.dart",
+      "bytes": 22434,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/notifications/widgets/uag_notification_preferences_panel.dart",
+      "bytes": 9347,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/onboarding/screens/uag_raider_agreement_screen.dart",
+      "bytes": 8445,
+      "category": "other-screen"
+    },
+    {
+      "path": "lib/features/profile/screens/profile_settings_screen.dart",
+      "bytes": 9393,
+      "category": "other-screen"
+    },
+    {
+      "path": "lib/features/release/widgets/uag_release_readiness_panel.dart",
+      "bytes": 13647,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_hunt_targets_screen.dart",
+      "bytes": 36426,
+      "category": "other-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart",
+      "bytes": 74088,
+      "category": "other-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/arc_additional_collections_screen.dart",
+      "bytes": 62650,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/arc_admin_map_editor_screen.dart",
+      "bytes": 118696,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/arc_availability_screen.dart",
+      "bytes": 14941,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/arc_away_screen.dart",
+      "bytes": 10892,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/arc_beta_feedback_screen.dart",
+      "bytes": 14943,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/arc_blueprint_collection_overview_screen.dart",
+      "bytes": 10893,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/arc_blueprint_live_scanner_screen.dart",
+      "bytes": 69146,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/arc_blueprint_photo_capture_screen.dart",
+      "bytes": 37187,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/arc_blueprint_photo_delta_review_screen.dart",
+      "bytes": 7404,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/arc_blueprint_photo_review_screen.dart",
+      "bytes": 14484,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/arc_camera_diagnostic_screen.dart",
+      "bytes": 12684,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/arc_collections_screen.dart",
+      "bytes": 11579,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/arc_collections_tracker_screen.dart",
+      "bytes": 9809,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/arc_command_centre_screen.dart",
+      "bytes": 46949,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/arc_crafting_planner_screen.dart",
+      "bytes": 22061,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/arc_create_trade_listing_screen.dart",
+      "bytes": 12311,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/arc_events_screen.dart",
+      "bytes": 1071,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/arc_frozen_trail_preview_screen.dart",
+      "bytes": 6238,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/arc_frozen_trail_single_grid_capture_screen.dart",
+      "bytes": 62975,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/arc_future_hub_screen.dart",
+      "bytes": 17359,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/arc_help_centre_screen.dart",
+      "bytes": 12075,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/arc_intel_explorer_screen.dart",
+      "bytes": 26340,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/arc_mandatory_onboarding_screen.dart",
+      "bytes": 69205,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/arc_map_filter_icon_review_screen.dart",
+      "bytes": 24031,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart",
+      "bytes": 50245,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/arc_match_rider_screen.dart",
+      "bytes": 42345,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/arc_my_trade_listings_screen.dart",
+      "bytes": 9313,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/arc_profile_edit_screen.dart",
+      "bytes": 27224,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/arc_profile_setup_screen.dart",
+      "bytes": 26161,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/arc_progress_trackers_screen.dart",
+      "bytes": 15150,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/arc_raid_intelligence_screen.dart",
+      "bytes": 90271,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/arc_raider_setup_screen.dart",
+      "bytes": 13789,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/arc_raiders_hub_screen.dart",
+      "bytes": 73961,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/arc_research_workstation_screen.dart",
+      "bytes": 11925,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/arc_season_reset_screen.dart",
+      "bytes": 16989,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/arc_smart_build_trade_draft_screen.dart",
+      "bytes": 17015,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/arc_trader_search_screen.dart",
+      "bytes": 11146,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart",
+      "bytes": 128199,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart",
+      "bytes": 147465,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/my_hub_screen.dart",
+      "bytes": 86027,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/my_intel_screen.dart",
+      "bytes": 18059,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/nomadic_trader_screen.dart",
+      "bytes": 89508,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/operations_command_screen.dart",
+      "bytes": 131621,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/play_like_a_pro_discover_screen.dart",
+      "bytes": 19517,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/play_like_a_pro_guide_detail_screen.dart",
+      "bytes": 14213,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/play_like_a_pro_mixtape_player_screen.dart",
+      "bytes": 5917,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/play_like_a_pro_routine_screen.dart",
+      "bytes": 17831,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/play_like_a_pro_screen.dart",
+      "bytes": 46720,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/referral_tools_screen.dart",
+      "bytes": 511,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart",
+      "bytes": 65922,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/smart_trade_assist_screen.dart",
+      "bytes": 34738,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart",
+      "bytes": 13405,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/trading_activity_screen.dart",
+      "bytes": 7449,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/trading_blueprint_watches_screen.dart",
+      "bytes": 23188,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/trading_create_listing_screen.dart",
+      "bytes": 78017,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/trading_listing_detail_screen.dart",
+      "bytes": 21676,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/trading_listing_queues_screen.dart",
+      "bytes": 14923,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/trading_listings_screen.dart",
+      "bytes": 28931,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/trading_make_offer_screen.dart",
+      "bytes": 46476,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/trading_my_listings_screen.dart",
+      "bytes": 8716,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/trading_my_offers_screen.dart",
+      "bytes": 20005,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/trading_notifications_screen.dart",
+      "bytes": 26195,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/trading_profile_screen.dart",
+      "bytes": 120695,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/trading_trade_sessions_screen.dart",
+      "bytes": 55269,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/uag_trade_invite_landing.dart",
+      "bytes": 5347,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/screens/wall_of_legends_screen.dart",
+      "bytes": 10578,
+      "category": "arc-screen"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_account_journey_bar.dart",
+      "bytes": 5664,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_account_support_workspace_bar.dart",
+      "bytes": 4905,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_ad_banner_card.dart",
+      "bytes": 2332,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_admin_workspace_bar.dart",
+      "bytes": 3907,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_asset_thumbnail.dart",
+      "bytes": 4532,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_attachment_slot_card.dart",
+      "bytes": 1902,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_beta_first_run.dart",
+      "bytes": 30014,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_blueprint_capture_boundary_overlay.dart",
+      "bytes": 4708,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_blueprint_corner_calibration_overlay.dart",
+      "bytes": 3874,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_blueprint_drop_report_sheet.dart",
+      "bytes": 52749,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_blueprint_edge_crop_overlay.dart",
+      "bytes": 7920,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_blueprint_grid_alignment_overlay.dart",
+      "bytes": 1970,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_blueprint_grid_detection_overlay.dart",
+      "bytes": 2492,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_blueprint_hotspots_card.dart",
+      "bytes": 4226,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_blueprint_intel_card.dart",
+      "bytes": 6178,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_blueprint_intel_panel.dart",
+      "bytes": 12093,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_blueprint_live_targeting_overlay.dart",
+      "bytes": 7259,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_blueprint_opportunity_carousel.dart",
+      "bytes": 9485,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_blueprint_opportunity_marker.dart",
+      "bytes": 8022,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_blueprint_sighting_activity.dart",
+      "bytes": 7379,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_blueprint_workspace_bar.dart",
+      "bytes": 6101,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_collection_dupe_manager.dart",
+      "bytes": 11613,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_collection_visual_share.dart",
+      "bytes": 35145,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_collections_category_bar.dart",
+      "bytes": 4285,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_community_intel_report_sheet.dart",
+      "bytes": 20512,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart",
+      "bytes": 9597,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_drop_report_carousel_picker.dart",
+      "bytes": 12167,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_drop_report_map_picker.dart",
+      "bytes": 18088,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_events_workspace.dart",
+      "bytes": 15599,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_feature_card.dart",
+      "bytes": 2876,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_feature_carousel.dart",
+      "bytes": 1427,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_feature_model.dart",
+      "bytes": 393,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_feature_visibility_diagnostics_panel.dart",
+      "bytes": 12095,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_fitted_weapon_bundle_editor.dart",
+      "bytes": 11620,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_game_platform_selector.dart",
+      "bytes": 3488,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_intelligence_workspace_bar.dart",
+      "bytes": 18265,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_loadout_cards.dart",
+      "bytes": 9224,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_loadout_category_banner.dart",
+      "bytes": 1713,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_loadout_intelligence_summary.dart",
+      "bytes": 14180,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_loadout_progress_card.dart",
+      "bytes": 1075,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_map_filter_icon.dart",
+      "bytes": 2682,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_map_marker_detail_card.dart",
+      "bytes": 5206,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_map_marker_filter_panel.dart",
+      "bytes": 7647,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_market_overview_card.dart",
+      "bytes": 8214,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_market_pulse_card.dart",
+      "bytes": 1696,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_network_liquidity_admin_panel.dart",
+      "bytes": 6235,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_personalisation_preferences_panel.dart",
+      "bytes": 16238,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_play_like_a_pro_workspace_bar.dart",
+      "bytes": 3771,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_precision_map_pin.dart",
+      "bytes": 5809,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_profile_status_card.dart",
+      "bytes": 1699,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_progression_workspace_bar.dart",
+      "bytes": 5158,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_quest_tracker_workspace.dart",
+      "bytes": 23280,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_raid_intelligence_map.dart",
+      "bytes": 17963,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_raid_location_picker.dart",
+      "bytes": 2119,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_raider_network_workspace_bar.dart",
+      "bytes": 4226,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart",
+      "bytes": 21770,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_readiness_status_banner.dart",
+      "bytes": 1452,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_recent_reports_feed.dart",
+      "bytes": 4266,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_report_explorer_feed.dart",
+      "bytes": 4566,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_report_filter_bar.dart",
+      "bytes": 6944,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_scrappy_item_sheet.dart",
+      "bytes": 16275,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_scrappy_status_banner.dart",
+      "bytes": 1709,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_section_transition_banner.dart",
+      "bytes": 1718,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_selected_blueprint_intel.dart",
+      "bytes": 3706,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_shared_page_ownership.dart",
+      "bytes": 1056,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_social_links_editor.dart",
+      "bytes": 13234,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_subscription_tier_badge.dart",
+      "bytes": 1232,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_systems_page_wrapper.dart",
+      "bytes": 613,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_trade_network_panel.dart",
+      "bytes": 30820,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/arc_trading_workspace_bar.dart",
+      "bytes": 4558,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/blueprint_actions_menu.dart",
+      "bytes": 1239,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/blueprint_bottom_dock_layout.dart",
+      "bytes": 1671,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/blueprint_filter_bar.dart",
+      "bytes": 3036,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/blueprint_grid_controls_card.dart",
+      "bytes": 6788,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/blueprint_progress_header.dart",
+      "bytes": 3719,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/blueprint_selection_toolbelt.dart",
+      "bytes": 4735,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/blueprint_tile.dart",
+      "bytes": 8809,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/blueprint_voice_search_button.dart",
+      "bytes": 3333,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/command_centre/arc_command_centre_content.dart",
+      "bytes": 77261,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/command_centre/arc_command_centre_layout_policy.dart",
+      "bytes": 553,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/command_centre/arc_command_centre_progress_policy.dart",
+      "bytes": 989,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/command_centre/arc_command_centre_widgets.dart",
+      "bytes": 5665,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/command_centre/arc_command_system_detail_mapper.dart",
+      "bytes": 2418,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/foundation/arc_action_button.dart",
+      "bytes": 1858,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/foundation/arc_bottom_action_dock.dart",
+      "bytes": 2418,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/foundation/arc_cinematic_scaffold.dart",
+      "bytes": 1183,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/foundation/arc_empty_state.dart",
+      "bytes": 1365,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/foundation/arc_form_surface.dart",
+      "bytes": 15342,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/foundation/arc_glass_panel.dart",
+      "bytes": 1125,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/foundation/arc_intelligence_card.dart",
+      "bytes": 2590,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/foundation/arc_kanban_column.dart",
+      "bytes": 1048,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/foundation/arc_modal_surface.dart",
+      "bytes": 2341,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/foundation/arc_my_hub_command_header.dart",
+      "bytes": 2549,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/foundation/arc_my_hub_intelligence_feed.dart",
+      "bytes": 2909,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/foundation/arc_reference_visuals.dart",
+      "bytes": 3529,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/foundation/arc_resource_row.dart",
+      "bytes": 2082,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/foundation/arc_section_header.dart",
+      "bytes": 2820,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/foundation/arc_status_pill.dart",
+      "bytes": 1272,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/foundation/arc_timeline_card.dart",
+      "bytes": 2636,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart",
+      "bytes": 11415,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/foundation/uag_profile_glyph.dart",
+      "bytes": 5954,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/missing_blueprint_dialog.dart",
+      "bytes": 3286,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/missing_scrappy_dialog.dart",
+      "bytes": 4570,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/my_day_snapshot_card.dart",
+      "bytes": 9943,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/my_hub_cinematic_background.dart",
+      "bytes": 1605,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/scrappy_actions_menu.dart",
+      "bytes": 1236,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/scrappy_feed_queue_section.dart",
+      "bytes": 3656,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/scrappy_filter_bar.dart",
+      "bytes": 2203,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/scrappy_progress_header.dart",
+      "bytes": 2854,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/scrappy_tile.dart",
+      "bytes": 3746,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/shared/arc_collapsible_panel.dart",
+      "bytes": 4228,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/smart_trade_intelligence_panel.dart",
+      "bytes": 11737,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/trading_card.dart",
+      "bytes": 1831,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/trading_cosmetic_identity_strip.dart",
+      "bytes": 10395,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/trading_hub_feature_card.dart",
+      "bytes": 4177,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/trading_listing_card.dart",
+      "bytes": 5679,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/trading_risk_badge.dart",
+      "bytes": 1768,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/trading_seed_bundle_picker.dart",
+      "bytes": 4087,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/trading_stat_chip.dart",
+      "bytes": 1485,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/uag_avatar_locker_sheet.dart",
+      "bytes": 8094,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/uag_profile_cosmetic_locker.dart",
+      "bytes": 33095,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trading_hub/arc_raiders/widgets/uag_raider_avatar.dart",
+      "bytes": 8584,
+      "category": "arc-widget"
+    },
+    {
+      "path": "lib/features/trust/screens/arc_raider_contracts_screen.dart",
+      "bytes": 74720,
+      "category": "other-screen"
+    },
+    {
+      "path": "lib/features/trust/widgets/arc_contract_discovery.dart",
+      "bytes": 9397,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/features/trust/widgets/arc_raider_contracts_admin_panel.dart",
+      "bytes": 18935,
+      "category": "feature-widget"
+    },
+    {
+      "path": "lib/screens/admin_console_screen.dart",
+      "bytes": 68806,
+      "category": "other-screen"
+    },
+    {
+      "path": "lib/screens/build/admin_business_metrics_panel.dart",
+      "bytes": 14604,
+      "category": "other-screen"
+    },
+    {
+      "path": "lib/screens/build/admin_console_screen.dart",
+      "bytes": 74765,
+      "category": "other-screen"
+    },
+    {
+      "path": "lib/screens/build/app_bar.dart",
+      "bytes": 5367,
+      "category": "other-screen"
+    },
+    {
+      "path": "lib/screens/build/app_drawer.dart",
+      "bytes": 60,
+      "category": "other-screen"
+    },
+    {
+      "path": "lib/screens/build/app_entry_gate.dart",
+      "bytes": 10314,
+      "category": "other-screen"
+    },
+    {
+      "path": "lib/screens/build/auth/auth_landing_screen.dart",
+      "bytes": 19479,
+      "category": "other-screen"
+    },
+    {
+      "path": "lib/screens/build/feedback_screen.dart",
+      "bytes": 26906,
+      "category": "other-screen"
+    },
+    {
+      "path": "lib/screens/build/splash_screen.dart",
+      "bytes": 3366,
+      "category": "other-screen"
+    },
+    {
+      "path": "lib/widgets/animated_logo.dart",
+      "bytes": 4626,
+      "category": "shared-widget"
+    },
+    {
+      "path": "lib/widgets/arc_app_scroll_behavior.dart",
+      "bytes": 1200,
+      "category": "shared-widget"
+    },
+    {
+      "path": "lib/widgets/arc_global_visual_system.dart",
+      "bytes": 5574,
+      "category": "shared-widget"
+    },
+    {
+      "path": "lib/widgets/arc_layout_system.dart",
+      "bytes": 15776,
+      "category": "shared-widget"
+    },
+    {
+      "path": "lib/widgets/arc_responsive_chrome.dart",
+      "bytes": 2966,
+      "category": "shared-widget"
+    },
+    {
+      "path": "lib/widgets/arc_responsive_page_shell.dart",
+      "bytes": 4009,
+      "category": "shared-widget"
+    },
+    {
+      "path": "lib/widgets/arc_responsive_status_grid.dart",
+      "bytes": 874,
+      "category": "shared-widget"
+    },
+    {
+      "path": "lib/widgets/arc_tactical_page.dart",
+      "bytes": 8556,
+      "category": "shared-widget"
+    },
+    {
+      "path": "lib/widgets/collapsible_section_card.dart",
+      "bytes": 2388,
+      "category": "shared-widget"
+    },
+    {
+      "path": "lib/widgets/custom_card.dart",
+      "bytes": 4082,
+      "category": "shared-widget"
+    },
+    {
+      "path": "lib/widgets/dose_action_button.dart",
+      "bytes": 3471,
+      "category": "shared-widget"
+    },
+    {
+      "path": "lib/widgets/dose_section_card.dart",
+      "bytes": 2210,
+      "category": "shared-widget"
+    },
+    {
+      "path": "lib/widgets/electric_charge_border.dart",
+      "bytes": 5818,
+      "category": "shared-widget"
+    },
+    {
+      "path": "lib/widgets/logo_particle_explosion.dart",
+      "bytes": 751,
+      "category": "shared-widget"
+    },
+    {
+      "path": "lib/widgets/responsive_layout_helper.dart",
+      "bytes": 2125,
+      "category": "shared-widget"
+    },
+    {
+      "path": "lib/widgets/static_watermark.dart",
+      "bytes": 483,
+      "category": "shared-widget"
+    },
+    {
+      "path": "lib/widgets/theme.dart",
+      "bytes": 22720,
+      "category": "shared-widget"
+    },
+    {
+      "path": "lib/widgets/uag_adaptive_card_deck.dart",
+      "bytes": 10391,
+      "category": "shared-widget"
+    },
+    {
+      "path": "lib/widgets/uag_cinematic_background.dart",
+      "bytes": 2612,
+      "category": "shared-widget"
+    },
+    {
+      "path": "lib/widgets/uag_cinematic_loading_screen.dart",
+      "bytes": 7677,
+      "category": "shared-widget"
+    },
+    {
+      "path": "lib/widgets/uag_dialogs.dart",
+      "bytes": 4778,
+      "category": "shared-widget"
+    },
+    {
+      "path": "lib/widgets/uag_drawer_nav_tile.dart",
+      "bytes": 3055,
+      "category": "shared-widget"
+    },
+    {
+      "path": "lib/widgets/uag_form_dropdown_field.dart",
+      "bytes": 801,
+      "category": "shared-widget"
+    },
+    {
+      "path": "lib/widgets/uag_page_carousel.dart",
+      "bytes": 11123,
+      "category": "shared-widget"
+    },
+    {
+      "path": "lib/widgets/uag_precision_scroll_view.dart",
+      "bytes": 3167,
+      "category": "shared-widget"
+    },
+    {
+      "path": "lib/widgets/uag_text_field.dart",
+      "bytes": 1510,
+      "category": "shared-widget"
+    },
+    {
+      "path": "lib/widgets/user_details_widget.dart",
+      "bytes": 1049,
+      "category": "shared-widget"
+    }
+  ]
+}
