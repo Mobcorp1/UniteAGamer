@@ -109,9 +109,10 @@ void main() {
       ),
     );
     expect(
-      grid,
-      contains('widget.bannerSlot ?? const ArcBlueprintBannerSlot()'),
-    );
+        RegExp(r'widget\.bannerSlot\s*\?\?\s*const\s+ArcBlueprintBannerSlot\(\)')
+            .hasMatch(grid),
+        isTrue,
+      );
     expect(grid, contains('InteractiveViewer('));
     expect(grid, contains("tooltip: 'Reset grid view'"));
     expect(grid, contains('_openBlueprintPhotoImport'));
