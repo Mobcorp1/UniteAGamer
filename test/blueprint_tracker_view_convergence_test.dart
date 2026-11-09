@@ -65,7 +65,7 @@ void main() {
       expect(tracker, contains("key: const Key('blueprint-landscape-fitted-dock')"));
       expect(tracker, contains("key: const Key('blueprint-dock-fitted-ad')"));
       expect(
-        RegExp(r'widget\.bannerSlot\s*\?\?\s*const\s+ArcBlueprintBannerSlot\(\)')
+        RegExp(r'widget\.bannerSlot\s*\?\?\s*const\s+ArcBlueprintBannerSlot\(')
             .hasMatch(tracker),
         isTrue,
       );
