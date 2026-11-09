@@ -130,19 +130,20 @@ void main() {
       final base = ArcBlueprintLoadoutBridge.baseLoadout(null);
 
       // This fixture must be full before checking replacement destinations.
+      // Augments are tracked separately; use six valid non-augment items.
       const fullQuickUse = <String>[
-        'Survivor',
         'Snap Hook',
         'Vita Shot',
         'Lure Grenade',
         'Wolfpack',
         'Pulse Mine',
+        'Triggernade',
       ];
       for (final itemName in fullQuickUse) {
         expect(
           ArcLoadoutLayoutEngine.quickUseOptionForName(itemName),
           isNotNull,
-          reason: '${itemName} must be a supported quick-use option',
+          reason: '${itemName} must be a supported non-augment quick-use option',
         );
       }
       final normalised = ArcLoadoutLayoutEngine.normaliseQuickUseSlots(
@@ -166,7 +167,7 @@ void main() {
         secondaryWeapon: base.secondaryWeapon,
         secondaryAttachments: base.secondaryAttachments,
         equipment: const <String>['Snap Hook', 'Wolfpack', 'Pulse Mine'],
-        consumables: const <String>['Vita Shot', 'Lure Grenade'],
+        consumables: const <String>['Vita Shot', 'Lure Grenade', 'Triggernade'],
         quickUse: normalised,
         createdAt: base.createdAt,
         updatedAt: base.updatedAt,
