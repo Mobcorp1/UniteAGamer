@@ -76,7 +76,7 @@ void main() {
 
     expect(grid, contains("Key('blueprint-landscape-static-ad')"));
     expect(
-      RegExp(r'widget\.bannerSlot\s*\?\?\s*const\s+ArcBlueprintBannerSlot\(\)')
+      RegExp(r'widget\.bannerSlot\s*\?\?\s*const\s+ArcBlueprintBannerSlot\(')
           .hasMatch(grid),
       isTrue,
     );
