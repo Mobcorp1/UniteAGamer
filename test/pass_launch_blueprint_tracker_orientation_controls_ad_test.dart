@@ -76,8 +76,9 @@ void main() {
 
     expect(grid, contains("Key('blueprint-landscape-static-ad')"));
     expect(
-      grid,
-      contains('widget.bannerSlot ?? const ArcBlueprintBannerSlot()'),
+      RegExp(r'widget\.bannerSlot\s*\?\?\s*const\s+ArcBlueprintBannerSlot\(')
+          .hasMatch(grid),
+      isTrue,
     );
     expect(grid, contains('const verticalColumns = 2;'));
     expect(grid, contains('const commandRailWidth = 106.0;'));

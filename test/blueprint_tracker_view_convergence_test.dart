@@ -64,7 +64,11 @@ void main() {
     if (tracker.contains("'blueprint-landscape-fitted-dock'")) {
       expect(tracker, contains("key: const Key('blueprint-landscape-fitted-dock')"));
       expect(tracker, contains("key: const Key('blueprint-dock-fitted-ad')"));
-      expect(tracker, contains("widget.bannerSlot ?? const ArcBlueprintBannerSlot()"));
+      expect(
+        RegExp(r'widget\.bannerSlot\s*\?\?\s*const\s+ArcBlueprintBannerSlot\(')
+            .hasMatch(tracker),
+        isTrue,
+      );
       expect(tracker, contains("keyName: 'blueprint-dock-camera'"));
       expect(tracker, contains("keyName: 'blueprint-dock-share'"));
     } else {
