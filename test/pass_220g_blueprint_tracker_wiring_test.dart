@@ -109,7 +109,7 @@ void main() {
       ),
     );
     expect(
-      RegExp(r'widget\.bannerSlot\s*\?\?\s*const\s+ArcBlueprintBannerSlot\(\)')
+      RegExp(r'widget\.bannerSlot\s*\?\?\s*const\s+ArcBlueprintBannerSlot\(')
           .hasMatch(grid),
       isTrue,
     );
