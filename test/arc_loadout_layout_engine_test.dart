@@ -154,60 +154,36 @@ void main() {
       );
     });
 
-    test('augment is allowed in Quick Use', () {
-      expect(
-        ArcLoadoutLayoutEngine.quickUseOptionForName('Survivor')?.type,
-        ArcLoadoutSlotType.augment,
-      );
-    });
-
-    test('only one augment is allowed', () {
-      final migration = ArcLoadoutLayoutEngine.normaliseQuickUseSlots(
+    test('PASS51 augment remains separate from Quick Use', () {
+      final result = ArcLoadoutLayoutEngine.normaliseQuickUseSlots(
         savedItems: ['Survivor', 'Combat Augment', 'Vita Shot'],
       );
-      final augmentCount = migration.quickUse
-          .map(ArcLoadoutLayoutEngine.quickUseOptionForName)
-          .whereType<ArcLoadoutOption>()
-          .where((option) => option.type == ArcLoadoutSlotType.augment)
-          .length;
-
-      expect(augmentCount, 1);
+      expect(result.augment, 'Survivor');
+      expect(result.quickUse, isNot(contains('Survivor')));
+      expect(result.quickUse, isNot(contains('Combat Augment')));
+      expect(result.quickUse, contains('Vita Shot'));
+      expect(result.quickUse.length, 6);
     });
 
-    test('legacy augment migrates into first available Quick Use slot', () {
-      final migration = ArcLoadoutLayoutEngine.normaliseQuickUseSlots(
+    test('PASS51 legacy augment is preserved separately', () {
+      final result = ArcLoadoutLayoutEngine.normaliseQuickUseSlots(
         savedItems: ['Snap Hook', 'Vita Shot'],
         legacyAugment: 'Combat Augment',
       );
-
-      expect(migration.quickUse[2], 'Combat Augment');
-      expect(migration.augment, 'Combat Augment');
+      expect(result.augment, 'Combat Augment');
+      expect(result.quickUse, isNot(contains('Combat Augment')));
     });
 
-    test('legacy augment does not overwrite six valid Quick Use items', () {
-      final migration = ArcLoadoutLayoutEngine.normaliseQuickUseSlots(
-        savedItems: [
-          'Snap Hook',
-          'Vita Shot',
-          'Lure Grenade',
-          'Pulse Mine',
-          'Triggernade',
-          'Wolfpack',
-        ],
+    test('PASS51 six full Quick Use slots do not discard augment', () {
+      final result = ArcLoadoutLayoutEngine.normaliseQuickUseSlots(
+        savedItems: ['Snap Hook', 'Vita Shot', 'Lure Grenade',
+          'Pulse Mine', 'Triggernade', 'Wolfpack'],
         legacyAugment: 'Combat Augment',
       );
-
-      expect(migration.quickUse, [
-        'Snap Hook',
-        'Vita Shot',
-        'Lure Grenade',
-        'Pulse Mine',
-        'Triggernade',
-        'Wolfpack',
-      ]);
-      expect(migration.augment, isEmpty);
+      expect(result.quickUse.length, 6);
+      expect(result.augment, 'Combat Augment');
+      expect(result.quickUse, isNot(contains('Combat Augment')));
     });
-
     test('save and reload preserves visible Quick Use state', () {
       final migration = ArcLoadoutLayoutEngine.normaliseQuickUseSlots(
         savedItems: ['Survivor', 'Snap Hook', 'Vita Shot', 'Empty Slot'],

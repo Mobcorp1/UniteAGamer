@@ -1,3 +1,4 @@
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_amplification_collections_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_native_collection_screenshot_recognizer.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_additional_collections_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_collections_category_bar.dart';
@@ -2141,7 +2142,9 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                     height: 74,
                     child: Center(
                       child:
-                          widget.bannerSlot ?? const ArcBlueprintBannerSlot(),
+                          widget.bannerSlot ?? const ArcBlueprintBannerSlot(
+                              placementRoute: '/trading-hub/arc-raiders/blueprints',
+                            ),
                     ),
                   ),
                   const SizedBox(width: 6),
@@ -2698,6 +2701,14 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                           () => _selectedFilter = ArcBlueprintFilter.all,
                         );
                       }
+                      return;
+                    }
+                    if (category == ArcCollectionsCategory.amplification) {
+                      Navigator.of(context).push<void>(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const ArcAmplificationCollectionsScreen(),
+                        ),
+                      );
                       return;
                     }
                     Navigator.of(context).push<bool>(
@@ -3431,7 +3442,9 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  widget.bannerSlot ?? const ArcBlueprintBannerSlot(),
+                  widget.bannerSlot ?? const ArcBlueprintBannerSlot(
+                              placementRoute: '/trading-hub/arc-raiders/blueprints',
+                            ),
                   const ArcCompanionBottomDock(activeLabel: 'Track'),
                 ],
               );

@@ -101,6 +101,26 @@ class UagAdService extends ChangeNotifier with WidgetsBindingObserver {
     canRequestAds: UagAdConsentController.instance.canRequestAds,
   );
 
+  /// A tab embedded in an approved collections route can supply its own
+  /// explicit placement. All account, consent and runtime checks still apply.
+  /// This does not modify global navigation/interstitial eligibility.
+  String? bannerBlockReasonForPlacement(String placementRoute) {
+    if (!UagAdPlacementPolicy.permitsBanner(placementRoute)) {
+      return 'AD PLACEMENT NOT ALLOWED';
+    }
+    if (!_initialised) return 'AD SERVICE NOT INITIALISED';
+    if (!_signedIn) return 'ADS REQUIRE SIGN-IN';
+    if (!_settings.adsEnabled || !_settings.bannerEnabled) {
+      return 'BANNER ADS DISABLED IN SETTINGS';
+    }
+    if (!_policy.showBannerAds) return 'NO ADS FOR THIS ACCOUNT TIER';
+    if (!_consentAllowsRequests) return 'AD CONSENT NOT AVAILABLE';
+    return null;
+  }
+
+  bool canShowBannerForPlacement(String placementRoute) =>
+      bannerBlockReasonForPlacement(placementRoute) == null;
+
   bool get canShowBanner =>
       _initialised &&
       _consentAllowsRequests &&

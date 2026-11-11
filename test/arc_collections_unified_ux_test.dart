@@ -24,11 +24,20 @@ void main() {
           onSelected: (_) {}, onDupesSelected: () {}),
       )));
       expect(find.byKey(const Key('collections-tab-dupes')), findsOneWidget);
-      final names = find.byType(Text).evaluate().map((e) =>
-        (e.widget as Text).data).whereType<String>().toList();
-      final idx = names.indexOf(category.name.toUpperCase());
-      expect(idx, greaterThanOrEqualTo(0));
-      expect(names[idx + 1], 'DUPES');
+      final categoryTab = find.byKey(
+        Key('collections-tab-${category.name}'),
+      );
+      final dupesTab = find.byKey(
+        const Key('collections-tab-dupes'),
+      );
+
+      expect(categoryTab, findsOneWidget);
+      expect(dupesTab, findsOneWidget);
+
+      expect(
+        tester.getTopLeft(dupesTab).dx,
+        greaterThan(tester.getTopLeft(categoryTab).dx),
+      );
     });
   }
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum ArcCollectionsCategory { blueprints, stencils, designs }
+enum ArcCollectionsCategory { blueprints, stencils, designs, amplification }
 
 /// Compact and consistent category navigation for all saved collection grids.
 /// This widget does not alter any Blueprint grid, state or tile logic.
@@ -56,7 +56,7 @@ class ArcCollectionsCategoryBar extends StatelessWidget {
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
                         child: Text(
-                          category.name.toUpperCase(),
+                          category == ArcCollectionsCategory.amplification ? 'AMPLIFY' : category.name.toUpperCase(),
                           maxLines: 1,
                           style: TextStyle(
                             fontSize: 12,

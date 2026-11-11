@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/ads/uag_ad_service.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/ads/uag_admob_config.dart';
@@ -8,10 +9,12 @@ class UagTacticalBannerAd extends StatefulWidget {
   const UagTacticalBannerAd({
     super.key,
     this.enabled = true,
+    this.placementRoute,
     this.margin = const EdgeInsets.fromLTRB(12, 6, 12, 8),
   });
 
   final bool enabled;
+  final String? placementRoute;
   final EdgeInsetsGeometry margin;
 
   @override
@@ -22,6 +25,14 @@ class _UagTacticalBannerAdState extends State<UagTacticalBannerAd> {
   BannerAd? _bannerAd;
   bool _isLoaded = false;
   bool _lastEligible = false;
+  String? _loadError;
+
+  bool get _eligible {
+    final service = UagAdService.instance;
+    return widget.enabled && (widget.placementRoute == null
+        ? service.canShowBanner
+        : service.canShowBannerForPlacement(widget.placementRoute!));
+  }
 
   @override
   void initState() {
@@ -32,7 +43,7 @@ class _UagTacticalBannerAdState extends State<UagTacticalBannerAd> {
 
   void _onPolicyChanged() {
     if (!mounted) return;
-    final eligible = widget.enabled && UagAdService.instance.canShowBanner;
+    final eligible = _eligible;
     if (eligible == _lastEligible) return;
     _lastEligible = eligible;
     if (!eligible) {
@@ -40,6 +51,7 @@ class _UagTacticalBannerAdState extends State<UagTacticalBannerAd> {
       setState(() {
         _bannerAd = null;
         _isLoaded = false;
+        _loadError = null;
       });
       return;
     }
@@ -49,11 +61,19 @@ class _UagTacticalBannerAdState extends State<UagTacticalBannerAd> {
   @override
   void didUpdateWidget(covariant UagTacticalBannerAd oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.enabled != widget.enabled) _onPolicyChanged();
+    if (oldWidget.enabled != widget.enabled ||
+        oldWidget.placementRoute != widget.placementRoute) {
+      _lastEligible = false;
+      _bannerAd?.dispose();
+      _bannerAd = null;
+      _isLoaded = false;
+      _onPolicyChanged();
+    }
   }
 
   void _loadBanner() {
-    if (_bannerAd != null || !UagAdService.instance.canShowBanner) return;
+    if (_bannerAd != null || !_eligible) return;
+    _loadError = null;
     final settings = UagAdService.instance.settings;
     final banner = BannerAd(
       adUnitId: UagAdMobConfig.bannerAdUnitId(
@@ -71,14 +91,17 @@ class _UagTacticalBannerAdState extends State<UagTacticalBannerAd> {
           setState(() {
             _bannerAd = ad as BannerAd;
             _isLoaded = true;
+            _loadError = null;
           });
         },
-        onAdFailedToLoad: (ad, _) {
+        onAdFailedToLoad: (ad, error) {
+          debugPrint('UAG banner AdMob error ${error.code}: ${error.message}');
           ad.dispose();
           if (!mounted) return;
           setState(() {
             _bannerAd = null;
             _isLoaded = false;
+            _loadError = '${error.code}: ${error.message}';
           });
         },
       ),
@@ -95,7 +118,7 @@ class _UagTacticalBannerAdState extends State<UagTacticalBannerAd> {
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.enabled || !UagAdService.instance.canShowBanner) {
+    if (!_eligible) {
       return const SizedBox.shrink();
     }
     return Container(
@@ -133,7 +156,15 @@ class _UagTacticalBannerAdState extends State<UagTacticalBannerAd> {
                     child: AdWidget(ad: _bannerAd!),
                   ),
                 )
-              : const _UagTacticalAdLoadingStrip(),
+              : (kDebugMode && _loadError != null)
+                  ? Center(child: Text(
+                      'ADMOB LOAD FAILED: $_loadError',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.white70, fontSize: 10),
+                    ))
+                  : const _UagTacticalAdLoadingStrip(),
         ),
       ),
     );

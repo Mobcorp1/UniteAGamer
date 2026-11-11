@@ -18,11 +18,11 @@ void main() {
     );
     expect(
       ArcAdminMarkerVisualRegistry.assetPathForSubtype('lemon'),
-      'assets/arc_raiders/scrappy_resources/lemons.webp',
+      'assets/arc_raiders/items/lemons.webp',
     );
     expect(
       ArcAdminMarkerVisualRegistry.assetPathForSubtype('mushroom'),
-      'assets/arc_raiders/scrappy_resources/mushrooms.webp',
+      'assets/arc_raiders/items/mushrooms.webp',
     );
   });
 

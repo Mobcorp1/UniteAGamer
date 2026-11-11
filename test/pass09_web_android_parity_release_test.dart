@@ -9,9 +9,12 @@ void main() {
     expect(grid, contains('ArcBlueprintGridViewMode _viewMode = ArcBlueprintGridViewMode.fullOverview'));
     expect(prefs, contains('arcBlueprintGridViewModeV3'));
     expect(prefs, contains('_ => ArcBlueprintGridViewMode.fullOverview'));
-    expect(grid, contains('math.min(widthScale, heightScale)'));
+    expect(grid, matches(RegExp(r'math\s*\.min\(widthScale,\s*heightScale\)')));
     expect(grid, contains('ArcFrozenTrailCollectionCatalogue.blueprintGrid.totalSlots'));
-    expect(grid, contains('totalCount: ArcFrozenTrailCollectionCatalogue.blueprintGrid.totalSlots'));
+    // PASS 33 uses the canonical 91-slot collection as its source and renders
+    // the filtered collection directly, without a `totalCount:` widget arg.
+    expect(grid, contains("key: const Key('blueprint-authoritative-grid-view')"));
+    expect(grid, contains('itemCount: filtered.length'));
     expect(grid, contains('_fullGridWithUnknownCells(filteredByState)'));
     expect(grid, contains('InteractiveViewer('));
     expect(grid, contains('scaleEnabled: true'));

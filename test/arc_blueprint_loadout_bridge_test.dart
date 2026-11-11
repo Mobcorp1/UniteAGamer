@@ -3,6 +3,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bl
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_layout_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
 
 void main() {
   group('ArcBlueprintLoadoutBridge', () {
@@ -126,25 +127,47 @@ void main() {
 
     test('full quick-use bars expose replacement destinations', () {
       final wolfpack = _blueprint('Wolfpack');
-      final full = ArcBlueprintLoadoutBridge.applyDestination(
-        blueprint: wolfpack,
-        loadout: ArcBlueprintLoadoutBridge.baseLoadout(null),
-        destination: const ArcBlueprintLoadoutDestination(
-          type: ArcBlueprintLoadoutDestinationType.quickUse,
-          label: 'Quick Use 5',
-          index: 4,
-          currentItem: ArcLoadoutLayoutEngine.emptySlot,
-        ),
-      );
-      final filled = ArcBlueprintLoadoutBridge.applyDestination(
-        blueprint: _blueprint('Pulse Mine'),
-        loadout: full,
-        destination: const ArcBlueprintLoadoutDestination(
-          type: ArcBlueprintLoadoutDestinationType.quickUse,
-          label: 'Quick Use 6',
-          index: 5,
-          currentItem: ArcLoadoutLayoutEngine.emptySlot,
-        ),
+      final base = ArcBlueprintLoadoutBridge.baseLoadout(null);
+
+      // Augments are tracked separately; use six valid non-augment items.
+      const fullQuickUse = <String>[
+        'Snap Hook',
+        'Vita Shot',
+        'Lure Grenade',
+        'Wolfpack',
+        'Pulse Mine',
+        'Triggernade',
+      ];
+      for (final itemName in fullQuickUse) {
+        expect(
+          ArcLoadoutLayoutEngine.quickUseOptionForName(itemName),
+          isNotNull,
+          reason:
+              '${itemName} must be a supported non-augment quick-use option',
+        );
+      }
+      final normalised = ArcLoadoutLayoutEngine.normaliseQuickUseSlots(
+        savedItems: fullQuickUse,
+      ).quickUse;
+      expect(normalised, hasLength(6));
+      expect(normalised, everyElement(isNot(ArcLoadoutLayoutEngine.emptySlot)));
+
+      final filled = ArcSavedLoadout(
+        id: base.id,
+        name: base.name,
+        category: base.category,
+        playStyle: base.playStyle,
+        augment: base.augment,
+        shield: base.shield,
+        primaryWeapon: base.primaryWeapon,
+        primaryAttachments: base.primaryAttachments,
+        secondaryWeapon: base.secondaryWeapon,
+        secondaryAttachments: base.secondaryAttachments,
+        equipment: const <String>['Snap Hook', 'Wolfpack', 'Pulse Mine'],
+        consumables: const <String>['Vita Shot', 'Lure Grenade', 'Triggernade'],
+        quickUse: normalised,
+        createdAt: base.createdAt,
+        updatedAt: base.updatedAt,
       );
 
       final replacements = ArcBlueprintLoadoutBridge.destinationsFor(
@@ -153,6 +176,10 @@ void main() {
       );
 
       expect(replacements, hasLength(6));
+      expect(
+        replacements.map((destination) => destination.index).toSet(),
+        <int>{0, 1, 2, 3, 4, 5},
+      );
       expect(
         replacements.every((destination) => destination.replacesOccupiedSlot),
         isTrue,

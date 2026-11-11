@@ -46,6 +46,17 @@ void main() {
       expect(state.owned, isTrue);
     });
 
+    test('malformed numeric flags do not crash ownership hydration', () {
+      final state = ArcBlueprintState.fromMap(const {
+        'blueprintId': 'bantam',
+        'owned': 0.5,
+        'wanted': 1.0,
+        'availableToTrade': 0.0,
+      });
+      expect(state.owned, isFalse);
+      expect(state.wanted, isTrue);
+    });
+
     test('copyWith clamps invalid duplicate and priority counts', () {
       final state = ArcBlueprintState.empty(
         'bobcat',

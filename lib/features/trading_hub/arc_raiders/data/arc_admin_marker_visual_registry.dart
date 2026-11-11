@@ -2,7 +2,7 @@ class ArcAdminMarkerVisualRegistry {
   const ArcAdminMarkerVisualRegistry._();
 
   static const String _mapBase = 'assets/arc_raiders/map_filter_icons/';
-  static const String _scrappyBase = 'assets/arc_raiders/scrappy_resources/';
+  static const String _scrappyBase = 'assets/arc_raiders/items/';
 
   static const Map<String, String> _exactAssets = <String, String>{
     'ammo_case': '${_mapBase}ammo_case.webp',

@@ -1,3 +1,4 @@
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_amplification_collections_screen.dart';
 import 'dart:math' as math;
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_collections_category_bar.dart';
@@ -1125,7 +1126,9 @@ class _ArcAdditionalCollectionsScreenState
                     child: Center(
                       child: widget.adBanner ??
                           const ArcBlueprintBannerSlot(
+                             placementRoute: '/trading-hub/arc-raiders/blueprints',
                             banner: UagTacticalBannerAd(
+                               placementRoute: '/trading-hub/arc-raiders/blueprints',
                               margin: EdgeInsets.fromLTRB(2, 6, 2, 8),
                             ),
                           ),
@@ -1547,6 +1550,21 @@ class _ArcAdditionalCollectionsScreenState
                               _confirmDiscard(() => Navigator.pop(context));
                             } else {
                               Navigator.pop(context);
+                            }
+                            return;
+                          }
+                          if (category == ArcCollectionsCategory.amplification) {
+                            void openAmplifications() {
+                              Navigator.of(context).push<void>(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => const ArcAmplificationCollectionsScreen(),
+                                ),
+                              );
+                            }
+                            if (hasPending) {
+                              _confirmDiscard(openAmplifications);
+                            } else {
+                              openAmplifications();
                             }
                             return;
                           }

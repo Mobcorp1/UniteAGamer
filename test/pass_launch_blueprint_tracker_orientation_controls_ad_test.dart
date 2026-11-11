@@ -69,18 +69,22 @@ void main() {
     expect(grid, contains('if (_advancedGridControlsVisible)'));
   });
 
-  test('compact landscape keeps the static ad and two-column command rail', () {
+  test('compact landscape uses fitted bottom dock with its banner slot', () {
     final grid = read(
       'lib/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart',
     );
 
-    expect(grid, contains("Key('blueprint-landscape-static-ad')"));
+    // The new PASS 33 compact layout moved the ad and controls into the
+    // fitted bottom dock. The previous static side ad key no longer applies.
+    expect(grid, contains("Key('blueprint-landscape-fitted-dock')"));
+    expect(grid, contains('child: _buildBlueprintLandscapeDock()'));
+    expect(grid, contains('bottomNavigationBar: AnimatedBuilder('));
     expect(
-      grid,
-      contains('widget.bannerSlot ?? const ArcBlueprintBannerSlot()'),
-    );
-    expect(grid, contains('const verticalColumns = 2;'));
-    expect(grid, contains('const commandRailWidth = 106.0;'));
+        RegExp(r'widget\.bannerSlot\s*\?\?\s*const\s+ArcBlueprintBannerSlot\(')
+            .hasMatch(grid),
+        isTrue,
+      );
+    expect(grid, contains('if (compactMobileLandscape)'));
     expect(grid, contains('mainAxisSize: MainAxisSize.min'));
     expect(
       grid,

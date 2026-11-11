@@ -11,7 +11,7 @@ void main() {
   test('PASS 346F Firefly resolves to the real singular asset', () {
     expect(
       ArcItemAssetRegistry.assetPathForId('firefly-burner'),
-      'assets/arc_raiders/scrappy_resources/firefly_burner.webp',
+      'assets/arc_raiders/items/firefly_burner.webp',
     );
   });
 

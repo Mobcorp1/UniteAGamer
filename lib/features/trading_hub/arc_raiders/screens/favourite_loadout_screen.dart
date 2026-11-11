@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_canonical_blueprint_catalogue.dart';
 import 'package:flutter/foundation.dart';
@@ -26,6 +28,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_item_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_smart_build_mission_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_progression_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_saved_loadout_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raid_intelligence_screen.dart';
@@ -60,10 +63,42 @@ const _blankFavouriteBuildChoice = _BlankFavouriteBuildChoice();
 
 class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
   bool _webFirstLayoutComplete = false;
+  final ArcProgressionRepository _progressionRepository = ArcProgressionRepository();
+  StreamSubscription<dynamic>? _benchSubscription;
+  int _gunsmithLevel = 0;
+
+  bool _weaponReady(ArcLoadoutWeaponSpec weapon, Map<String, ArcBlueprintState> states) {
+    if (weapon.name.toLowerCase() == 'arpeggio') {
+      return _gunsmithLevel >= 2;
+    }
+    return _isOwnedOrNotBlueprint(
+      itemName: weapon.name,
+      blueprintBased: weapon.blueprintBased,
+      states: states,
+    );
+  }
+
+  @override
+  void dispose() {
+    _benchSubscription?.cancel();
+    super.dispose();
+  }
+
 
   @override
   void initState() {
     super.initState();
+    _benchSubscription = _progressionRepository.watchProgressionRecords().listen(
+      (records) {
+        final level = records.benchRecords.values
+            .where((record) => record.station.toLowerCase() == 'gunsmith')
+            .fold<int>(0, (previous, record) =>
+                record.currentLevel > previous ? record.currentLevel : previous);
+        if (mounted && level != _gunsmithLevel) {
+          setState(() => _gunsmithLevel = level);
+        }
+      },
+    );
 
     if (kIsWeb) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -104,7 +139,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     'Empty Slot',
   ];
   final List<String> _quickSlots = <String>[
-    'Survivor',
+    'Empty Slot',
     'Snap Hook',
     'Vita Shot',
     'Lure Grenade',
@@ -248,7 +283,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     _quickSlots
       ..clear()
       ..addAll(migration.quickUse);
-    _augment = migration.augment;
+    if (migration.augment.isNotEmpty) _augment = migration.augment;
   }
 
   ArcSavedLoadout _draftLoadout({DateTime? now}) {
@@ -271,19 +306,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         })
         .where((slot) => slot != ArcLoadoutLayoutEngine.emptySlot)
         .toList(growable: false);
-    final augment = quickUse
-        .map(ArcLoadoutLayoutEngine.quickUseOptionForName)
-        .whereType<ArcLoadoutOption>()
-        .firstWhere(
-          (option) => option.type == ArcLoadoutSlotType.augment,
-          orElse: () => const ArcLoadoutOption(
-            name: '',
-            type: ArcLoadoutSlotType.augment,
-            description: '',
-          ),
-        )
-        .name;
-
+    final augment = _augment;
     return ArcSavedLoadout(
       id: 'favourite-loadout',
       name: _buildName,
@@ -354,7 +377,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       _quickSlots
         ..clear()
         ..addAll(migration.quickUse);
-      _augment = migration.augment;
+      _augment = migration.augment.isNotEmpty ? migration.augment : loadout.augment;
       _activeSmartPlan = ArcGeneratedLoadoutPlan.fromMap(
         loadout.smartBuildData,
       );
@@ -1208,12 +1231,12 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       items: ArcLoadoutSeedData.weapons,
       labelBuilder: (weapon) => weapon.name,
       subtitleBuilder: (weapon) {
-        final owned = _isOwnedOrNotBlueprint(
-          itemName: weapon.name,
-          blueprintBased: weapon.blueprintBased,
-          states: states,
-        );
-        final availability = weapon.blueprintBased
+        final owned = _weaponReady(weapon, states);
+        final availability = weapon.name.toLowerCase() == 'arpeggio'
+            ? (_gunsmithLevel >= 2
+                  ? 'Gunsmith Level 2 unlocked'
+                  : 'Requires Gunsmith Level 2 (current: $_gunsmithLevel)')
+            : weapon.blueprintBased
             ? owned
                   ? 'Blueprint owned'
                   : 'Missing blueprint - selectable for planning'
@@ -1225,11 +1248,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         return '$availability - ${weapon.category} - ${weapon.role}';
       },
       leadingBuilder: (weapon) {
-        final owned = _isOwnedOrNotBlueprint(
-          itemName: weapon.name,
-          blueprintBased: weapon.blueprintBased,
-          states: states,
-        );
+        final owned = _weaponReady(weapon, states);
         return _itemImage(
           imageAsset: _assetForLoadoutItem(
             weapon.name,
@@ -1299,7 +1318,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       ),
       selectedBuilder: (option) => option.name == _shield,
       footerText:
-          'Shield artwork stays icon-only until genuine Light, Medium and Heavy Shield assets are supplied.',
+          'Shield image uses the matching local asset when available.',
     );
     if (selected == null) return;
     setState(() => _shield = selected.name);
@@ -1312,17 +1331,10 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     final currentOption = ArcLoadoutLayoutEngine.quickUseOptionForName(
       _quickSlots[index],
     );
-    final augmentAlreadySelected = _quickSlots.indexed.any((entry) {
-      if (entry.$1 == index) return false;
-      return ArcLoadoutLayoutEngine.quickUseOptionForName(entry.$2)?.type ==
-          ArcLoadoutSlotType.augment;
-    });
     final options = <ArcLoadoutOption>[
-      ...ArcLoadoutLayoutEngine.quickUseOptions().where((option) {
-        if (option.type != ArcLoadoutSlotType.augment) return true;
-        return !augmentAlreadySelected ||
-            currentOption?.type == ArcLoadoutSlotType.augment;
-      }),
+      ...ArcLoadoutLayoutEngine.quickUseOptions().where(
+        (option) => option.type != ArcLoadoutSlotType.augment,
+      ),
       ArcLoadoutOption(
         name: ArcLoadoutLayoutEngine.emptySlot,
         type: currentOption?.type ?? ArcLoadoutSlotType.equipment,
@@ -1372,7 +1384,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         }
       },
       footerText:
-          'Six fixed Quick Use slots accept gadgets, utility, healing, throwables and one augment. Weapons, attachments and shield stay out of this picker.',
+          'Six Quick Use slots accept gadgets, utility, healing and throwables. Augment and shield have their own slots.',
     );
     if (selected == null) return;
   }
@@ -1860,11 +1872,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     final weapon = _weaponSpec(primary ? _primaryWeapon : _secondaryWeapon);
     final attachments = primary ? _primaryAttachments : _secondaryAttachments;
     final accent = primary ? AppTheme.neonCyan : AppTheme.neonPink;
-    final owned = _isOwnedOrNotBlueprint(
-      itemName: weapon.name,
-      blueprintBased: weapon.blueprintBased,
-      states: states,
-    );
+    final owned = _weaponReady(weapon, states);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -2065,14 +2073,23 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     );
   }
 
-  int _augmentQuickSlotIndex() {
-    for (var index = 0; index < _quickSlots.length; index++) {
-      final option = ArcLoadoutLayoutEngine.quickUseOptionForName(
-        _quickSlots[index],
-      );
-      if (option?.type == ArcLoadoutSlotType.augment) return index;
+  Future<void> _pickAugment() async {
+    final selected = await _showPicker<ArcLoadoutOption>(
+      title: 'Select Augment',
+      items: ArcLoadoutSeedData.augments,
+      labelBuilder: (option) => option.name,
+      subtitleBuilder: (option) => option.description,
+      leadingBuilder: (option) => _itemImage(
+        imageAsset: _assetForLoadoutItem(option.name, ArcLoadoutAssetKind.augment),
+        accent: AppTheme.neonPink,
+        owned: true,
+        icon: Icons.health_and_safety_rounded,
+      ),
+      selectedBuilder: (option) => option.name == _augment,
+    );
+    if (selected != null && mounted) {
+      setState(() => _augment = selected.name);
     }
-    return 0;
   }
 
   Widget _buildCompactAugment(Map<String, ArcBlueprintState> states) {
@@ -2093,7 +2110,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       accent: AppTheme.neonPink,
       owned: owned,
       icon: Icons.health_and_safety_rounded,
-      onTap: () => _pickQuickSlot(_augmentQuickSlotIndex()),
+      onTap: _pickAugment,
     );
   }
 
@@ -2959,11 +2976,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     final weapon = _weaponSpec(primary ? _primaryWeapon : _secondaryWeapon);
     final attachments = primary ? _primaryAttachments : _secondaryAttachments;
     final accent = primary ? AppTheme.neonCyan : AppTheme.neonPink;
-    final owned = _isOwnedOrNotBlueprint(
-      itemName: weapon.name,
-      blueprintBased: weapon.blueprintBased,
-      states: states,
-    );
+    final owned = _weaponReady(weapon, states);
 
     return _arcPanel(
       accent: accent,

@@ -1,0 +1,315 @@
+import 'dart:async';
+import 'dart:math' as math;
+
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_grid_view_preferences.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/blueprint_tile.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_blueprint_workspace_bar.dart';
+
+void main() {
+  final viewports = <Size>[
+    const Size(390, 844),
+    const Size(430, 932),
+    const Size(640, 360),
+    const Size(740, 360),
+    const Size(844, 390),
+    const Size(768, 1024),
+    const Size(1024, 768),
+    const Size(1280, 900),
+    const Size(1440, 1000),
+    const Size(1600, 1000),
+  ];
+
+  for (final viewport in viewports) {
+    testWidgets(
+      'Blueprint Tracker renders authoritative grid at ${viewport.width.toInt()} wide',
+      (tester) async {
+        tester.view.physicalSize = viewport;
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: BlueprintGridScreen(
+              showFirstRunTutorial: false,
+              loadViewMode: () async => ArcBlueprintGridViewMode.fullOverview,
+              saveViewMode: (_) async {},
+              blueprintStateSnapshotStream: () =>
+                  Stream<ArcBlueprintStateSnapshot>.value(
+                    ArcBlueprintStateSnapshot.loaded(
+                      userId: 'blueprint-grid-regression-test',
+                      states: const <String, ArcBlueprintState>{},
+                    ),
+                  ),
+              favouriteLoadoutStream: () => Stream.value(null),
+            ),
+          ),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 50));
+
+        if (viewport.height > viewport.width) {
+          expect(find.text('ROTATE TO LANDSCAPE'), findsOneWidget);
+          expect(
+            find.byKey(const Key('blueprint-authoritative-grid')),
+            findsNothing,
+          );
+          expect(tester.takeException(), isNull);
+          return;
+        }
+
+        expect(
+          find.byKey(const Key('blueprint-authoritative-grid')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('blueprint-authoritative-grid-viewport')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('blueprint-authoritative-grid-view')),
+          findsOneWidget,
+        );
+        expect(find.byType(InteractiveViewer), findsOneWidget);
+        expect(find.byTooltip('Zoom in'), findsNothing);
+        expect(find.byTooltip('Reset grid view'), findsNothing);
+        expect(find.byTooltip('Zoom out'), findsNothing);
+        expect(find.byType(BlueprintTile), findsWidgets);
+
+        final gridView = tester.widget<GridView>(
+          find.byKey(const Key('blueprint-authoritative-grid-view')),
+        );
+        expect(gridView.semanticChildCount, 91);
+
+        final ordered = [...ArcBlueprintSeedData.blueprints]
+          ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+        expect(find.text(ordered.first.name), findsOneWidget);
+        expect(find.text(ordered.last.name), findsOneWidget);
+
+        final viewportBox = tester.renderObject<RenderBox>(
+          find.byKey(const Key('blueprint-authoritative-grid-viewport')),
+        );
+        expect(viewportBox.size.width, greaterThan(0));
+        expect(viewportBox.size.height.isFinite, isTrue);
+        expect(viewportBox.size.height, greaterThan(100));
+        final gridRect = tester.getRect(
+          find.byKey(const Key('blueprint-authoritative-grid-viewport')),
+        );
+        final workspaceDock = find.byType(ArcBlueprintWorkspaceDock);
+        if (workspaceDock.evaluate().isNotEmpty) {
+          expect(gridRect.overlaps(tester.getRect(workspaceDock)), isFalse);
+        }
+
+        final compactLandscape =
+            viewport.width > viewport.height && viewport.height <= 720;
+        final appDock = find.byType(ArcCompanionBottomDock);
+        if (compactLandscape) {
+          expect(appDock, findsNothing);
+          expect(
+            find.byKey(const Key('blueprint-grid-vertical-command-rail')),
+            findsNothing,
+          );
+        } else {
+          expect(appDock, findsOneWidget);
+          expect(gridRect.overlaps(tester.getRect(appDock)), isFalse);
+          final dockBox = tester.renderObject<RenderBox>(appDock);
+          expect(dockBox.size.height, lessThan(96));
+        }
+        if (compactLandscape) {
+          expect(
+            find.byTooltip('Blueprint menu').hitTestable(),
+            findsOneWidget,
+          );
+          expect(find.byTooltip('Blueprint tools'), findsNothing);
+        } else {
+          expect(
+            find.byTooltip('Blueprint tools').hitTestable(),
+            findsOneWidget,
+          );
+        }
+
+        final gridTop = tester
+            .getTopLeft(
+              find.byKey(const Key('blueprint-authoritative-grid-viewport')),
+            )
+            .dy;
+        final gridBottom = tester
+            .getBottomLeft(
+              find.byKey(const Key('blueprint-authoritative-grid-viewport')),
+            )
+            .dy;
+        final visibleBottom = compactLandscape
+            ? viewport.height
+            : tester.getTopLeft(appDock).dy;
+        final visibleGridHeight =
+            math.min(gridBottom, visibleBottom) - math.max(gridTop, 0);
+        expect(visibleGridHeight, greaterThan(100));
+
+        // PASS05: controls are compact; preserve the explicit zoom regression
+        // by opening More in landscape. Pinch below is still exercised.
+        if (compactLandscape) {
+          expect(
+            find.byKey(const Key('blueprint-landscape-fitted-dock')),
+            findsOneWidget,
+          );
+          expect(
+            find.byKey(const Key('blueprint-dock-fitted-ad')),
+            findsOneWidget,
+          );
+          expect(find.byKey(const Key('blueprint-dock-all')), findsOneWidget);
+          expect(
+            find.byKey(const Key('blueprint-dock-needed')),
+            findsOneWidget,
+          );
+          expect(
+            find.byKey(const Key('blueprint-dock-camera')),
+            findsOneWidget,
+          );
+          expect(find.byKey(const Key('blueprint-dock-share')), findsOneWidget);
+        } else {
+          expect(find.byTooltip('All'), findsOneWidget);
+          expect(find.byTooltip('Needed'), findsOneWidget);
+          expect(find.byTooltip('Duplicates'), findsOneWidget);
+          expect(find.byTooltip('Share collection'), findsOneWidget);
+        }
+
+        final center = tester.getCenter(
+          find.byKey(const Key('blueprint-authoritative-grid-viewport')),
+        );
+        final firstFinger = await tester.createGesture(pointer: 1);
+        final secondFinger = await tester.createGesture(pointer: 2);
+        await firstFinger.down(center - const Offset(8, 0));
+        await secondFinger.down(center + const Offset(8, 0));
+        await tester.pump();
+        await firstFinger.moveTo(center - const Offset(28, 0));
+        await secondFinger.moveTo(center + const Offset(28, 0));
+        await tester.pump();
+        await firstFinger.up();
+        await secondFinger.up();
+        await tester.pump(const Duration(milliseconds: 80));
+
+        if (compactLandscape) {
+          await tester.tap(find.byTooltip('Blueprint menu'));
+          await tester.pumpAndSettle();
+          final multiSelectMenuItem = find.ancestor(
+            of: find.text('Multi Select'),
+            matching: find.byType(PopupMenuItem<String>),
+          );
+          expect(multiSelectMenuItem, findsOneWidget);
+          expect(find.text('Duplicate Blueprints'), findsNothing);
+          expect(find.text('In-game View'), findsOneWidget);
+          expect(find.text('Full Grid View'), findsOneWidget);
+          expect(find.text('Zoom In'), findsOneWidget);
+          expect(find.text('Reset Grid View'), findsOneWidget);
+          expect(find.text('Zoom Out'), findsOneWidget);
+          await tester.ensureVisible(multiSelectMenuItem);
+          await tester.pumpAndSettle();
+          await tester.tap(multiSelectMenuItem);
+          await tester.pumpAndSettle();
+          expect(
+            find.byKey(const Key('blueprint-tools-panel')),
+            findsOneWidget,
+          );
+          final toolsScroll = find
+              .descendant(
+                of: find.byKey(const Key('blueprint-tools-panel')),
+                matching: find.byType(Scrollable),
+              )
+              .first;
+          await tester.scrollUntilVisible(
+            find.text('Select All Visible'),
+            90,
+            scrollable: toolsScroll,
+          );
+          expect(find.text('Select All Visible'), findsOneWidget);
+          await tester.scrollUntilVisible(
+            find.text('Exit Selection'),
+            90,
+            scrollable: toolsScroll,
+          );
+          expect(find.text('Exit Selection'), findsOneWidget);
+        } else {
+          await tester.tap(find.byTooltip('Blueprint tools'));
+          await tester.pump();
+          final select = find.text('Select Multiple');
+          await tester.scrollUntilVisible(
+            select,
+            100,
+            scrollable: find
+                .descendant(
+                  of: find.byKey(const Key('blueprint-tools-panel')),
+                  matching: find.byType(Scrollable),
+                )
+                .first,
+          );
+          await tester.pump();
+          await tester.tap(select);
+          await tester.pump();
+          expect(
+            find.byTooltip('Exit selection').hitTestable(),
+            findsOneWidget,
+          );
+          expect(find.byTooltip('Mark selected owned'), findsOneWidget);
+          await tester.tap(find.byTooltip('Exit selection'));
+          await tester.pump();
+        }
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+  testWidgets('Blueprint hydration retains loaded ownership on stream error', (
+    tester,
+  ) async {
+    final controller = StreamController<ArcBlueprintStateSnapshot>();
+    addTearDown(controller.close);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: BlueprintGridScreen(
+          showFirstRunTutorial: false,
+          loadViewMode: () async => ArcBlueprintGridViewMode.fullOverview,
+          saveViewMode: (_) async {},
+          blueprintStateSnapshotStream: () => controller.stream,
+          favouriteLoadoutStream: () => Stream.value(null),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.text('Synchronising Blueprint ownership'), findsOneWidget);
+    controller.add(
+      ArcBlueprintStateSnapshot.loaded(
+        userId: 'test',
+        states: {
+          'tempest': const ArcBlueprintState(
+            blueprintId: 'tempest',
+            owned: true,
+            dupesOwned: 0,
+            priorityRank: 0,
+            updatedAt: null,
+          ),
+        },
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+    controller.addError(StateError('offline'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 20));
+    expect(find.text('Retry sync'), findsOneWidget);
+    expect(
+      find.byKey(const Key('blueprint-authoritative-grid')),
+      findsOneWidget,
+    );
+    final tile = tester
+        .widgetList<BlueprintTile>(find.byType(BlueprintTile))
+        .firstWhere((t) => t.blueprint.id == 'tempest');
+    expect(tile.state.owned, isTrue);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+}

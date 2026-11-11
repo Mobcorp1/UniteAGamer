@@ -4,6 +4,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_card.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_seed_bundle_picker.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/trading/arc_trade_needs_panel.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/trade_items_data.dart';
@@ -87,6 +88,7 @@ class _TradingCreateListingScreenState
   final List<ArcBlueprint> _selectedWantedBlueprints = <ArcBlueprint>[];
   final List<ArcTradeItem> _selectedOfferingAssets = <ArcTradeItem>[];
   final List<ArcTradeItem> _selectedWantedAssets = <ArcTradeItem>[];
+  final List<String> _supplementalWantedItems = <String>[];
   final List<ArcTradeBundleComponent> _fittedWeaponRequirements =
       <ArcTradeBundleComponent>[];
 
@@ -145,6 +147,7 @@ class _TradingCreateListingScreenState
 
   bool get _hasAnyWantedSelection =>
       _selectedWantedBlueprints.isNotEmpty ||
+      _supplementalWantedItems.isNotEmpty ||
       _selectedWantedAssets.isNotEmpty ||
       _fittedWeaponRequirements.isNotEmpty;
 
@@ -719,6 +722,7 @@ class _TradingCreateListingScreenState
     final pieces = <String>[
       ..._selectedWantedBlueprints.map((item) => item.name),
       ..._selectedWantedAssets.map((item) => item.name),
+      ..._supplementalWantedItems,
     ];
     if (pieces.isEmpty) return '';
     if (pieces.length == 1) return pieces.first;
@@ -1376,6 +1380,33 @@ class _TradingCreateListingScreenState
                                   color: AppTheme.neonPink,
                                 ),
                               ],
+                            ),
+                          ),
+                          _sectionCard(
+                            title: 'Tracker Trade Needs',
+                            subtitle: 'Use your actual missing Blueprint, Stencil, Design and Amplification requirements.',
+                            child: ArcTradeNeedsPanel(
+                              missingBlueprints: missingBlueprints,
+                              catalog: _tradeCatalog,
+                              onApply: (selection) {
+                                setState(() {
+                                  _selectedWantedBlueprints
+                                    ..clear()
+                                    ..addAll(missingBlueprints.where(
+                                      (bp) => selection.blueprintIds.contains(bp.id)));
+                                  _selectedWantedAssets
+                                    ..clear()
+                                    ..addAll(_tradeCatalog.where(
+                                      (asset) => selection.assetIds.contains(asset.id)));
+                                  _supplementalWantedItems
+                                    ..clear()
+                                    ..addAll(selection.otherNeeds);
+                                  _openToOffers = false;
+                                  _wantsNothing = false;
+                                  _acceptsBlueprints = true;
+                                  _acceptsResources = true;
+                                });
+                              },
                             ),
                           ),
                           _buildFittedWeaponRequirements(),

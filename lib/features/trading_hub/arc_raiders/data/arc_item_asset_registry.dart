@@ -1,7 +1,7 @@
 class ArcItemAssetRegistry {
   const ArcItemAssetRegistry._();
 
-  static const String runtimeBase = 'assets/arc_raiders/scrappy_resources/';
+  static const String runtimeBase = 'assets/arc_raiders/items/';
   static const String targetCanonicalBase = 'assets/arc_raiders/items/';
 
   // New research artwork is kept in the canonical item directory.
@@ -54,6 +54,28 @@ class ArcItemAssetRegistry {
     'bully-fragmenter': 'bully-fragmenters',
   };
 
+  // Consolidated aliases: same image bytes previously had different file names.
+  // Keep inventory IDs stable while resolving to the single canonical asset.
+  static const Map<String, String> _canonicalFilenameOverrides = <String, String>{
+    'bastion-cells': 'bastion_cell.webp',
+    'explosive-compounds': 'explosive_compound.webp',
+    'fireball-burners': 'fireball_burner.webp',
+    'hornet-drivers': 'hornet_driver.webp',
+    'leaper-pulse-units': 'leaper_pulse_unit.webp',
+    'motors': 'motor.webp',
+    'pop-triggers': 'pop_trigger.webp',
+    'rocketeer-drivers': 'rocketeer_driver.webp',
+    'sentinel-firing-cores': 'sentinel_firing_core.webp',
+    'snitch-scanners': 'snitch_scanner.webp',
+    'steel-springs': 'steel_spring.webp',
+    'surveyor-vaults': 'surveyor_vault.webp',
+    'tick-pods': 'tick_pod.webp',
+    'wasp-drivers': 'wasp_driver.webp',
+  };
+
+  static String _canonicalFileNameForId(String id) =>
+      _canonicalFilenameOverrides[id] ?? '${id.replaceAll('-', '_')}.webp';
+
   static String canonicalId(String itemId) {
     final clean = itemId.trim().toLowerCase().replaceAll(RegExp(r'[_\s]+'), '-');
     return _aliases[clean] ?? clean;
@@ -96,11 +118,11 @@ class ArcItemAssetRegistry {
     if (_pendingArtworkItemIds.contains(id)) {
       return upgradeArtworkPending;
     }
-    return '$runtimeBase${id.replaceAll('-', '_')}.webp';
+    return '$runtimeBase${_canonicalFileNameForId(id)}';
   }
 
   static String targetItemAssetPathForId(String itemId) {
     final id = canonicalId(itemId);
-    return '$targetCanonicalBase${id.replaceAll('-', '_')}.webp';
+    return '$targetCanonicalBase${_canonicalFileNameForId(id)}';
   }
 }

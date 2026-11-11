@@ -178,61 +178,34 @@ class ArcLoadoutLayoutEngine {
     required List<String> savedItems,
     String? legacyAugment,
   }) {
-    final normalised = <String>[];
-    var hasAugment = false;
-
+    // Augments are dedicated loadout equipment, never a Quick Use slot.
+    // Migrate old saved Quick Use augments without discarding the selection.
+    final legacyName = legacyAugment?.trim() ?? '';
+    String augment = '';
+    for (final candidate in ArcLoadoutSeedData.augments) {
+      if (normalise(candidate.name) == normalise(legacyName)) {
+        augment = candidate.name;
+        break;
+      }
+    }
+    final quickUse = <String>[];
     for (final item in savedItems) {
-      if (normalised.length == quickUseSlotCount) break;
-      final value = item.trim();
-      if (value.isEmpty || value == emptySlot) {
-        normalised.add(emptySlot);
-        continue;
-      }
-
-      final option = quickUseOptionForName(value);
-      if (option == null) {
-        normalised.add(emptySlot);
-        continue;
-      }
-      if (option.type == ArcLoadoutSlotType.augment) {
-        if (hasAugment) {
-          normalised.add(emptySlot);
-          continue;
-        }
-        hasAugment = true;
-      }
-      normalised.add(option.name);
-    }
-
-    while (normalised.length < quickUseSlotCount) {
-      normalised.add(emptySlot);
-    }
-
-    final legacy = legacyAugment?.trim() ?? '';
-    final legacyOption = quickUseOptionForName(legacy);
-    if (!hasAugment && legacyOption?.type == ArcLoadoutSlotType.augment) {
-      final emptyIndex = normalised.indexOf(emptySlot);
-      if (emptyIndex != -1) {
-        normalised[emptyIndex] = legacyOption!.name;
-        hasAugment = true;
+      if (quickUse.length == quickUseSlotCount) break;
+      final option = quickUseOptionForName(item.trim());
+      if (option?.type == ArcLoadoutSlotType.augment) {
+        if (augment.isEmpty) augment = option!.name;
+        quickUse.add(emptySlot);
+      } else if (option == null) {
+        quickUse.add(emptySlot);
+      } else {
+        quickUse.add(option.name);
       }
     }
-
-    final augment = normalised
-        .map(quickUseOptionForName)
-        .whereType<ArcLoadoutOption>()
-        .firstWhere(
-          (option) => option.type == ArcLoadoutSlotType.augment,
-          orElse: () => const ArcLoadoutOption(
-            name: '',
-            type: ArcLoadoutSlotType.augment,
-            description: '',
-          ),
-        )
-        .name;
-
+    while (quickUse.length < quickUseSlotCount) {
+      quickUse.add(emptySlot);
+    }
     return ArcQuickUseMigrationResult(
-      quickUse: List<String>.unmodifiable(normalised),
+      quickUse: List<String>.unmodifiable(quickUse),
       augment: augment,
     );
   }

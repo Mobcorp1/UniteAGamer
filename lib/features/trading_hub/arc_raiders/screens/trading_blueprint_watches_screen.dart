@@ -31,8 +31,7 @@ class _TradingBlueprintWatchesScreenState
     extends State<TradingBlueprintWatchesScreen> {
   final TradingRepository _repository = TradingRepository();
   final ArcBlueprintRepository _blueprintRepository = ArcBlueprintRepository();
-  late final Stream<ArcBlueprintStateSnapshot> _ownershipStream =
-      _blueprintRepository.watchMyBlueprintStateSnapshot().asBroadcastStream();
+
 
   String _normalize(String value) {
     return value
@@ -88,7 +87,19 @@ class _TradingBlueprintWatchesScreenState
   }
 
   Future<void> _showCreateSheet() async {
+    final openingUid = _blueprintRepository.currentUid;
+    if (openingUid == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sign in to manage blueprint watches.')),
+      );
+      return;
+    }
+
+    // A broadcast stream does not replay its last event to a new sheet.
+    // Each sheet opening must obtain its own canonical, confirmed state.
+    final ownershipFuture = _blueprintRepository.loadMyBlueprintStates();
     var searchQuery = '';
+    var savingAll = false;
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -115,27 +126,31 @@ class _TradingBlueprintWatchesScreenState
                     fontSize: 22, color: ArcUiTokens.primaryAccent)),
                   const SizedBox(height: AppTheme.spaceM),
                   TextField(
+                    enabled: !savingAll,
                     onChanged: (value) => setModalState(() => searchQuery = value),
                     style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
                     decoration: ArcUiTokens.inputDecoration(labelText: 'Search missing blueprints'),
                   ),
                   const SizedBox(height: AppTheme.spaceM),
                   Expanded(
-                    child: StreamBuilder<ArcBlueprintStateSnapshot>(
-                      stream: _ownershipStream,
+                    child: FutureBuilder<Map<String, ArcBlueprintState>>(
+                      future: ownershipFuture,
                       builder: (context, snapshot) {
-                        final state = snapshot.data;
-                        if (state == null || !state.hasConfirmedLoad ||
-                            state.userId != _blueprintRepository.currentUid) {
+                        if (snapshot.connectionState != ConnectionState.done) {
                           return Center(child: Text(
-                            state?.status == ArcBlueprintStateHydrationStatus.error
-                                ? 'Collections ownership unavailable. Close and retry.'
-                                : 'Synchronising Collections ownership...',
+                            'Synchronising Collections ownership...',
+                            style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+                          ));
+                        }
+                        if (snapshot.hasError || !snapshot.hasData ||
+                            _blueprintRepository.currentUid != openingUid) {
+                          return Center(child: Text(
+                            'Collections ownership unavailable. Close and retry.',
                             style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
                           ));
                         }
                         final query = searchQuery.trim().toLowerCase();
-                        final filtered = ArcCanonicalBlueprintCatalogue.missing(state.states)
+                        final filtered = ArcCanonicalBlueprintCatalogue.missing(snapshot.requireData)
                             .where((bp) => bp.name.toLowerCase().contains(query) ||
                                 bp.category.toLowerCase().contains(query))
                             .toList()..sort((a,b) => a.name.compareTo(b.name));
@@ -143,21 +158,76 @@ class _TradingBlueprintWatchesScreenState
                           query.isEmpty ? 'All catalogue blueprints are owned.' : 'No missing blueprints match your search.',
                           style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
                         ));
-                        return ListView.builder(
-                          itemCount: filtered.length,
-                          itemBuilder: (context, index) {
-                            final bp = filtered[index];
-                            return ListTile(
-                              contentPadding: EdgeInsets.zero,
-                              title: Text(bp.name, style: ArcUiTokens.body(color: ArcUiTokens.textPrimary)),
-                              subtitle: Text(bp.category, style: ArcUiTokens.bodySmall(color: ArcUiTokens.textTertiary)),
-                              trailing: const Icon(Icons.add_alert_outlined, color: ArcUiTokens.secondaryAccent),
-                              onTap: () async {
-                                Navigator.of(sheetContext).pop();
-                                await _createWatch(bp);
-                              },
-                            );
-                          },
+                        return Column(
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text('${filtered.length} missing ${query.isEmpty ? 'blueprints' : 'matches'}',
+                                    style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary)),
+                                ),
+                                TextButton.icon(
+                                  onPressed: savingAll ? null : () async {
+                                    final confirmed = await showDialog<bool>(
+                                      context: sheetContext,
+                                      builder: (dialogContext) => AlertDialog(
+                                        title: const Text('Watch all missing blueprints?'),
+                                        content: Text('Create or reactivate watches for all ${filtered.length} ${query.isEmpty ? 'missing blueprints' : 'matching missing blueprints'}? Existing watches will be reused.'),
+                                        actions: [
+                                          TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: const Text('Cancel')),
+                                          TextButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: const Text('Add all')),
+                                        ],
+                                      ),
+                                    );
+                                    if (confirmed != true || !sheetContext.mounted ||
+                                        _blueprintRepository.currentUid != openingUid) return;
+                                    setModalState(() => savingAll = true);
+                                    var saved = 0;
+                                    for (final blueprint in filtered) {
+                                      if (_blueprintRepository.currentUid != openingUid) break;
+                                      try {
+                                        await _repository.createOrReactivateBlueprintWatch(
+                                          blueprintId: blueprint.id,
+                                          blueprintDisplayName: blueprint.name,
+                                          preferredAcquisitionMethods: const <String>['Trade listings'],
+                                        );
+                                        saved++;
+                                      } catch (_) {
+                                        // Preserve successfully created watches; report partial success.
+                                      }
+                                    }
+                                    if (!sheetContext.mounted) return;
+                                    Navigator.of(sheetContext).pop();
+                                    if (!mounted) return;
+                                    ScaffoldMessenger.of(this.context).showSnackBar(
+                                      SnackBar(content: Text('$saved of ${filtered.length} blueprint watches saved.')),
+                                    );
+                                  },
+                                  icon: const Icon(Icons.playlist_add_check_rounded),
+                                  label: Text(savingAll ? 'Saving...' : 'Watch all ${filtered.length}'),
+                                ),
+                              ],
+                            ),
+                            Expanded(
+                              child: ListView.builder(
+                                itemCount: filtered.length,
+                                itemBuilder: (context, index) {
+                                  final bp = filtered[index];
+                                  return ListTile(
+                                    enabled: !savingAll,
+                                    contentPadding: EdgeInsets.zero,
+                                    title: Text(bp.name, style: ArcUiTokens.body(color: ArcUiTokens.textPrimary)),
+                                    subtitle: Text(bp.category, style: ArcUiTokens.bodySmall(color: ArcUiTokens.textTertiary)),
+                                    trailing: const Icon(Icons.add_alert_outlined, color: ArcUiTokens.secondaryAccent),
+                                    onTap: () async {
+                                      Navigator.of(sheetContext).pop();
+                                      await _createWatch(bp);
+                                    },
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
                         );
                       },
                     ),

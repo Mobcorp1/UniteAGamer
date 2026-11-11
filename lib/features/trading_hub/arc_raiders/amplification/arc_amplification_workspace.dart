@@ -12,7 +12,8 @@ import 'arc_research_quantity_dialog.dart';
 
 /// Full shared progress editor, displayed inside the Research Workstation.
 class ArcAmplificationWorkspace extends StatefulWidget {
-  const ArcAmplificationWorkspace({super.key});
+  const ArcAmplificationWorkspace({super.key, this.initialProjectId});
+  final String? initialProjectId;
   @override
   State<ArcAmplificationWorkspace> createState()=>_ArcAmplificationWorkspaceState();
 }
@@ -20,7 +21,15 @@ class _ArcAmplificationWorkspaceState extends State<ArcAmplificationWorkspace> {
   final ArcAmplificationRepository _repo=ArcAmplificationRepository();
   late final Stream<ArcAmplificationState> _progress;
   @override
-  void initState(){super.initState();_progress=_repo.watch();}
+  void initState(){
+    super.initState();
+    _progress=_repo.watch();
+    _focused=widget.initialProjectId;
+    if (_focused != null) {
+      _openProjects.add(_focused!);
+      _showCatalogue=true;
+    }
+  }
   bool _busy=false;
   String? _focused;
   bool _showCatalogue = false;
@@ -62,6 +71,26 @@ class _ArcAmplificationWorkspaceState extends State<ArcAmplificationWorkspace> {
     final n=await _number(p.objectives[index].label,s.objectiveCount(p.id,index),max:p.objectives[index].target);
     if(n!=null && mounted)await _run((state)=>state.setObjective(p.id,index,n));
   }
+  Future<void> _completeObjective(ArcAmplificationProject p,int index) async {
+    final objective = p.objectives[index];
+    final approved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Mark objective complete?'),
+        content: Text('Confirm you completed "${objective.label}" in ARC Raiders.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Complete')),
+        ],
+      ),
+    );
+    if (approved == true && mounted) {
+      await _run((state) => state.setObjective(p.id,index,objective.target));
+    }
+  }
+
   Future<void> _complete(ArcAmplificationProject p) async {
     final approve=await showDialog<bool>(context:context,builder:(context)=>AlertDialog(
       title:Text('Complete ${p.title}?'),
@@ -87,116 +116,438 @@ class _ArcAmplificationWorkspaceState extends State<ArcAmplificationWorkspace> {
     padding:const EdgeInsets.all(12),
     decoration:BoxDecoration(color:ArcUiTokens.surfacePanel,borderRadius:BorderRadius.circular(12),border:Border.all(color:ArcUiTokens.primaryAccent.withValues(alpha:.24))),child:child);
 
+  String _artwork(ArcAmplificationProject project) {
+    final id = project.id == 'magazine_geometry_101'
+        ? 'magazine_geometry' : project.id;
+    return 'assets/arc_raiders/blueprints/$id.webp';
+  }
+
+  Widget _projectArtwork(ArcAmplificationProject project,
+      {double size = 56, bool completed = false}) {
+    return Container(
+      width: size,
+      height: size,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: ArcUiTokens.surfaceRaised,
+        borderRadius: BorderRadius.circular(9),
+        border: Border.all(
+          color: completed ? ArcUiTokens.success.withValues(alpha: .7)
+              : ArcUiTokens.primaryAccent.withValues(alpha: .34),
+        ),
+      ),
+      child: ColorFiltered(
+        colorFilter: completed
+            ? const ColorFilter.mode(Colors.transparent, BlendMode.dst)
+            : const ColorFilter.matrix(<double>[
+                .28, .59, .11, 0, 0,
+                .28, .59, .11, 0, 0,
+                .28, .59, .11, 0, 0,
+                0, 0, 0, 1, 0,
+              ]),
+        child: Image.asset(
+          _artwork(project),
+          fit: BoxFit.contain,
+          errorBuilder: (_, _, _) => const Icon(
+            Icons.memory_outlined, color: ArcUiTokens.textTertiary,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
-  Widget build(BuildContext context){
+  Widget build(BuildContext context) {
     return StreamBuilder<ArcAmplificationState>(
-      stream:_progress,builder:(context,snapshot){
-        if(snapshot.hasError)return _card(const Text('Research unavailable. Try again.',style:TextStyle(color:ArcUiTokens.warning)));
-        if(!snapshot.hasData)return const Center(child:Padding(padding:EdgeInsets.all(24),child:CircularProgressIndicator()));
-        final s=snapshot.data!;
-        final active=s.active.map(ArcAmplificationCatalog.project).toList();
+      stream: _progress,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return _card(const Text('Research unavailable. Try again.',
+              style: TextStyle(color: ArcUiTokens.warning)));
+        }
+        if (!snapshot.hasData) {
+          return const Center(child: Padding(
+            padding: EdgeInsets.all(24), child: CircularProgressIndicator()));
+        }
+        final s = snapshot.data!;
+        final active = s.active.map(ArcAmplificationCatalog.project).toList();
+        final stepOne = active.where((p) => !s.objectivesDone(p.id)).toList();
+        final stepTwo = active.where((p) => s.objectivesDone(p.id)).toList();
         final inactive = ArcAmplificationCatalog.projects
             .where((p) => !s.active.contains(p.id)).toList(growable: false);
-        return Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-          _card(Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-            Text('AMPLIFICATION PROJECTS',style:ArcUiTokens.display(fontSize:22,color:ArcUiTokens.primaryAccent)),
-            const SizedBox(height:8),
-            Wrap(spacing:7,runSpacing:7,children:[
-              _chip('${active.length}/5 ACTIVE'),
-              _chip('${s.completed.length}/15 UNLOCKED',color:ArcUiTokens.secondaryAccent),
-              _chip('${s.researchPoints} RP',color:ArcUiTokens.success),
-            ]),
-            const SizedBox(height:6),
-            Wrap(spacing:4,children:[
-              TextButton.icon(onPressed:_busy?null:()=>_setPoints(s),icon:const Icon(Icons.edit,size:17),label:const Text('Set RP')),
-              TextButton.icon(onPressed:_busy?null:()=>_study(s),icon:const Icon(Icons.menu_book,size:17),label:const Text('Study items')),
-            ]),
-          ])),
-          const SizedBox(height:12),
-          Row(children:[
-            Expanded(child:Text('ACTIVE RESEARCH',style:ArcUiTokens.display(fontSize:19,color:ArcUiTokens.primaryAccent))),
-            _chip('${active.length} / 5'),
-          ]),
-          const SizedBox(height:8),
-          if(active.isEmpty)
-            _card(const Text('Choose a project below to start researching.',style:TextStyle(color:ArcUiTokens.textSecondary))),
-          for(final p in active) ...[_projectCard(p,s),const SizedBox(height:8)],
-          const SizedBox(height:7),
-          _card(Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-            InkWell(
-              onTap:()=>setState(()=>_showCatalogue=!_showCatalogue),
-              child:Padding(
-                padding:const EdgeInsets.symmetric(vertical:5),
-                child:Row(children:[
-                  const Icon(Icons.science_outlined,color:ArcUiTokens.secondaryAccent),
-                  const SizedBox(width:8),
-                  Expanded(child:Text('BROWSE RESEARCH',style:ArcUiTokens.display(fontSize:19,color:ArcUiTokens.secondaryAccent))),
-                  Text('${inactive.length}',style:const TextStyle(color:ArcUiTokens.textSecondary)),
-                  Icon(_showCatalogue?Icons.expand_less:Icons.expand_more,color:ArcUiTokens.secondaryAccent),
-                ]),
-              ),
-            ),
-            if(_showCatalogue) ...[
-              const SizedBox(height:10),
-              LayoutBuilder(builder:(context,constraints){
-                final width=constraints.maxWidth;
-                final columns=width>=760?3:width>=390?2:1;
-                final itemWidth=(width-8*(columns-1))/columns;
-                return Wrap(spacing:8,runSpacing:8,children:[
-                  for(final p in inactive)
-                    SizedBox(width:itemWidth,child:InkWell(
-                      onTap:()=>setState(()=>_focused=_focused==p.id?null:p.id),
-                      child:Container(
-                        padding:const EdgeInsets.all(10),
-                        decoration:BoxDecoration(
-                          color:ArcUiTokens.surfaceRaised,
-                          borderRadius:BorderRadius.circular(ArcUiTokens.radiusM),
-                          border:Border.all(color:(_focused==p.id?ArcUiTokens.secondaryAccent:ArcUiTokens.primaryAccent).withValues(alpha:.3)),
-                        ),
-                        child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-                          Text(p.title,maxLines:2,overflow:TextOverflow.ellipsis,style:const TextStyle(color:ArcUiTokens.textPrimary,fontWeight:FontWeight.bold,fontSize:12)),
-                          const SizedBox(height:4),
-                          Text(p.weapons.join(' / '),maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:ArcUiTokens.textSecondary,fontSize:10)),
-                          const SizedBox(height:5),
-                          if(s.completed.contains(p.id))
-                            const Text('UNLOCKED',style:TextStyle(color:ArcUiTokens.success,fontWeight:FontWeight.bold,fontSize:11))
-                          else Align(alignment:Alignment.centerRight,child:SizedBox(height:31,child:TextButton(
-                            onPressed:(_busy||!s.canStartMore)?null:()=>_run((state)=>state.start(p.id)),
-                            child:const Text('START'),
-                          ))),
+        return Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1000),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                  decoration: BoxDecoration(
+                    color: ArcUiTokens.surfacePanel,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: ArcUiTokens.primaryAccent.withValues(alpha: .35)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 38, height: 38,
+                        decoration: BoxDecoration(
+                          color: ArcUiTokens.primaryAccent.withValues(alpha: .12),
+                          borderRadius: BorderRadius.circular(9)),
+                        child: const Icon(Icons.bolt_rounded,
+                            color: ArcUiTokens.primaryAccent, size: 24),
+                      ),
+                      const SizedBox(width: 9),
+                      Expanded(child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('AMPLIFICATION PROJECTS', maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: ArcUiTokens.display(fontSize: 17,
+                                color: ArcUiTokens.primaryAccent)),
+                          const SizedBox(height: 3),
+                          Text('${s.stepOneActiveCount}/5 STEP 1  |  '
+                              '${s.stepTwoActiveCount} STEP 2  |  '
+                              '${s.completed.length}/15 COMPLETE  |  '
+                              '${s.researchPoints} RP',
+                            maxLines: 2, overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                color: ArcUiTokens.textSecondary, fontSize: 11)),
+                        ],
+                      )),
+                      PopupMenuButton<String>(
+                        tooltip: 'Research actions',
+                        icon: const Icon(Icons.more_vert_rounded,
+                            color: ArcUiTokens.primaryAccent),
+                        onSelected: (value) {
+                          if (value == 'rp') _setPoints(s);
+                          if (value == 'study') _study(s);
+                        },
+                        itemBuilder: (_) => const [
+                          PopupMenuItem(value: 'rp', child: Text('Set Research Points')),
+                          PopupMenuItem(value: 'study', child: Text('Study items')),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                _activeStageSection(
+                  label: 'STEP 1 - RAID OBJECTIVES',
+                  projects: stepOne,
+                  state: s,
+                  accent: ArcUiTokens.primaryAccent,
+                ),
+                const SizedBox(height: 12),
+                _activeStageSection(
+                  label: 'STEP 2 - MATERIALS & RESEARCH',
+                  projects: stepTwo,
+                  state: s,
+                  accent: ArcUiTokens.secondaryAccent,
+                ),
+                const SizedBox(height: 9),
+                const SizedBox(height: 5),
+                Container(
+                  decoration: BoxDecoration(
+                    color: ArcUiTokens.surfacePanel,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color:
+                        ArcUiTokens.secondaryAccent.withValues(alpha: .34)),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      InkWell(
+                        onTap: () => setState(() => _showCatalogue = !_showCatalogue),
+                        child: Row(children: [
+                          const Icon(Icons.grid_view_rounded,
+                              color: ArcUiTokens.secondaryAccent, size: 20),
+                          const SizedBox(width: 7),
+                          Expanded(child: Text('BROWSE RESEARCH',
+                              style: ArcUiTokens.display(fontSize: 17,
+                                  color: ArcUiTokens.secondaryAccent))),
+                          _chip('${inactive.length} PROJECTS',
+                              color: ArcUiTokens.secondaryAccent),
+                          Icon(_showCatalogue ? Icons.expand_less : Icons.expand_more,
+                              color: ArcUiTokens.secondaryAccent),
                         ]),
                       ),
-                    )),
-                ]);
-              }),
-              if(_focused!=null && !s.active.contains(_focused))
-                Builder(builder:(_){
-                  final p=ArcAmplificationCatalog.project(_focused!);
-                  return Padding(padding:const EdgeInsets.only(top:10),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-                    Text(p.title,style:const TextStyle(color:ArcUiTokens.primaryAccent,fontWeight:FontWeight.bold)),
-                    Text(p.perk,style:const TextStyle(color:ArcUiTokens.textSecondary,fontSize:12)),
-                    for(final objective in p.objectives)
-                      Text('• ${objective.label} · ${objective.target}',style:const TextStyle(color:ArcUiTokens.textSecondary,fontSize:12)),
-                    Text('5,000 RP · ${p.materialCount} × ${p.material}',style:const TextStyle(color:ArcUiTokens.textSecondary,fontSize:12)),
-                  ]));
-                }),
-            ],
-          ])),
-        ]);
-      });
+                      if (_showCatalogue) ...[
+                        const SizedBox(height: 10),
+                        LayoutBuilder(builder: (context, constraints) {
+                          final columns = constraints.maxWidth >= 440 ? 2 : 1;
+                          final tileWidth = (constraints.maxWidth - (columns - 1) * 8)
+                              / columns;
+                          return Wrap(spacing: 8, runSpacing: 8, children: [
+                            for (final p in inactive)
+                              SizedBox(width: tileWidth,
+                                child: InkWell(
+                                  onTap: () => setState(() =>
+                                      _focused = _focused == p.id ? null : p.id),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(7),
+                                    decoration: BoxDecoration(
+                                      color: ArcUiTokens.surfaceRaised,
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(color: (_focused == p.id
+                                          ? ArcUiTokens.secondaryAccent
+                                          : ArcUiTokens.primaryAccent)
+                                          .withValues(alpha: .4)),
+                                    ),
+                                    child: Row(children: [
+                                      _projectArtwork(p, size: 48,
+                                          completed: s.completed.contains(p.id)),
+                                      const SizedBox(width: 7),
+                                      Expanded(child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(p.title.toUpperCase(), maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                              color: ArcUiTokens.textPrimary,
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 11, height: 1.1)),
+                                          const SizedBox(height: 3),
+                                          if (s.completed.contains(p.id))
+                                            const Text('COMPLETE', style: TextStyle(
+                                                color: ArcUiTokens.success, fontSize: 10))
+                                          else SizedBox(height: 26,
+                                            child: TextButton(
+                                              onPressed: (_busy || !s.canStartMore)
+                                                  ? null : () => _run((state) => state.start(p.id)),
+                                              style: TextButton.styleFrom(
+                                                padding: EdgeInsets.zero,
+                                                minimumSize: const Size(48, 26)),
+                                              child: const Text('START', style: TextStyle(fontSize: 11)),
+                                            ),
+                                          ),
+                                        ],
+                                      )),
+                                    ]),
+                                  ),
+                                ),
+                              ),
+                          ]);
+                        }),
+                        if (_focused != null && !s.active.contains(_focused))
+                          Builder(builder: (_) {
+                            final p = ArcAmplificationCatalog.project(_focused!);
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 9),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(p.title.toUpperCase(), style: const TextStyle(
+                                      color: ArcUiTokens.primaryAccent,
+                                      fontWeight: FontWeight.bold)),
+                                  Text(p.perk, style: const TextStyle(
+                                      color: ArcUiTokens.textSecondary, fontSize: 12)),
+                                  for (final objective in p.objectives)
+                                    Text('${objective.label} (${objective.target})',
+                                      style: const TextStyle(
+                                          color: ArcUiTokens.textSecondary, fontSize: 12)),
+                                  Text('5000 RP | ${p.materialCount} x ${p.material}',
+                                    style: const TextStyle(
+                                        color: ArcUiTokens.textSecondary, fontSize: 12)),
+                                ],
+                              ),
+                            );
+                          }),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
+  /// Shared research-stage layout. Its colours and spacing use the same UAG
+  /// theme tokens as other Collections surfaces, without duplicating state.
+  Widget _activeStageSection({
+    required String label,
+    required List<ArcAmplificationProject> projects,
+    required ArcAmplificationState state,
+    required Color accent,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(children: [
+          Expanded(child: Text(label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: ArcUiTokens.display(fontSize: 17, color: accent))),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: .12),
+              border: Border.all(color: accent.withValues(alpha: .65)),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text('${projects.length}${label.startsWith('STEP 1') ? '/5' : ''}',
+              style: TextStyle(color: accent, fontWeight: FontWeight.w700)),
+          ),
+        ]),
+        const SizedBox(height: 7),
+        if (projects.isEmpty)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
+            decoration: BoxDecoration(
+              color: ArcUiTokens.surfacePanel,
+              border: Border.all(color: accent.withValues(alpha: .25)),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text('No projects in this stage',
+              style: const TextStyle(color: ArcUiTokens.textSecondary)),
+          )
+        else
+          LayoutBuilder(builder: (context, constraints) {
+            final columns = constraints.maxWidth >= 850
+                ? 3 : constraints.maxWidth >= 540 ? 2 : 1;
+            final itemWidth = (constraints.maxWidth - (columns - 1) * 9) / columns;
+            return Wrap(
+              spacing: 9,
+              runSpacing: 9,
+              children: [
+                for (final project in projects)
+                  SizedBox(width: itemWidth,
+                    child: _activeCompactCard(project, state, accent)),
+              ],
+            );
+          }),
+        for (final project in projects)
+          if (_openProjects.contains(project.id))
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 680),
+                  child: _projectCard(project, state),
+                ),
+              ),
+            ),
+      ],
+    );
+  }
+
+  Widget _activeCompactCard(
+      ArcAmplificationProject project,
+      ArcAmplificationState state,
+      Color accent) {
+    final expanded = _openProjects.contains(project.id);
+    final completedObjectives = project.objectives.asMap().entries
+        .where((entry) => state.objectiveCount(project.id, entry.key)
+            >= entry.value.target)
+        .length;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(11),
+        onTap: () => setState(() {
+          if (expanded) {
+            _openProjects.remove(project.id);
+          } else {
+            _openProjects.add(project.id);
+          }
+        }),
+        child: Container(
+          height: 94,
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: ArcUiTokens.surfacePanel,
+            borderRadius: BorderRadius.circular(11),
+            border: Border.all(
+              color: accent.withValues(alpha: expanded ? .95 : .62),
+              width: expanded ? 1.8 : 1,
+            ),
+          ),
+          child: Row(children: [
+            _projectArtwork(project, size: 60),
+            const SizedBox(width: 9),
+            Expanded(child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(project.title.toUpperCase(),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: ArcUiTokens.textPrimary,
+                    fontWeight: FontWeight.w700,
+                    height: 1.08,
+                    fontSize: 13,
+                  )),
+                const SizedBox(height: 6),
+                Text('$completedObjectives/${project.objectives.length} OBJECTIVES',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: accent,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 10,
+                  )),
+                if (state.shortage(project.id) > 0)
+                  Text('${state.shortage(project.id)} MATERIALS NEEDED',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: ArcUiTokens.textSecondary,
+                      fontSize: 10,
+                    )),
+              ],
+            )),
+            Icon(expanded ? Icons.expand_less : Icons.expand_more,
+              size: 18, color: accent),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  String _twoLineTitle(String title) {
+    final words = title.toUpperCase().split(' ');
+    if (words.length < 3) return title.toUpperCase();
+    var split = 1;
+    var best = 100000;
+    for (var i = 1; i < words.length; i++) {
+      final left = words.take(i).join(' ').length;
+      final right = words.skip(i).join(' ').length;
+      final difference = (left - right).abs();
+      if (difference < best) {
+        best = difference;
+        split = i;
+      }
+    }
+    return '${words.take(split).join(' ')}\n${words.skip(split).join(' ')}';
+  }
+
   Widget _projectCard(ArcAmplificationProject p,ArcAmplificationState s){
     final complete=s.canComplete(p.id);
     final expanded=_openProjects.contains(p.id);
     final objectivesDone=p.objectives.where((o)=>s.objectiveCount(p.id,p.objectives.indexOf(o))>=o.target).length;
-    return _card(Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 8),
+      decoration: BoxDecoration(
+        color: ArcUiTokens.surfacePanel,
+        borderRadius: BorderRadius.circular(11),
+        border: Border.all(color: ArcUiTokens.primaryAccent.withValues(alpha: .37)),
+      ),
+      child: Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
       InkWell(
         onTap:()=>setState(()=>expanded?_openProjects.remove(p.id):_openProjects.add(p.id)),
         child:Row(children:[
-          Icon(expanded?Icons.expand_less:Icons.expand_more,color:ArcUiTokens.primaryAccent),
-          const SizedBox(width:6),
+          _projectArtwork(p, size: 54, completed: s.completed.contains(p.id)),
+          const SizedBox(width:8),
+          Icon(expanded?Icons.expand_less:Icons.expand_more,color:ArcUiTokens.primaryAccent, size:19),
+          const SizedBox(width:4),
           Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-            Text(p.title.toUpperCase(),maxLines:1,overflow:TextOverflow.ellipsis,style:ArcUiTokens.display(fontSize:18,color:ArcUiTokens.primaryAccent)),
+            Text(_twoLineTitle(p.title),maxLines:2,overflow:TextOverflow.ellipsis,style:ArcUiTokens.display(fontSize:16,color:ArcUiTokens.primaryAccent)),
             Text('$objectivesDone/${p.objectives.length} OBJECTIVES · ${s.shortage(p.id)} MATERIALS NEEDED',style:const TextStyle(color:ArcUiTokens.textSecondary,fontSize:11)),
           ])),
           Icon(complete?Icons.check_circle:Icons.radio_button_unchecked,color:complete?ArcUiTokens.success:ArcUiTokens.textTertiary,size:19),
@@ -216,13 +567,21 @@ class _ArcAmplificationWorkspaceState extends State<ArcAmplificationWorkspace> {
       const SizedBox(height:6),
       for(var i=0;i<p.objectives.length;i++) ...[
         Builder(builder:(context){final o=p.objectives[i]; final current=s.objectiveCount(p.id,i);
-          return Padding(padding:const EdgeInsets.only(top:5),child:InkWell(onTap:_busy?null:()=>_objective(p,i,s),child:Row(children:[
-            Icon(current>=o.target?Icons.check_circle:Icons.radio_button_unchecked,color:current>=o.target?ArcUiTokens.success:ArcUiTokens.textSecondary,size:19),
-            const SizedBox(width:7),
-            Expanded(child:Text(o.label,style:const TextStyle(color:ArcUiTokens.textPrimary,fontSize:12))),
-            Text('$current/${o.target}',style:const TextStyle(color:ArcUiTokens.primaryAccent,fontSize:12)),
-            const Icon(Icons.edit,color:ArcUiTokens.textTertiary,size:16),
-          ])));}),
+          return Padding(padding: const EdgeInsets.only(top: 5), child: Row(children: [
+            Icon(current >= o.target ? Icons.check_circle : Icons.radio_button_unchecked,
+              color: current >= o.target ? ArcUiTokens.success : ArcUiTokens.textSecondary, size: 19),
+            const SizedBox(width: 7),
+            Expanded(child: Text(o.label, maxLines: 2, overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: ArcUiTokens.textPrimary, fontSize: 12))),
+            Text('$current/${o.target}', style: const TextStyle(color: ArcUiTokens.primaryAccent, fontSize: 12)),
+            if (current < o.target) TextButton(
+              onPressed: _busy ? null : () => _completeObjective(p,i),
+              child: const Text('COMPLETE')),
+            IconButton(
+              tooltip: 'Edit partial objective count',
+              onPressed: _busy ? null : () => _objective(p,i,s),
+              icon: const Icon(Icons.edit, color: ArcUiTokens.textTertiary, size: 16)),
+          ]));}),
       ],
       const Divider(),
       Row(children:[

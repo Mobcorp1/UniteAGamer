@@ -99,7 +99,7 @@ class ArcWeaponAttachmentDatabase {
         'Il Toro',
         'Stitcher',
       ],
-      assetPath: 'assets/arc_raiders/scrappy_resources/angled_grip_i.webp',
+      assetPath: 'assets/arc_raiders/items/angled_grip_i.webp',
     ),
     _craftable(
       name: 'Vertical Grip I',

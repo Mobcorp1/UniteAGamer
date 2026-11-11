@@ -33,6 +33,7 @@ void main() {
     '/guides/bantam-stiletto/',
     '/guides/arc-couplers/',
     '/guides/hand-drill/',
+    '/tools/research-material-calculator/',
   ];
 
   String sourcePath(String urlPath) {
@@ -48,13 +49,13 @@ void main() {
     return 'web${urlPath}index.html';
   }
 
-  test('all 27 URLs point to verified custom domain', () {
+  test('all 28 URLs point to verified custom domain', () {
     final sitemap = File('web/sitemap.xml').readAsStringSync();
     final locs = RegExp(
       r'<loc>([^<]+)</loc>',
     ).allMatches(sitemap).map((match) => match.group(1)!).toList();
-    expect(locs.length, 27);
-    expect(locs.toSet().length, 27);
+    expect(locs.length, sitePaths.length);
+    expect(locs.toSet().length, sitePaths.length);
     expect(locs, sitePaths.map((p) => '$canonicalHost$p').toList());
     expect(sitemap, isNot(contains(legacyHost)));
     final robots = File('web/robots.txt').readAsStringSync();

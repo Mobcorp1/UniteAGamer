@@ -49,21 +49,25 @@ class UagAdRuntimeSettings {
       return parsed.clamp(min, max).toInt();
     }
 
+    bool flag(String key, bool fallback) {
+      final raw = value[key];
+      return raw is bool ? raw : fallback;
+    }
+
     return UagAdRuntimeSettings(
       rewardedEnabled:
-          value['rewardedEnabled'] as bool? ?? defaults.rewardedEnabled,
+          flag('rewardedEnabled', defaults.rewardedEnabled),
       rewardedSsvReady:
-          value['rewardedSsvReady'] as bool? ?? defaults.rewardedSsvReady,
-      adsEnabled: value['adsEnabled'] as bool? ?? defaults.adsEnabled,
-      bannerEnabled: value['bannerEnabled'] as bool? ?? defaults.bannerEnabled,
+          flag('rewardedSsvReady', defaults.rewardedSsvReady),
+      adsEnabled: flag('adsEnabled', defaults.adsEnabled),
+      bannerEnabled: flag('bannerEnabled', defaults.bannerEnabled),
       appOpenEnabled:
-          value['appOpenEnabled'] as bool? ?? defaults.appOpenEnabled,
+          flag('appOpenEnabled', defaults.appOpenEnabled),
       interstitialEnabled:
-          value['interstitialEnabled'] as bool? ?? defaults.interstitialEnabled,
+          flag('interstitialEnabled', defaults.interstitialEnabled),
       productionAdsEnabled:
-          value['productionAdsEnabled'] as bool? ??
-          defaults.productionAdsEnabled,
-      forceTestAds: value['forceTestAds'] as bool? ?? defaults.forceTestAds,
+          flag('productionAdsEnabled', defaults.productionAdsEnabled),
+      forceTestAds: flag('forceTestAds', defaults.forceTestAds),
       interstitialEveryTransitions: intValue(
         'interstitialEveryTransitions',
         defaults.interstitialEveryTransitions,

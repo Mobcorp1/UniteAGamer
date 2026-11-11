@@ -67,18 +67,18 @@ void main() {
       }
     });
 
-    test('existing Scrappy and bench artwork paths are unchanged', () {
+    test('Scrappy and bench artwork uses canonical item assets', () {
       expect(
         ArcItemAssetRegistry.assetPathForId('metal_parts'),
-        'assets/arc_raiders/scrappy_resources/metal_parts.webp',
+        'assets/arc_raiders/items/metal_parts.webp',
       );
       expect(
         ArcItemAssetRegistry.dogCollar,
-        'assets/arc_raiders/scrappy_resources/dog_collar.webp',
+        'assets/arc_raiders/items/dog_collar.webp',
       );
       expect(
         ArcItemAssetRegistry.assetPathForId('magnetic_accelerators'),
-        'assets/arc_raiders/scrappy_resources/magnetic_accelerator.webp',
+        'assets/arc_raiders/items/magnetic_accelerator.webp',
       );
     });
   });

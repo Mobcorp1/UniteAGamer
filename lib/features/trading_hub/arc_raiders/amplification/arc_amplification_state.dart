@@ -25,7 +25,7 @@ class ArcAmplificationState {
     if (json == null) return empty;
     final ids = ArcAmplificationCatalog.projects.map((p) => p.id).toSet();
     final parsedActive = ((json['active'] as List?) ?? const [])
-        .whereType<String>().where(ids.contains).toSet().take(ArcAmplificationCatalog.maxActive).toList();
+        .whereType<String>().where(ids.contains).toSet().toList();
     final parsedCompleted = ((json['completed'] as List?) ?? const [])
         .whereType<String>().where(ids.contains).toSet().toList();
     final savedObjectives = <String, List<int>>{};
@@ -93,17 +93,45 @@ class ArcAmplificationState {
     plannedPerks:plannedPerks ?? this.plannedPerks,
     installedPerks:installedPerks ?? this.installedPerks,
   );
-  bool get canStartMore => active.length < ArcAmplificationCatalog.maxActive;
+  /// The five-project capacity applies only to Step 1 research.
+/// Step 2 projects stay active but free their Step 1 slot.
+int get stepOneActiveCount => active.where((id) => !objectivesDone(id)).length;
+int get stepTwoActiveCount => active.where(objectivesDone).length;
+bool get canStartMore => stepOneActiveCount < ArcAmplificationCatalog.maxActive;
   ArcAmplificationState start(String id) {
     ArcAmplificationCatalog.project(id);
     if (completed.contains(id) || active.contains(id)) return this;
-    if (!canStartMore) throw StateError('Only five research projects may be active.');
+    if (!canStartMore) throw StateError('Only five Step 1 research projects may be in progress.');
     return _change(active:[...active,id]);
   }
   ArcAmplificationState pause(String id) {
     if (!active.contains(id)) return this;
     return _change(active:active.where((value) => value != id).toList());
   }
+  /// Resets only one project. Shared RP and stash quantities remain unchanged.
+  ArcAmplificationState resetProject(String id) {
+    ArcAmplificationCatalog.project(id);
+    final nextObjectives = {...objectives}..remove(id);
+    final nextInstalled = <String, List<String>>{
+      for (final entry in installedPerks.entries)
+        entry.key: entry.value.where((value) => value != id).toList(),
+    };
+    return _change(
+      active: active.where((value) => value != id).toList(),
+      completed: completed.where((value) => value != id).toList(),
+      objectives: nextObjectives,
+      installedPerks: nextInstalled,
+    );
+  }
+
+  /// Clears project progress only, preserving shared resource balances.
+  ArcAmplificationState resetAllProjects() => _change(
+    active: <String>[],
+    completed: <String>[],
+    objectives: <String, List<int>>{},
+    installedPerks: <String, List<String>>{},
+  );
+
   int objectiveCount(String id,int index) {
     final project = ArcAmplificationCatalog.project(id);
     RangeError.checkValidIndex(index,project.objectives);
@@ -142,6 +170,30 @@ class ArcAmplificationState {
       completed:[...completed,id],
     );
   }
+  /// Records a player's manual confirmation that all Step 1 objectives were
+  /// completed in-game. No materials or Research Points are fabricated.
+  ArcAmplificationState confirmStepOneInGame(String id) {
+    final project = ArcAmplificationCatalog.project(id);
+    if (completed.contains(id)) return this;
+    var next = active.contains(id) ? this : start(id);
+    for (var i = 0; i < project.objectives.length; i++) {
+      next = next.setObjective(id, i, project.objectives[i].target);
+    }
+    return next;
+  }
+
+  /// Records a research unlock already completed in ARC Raiders.
+  /// This is a manual tracker acknowledgement, not a resource transaction;
+  /// tracked stash quantities and Research Points remain unchanged.
+  ArcAmplificationState confirmResearchCompletedInGame(String id) {
+    ArcAmplificationCatalog.project(id);
+    if (completed.contains(id)) return this;
+    return _change(
+      active: active.where((value) => value != id).toList(),
+      completed: [...completed, id],
+    );
+  }
+
   ArcAmplificationState setPoints(int points) {
     if (points < 0 || points>999999999) throw RangeError.value(points,'points');
     return _change(researchPoints:points);

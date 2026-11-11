@@ -26,23 +26,6 @@ void main() {
     'arc-data-modules',
     'frigate-inductors',
   };
-  const pendingArt = <String>{
-    'radial-presses',
-    'emperor-modulators',
-    'planks',
-    'battered-paperbacks',
-    'mini-pumps',
-    'calculators',
-    'raider-logbooks',
-    'skulker-targeters',
-    'differential-microphones',
-    'exodus-technical-handbooks',
-    'bully-fragmenters',
-    'thermal-shakers',
-    'arc-data-modules',
-    'frigate-inductors',
-  };
-
   test('all 15 newly introduced upgrade resources are mapped explicitly', () {
     final requirements = ArcBenchUpgradeSeedData.requirements
         .cast<ArcBenchUpgradeRequirement>();
@@ -55,17 +38,21 @@ void main() {
         .map((requirement) => requirement.itemId)
         .toSet();
     expect(introduced, newResources);
-    expect(pendingArt.length, 14);
-    expect(newResources.difference(pendingArt), <String>{
-      'magnetic-accelerators',
-    });
-
+    // Artwork integration may replace a placeholder with a named real asset.
+    // Protect completeness, identity mapping and file existence instead of
+    // requiring all later upgrades to regress to placeholder artwork.
     for (final id in introduced) {
       final asset = ArcItemAssetRegistry.assetPathForId(id);
-      final expected = id == 'magnetic-accelerators'
-          ? 'assets/arc_raiders/scrappy_resources/magnetic_accelerator.webp'
-          : ArcItemAssetRegistry.upgradeArtworkPending;
-      expect(asset, expected, reason: id);
+      expect(asset, isNotEmpty, reason: id);
+      expect(asset, startsWith('assets/arc_raiders/'), reason: id);
+      expect(asset, isNot(contains('..')), reason: id);
+      if (id == 'magnetic-accelerators') {
+        expect(
+          asset,
+          'assets/arc_raiders/items/magnetic_accelerator.webp',
+          reason: id,
+        );
+      }
       expect(File(asset).existsSync(), isTrue, reason: 'Missing $id: $asset');
       final resource = ArcMapUpgradeResourceCatalog.byItemId(id);
       expect(resource, isNotNull, reason: id);
@@ -73,7 +60,7 @@ void main() {
     }
     expect(
       ArcItemAssetRegistry.assetPathForId('firefly-burner'),
-      'assets/arc_raiders/scrappy_resources/firefly_burner.webp',
+      'assets/arc_raiders/items/firefly_burner.webp',
     );
   });
 

@@ -53,7 +53,7 @@ void main() {
     ]) {
       expect(source, contains(asset));
       expect(
-        File('assets/arc_raiders/scrappy_resources/$asset').existsSync(),
+        File('assets/arc_raiders/items/$asset').existsSync(),
         isTrue,
         reason: 'Missing canonical nature asset: $asset',
       );

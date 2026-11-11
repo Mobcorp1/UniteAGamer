@@ -108,11 +108,11 @@ void main() {
   test('PASS 355 nature admin markers reuse scrappy resource artwork', () {
     expect(
       ArcAdminMarkerVisualRegistry.assetPathForSubtype('great_mullein'),
-      'assets/arc_raiders/scrappy_resources/great_mullein.webp',
+      'assets/arc_raiders/items/great_mullein.webp',
     );
     expect(
       ArcAdminMarkerVisualRegistry.assetPathForSubtype('mushroom'),
-      'assets/arc_raiders/scrappy_resources/mushrooms.webp',
+      'assets/arc_raiders/items/mushrooms.webp',
     );
   });
 

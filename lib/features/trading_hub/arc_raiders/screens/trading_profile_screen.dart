@@ -731,7 +731,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
     final percent = profileCompletion.completionPercent;
 
     return _profilePanel(
-      accent: complete ? Colors.lightGreenAccent : AppTheme.neonPink,
+      accent: AppTheme.neonCyan,
       title: 'Profile Completion',
       icon: complete ? Icons.verified_rounded : Icons.fact_check_rounded,
       child: Column(
@@ -751,15 +751,13 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
                       strokeWidth: 7,
                       backgroundColor: Colors.white10,
                       color: complete
-                          ? Colors.lightGreenAccent
+                          ? AppTheme.neonCyan
                           : AppTheme.neonPink,
                     ),
                     Text(
                       '$percent%',
                       style: TextStyle(
-                        color: complete
-                            ? Colors.lightGreenAccent
-                            : AppTheme.neonPink,
+                        color: ArcUiTokens.textPrimary,
                         fontWeight: FontWeight.w900,
                         fontSize: 17,
                       ),
@@ -778,9 +776,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
                           : '${profileCompletion.completedFieldCount} OF ${profileCompletion.requiredFieldCount} COMPLETE',
                       style: ArcUiTokens.sectionTitle(
                         fontSize: 16,
-                        color: complete
-                            ? Colors.lightGreenAccent
-                            : ArcUiTokens.textPrimary,
+                        color: ArcUiTokens.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 4),

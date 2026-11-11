@@ -38,7 +38,13 @@ void main() {
     );
 
     expect(source, contains('final viewportWidth = fittedWidth;'));
-    expect(source, contains('const commandRailWidth = 106.0;'));
+    if (source.contains("'blueprint-landscape-fitted-dock'")) {
+      expect(source, contains("key: const Key('blueprint-dock-fitted-ad')"));
+      expect(source, contains("keyName: 'blueprint-dock-camera'"));
+      expect(source, contains('const verticalColumns = 2;'));
+    } else {
+      expect(source, contains('const commandRailWidth = 106.0;'));
+    }
     expect(source, contains('mainAxisSize: MainAxisSize.min'));
     expect(
       source,

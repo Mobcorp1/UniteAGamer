@@ -8,16 +8,23 @@ enum ArcAdAccessTier { free, traderPro, elite }
 /// Opt-in fixed outer geometry. Creative load/failure never changes this lane.
 /// Eligibility remains owned by the existing commercial/route policy.
 class ArcBlueprintBannerSlot extends StatelessWidget {
-  const ArcBlueprintBannerSlot({super.key, this.eligibility, this.banner});
+  const ArcBlueprintBannerSlot({
+    super.key,
+    this.eligibility,
+    this.banner,
+    this.placementRoute,
+  });
 
   final ValueListenable<bool>? eligibility;
   final Widget? banner;
+  /// Explicit route for nested Collections tabs. Does not bypass account policy.
+  final String? placementRoute;
 
   Widget _slot(bool eligible) => eligible
       ? SizedBox(
           key: const Key('blueprint-banner-slot'),
           height: 74,
-          child: banner ?? const ArcAdBannerCard(),
+          child: banner ?? ArcAdBannerCard(placementRoute: placementRoute),
         )
       : const SizedBox.shrink();
 
@@ -31,7 +38,12 @@ class ArcBlueprintBannerSlot extends StatelessWidget {
     }
     return AnimatedBuilder(
       animation: UagAdService.instance,
-      builder: (_, _) => _slot(UagAdService.instance.canShowBanner),
+      builder: (_, _) {
+        final service = UagAdService.instance;
+        return _slot(placementRoute == null
+            ? service.canShowBanner
+            : service.canShowBannerForPlacement(placementRoute!));
+      },
     );
   }
 }
@@ -46,10 +58,12 @@ class ArcAdBannerCard extends StatelessWidget {
     super.key,
     this.tier = ArcAdAccessTier.free,
     this.showForTraderPro = false,
+    this.placementRoute,
   });
 
   final ArcAdAccessTier tier;
   final bool showForTraderPro;
+  final String? placementRoute;
 
   static bool shouldShowForTier({
     required ArcAdAccessTier tier,
@@ -73,6 +87,7 @@ class ArcAdBannerCard extends StatelessWidget {
         showForTraderPro: showForTraderPro,
       ),
       margin: const EdgeInsets.fromLTRB(10, 6, 10, 8),
+      placementRoute: placementRoute,
     );
   }
 }

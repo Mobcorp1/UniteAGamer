@@ -48,7 +48,6 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
-  flutter_native_splash: ^2.4.4
   flutter_launcher_icons: ^0.14.4
 
 flutter_launcher_icons:
@@ -74,11 +73,11 @@ flutter:
 
   assets:
     - assets/arc_raiders/
+    - assets/arc_raiders/amplification/
     - assets/icon/
     - assets/uag/avatars/
     - assets/arc_raiders/banners/
     - assets/arc_raiders/blueprints/
-    - assets/arc_raiders/scrappy_resources/
     - assets/arc_raiders/items/
     - assets/arc_raiders/map_filter_icons/
     - assets/arc_raiders/operations/

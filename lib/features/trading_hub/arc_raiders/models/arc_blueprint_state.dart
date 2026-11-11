@@ -92,9 +92,13 @@ class ArcBlueprintState {
             ? legacyOwnedCount - 1
             : 0);
 
-    final explicitOwned = map['owned'] as bool?;
-    final explicitWanted = map['wanted'] as bool?;
-    final explicitAvailable = map['availableToTrade'] as bool?;
+    // Legacy and malformed Firestore payloads may contain numeric values.
+    // Only an explicit boolean is a trustworthy ownership signal.
+    final explicitOwned = map['owned'] is bool ? map['owned'] as bool : null;
+    final explicitWanted = map['wanted'] is bool ? map['wanted'] as bool : null;
+    final explicitAvailable = map['availableToTrade'] is bool
+        ? map['availableToTrade'] as bool
+        : null;
     final hasOwnershipSignal =
         explicitOwned != null ||
         legacyOwnedCount != null ||

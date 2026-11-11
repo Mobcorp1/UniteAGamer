@@ -32,7 +32,9 @@ class ArcLoadoutAssetRegistry {
     'torrente': 'assets/arc_raiders/blueprints/torrente.webp',
     'venator': 'assets/arc_raiders/blueprints/venator.webp',
     'vulcano': 'assets/arc_raiders/blueprints/vulcano.webp',
-  };
+  
+    'renegade': 'assets/arc_raiders/blueprints/renegade.webp',
+};
 
   static const Map<String, String> _attachmentAssets = {
     'anvil splitter': 'assets/arc_raiders/blueprints/anvil-splitter.webp',

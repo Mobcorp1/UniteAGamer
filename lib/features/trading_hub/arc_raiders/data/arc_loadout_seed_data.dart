@@ -61,6 +61,8 @@ class ArcLoadoutSeedData {
     ArcLoadoutWeaponSpec(
       name: 'Arpeggio',
       category: 'Assault Rifle',
+      craftable: true,
+      gunsmithLevel: 2,
       role: 'Flexible medium-range rifle platform',
       slots: [
         'Muzzle Mod',

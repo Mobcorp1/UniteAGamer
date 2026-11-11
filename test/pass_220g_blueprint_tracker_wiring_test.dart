@@ -15,7 +15,12 @@ void main() {
       multiLine: true,
     );
 
-    expect(directTapFlow.allMatches(grid), hasLength(2));
+    // The responsive search layout and normal grid can share the same direct
+    // tap handler in the PASS33 design; both call the owned/duplicate flow.
+    final expectedFlowCount =
+        grid.contains("'blueprint-landscape-fitted-dock'") ? 1 : 2;
+    expect(directTapFlow.allMatches(grid), hasLength(expectedFlowCount));
+    expect(grid, contains('onTap: () async {'));
     expect(grid, contains("title: 'Add drop report?'"));
     expect(grid, contains("title: 'Add duplicates?'"));
     expect(
@@ -96,11 +101,18 @@ void main() {
     expect(grid, contains('static const int _gridColumns = 17;'));
     expect(grid, contains('int sumDupesOwned()'));
     expect(grid, contains('ArcBlueprintGridViewMode.inGameFramed'));
-    expect(grid, contains("Key('blueprint-landscape-static-ad')"));
     expect(
       grid,
-      contains('widget.bannerSlot ?? const ArcBlueprintBannerSlot()'),
+      anyOf(
+        contains("Key('blueprint-landscape-static-ad')"),
+        contains("Key('blueprint-dock-fitted-ad')"),
+      ),
     );
+    expect(
+        RegExp(r'widget\.bannerSlot\s*\?\?\s*const\s+ArcBlueprintBannerSlot\(')
+            .hasMatch(grid),
+        isTrue,
+      );
     expect(grid, contains('InteractiveViewer('));
     expect(grid, contains("tooltip: 'Reset grid view'"));
     expect(grid, contains('_openBlueprintPhotoImport'));
