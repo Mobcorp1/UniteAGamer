@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/trading_offer.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trading_make_offer_screen.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trading_trade_sessions_screen.dart';
-import 'package:uag_traders_hub/widgets/static_watermark.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_offer.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_make_offer_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_trade_sessions_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_cosmetic_identity_strip.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class TradingMyOffersScreen extends StatelessWidget {
   static const routeName = '/trading-hub/arc-raiders/offers';
@@ -31,11 +33,17 @@ class TradingMyOffersScreen extends StatelessWidget {
 
   String _bundleText(TradingOffer offer) {
     final parts = <String>[];
-    if (offer.smallBundles > 0) parts.add('${offer.smallBundles}×10');
-    if (offer.mediumBundles > 0) parts.add('${offer.mediumBundles}×50');
-    if (offer.largeBundles > 0) parts.add('${offer.largeBundles}×100');
+    if (offer.smallBundles > 0) {
+      parts.add('${offer.smallBundles}x10');
+    }
+    if (offer.mediumBundles > 0) {
+      parts.add('${offer.mediumBundles}x50');
+    }
+    if (offer.largeBundles > 0) {
+      parts.add('${offer.largeBundles}x100');
+    }
     if (parts.isEmpty) return 'No seed bundles';
-    return '${parts.join(' • ')} (${offer.seedTotal} total)';
+    return '${parts.join(' - ')} (${offer.seedTotal} total)';
   }
 
   Future<bool> _confirmAction({
@@ -49,21 +57,30 @@ class TradingMyOffersScreen extends StatelessWidget {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          backgroundColor: AppTheme.tradingCardBackground,
-          title: Text(title, style: const TextStyle(color: Colors.white)),
-          content: Text(message, style: const TextStyle(color: Colors.white70)),
+          backgroundColor: ArcUiTokens.surfaceOverlay,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
+            side: BorderSide(color: confirmColor.withValues(alpha: 0.30)),
+          ),
+          title: Text(
+            title,
+            style: ArcUiTokens.sectionTitle(fontSize: 18, color: confirmColor),
+          ),
+          content: Text(
+            message,
+            style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
+          ),
           actions: [
             TextButton(
+              style: ArcUiTokens.textButtonStyle(accent: confirmColor),
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text(
-                'Back',
-                style: TextStyle(color: Colors.white70),
-              ),
+              child: const Text('Back'),
             ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: confirmColor,
-                foregroundColor: Colors.black,
+            TextButton(
+              style: ArcUiTokens.textButtonStyle(
+                accent: confirmColor,
+                primary: true,
               ),
               onPressed: () => Navigator.of(dialogContext).pop(true),
               child: Text(confirmText),
@@ -119,9 +136,9 @@ class TradingMyOffersScreen extends StatelessWidget {
           builder: (_) => TradingMakeOfferScreen(listing: listing),
         ),
       );
-    } catch (error) {
+    } catch (_) {
       messenger.showSnackBar(
-        SnackBar(content: Text('Could not open renegotiation: $error')),
+        SnackBar(content: Text('Could not open renegotiation. Try again.')),
       );
     }
   }
@@ -133,14 +150,25 @@ class TradingMyOffersScreen extends StatelessWidget {
   ) {
     final uid = repository.currentUid;
     final isSentByMe = uid == offer.senderUid;
-    final canAction = offer.status == TradingOfferStatus.pending;
+    final effectiveStatus = offer.effectiveStatus;
+    final canAction = effectiveStatus == TradingOfferStatus.pending;
     final messenger = ScaffoldMessenger.of(context);
+    final counterpartyUid = isSentByMe ? offer.receiverUid : offer.senderUid;
+    final counterpartyName = isSentByMe
+        ? 'Listing owner'
+        : (offer.senderName.isEmpty ? 'Offer sender' : offer.senderName);
+    final counterpartySubtitle = isSentByMe
+        ? 'Receiving trader'
+        : [
+            if (offer.senderGamerTag.isNotEmpty) offer.senderGamerTag,
+            if (offer.senderPlatform.isNotEmpty) offer.senderPlatform,
+          ].join(' - ');
 
     final canRenegotiate =
         isSentByMe &&
-        (offer.status == TradingOfferStatus.declined ||
-            offer.status == TradingOfferStatus.cancelled ||
-            offer.status == TradingOfferStatus.expired);
+        (effectiveStatus == TradingOfferStatus.declined ||
+            effectiveStatus == TradingOfferStatus.cancelled ||
+            effectiveStatus == TradingOfferStatus.expired);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
@@ -166,12 +194,12 @@ class TradingMyOffersScreen extends StatelessWidget {
                   Container(
                     padding: AppTheme.pillPadding,
                     decoration: AppTheme.tradingPillDecoration(
-                      color: _statusColor(offer.status),
+                      color: _statusColor(effectiveStatus),
                     ),
                     child: Text(
                       offer.statusLabel,
                       style: TextStyle(
-                        color: _statusColor(offer.status),
+                        color: _statusColor(effectiveStatus),
                         fontWeight: FontWeight.w700,
                         fontSize: 12,
                       ),
@@ -180,35 +208,15 @@ class TradingMyOffersScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 12),
-              Text(
-                'Blueprints: ${offer.offeredBlueprintText.isEmpty ? 'None listed' : offer.offeredBlueprintText}',
-                style: const TextStyle(color: Colors.white),
+              TradingCosmeticIdentityStrip(
+                repository: repository,
+                uid: counterpartyUid,
+                displayName: counterpartyName,
+                subtitle: counterpartySubtitle,
+                compact: true,
               ),
-              const SizedBox(height: 6),
-              Text(
-                'Seeds: ${_bundleText(offer)}',
-                style: TextStyle(color: AppTheme.tradingMutedText),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Resources: ${offer.includesResources ? offer.resourcesText : 'None'}',
-                style: TextStyle(color: AppTheme.tradingMutedText),
-              ),
-              if (offer.note.trim().isNotEmpty) ...[
-                const SizedBox(height: 6),
-                Text(
-                  'Message: ${offer.note}',
-                  style: TextStyle(color: AppTheme.tradingFaintText),
-                ),
-              ],
-              const SizedBox(height: 6),
-              Text(
-                'Listing ID: ${offer.listingId}',
-                style: TextStyle(
-                  color: AppTheme.tradingFaintText,
-                  fontSize: 12,
-                ),
-              ),
+              const SizedBox(height: 12),
+              _offerPayloadGrid(offer),
               if (offer.status == TradingOfferStatus.accepted) ...[
                 const SizedBox(height: 14),
                 OutlinedButton.icon(
@@ -245,10 +253,12 @@ class TradingMyOffersScreen extends StatelessWidget {
                             messenger.showSnackBar(
                               const SnackBar(content: Text('Offer cancelled.')),
                             );
-                          } catch (error) {
+                          } catch (_) {
                             messenger.showSnackBar(
                               SnackBar(
-                                content: Text('Could not cancel offer: $error'),
+                                content: Text(
+                                  'Could not cancel offer. Try again.',
+                                ),
                               ),
                             );
                           }
@@ -274,11 +284,11 @@ class TradingMyOffersScreen extends StatelessWidget {
                             messenger.showSnackBar(
                               const SnackBar(content: Text('Offer declined.')),
                             );
-                          } catch (error) {
+                          } catch (_) {
                             messenger.showSnackBar(
                               SnackBar(
                                 content: Text(
-                                  'Could not decline offer: $error',
+                                  'Could not decline offer. Try again.',
                                 ),
                               ),
                             );
@@ -309,10 +319,12 @@ class TradingMyOffersScreen extends StatelessWidget {
                                 ),
                               ),
                             );
-                          } catch (error) {
+                          } catch (_) {
                             messenger.showSnackBar(
                               SnackBar(
-                                content: Text('Could not accept offer: $error'),
+                                content: Text(
+                                  'Could not accept offer. Try again.',
+                                ),
                               ),
                             );
                           }
@@ -321,6 +333,45 @@ class TradingMyOffersScreen extends StatelessWidget {
                     ],
                   ],
                 ),
+                if (!isSentByMe) ...[
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () async {
+                        final confirmed = await _confirmAction(
+                          context: context,
+                          title: 'Decline all pending offers?',
+                          message:
+                              'This will decline every pending offer currently attached to this listing.',
+                          confirmText: 'Decline All',
+                          confirmColor: Colors.redAccent,
+                        );
+                        if (!confirmed) return;
+                        try {
+                          await repository.declineAllPendingOffersForListing(
+                            offer.listingId,
+                          );
+                          messenger.showSnackBar(
+                            const SnackBar(
+                              content: Text('Pending offers declined.'),
+                            ),
+                          );
+                        } catch (_) {
+                          messenger.showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Could not decline all offers. Try again.',
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.playlist_remove_rounded),
+                      label: const Text('Decline All Pending Offers'),
+                    ),
+                  ),
+                ],
               ],
               if (canRenegotiate) ...[
                 const SizedBox(height: 14),
@@ -341,47 +392,141 @@ class TradingMyOffersScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBody(BuildContext context, TradingRepository repository) {
-    return Stack(
-      children: [
-        const Positioned.fill(child: StaticWatermark()),
-        SafeArea(
-          child: StreamBuilder<List<TradingOffer>>(
-            stream: repository.watchMyOffers(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(
-                  child: CircularProgressIndicator(color: AppTheme.neonCyan),
-                );
-              }
-
-              final offers = snapshot.data ?? const <TradingOffer>[];
-              if (offers.isEmpty) {
-                return Center(
-                  child: Padding(
-                    padding: AppTheme.pagePadding,
-                    child: Text(
-                      'No offers yet. Send offers from listing details and manage them here.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: AppTheme.tradingMutedText,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                );
-              }
-
-              return ListView.builder(
-                padding: AppTheme.pagePadding,
-                itemCount: offers.length,
-                itemBuilder: (context, index) =>
-                    _offerCard(context, repository, offers[index]),
-              );
-            },
-          ),
+  Widget _offerPayloadGrid(TradingOffer offer) {
+    final panels = [
+      _payloadPanel(
+        label: 'BLUEPRINTS',
+        value: offer.offeredBlueprintText.isEmpty
+            ? 'None listed'
+            : offer.offeredBlueprintText,
+        icon: Icons.grid_view_rounded,
+        accent: ArcUiTokens.secondaryAccent,
+      ),
+      _payloadPanel(
+        label: 'SEEDS',
+        value: _bundleText(offer),
+        icon: Icons.grain_rounded,
+        accent: ArcUiTokens.warning,
+      ),
+      _payloadPanel(
+        label: 'RESOURCES',
+        value: offer.includesResources ? offer.resourcesText : 'None',
+        icon: Icons.inventory_2_outlined,
+        accent: ArcUiTokens.primaryAccent,
+      ),
+      if (offer.note.trim().isNotEmpty)
+        _payloadPanel(
+          label: 'MESSAGE',
+          value: offer.note.trim(),
+          icon: Icons.chat_bubble_outline_rounded,
+          accent: ArcUiTokens.info,
         ),
-      ],
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final twoColumns = constraints.maxWidth >= 620;
+        if (!twoColumns) {
+          return Column(
+            children: [
+              for (final panel in panels) ...[
+                panel,
+                if (panel != panels.last) const SizedBox(height: 8),
+              ],
+            ],
+          );
+        }
+        return Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final panel in panels)
+              SizedBox(width: (constraints.maxWidth - 8) / 2, child: panel),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _payloadPanel({
+    required String label,
+    required String value,
+    required IconData icon,
+    required Color accent,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        accent: accent,
+        borderOpacity: 0.18,
+        radius: ArcUiTokens.radiusM,
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: accent, size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: ArcUiTokens.label(color: accent)),
+                const SizedBox(height: 3),
+                Text(
+                  value,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: ArcUiTokens.body(
+                    color: ArcUiTokens.textPrimary,
+                    weight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBody(BuildContext context, TradingRepository repository) {
+    return ArcRaidersScreenShell(
+      showAdBanner: false,
+      child: SafeArea(
+        child: StreamBuilder<List<TradingOffer>>(
+          stream: repository.watchMyOffers(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: CircularProgressIndicator(color: AppTheme.neonCyan),
+              );
+            }
+
+            final offers = snapshot.data ?? const <TradingOffer>[];
+            if (offers.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
+                  child: const ArcRaidersStatePanel(
+                    title: 'No active offers',
+                    message:
+                        'Send offers from listing details and manage replies here.',
+                    icon: Icons.local_offer_outlined,
+                    accent: ArcUiTokens.secondaryAccent,
+                  ),
+                ),
+              );
+            }
+
+            return ListView.builder(
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
+              itemCount: offers.length,
+              itemBuilder: (context, index) =>
+                  _offerCard(context, repository, offers[index]),
+            );
+          },
+        ),
+      ),
     );
   }
 
@@ -394,8 +539,10 @@ class TradingMyOffersScreen extends StatelessWidget {
     }
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      extendBody: true,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
         title: Text('My Offers', style: AppTheme.tradingHeading(fontSize: 25)),
       ),
       body: _buildBody(context, repository),

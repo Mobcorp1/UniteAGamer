@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_poi_data.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_drop_report.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_stats.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_poi_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_drop_report.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_stats.dart';
 
 @immutable
 class ArcPoiDropStats {
@@ -61,8 +61,15 @@ class ArcPoiDropStats {
     required String poiName,
     required List<ArcBlueprintDropReport> reports,
   }) {
-    if (reports.isEmpty) {
-      return ArcPoiDropStats.empty(mapName: mapName, poiId: poiId, poiName: poiName);
+    final intelligenceReports = reports
+        .where((report) => report.countsForMapIntelligence)
+        .toList(growable: false);
+    if (intelligenceReports.isEmpty) {
+      return ArcPoiDropStats.empty(
+        mapName: mapName,
+        poiId: poiId,
+        poiName: poiName,
+      );
     }
 
     final blueprintCounts = <String, int>{};
@@ -71,16 +78,28 @@ class ArcPoiDropStats {
     final blueprintLabels = <String, String>{};
     DateTime? lastReportedAt;
 
-    for (final report in reports) {
-      blueprintCounts.update(report.blueprintId, (value) => value + 1, ifAbsent: () => 1);
+    for (final report in intelligenceReports) {
+      blueprintCounts.update(
+        report.blueprintId,
+        (value) => value + 1,
+        ifAbsent: () => 1,
+      );
       blueprintLabels[report.blueprintId] = report.blueprintId;
 
       final conditionLabel = (report.conditionLabel?.trim().isNotEmpty ?? false)
           ? report.conditionLabel!.trim()
           : 'No Special Condition';
-      conditionCounts.update(conditionLabel, (value) => value + 1, ifAbsent: () => 1);
+      conditionCounts.update(
+        conditionLabel,
+        (value) => value + 1,
+        ifAbsent: () => 1,
+      );
 
-      sourceCounts.update(report.sourceType.label, (value) => value + 1, ifAbsent: () => 1);
+      sourceCounts.update(
+        report.sourceType.label,
+        (value) => value + 1,
+        ifAbsent: () => 1,
+      );
 
       final createdAt = report.createdAt;
       if (createdAt != null &&
@@ -89,7 +108,7 @@ class ArcPoiDropStats {
       }
     }
 
-    final totalReports = reports.length;
+    final totalReports = intelligenceReports.length;
 
     List<ArcStatsBreakdownItem> buildBreakdown(
       Map<String, int> counts, {
@@ -108,13 +127,18 @@ class ArcPoiDropStats {
               key: entry.key,
               label: labels?[entry.key] ?? entry.key,
               count: entry.value,
-              percentage: totalReports <= 0 ? 0 : (entry.value / totalReports) * 100,
+              percentage: totalReports <= 0
+                  ? 0
+                  : (entry.value / totalReports) * 100,
             ),
           )
           .toList(growable: false);
     }
 
-    final blueprintBreakdown = buildBreakdown(blueprintCounts, labels: blueprintLabels);
+    final blueprintBreakdown = buildBreakdown(
+      blueprintCounts,
+      labels: blueprintLabels,
+    );
     final conditionBreakdown = buildBreakdown(conditionCounts);
     final sourceBreakdown = buildBreakdown(sourceCounts);
 
@@ -127,9 +151,15 @@ class ArcPoiDropStats {
       blueprintBreakdown: blueprintBreakdown,
       conditionBreakdown: conditionBreakdown,
       sourceBreakdown: sourceBreakdown,
-      topBlueprintId: blueprintBreakdown.isEmpty ? null : blueprintBreakdown.first.key,
-      topBlueprintLabel: blueprintBreakdown.isEmpty ? null : blueprintBreakdown.first.label,
-      topConditionLabel: conditionBreakdown.isEmpty ? null : conditionBreakdown.first.label,
+      topBlueprintId: blueprintBreakdown.isEmpty
+          ? null
+          : blueprintBreakdown.first.key,
+      topBlueprintLabel: blueprintBreakdown.isEmpty
+          ? null
+          : blueprintBreakdown.first.label,
+      topConditionLabel: conditionBreakdown.isEmpty
+          ? null
+          : conditionBreakdown.first.label,
       lastReportedAt: lastReportedAt,
       updatedAt: DateTime.now(),
     );
@@ -142,9 +172,15 @@ class ArcPoiDropStats {
       'poiId': poiId,
       'poiName': poiName,
       'totalReports': totalReports,
-      'blueprintBreakdown': blueprintBreakdown.map((item) => item.toMap()).toList(growable: false),
-      'conditionBreakdown': conditionBreakdown.map((item) => item.toMap()).toList(growable: false),
-      'sourceBreakdown': sourceBreakdown.map((item) => item.toMap()).toList(growable: false),
+      'blueprintBreakdown': blueprintBreakdown
+          .map((item) => item.toMap())
+          .toList(growable: false),
+      'conditionBreakdown': conditionBreakdown
+          .map((item) => item.toMap())
+          .toList(growable: false),
+      'sourceBreakdown': sourceBreakdown
+          .map((item) => item.toMap())
+          .toList(growable: false),
       'topBlueprintId': topBlueprintId,
       'topBlueprintLabel': topBlueprintLabel,
       'topConditionLabel': topConditionLabel,
@@ -158,13 +194,18 @@ class ArcPoiDropStats {
       if (raw is! List) return const <ArcStatsBreakdownItem>[];
       return raw
           .whereType<Map>()
-          .map((item) => ArcStatsBreakdownItem.fromMap(Map<String, dynamic>.from(item)))
+          .map(
+            (item) =>
+                ArcStatsBreakdownItem.fromMap(Map<String, dynamic>.from(item)),
+          )
           .toList(growable: false);
     }
 
     DateTime? fromMillis(dynamic value) {
       if (value is int) return DateTime.fromMillisecondsSinceEpoch(value);
-      if (value is num) return DateTime.fromMillisecondsSinceEpoch(value.toInt());
+      if (value is num) {
+        return DateTime.fromMillisecondsSinceEpoch(value.toInt());
+      }
       return null;
     }
 

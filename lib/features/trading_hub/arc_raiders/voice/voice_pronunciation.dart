@@ -2,7 +2,14 @@ class UagVoicePronunciation {
   const UagVoicePronunciation._();
 
   static const Map<String, List<String>> itemAliases = <String, List<String>>{
-    'dolabra': <String>['dalabra', 'doll abra', 'dol abra', 'doh labra', 'do labra', 'doll labra'],
+    'dolabra': <String>[
+      'dalabra',
+      'doll abra',
+      'dol abra',
+      'doh labra',
+      'do labra',
+      'doll labra',
+    ],
     'aphelion': <String>['a feelion', 'ap helium', 'a phelium', 'aph elion'],
     'arpeggio': <String>['ar pedgio', 'ar peg io', 'arpegeo', 'ar peggio'],
     'venator': <String>['ven ata', 'venetor', 'venater', 'ven ator'],

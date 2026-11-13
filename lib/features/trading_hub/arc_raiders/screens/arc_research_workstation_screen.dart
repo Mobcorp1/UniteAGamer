@@ -1,0 +1,421 @@
+import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/amplification/arc_amplification_workspace.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/research/uag_research_screen.dart';
+
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_frozen_trail_preview_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_item_asset_registry.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_frozen_trail_two_content.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_progression_workspace_bar.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+
+class ArcResearchWorkstationScreen extends StatefulWidget {
+  const ArcResearchWorkstationScreen({super.key});
+
+  static const routeName = '/trading-hub/arc-raiders/research-workstation';
+
+  @override
+  State<ArcResearchWorkstationScreen> createState() => _ArcResearchWorkstationScreenState();
+}
+
+class _ArcResearchWorkstationScreenState extends State<ArcResearchWorkstationScreen> {
+  int _selectedTab = 0;
+  static const sections = <String>['Blueprints', 'Amplified Research', 'Designs', 'Overview'];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'RESEARCH WORKSTATION',
+          style: ArcUiTokens.display(
+            fontSize: 20,
+            color: ArcUiTokens.primaryAccent,
+          ),
+        ),
+      ),
+      body: ArcRaidersScreenShell(
+        showAdBanner: true,
+        child: Column(
+          children: [
+            const ArcProgressionWorkspaceBar(
+              current: ArcProgressionWorkspace.research,
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            ),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              child: Row(
+                children: [
+                  for (var i = 0; i < sections.length; i++)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ChoiceChip(
+                        label: Text(sections[i]),
+                        selected: _selectedTab == i,
+                        onSelected: (_) => setState(() => _selectedTab = i),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: switch (_selectedTab) {
+                0 => const UagResearchScreen(
+                    key: ValueKey('research-blueprints'),
+                    embedded: true,
+                    initialCategory: 'blueprint',
+                  ),
+                1 => const SingleChildScrollView(
+                    padding: EdgeInsets.fromLTRB(12, 12, 12, 30),
+                    child: ArcAmplificationWorkspace(),
+                  ),
+                2 => const UagResearchScreen(
+                    key: ValueKey('research-designs'),
+                    embedded: true,
+                    initialCategory: 'design',
+                  ),
+                _ => _overview(),
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _overview() {
+    final research = ArcFrozenTrailPreviewData.researchWorkstation;
+    return ListView(
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 30),
+          children: [
+            _hero(research),
+            const SizedBox(height: AppTheme.spaceM),
+            _confirmed(),
+            const SizedBox(height: AppTheme.spaceM),
+            _currentContent(),
+            const SizedBox(height: AppTheme.spaceM),
+            _pending(),
+          ],
+        );
+  }
+
+  Widget _hero(ArcFrozenTrailContentItem research) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: ArcUiTokens.surfacePanel,
+        borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
+        border: Border.all(
+          color: ArcUiTokens.primaryAccent.withValues(alpha: 0.34),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 82,
+            height: 82,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: Image.asset(
+                research.imageAssetPath!,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => Container(
+                  color: Colors.black.withValues(alpha: 0.28),
+                  alignment: Alignment.center,
+                  child: const Icon(
+                    Icons.science_rounded,
+                    size: 38,
+                    color: ArcUiTokens.primaryAccent,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 13),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'FROZEN TRAIL · 08 OCT 2026',
+                  style: TextStyle(
+                    color: ArcUiTokens.secondaryAccent,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  research.summary,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    height: 1.35,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 7),
+                Text(
+                  research.detail,
+                  style: const TextStyle(
+                    color: Colors.white60,
+                    fontSize: 12,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _confirmed() {
+    return _section('CONFIRMED FUNCTION', const <String>[
+      'Located in the new Outpost.',
+      'Used to research new elements of the world.',
+      'Unlocks higher levels of weapon customisation and modding.',
+      'Research Station level IV plus Gunsmith level IV unlock weapon quality V.',
+      'Outpost IV is required for these workshop upgrades; amplification cannot be reversed.',
+      'Embark says the first rollout covers 15 weapons.',
+    ], ArcUiTokens.success);
+  }
+
+  Widget _currentContent() {
+    final outpost = ArcFrozenTrailProgressionCatalog.outpost
+        .map(
+          (tier) =>
+              'Outpost Lv.${tier.level}: ${tier.materials.entries.map((m) => '${m.value}x ${m.key.replaceAll('_', ' ')}').join(', ')}. ${tier.source}',
+        )
+        .toList(growable: false);
+    final modules = ArcFrozenTrailProgressionCatalog
+        .amplificationMarkByWeapon
+        .entries
+        .map((entry) => '${entry.key}: Mk.${entry.value} Amplification Module')
+        .toList(growable: false);
+    return Column(
+      children: <Widget>[
+        _researchPointsSection(),
+        const SizedBox(height: 12),
+        _section('OUTPOST LEVELS', outpost, ArcUiTokens.primaryAccent),
+        const SizedBox(height: 12),
+        _researchMaterialsSection(),
+        const SizedBox(height: 12),
+        _section(
+          'AMPLIFICATION MODULES - 15 WEAPONS',
+          modules,
+          ArcUiTokens.success,
+        ),
+      ],
+    );
+  }
+
+
+  Widget _researchPointsSection() {
+    return _illustratedSection(
+      'RESEARCH ITEMS / POINTS',
+      ArcUiTokens.success,
+      <Widget>[
+        for (final entry
+            in ArcFrozenTrailProgressionCatalog.researchPointYield.entries)
+          _resourceRow(entry.key, '+${entry.value} RP when studied'),
+      ],
+    );
+  }
+
+  Widget _researchMaterialsSection() {
+    return _illustratedSection(
+      'RESEARCH STATION MATERIALS',
+      ArcUiTokens.secondaryAccent,
+      <Widget>[
+        for (final tier in ArcFrozenTrailProgressionCatalog.researchStation) ...[
+          Text(
+            'RESEARCH LV.${tier.level}',
+            style: const TextStyle(
+              color: ArcUiTokens.secondaryAccent,
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.6,
+            ),
+          ),
+          const SizedBox(height: 6),
+          for (final entry in tier.materials.entries)
+            _resourceRow(entry.key, '×${entry.value}'),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 14),
+            child: Text(
+              tier.source,
+              style: const TextStyle(color: Colors.white54, fontSize: 11),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _illustratedSection(
+    String heading,
+    Color accent,
+    List<Widget> content,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(ArcUiTokens.radiusL),
+        border: Border.all(color: accent.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            heading,
+            style: TextStyle(
+              color: accent,
+              fontSize: 13,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.8,
+            ),
+          ),
+          const SizedBox(height: 10),
+          ...content,
+        ],
+      ),
+    );
+  }
+
+  Widget _resourceRow(String itemId, String valueLabel) {
+    final name = itemId.replaceAll('_', ' ');
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: <Widget>[
+          Container(
+            width: 46,
+            height: 46,
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              color: ArcUiTokens.surfacePanel,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: ArcUiTokens.primaryAccent.withValues(alpha: 0.22),
+              ),
+            ),
+            child: Image.asset(
+              ArcItemAssetRegistry.assetPathForId(itemId),
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) => const Icon(
+                Icons.inventory_2_outlined,
+                color: Colors.white38,
+                size: 24,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              name,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 12,
+                height: 1.3,
+              ),
+            ),
+          ),
+          const SizedBox(width: 5),
+          Text(
+            valueLabel,
+            textAlign: TextAlign.right,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _pending() {
+    return _section(
+      'STILL AWAITING IN-GAME VALIDATION',
+      const <String>[
+        'Exact research-node unlock costs and node-specific materials for every amplified weapon.',
+        'Current user Outpost level is not yet saved or enforced; this view is a cost reference.',
+        'Amplified repair quantities vary with installed weapon perks.',
+        'Not every visible material is guaranteed to be tradeable in an actual raid.',
+      ],
+      ArcUiTokens.warning,
+      footer:
+          'The materials above are 2.0 reference values; player-specific Outpost completion is not yet synchronised.',
+    );
+  }
+
+  Widget _section(
+    String title,
+    List<String> values,
+    Color accent, {
+    String? footer,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(ArcUiTokens.radiusL),
+        border: Border.all(color: accent.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              color: accent,
+              fontSize: 13,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.8,
+            ),
+          ),
+          const SizedBox(height: 9),
+          for (final value in values)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 7),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.chevron_right_rounded, size: 17, color: accent),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      value,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        height: 1.3,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          if (footer != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              footer,
+              style: const TextStyle(
+                color: Colors.white54,
+                fontSize: 12,
+                height: 1.35,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}

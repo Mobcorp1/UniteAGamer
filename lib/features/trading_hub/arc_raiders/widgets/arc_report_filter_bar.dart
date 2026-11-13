@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_drop_report.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_report_filters.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_drop_report.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_report_filters.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class ArcReportFilterBar extends StatelessWidget {
   const ArcReportFilterBar({
@@ -97,7 +97,11 @@ class ArcReportFilterBar extends StatelessWidget {
                 width: 180,
                 value: filters.raidType,
                 label: 'Raid Type',
-                items: ArcRaidType.values,
+                items: const <ArcRaidType>[
+                  ArcRaidType.fullRaid,
+                  ArcRaidType.midRaid,
+                  ArcRaidType.lateRaid,
+                ],
                 labelBuilder: (value) => value.label,
                 onChanged: (value) => onChanged(
                   value == null

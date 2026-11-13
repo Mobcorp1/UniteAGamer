@@ -1,3 +1,5 @@
+import 'uag_commercial_economy.dart';
+import 'uag_match_intelligence_copy.dart';
 import 'uag_plan_limits.dart';
 import 'uag_subscription_tier.dart';
 
@@ -5,20 +7,26 @@ class UagSubscriptionPlan {
   const UagSubscriptionPlan({
     required this.tier,
     required this.name,
+    required this.shortName,
+    required this.positioning,
     required this.monthlyPricePence,
     required this.yearlyPricePence,
     required this.creatorOnboardingDiscountPercent,
     required this.limits,
     required this.features,
+    required this.bestFor,
   });
 
   final UagSubscriptionTier tier;
   final String name;
+  final String shortName;
+  final String positioning;
   final int monthlyPricePence;
   final int yearlyPricePence;
   final int creatorOnboardingDiscountPercent;
   final UagPlanLimits limits;
   final List<String> features;
+  final List<String> bestFor;
 
   String get monthlyPriceLabel => monthlyPricePence == 0
       ? 'Free'
@@ -28,55 +36,95 @@ class UagSubscriptionPlan {
       ? 'Free'
       : '£${(yearlyPricePence / 100).toStringAsFixed(2)}/yr';
 
+  String get adsLabel {
+    if (!limits.hasAds) return 'No ads';
+    if (limits.reducedAds) return 'Reduced passive ads';
+    return 'Balanced passive ads + optional rewarded boosts';
+  }
+
   static const plans = <UagSubscriptionPlan>[
     UagSubscriptionPlan(
       tier: UagSubscriptionTier.free,
-      name: 'Free',
+      name: 'Core Raider',
+      shortName: 'Free',
+      positioning:
+          'Useful enough to keep every player contributing to Intel, trading and Match Raider activity.',
       monthlyPricePence: 0,
       yearlyPricePence: 0,
       creatorOnboardingDiscountPercent: 0,
       limits: UagPlanLimits.free,
       features: [
-        '1 trade per week',
-        '1 matchmaking search per week',
-        '1 intel hint per week',
-        '1 priority slot',
-        'Full ad frequency',
-        '+1 bonus action after every 5 free referrals',
+        'Full Collections Tracker access',
+        UagMatchIntelligenceCopy.freeDescription,
+        'Core UAG Raider voice item advice',
+        'Intel contribution stays unlimited',
+        'Trade participation with 2 active listings and 5 daily offers',
+        '5 Trades, 5 Match Raider actions, 5 Raid Intelligence unlocks and 5 Raid Planner runs each month',
+        'Earn Hub Credits from optional rewarded ads for capped bonus actions',
+        '3 priority targets and 2 saved raid plans',
+        'Passive ads plus optional rewarded boosts only',
+      ],
+      bestFor: [
+        'new users',
+        'casual players',
+        'ecosystem growth',
+        'Intel and trade liquidity',
       ],
     ),
     UagSubscriptionPlan(
       tier: UagSubscriptionTier.essential,
-      name: 'Essential',
-      monthlyPricePence: 599,
-      yearlyPricePence: 4999,
-      creatorOnboardingDiscountPercent: 30,
+      name: 'Active Raider',
+      shortName: 'Essential',
+      positioning:
+          'The regular-player tier: higher limits, cleaner experience, smart alerts and stronger voice tools.',
+      monthlyPricePence: UagCommercialEconomy.essentialMonthlyPricePence,
+      yearlyPricePence: UagCommercialEconomy.essentialAnnualPricePence,
+      creatorOnboardingDiscountPercent: 0,
       limits: UagPlanLimits.essential,
       features: [
-        '5 trades per week',
-        '5 matchmaking searches per week',
-        '5 intel hints per week',
-        '5 priority slots',
-        'Reduced ads',
-        '10% follower discount codes',
-        '10% recurring commission on paid referrals',
+        UagMatchIntelligenceCopy.essentialDescription,
+        '10 active trade listings and 25 daily offers',
+        '30 Trades, 30 Match Raider actions, 30 Raid Intelligence unlocks and 30 Raid Planner runs each month',
+        '40 weekly Intel hints alongside the monthly Raid Intelligence allowance',
+        'Unlimited advanced voice commands',
+        'Smart item, trade and session alerts',
+        '30 monthly Raid Planner runs and 6 voice profiles',
+        'Light advertising: banner only',
+        'Refer & Earn access with staggered recurring commission',
+      ],
+      bestFor: [
+        'regular players',
+        'squad organisers',
+        'active traders',
+        'users who want no disruptive full-screen ads',
       ],
     ),
     UagSubscriptionPlan(
       tier: UagSubscriptionTier.premium,
-      name: 'Premium',
-      monthlyPricePence: 1099,
-      yearlyPricePence: 9499,
-      creatorOnboardingDiscountPercent: 30,
+      name: 'Elite Raider',
+      shortName: 'Premium',
+      positioning:
+          'The power-user tier: unlimited systems, no ads, Trader Pro analytics and full automation.',
+      monthlyPricePence: UagCommercialEconomy.premiumMonthlyPricePence,
+      yearlyPricePence: UagCommercialEconomy.premiumAnnualPricePence,
+      creatorOnboardingDiscountPercent: 0,
       limits: UagPlanLimits.premium,
       features: [
-        'Unlimited trades',
-        'Unlimited matchmaking searches',
-        'Unlimited intel hints',
-        'Unlimited priority tracking',
+        UagMatchIntelligenceCopy.premiumDescription,
+        'Unlimited Trade actions, listings and offers',
+        'Unlimited Match Raider actions and session tools',
+        'Unlimited Raid Intelligence unlocks and Intel hints',
+        'Trader Pro analytics and demand alerts',
+        'Unlimited Raid Planner runs plus all voice profiles and personalities',
+        'Unlimited saved raid plans and priority targets',
         'No ads',
-        '20% follower discount codes',
-        '20% recurring commission on paid referrals',
+        'Refer & Earn access with a +2.5 percentage-point Premium boost',
+      ],
+      bestFor: [
+        'hardcore traders',
+        'creators',
+        'daily grinders',
+        'users who want no ads and full analytics',
       ],
     ),
   ];

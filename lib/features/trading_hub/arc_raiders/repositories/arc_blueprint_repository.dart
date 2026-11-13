@@ -1,12 +1,21 @@
+import '../models/arc_admin_map_marker.dart';
+import '../data/arc_published_report_pois.dart';
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_poi_data.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_map_conditions.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_drop_report.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_drop_intel.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_poi_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_conditions.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_drop_report_pinpoint.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_drop_report.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state_recovery.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_drop_intel.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
+
+import 'arc_operations_repository.dart';
 
 class ArcBlueprintRepository {
   ArcBlueprintRepository({FirebaseFirestore? firestore, FirebaseAuth? auth})
@@ -21,21 +30,252 @@ class ArcBlueprintRepository {
   CollectionReference<Map<String, dynamic>> _stateCollection(String uid) =>
       _firestore.collection('users').doc(uid).collection('arc_blueprints');
 
+  static String canonicalStoragePathFor(String uid) =>
+      'users/$uid/arc_blueprints';
+
+  static List<String> legacyStoragePathCandidatesFor(String uid) => [
+    // Runtime recovery is intentionally limited to user-scoped paths that are
+    // covered by the signed-in user's Firestore permissions. The two former
+    // root-level legacy paths are not readable by normal clients and caused
+    // repeated PERMISSION_DENIED noise during Blueprint photo import.
+    'users/$uid/arc_blueprint_states',
+    'users/$uid/blueprints',
+  ];
+
   CollectionReference<Map<String, dynamic>> get _reportsCollection =>
       _firestore.collection('arc_blueprint_drop_reports');
 
-  Stream<Map<String, ArcBlueprintState>> watchMyBlueprintStates() {
-    final uid = currentUid;
-    if (uid == null) return Stream.value(<String, ArcBlueprintState>{});
-
-    return _stateCollection(uid).snapshots().map((snapshot) {
-      final out = <String, ArcBlueprintState>{};
-      for (final doc in snapshot.docs) {
-        final state = ArcBlueprintState.fromMap(doc.data());
-        out[state.blueprintId] = state;
+  Stream<ArcBlueprintStateSnapshot> watchMyBlueprintStateSnapshot() {
+    final lastLoadedByUid = <String, Map<String, ArcBlueprintState>>{};
+    return _authUserIdChanges().distinct().asyncExpand((uid) {
+      if (uid == null) {
+        return Stream<ArcBlueprintStateSnapshot>.value(
+          ArcBlueprintStateSnapshot.signedOut(),
+        );
       }
-      return out;
+
+      final controller = StreamController<ArcBlueprintStateSnapshot>();
+      StreamSubscription<Map<String, ArcBlueprintState>>? subscription;
+
+      controller.onListen = () {
+        controller.add(
+          ArcBlueprintStateSnapshot.loading(
+            userId: uid,
+            states: lastLoadedByUid[uid] ?? const <String, ArcBlueprintState>{},
+          ),
+        );
+        subscription = _stateCollection(uid)
+            .snapshots()
+            .asyncMap((snapshot) => _statesFromSnapshot(uid, snapshot))
+            .listen(
+              (states) {
+                lastLoadedByUid[uid] = states;
+                controller.add(
+                  ArcBlueprintStateSnapshot.loaded(userId: uid, states: states),
+                );
+              },
+              onError: (Object error) {
+                controller.add(
+                  ArcBlueprintStateSnapshot.failed(
+                    userId: uid,
+                    states:
+                        lastLoadedByUid[uid] ??
+                        const <String, ArcBlueprintState>{},
+                    error: error,
+                  ),
+                );
+              },
+            );
+      };
+
+      controller.onCancel = () => subscription?.cancel();
+      return controller.stream;
     });
+  }
+
+  Stream<Map<String, ArcBlueprintState>> watchMyBlueprintStates() {
+    return _auth
+        .authStateChanges()
+        .map((user) => user?.uid)
+        .distinct()
+        .asyncExpand((uid) {
+          if (uid == null) return Stream.value(<String, ArcBlueprintState>{});
+          return _stateCollection(uid).snapshots().asyncMap(
+            (snapshot) => _statesFromSnapshot(uid, snapshot),
+          );
+        });
+  }
+
+  Stream<String?> _authUserIdChanges() async* {
+    yield _auth.currentUser?.uid;
+    await for (final user in _auth.authStateChanges()) {
+      yield user?.uid;
+    }
+  }
+
+  Future<Map<String, ArcBlueprintState>> loadMyBlueprintStates() async {
+    final uid = currentUid;
+    if (uid == null) return const <String, ArcBlueprintState>{};
+
+    final snapshot = await _stateCollection(uid).get();
+
+    // IMPORTANT: one-shot consumers (photo import, delta review, etc.) must
+    // resolve ownership through the exact same canonical + safe-legacy
+    // recovery path used by the live Blueprint Tracker stream. Previously this
+    // method returned only the canonical collection, so the tracker could show
+    // 40 owned while photo import incorrectly saw existingOwned=0.
+    final states = await _statesFromSnapshot(uid, snapshot);
+
+    if (kDebugMode) {
+      final ownedCount = states.values.where((state) => state.owned).length;
+      debugPrint(
+        'ARC BLUEPRINT STATE: load resolved '
+        'uid=$uid states=${states.length} owned=$ownedCount '
+        'canonical=${canonicalStoragePathFor(uid)}',
+      );
+    }
+
+    return states;
+  }
+
+  Future<ArcBlueprintStateRecoveryPreview>
+  previewMyBlueprintStateRecovery() async {
+    final uid = currentUid;
+    if (uid == null) {
+      return const ArcBlueprintStateRecoveryPreview(
+        canonicalPath: 'users/{uid}/arc_blueprints',
+        currentStates: <String, ArcBlueprintState>{},
+        legacySources: <ArcBlueprintStateRecoverySource>[],
+        mergedStates: <String, ArcBlueprintState>{},
+      );
+    }
+    return _buildRecoveryPreview(uid);
+  }
+
+  Future<ArcBlueprintStateRecoveryPreview>
+  recoverMyBlueprintStatesFromLegacyPaths() async {
+    final uid = currentUid;
+    if (uid == null) {
+      throw Exception('You must be signed in.');
+    }
+
+    final preview = await _buildRecoveryPreview(uid);
+    if (!preview.requiresMigration) return preview;
+
+    final batch = _firestore.batch();
+    for (final state in preview.mergedStates.values) {
+      final docRef = _stateCollection(uid).doc(state.blueprintId);
+      batch.set(docRef, state.toMap(), SetOptions(merge: true));
+    }
+    await batch.commit();
+    return preview;
+  }
+
+  Future<Map<String, ArcBlueprintState>> _statesFromSnapshot(
+    String uid,
+    QuerySnapshot<Map<String, dynamic>> snapshot,
+  ) async {
+    final currentStates = _statesFromSnapshotDocs(snapshot.docs);
+    if (currentStates.isNotEmpty) return currentStates;
+
+    try {
+      final recovery = await _buildRecoveryPreview(uid);
+      if (!recovery.requiresMigration) return currentStates;
+
+      final batch = _firestore.batch();
+      for (final state in recovery.mergedStates.values) {
+        final docRef = _stateCollection(uid).doc(state.blueprintId);
+        batch.set(docRef, state.toMap(), SetOptions(merge: true));
+      }
+      await batch.commit();
+      if (kDebugMode) {
+        final ownedCount = recovery.mergedStates.values
+            .where((state) => state.owned)
+            .length;
+        debugPrint(
+          'ARC BLUEPRINT STATE: canonical migration complete '
+          'uid=$uid states=${recovery.mergedStates.length} owned=$ownedCount',
+        );
+      }
+      return recovery.mergedStates;
+    } catch (error, stackTrace) {
+      debugPrint('Blueprint legacy recovery failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      return currentStates;
+    }
+  }
+
+  Map<String, ArcBlueprintState> _statesFromSnapshotDocs(
+    Iterable<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
+  ) {
+    final out = <String, ArcBlueprintState>{};
+    for (final doc in docs) {
+      final rawData = doc.data();
+      final data = <String, dynamic>{
+        ...rawData,
+        'blueprintId':
+            (rawData['blueprintId'] as String?)?.trim().isNotEmpty == true
+            ? rawData['blueprintId']
+            : doc.id,
+      };
+      final state = ArcBlueprintState.fromMap(data);
+      final blueprintId = state.blueprintId.trim().isNotEmpty
+          ? state.blueprintId.trim()
+          : doc.id;
+      out[blueprintId] = state.copyWith(blueprintId: blueprintId);
+    }
+    return out;
+  }
+
+  Future<Map<String, ArcBlueprintState>> _statesFromCollectionPath(
+    String path,
+  ) async {
+    final snapshot = await _firestore.collection(path).get();
+    return _statesFromSnapshotDocs(snapshot.docs);
+  }
+
+  Future<ArcBlueprintStateRecoveryPreview> _buildRecoveryPreview(
+    String uid,
+  ) async {
+    final currentStates = await _statesFromCollectionPath(
+      canonicalStoragePathFor(uid),
+    );
+    final sources = <ArcBlueprintStateRecoverySource>[];
+    for (final path in legacyStoragePathCandidatesFor(uid)) {
+      try {
+        final states = await _statesFromCollectionPath(path);
+        sources.add(
+          ArcBlueprintStateRecoverySource(path: path, states: states),
+        );
+        if (kDebugMode && states.isNotEmpty) {
+          final ownedCount = states.values.where((state) => state.owned).length;
+          debugPrint(
+            'ARC BLUEPRINT STATE: recovery source '
+            'path=$path states=${states.length} owned=$ownedCount',
+          );
+        }
+      } catch (error, stackTrace) {
+        debugPrint('Blueprint legacy path scan failed for $path: $error');
+        debugPrintStack(stackTrace: stackTrace);
+        sources.add(
+          ArcBlueprintStateRecoverySource(
+            path: path,
+            states: const <String, ArcBlueprintState>{},
+          ),
+        );
+      }
+    }
+
+    final mergedStates = ArcBlueprintStateRecovery.merge(
+      currentStates: currentStates,
+      legacySources: sources,
+    );
+    return ArcBlueprintStateRecoveryPreview(
+      canonicalPath: canonicalStoragePathFor(uid),
+      currentStates: currentStates,
+      legacySources: sources,
+      mergedStates: mergedStates,
+    );
   }
 
   Future<void> saveBlueprintState(ArcBlueprintState state) async {
@@ -118,7 +358,7 @@ class ArcBlueprintRepository {
         });
   }
 
-  Stream<List<ArcBlueprintDropReport>> watchRecentReports({int limit = 120}) {
+  Stream<List<ArcBlueprintDropReport>> watchRecentReports({int limit = 300}) {
     return _reportsCollection
         .orderBy('createdAt', descending: true)
         .limit(limit)
@@ -145,8 +385,29 @@ class ArcBlueprintRepository {
     required ArcRaidType raidType,
     required ArcEntryTime entryTime,
     required ArcTimeOfDay timeOfDay,
+    required ArcBlueprintAcquisitionSource acquisitionSource,
+    ArcGiftedBlueprintRelationship giftRelationship =
+        ArcGiftedBlueprintRelationship.unknown,
+    String? originalFindMapName,
+    ArcRaidMapLayer? originalFindLayer,
+    String? originalFindPoiId,
+    String? originalFindPoiName,
+    String? handoverMapName,
+    ArcRaidMapLayer? handoverLayer,
+    String? handoverPoiId,
+    String? handoverPoiName,
+    bool recipientWitnessedOriginalPickup = false,
+    String? originalFinderUid,
+    String? originalFinderEmbarkId,
+    String acquisitionEvidence = '',
+    ArcBlueprintReportConfidence acquisitionConfidence =
+        ArcBlueprintReportConfidence.standard,
     String? poiId,
     String? poiName,
+    String? publishedMarkerId,
+    ArcNormalizedPoint? historicalPoint,
+    ArcRaidMapLayer? poiLayer,
+    String? serverRegion,
     String? enemySourceId,
     String? enemySourceName,
     String? containerTypeId,
@@ -158,11 +419,34 @@ class ArcBlueprintRepository {
     String? conditionId,
     String? conditionLabel,
     DateTime? foundAt,
+    String? localTimeLabel,
+    int? timezoneOffsetMinutes,
     String notes = '',
   }) async {
     final uid = currentUid;
     if (uid == null) throw Exception('You must be signed in.');
 
+    ArcAdminMapMarker? publishedPoi;
+    if (publishedMarkerId != null) {
+      final markerDoc = await _firestore
+          .collection('arc_admin_map_markers')
+          .doc(publishedMarkerId)
+          .get();
+      if (markerDoc.exists) {
+        final candidate = ArcAdminMapMarker.fromMap({
+          ...markerDoc.data()!,
+          'id': markerDoc.id,
+        });
+        if (ArcPublishedReportPois.forMap(mapName, [candidate]).isNotEmpty) {
+          publishedPoi = candidate;
+        }
+      }
+      if (publishedPoi == null) {
+        throw StateError(
+          'This location is no longer published. Choose another POI.',
+        );
+      }
+    }
     final trimmedMapName = mapName.trim();
     final trimmedPoiId = poiId?.trim();
     final normalizedPoi = (trimmedPoiId != null && trimmedPoiId.isNotEmpty)
@@ -201,28 +485,42 @@ class ArcBlueprintRepository {
               ? selectedCondition.label
               : null);
 
-    final normalizedPoiId = normalizedPoi?.id ?? trimmedPoiId;
-    final normalizedPoiName = normalizedPoi?.name ?? poiName?.trim();
+    final normalizedPoiId =
+        publishedPoi?.seedReferenceId ??
+        publishedPoi?.id ??
+        normalizedPoi?.id ??
+        trimmedPoiId;
+    final normalizedPoiName =
+        publishedPoi?.name ?? normalizedPoi?.name ?? poiName?.trim();
     final normalizedEnemyId = enemySourceId?.trim();
     final normalizedEnemyName = enemySourceName?.trim();
     final normalizedContainerTypeId = containerTypeId?.trim();
     final normalizedContainerTypeLabel = containerTypeLabel?.trim();
+    final normalizedServerRegion = serverRegion?.trim();
     final now = DateTime.now();
 
-    final signature = ArcBlueprintDropReport.buildSignature(
+    final baseSignature = ArcBlueprintDropReport.buildSignature(
       blueprintId: blueprintId,
       mapName: trimmedMapName,
       sourceType: sourceType,
-      poiId: normalizedPoiId,
+      poiId: publishedPoi?.id ?? normalizedPoiId,
       enemySourceId: normalizedEnemyId,
       containerTypeId: normalizedContainerTypeId,
       weatherConditionId: resolvedWeatherConditionId,
       mapEventId: resolvedMapEventId,
       mode: mode,
       raidType: raidType,
-      entryTime: entryTime,
+      entryTime: ArcEntryTime.unknown,
       timeOfDay: timeOfDay,
+      acquisitionSource: acquisitionSource,
+      giftRelationship: giftRelationship,
+      originalFindMapName: originalFindMapName,
+      originalFindPoiId: originalFindPoiId,
+      handoverMapName: handoverMapName,
+      handoverPoiId: handoverPoiId,
     );
+    final signature =
+        '$baseSignature${ArcDropReportPinpoint.signatureSuffix(point: historicalPoint, serverRegion: normalizedServerRegion)}';
 
     final existingSnapshot = await _reportsCollection
         .where('signature', isEqualTo: signature)
@@ -237,6 +535,24 @@ class ArcBlueprintRepository {
       );
 
       final updatePayload = <String, dynamic>{
+        if (publishedPoi != null) ...{
+          'markerId': publishedPoi.id,
+          'poiId': normalizedPoiId,
+          'poiName': publishedPoi.name,
+        },
+        if (historicalPoint != null) ...{
+          'historicalPoint': historicalPoint.toMap(),
+          'exactPin': true,
+          'intelligenceLayer':
+              (poiLayer ?? publishedPoi?.layer ?? ArcRaidMapLayer.surface)
+                  .storageValue,
+        } else if (publishedPoi != null &&
+            existingReport.historicalPoint == null) ...{
+          'historicalPoint': publishedPoi.point.toMap(),
+          'intelligenceLayer': publishedPoi.layer.storageValue,
+        },
+        if (normalizedServerRegion != null && normalizedServerRegion.isNotEmpty)
+          'serverRegion': normalizedServerRegion,
         'lastConfirmedAt': Timestamp.fromDate(now),
         'foundAt': Timestamp.fromDate(foundAt ?? now),
       };
@@ -252,6 +568,12 @@ class ArcBlueprintRepository {
       }
 
       await existingDoc.reference.set(updatePayload, SetOptions(merge: true));
+      if (!alreadyConfirmed) {
+        await ArcOperationsRepository(
+          firestore: _firestore,
+          auth: _auth,
+        ).recordIntelConfirmed(confirmationId: '${existingDoc.id}:$uid');
+      }
       return;
     }
 
@@ -263,6 +585,10 @@ class ArcBlueprintRepository {
       userId: uid,
       mapName: trimmedMapName,
       sourceType: sourceType,
+      markerId: publishedPoi?.id,
+      poiLayer: poiLayer ?? publishedPoi?.layer,
+      historicalPoint: historicalPoint ?? publishedPoi?.point,
+      exactPin: historicalPoint != null,
       poiId: normalizedPoiId,
       poiName: normalizedPoiName,
       enemySourceId: normalizedEnemyId,
@@ -273,11 +599,29 @@ class ArcBlueprintRepository {
       weatherConditionLabel: resolvedWeatherConditionLabel,
       mapEventId: resolvedMapEventId,
       mapEventLabel: resolvedMapEventLabel,
+      serverRegion: normalizedServerRegion,
       mode: mode,
       raidType: raidType,
-      entryTime: entryTime,
+      entryTime: ArcEntryTime.unknown,
       timeOfDay: timeOfDay,
+      acquisitionSource: acquisitionSource,
+      giftRelationship: giftRelationship,
+      originalFindMapName: originalFindMapName?.trim(),
+      originalFindLayer: originalFindLayer,
+      originalFindPoiId: originalFindPoiId?.trim(),
+      originalFindPoiName: originalFindPoiName?.trim(),
+      handoverMapName: handoverMapName?.trim(),
+      handoverLayer: handoverLayer,
+      handoverPoiId: handoverPoiId?.trim(),
+      handoverPoiName: handoverPoiName?.trim(),
+      recipientWitnessedOriginalPickup: recipientWitnessedOriginalPickup,
+      originalFinderUid: originalFinderUid?.trim(),
+      originalFinderEmbarkId: originalFinderEmbarkId?.trim(),
+      acquisitionEvidence: acquisitionEvidence.trim(),
+      acquisitionConfidence: acquisitionConfidence,
       foundAt: foundAt ?? now,
+      localTimeLabel: localTimeLabel?.trim(),
+      timezoneOffsetMinutes: timezoneOffsetMinutes,
       lastConfirmedAt: now,
       notes: notes.trim(),
       createdAt: now,
@@ -286,7 +630,16 @@ class ArcBlueprintRepository {
       signature: signature,
     );
 
-    await doc.set({...report.toMap(), 'locationName': report.poiName});
+    await doc.set({
+      ...report.toMap(),
+      'locationName': report.poiName,
+      if (normalizedServerRegion != null && normalizedServerRegion.isNotEmpty)
+        'serverRegion': normalizedServerRegion,
+    });
+    await ArcOperationsRepository(
+      firestore: _firestore,
+      auth: _auth,
+    ).recordBlueprintReportSubmitted(reportId: doc.id);
 
     debugPrint(
       'ARC report saved: blueprint=$blueprintId, map=$mapName, '

@@ -1,0 +1,19 @@
+AMPLIFICATION ARTWORK - Place images in this folder as WebP.
+
+action_economy.webp
+beam_resonance_tech.webp
+burst_assembly_recovery.webp
+compact_combustion_charges.webp
+embedded_blast_engineering.webp
+extended_burst_cycles.webp
+high_voltage_exposure.webp
+magazine_geometry.webp
+mobile_fire_grip_fittings.webp
+shield_stress_testing.webp
+solid_core_casting_tech.webp
+targeted_component_trial.webp
+thermite_tipped_rounds.webp
+top_mounted_optics_retrofittings.webp
+trigger_reset_systems.webp
+
+Recommended size: 512 x 512 pixels, square art.

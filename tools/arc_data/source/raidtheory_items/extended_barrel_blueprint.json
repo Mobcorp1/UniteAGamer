@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "extended_barrel_blueprint",
   "name": {
     "da": "Forlaenget lob-tegning",
@@ -15,7 +15,7 @@
     "pl": "Projekt Wydluzona lufa",
     "pt": "Projeto de Cano estendido",
     "pt-BR": "Esquema de Cano Estendido",
-    "ru": "Чертеж — Удлиненный ствол",
+    "ru": "Чертеж - Удлиненный ствол",
     "sr": "Produzena cev Nacrt",
     "tr": "Uzatilmis Namlu Taslağı",
     "uk": "Креслення Подовжений ствол",
@@ -53,3 +53,4 @@
   "updatedAt": "01/13/2026",
   "addedIn": "base"
 }
+

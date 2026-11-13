@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "mapId": "pendola_pass",
+  "displayName": "Pendola Pass",
+  "layer": "surface",
+  "masterAsset": "pendola_pass_master.webp",
+  "capturedDate": "2026-10-08",
+  "sourceType": "user-supplied in-game map capture",
+  "coordinateSystem": "normalized-identity",
+  "mapConditionsObserved": [
+    "Redirection",
+    "Frigate"
+  ],
+  "markerStatus": "verified coordinates pending",
+  "notes": "The map asset is live. No schematic POI, spawn, extraction, hatch or loot coordinates are emitted for Pendola Pass until positions are verified against the final master."
+}

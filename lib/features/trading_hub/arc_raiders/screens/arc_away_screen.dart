@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/build/app_bar.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_form_surface.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 import '../models/arc_away_status.dart';
 import '../repositories/arc_trader_profile_repository.dart';
@@ -20,6 +24,7 @@ class _ArcAwayScreenState extends State<ArcAwayScreen> {
   ArcAwayStatus _awayStatus = ArcAwayStatus.initial();
   bool _isLoading = true;
   bool _isSaving = false;
+  bool _loadFailed = false;
 
   @override
   void initState() {
@@ -34,12 +39,24 @@ class _ArcAwayScreenState extends State<ArcAwayScreen> {
   }
 
   Future<void> _load() async {
-    final status = await _repository.getAwayStatus();
-    _noteController.text = status.note;
-    if (mounted) {
+    setState(() {
+      _isLoading = true;
+      _loadFailed = false;
+    });
+    try {
+      final status = await _repository.getAwayStatus();
+      _noteController.text = status.note;
+      if (mounted) {
+        setState(() {
+          _awayStatus = status;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (!mounted) return;
       setState(() {
-        _awayStatus = status;
         _isLoading = false;
+        _loadFailed = true;
       });
     }
   }
@@ -86,6 +103,11 @@ class _ArcAwayScreenState extends State<ArcAwayScreen> {
       );
       if (!mounted) return;
       Navigator.of(context).pop(true);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not save away mode. Try again.')),
+      );
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -98,59 +120,179 @@ class _ArcAwayScreenState extends State<ArcAwayScreen> {
 
   @override
   Widget build(BuildContext context) {
+    Widget actionCard({required List<Widget> children}) {
+      return Container(
+        padding: ArcUiTokens.compactPanelPadding,
+        decoration: ArcUiTokens.surfaceDecoration(
+          role: ArcSurfaceRole.panel,
+          accent: ArcUiTokens.secondaryAccent,
+          borderOpacity: 0.18,
+          radius: ArcUiTokens.radiusL,
+        ),
+        child: Column(children: children),
+      );
+    }
+
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
-      appBar: AppBar(title: const Text('Away Mode')),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SafeArea(
-              child: ListView(
-                padding: const EdgeInsets.all(AppTheme.spaceL),
-                children: [
-                  SwitchListTile(
-                    value: _awayStatus.isAway,
-                    onChanged: (value) {
-                      setState(() {
-                        _awayStatus = _awayStatus.copyWith(isAway: value);
-                      });
-                    },
-                    title: const Text('Set yourself away'),
-                    subtitle: const Text(
-                      'Hide from search and pause new trade requests while away.',
+      extendBody: true,
+      backgroundColor: Colors.transparent,
+      appBar: const UagAppBar(
+        title: 'Away Mode',
+        subtitle: 'Temporarily pause discovery and new trade requests.',
+        showLogout: false,
+      ),
+      body: ArcRaidersScreenShell(
+        useSafeArea: false,
+        child: _isLoading
+            ? const Center(
+                child: CircularProgressIndicator(
+                  color: ArcUiTokens.primaryAccent,
+                ),
+              )
+            : _loadFailed
+            ? SafeArea(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 560),
+                    child: Padding(
+                      padding: ArcUiTokens.compactPanelPadding,
+                      child: ArcRaidersStatePanel(
+                        title: 'Away status unavailable',
+                        message: 'Your away settings could not load right now.',
+                        icon: Icons.cloud_off_rounded,
+                        accent: ArcUiTokens.warning,
+                        action: TextButton.icon(
+                          style: ArcUiTokens.textButtonStyle(
+                            accent: ArcUiTokens.primaryAccent,
+                          ),
+                          onPressed: _load,
+                          icon: const Icon(Icons.refresh_rounded),
+                          label: const Text('Retry'),
+                        ),
+                      ),
                     ),
                   ),
-                  const SizedBox(height: AppTheme.spaceM),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Away from'),
-                    subtitle: Text(_format(_awayStatus.from)),
-                    trailing: const Icon(Icons.calendar_month),
-                    onTap: () => _pickDateTime(isFrom: true),
-                  ),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Away to'),
-                    subtitle: Text(_format(_awayStatus.to)),
-                    trailing: const Icon(Icons.calendar_month),
-                    onTap: () => _pickDateTime(isFrom: false),
-                  ),
-                  const SizedBox(height: AppTheme.spaceM),
-                  TextField(
-                    controller: _noteController,
-                    decoration: const InputDecoration(
-                      labelText: 'Note',
-                      hintText: 'Holiday, break, shift block, etc.',
+                ),
+              )
+            : SafeArea(
+                child: ArcFormScrollView(
+                  children: [
+                    const ArcFormPageLead(
+                      icon: Icons.do_not_disturb_on_outlined,
+                      title: 'Away Mode',
+                      subtitle: 'Pause discovery while you are unavailable.',
                     ),
-                    maxLines: 3,
-                  ),
-                  const SizedBox(height: AppTheme.spaceL),
-                  ElevatedButton(
-                    onPressed: _isSaving ? null : _save,
-                    child: Text(_isSaving ? 'Saving...' : 'Save Away Status'),
-                  ),
-                ],
+                    const SizedBox(height: 12),
+                    ArcFormStatGrid(
+                      children: [
+                        ArcTacticalStatTile(
+                          label: 'Status',
+                          value: _awayStatus.isAway ? 'Away' : 'Available',
+                          icon: _awayStatus.isAway
+                              ? Icons.do_not_disturb_on_outlined
+                              : Icons.verified_rounded,
+                          accent: _awayStatus.isAway
+                              ? ArcUiTokens.warning
+                              : ArcUiTokens.success,
+                        ),
+                        ArcTacticalStatTile(
+                          label: 'From',
+                          value: _format(_awayStatus.from),
+                          icon: Icons.login_rounded,
+                          accent: ArcUiTokens.primaryAccent,
+                        ),
+                        ArcTacticalStatTile(
+                          label: 'To',
+                          value: _format(_awayStatus.to),
+                          icon: Icons.logout_rounded,
+                          accent: ArcUiTokens.secondaryAccent,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    actionCard(
+                      children: [
+                        SwitchListTile(
+                          value: _awayStatus.isAway,
+                          onChanged: (value) {
+                            setState(() {
+                              _awayStatus = _awayStatus.copyWith(isAway: value);
+                            });
+                          },
+                          activeThumbColor: ArcUiTokens.secondaryAccent,
+                          title: Text(
+                            'Set yourself away',
+                            style: ArcUiTokens.body(
+                              color: ArcUiTokens.textPrimary,
+                              weight: FontWeight.w700,
+                            ),
+                          ),
+                          subtitle: Text(
+                            'Hide from discovery and pause new trade requests.',
+                            style: ArcUiTokens.bodySmall(),
+                          ),
+                        ),
+                        Divider(color: ArcUiTokens.borderSubtle),
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(
+                            'Away from',
+                            style: ArcUiTokens.body(
+                              color: ArcUiTokens.textPrimary,
+                              weight: FontWeight.w700,
+                            ),
+                          ),
+                          subtitle: Text(
+                            _format(_awayStatus.from),
+                            style: ArcUiTokens.bodySmall(),
+                          ),
+                          trailing: const Icon(
+                            Icons.calendar_month,
+                            color: ArcUiTokens.primaryAccent,
+                          ),
+                          onTap: () => _pickDateTime(isFrom: true),
+                        ),
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(
+                            'Away to',
+                            style: ArcUiTokens.body(
+                              color: ArcUiTokens.textPrimary,
+                              weight: FontWeight.w700,
+                            ),
+                          ),
+                          subtitle: Text(
+                            _format(_awayStatus.to),
+                            style: ArcUiTokens.bodySmall(),
+                          ),
+                          trailing: const Icon(
+                            Icons.calendar_month,
+                            color: ArcUiTokens.primaryAccent,
+                          ),
+                          onTap: () => _pickDateTime(isFrom: false),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppTheme.spaceM),
+                    TextField(
+                      controller: _noteController,
+                      style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+                      decoration: ArcUiTokens.inputDecoration(
+                        labelText: 'Note',
+                      ),
+                      maxLines: 3,
+                    ),
+                    const SizedBox(height: AppTheme.spaceM),
+                    ElevatedButton.icon(
+                      style: ArcUiTokens.textButtonStyle(primary: true),
+                      onPressed: _isSaving ? null : _save,
+                      icon: const Icon(Icons.save_rounded),
+                      label: Text(_isSaving ? 'Saving...' : 'Save Away Status'),
+                    ),
+                  ],
+                ),
               ),
-            ),
+      ),
     );
   }
 }

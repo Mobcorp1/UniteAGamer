@@ -1,0 +1,38 @@
+attachment_name,slot_type,compatible_weapons,slot_matrix_conflicts,status,source
+Compensator I,Muzzle Mod,Ferro; Torrente; Tempest; Arpeggio; Bettina,,structurally_aligned,lib/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart
+Muzzle Brake I,Muzzle Mod,Arpeggio; Ferro,,structurally_aligned,lib/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart
+Shotgun Choke I,Shotgun Muzzle Mod,Vulcano; Il Toro,,structurally_aligned,lib/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart
+Angled Grip I,Underbarrel Mod,Vulcano; Osprey; Ferro; Venator; Il Toro,,structurally_aligned,lib/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart
+Vertical Grip I,Underbarrel Mod,Vulcano; Ferro; Bobcat; Il Toro; Tempest,,structurally_aligned,lib/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart
+Extended Light Mag I,Light Magazine Mod,Bobcat,,structurally_aligned,lib/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart
+Extended Medium Mag I,Medium Magazine Mod,Arpeggio; Venator; Torrente; Renegade; Osprey; Tempest,Renegade,authoritative_mapping_preserved_with_slot_matrix_conflict,lib/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart
+Extended Shotgun Mag I,Shotgun Magazine Mod,Il Toro; Vulcano,,structurally_aligned,lib/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart
+Stable Stock I,Stock Mod,Vulcano; Ferro; Bobcat; Il Toro; Torrente; Arpeggio; Rattler,,structurally_aligned,lib/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart
+Compensator II,Muzzle Mod,Arpeggio; Renegade; Bobcat; Torrente; Burletta; Anvil; Osprey; Ferro,,structurally_aligned,lib/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart
+Muzzle Brake II,Muzzle Mod,Arpeggio; Ferro; Tempest; Anvil; Osprey,,structurally_aligned,lib/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart
+Shotgun Choke II,Shotgun Muzzle Mod,Vulcano; Il Toro,,structurally_aligned,lib/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart
+Silencer I,Muzzle Mod,Bobcat; Osprey; Torrente; Tempest; Arpeggio; Anvil; Burletta; Renegade,,structurally_aligned,lib/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart
+Angled Grip II,Underbarrel Mod,Vulcano; Tempest; Osprey; Bobcat,,structurally_aligned,lib/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart
+Vertical Grip II,Underbarrel Mod,Arpeggio; Kettle; Ferro; Rattler; Stitcher; Venator,Rattler,authoritative_mapping_preserved_with_slot_matrix_conflict,lib/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart
+Extended Light Mag II,Light Magazine Mod,Burletta; Bobcat,,structurally_aligned,lib/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart
+Extended Medium Mag II,Medium Magazine Mod,Arpeggio; Venator; Torrente; Renegade; Osprey; Tempest,Renegade,authoritative_mapping_preserved_with_slot_matrix_conflict,lib/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart
+Extended Shotgun Mag II,Shotgun Magazine Mod,Il Toro; Vulcano,,structurally_aligned,lib/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart
+Stable Stock II,Stock Mod,Renegade; Vulcano; Torrente,,structurally_aligned,lib/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart
+Compensator III,Muzzle Mod,Arpeggio; Renegade; Anvil; Burletta; Osprey,,structurally_aligned,lib/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart
+Muzzle Brake III,Muzzle Mod,Arpeggio; Anvil; Ferro; Bobcat; Torrente; Tempest; Osprey; Renegade,,structurally_aligned,lib/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart
+Shotgun Choke III,Shotgun Muzzle Mod,Vulcano; Il Toro,,structurally_aligned,lib/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart
+Silencer II,Muzzle Mod,Bobcat; Osprey; Torrente; Tempest; Arpeggio; Anvil; Burletta; Renegade,,structurally_aligned,lib/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart
+Silencer III,Muzzle Mod,Bobcat; Osprey; Torrente; Tempest; Arpeggio; Renegade,,structurally_aligned,lib/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart
+Shotgun Silencer,Shotgun Muzzle Mod,Il Toro; Vulcano,,structurally_aligned,lib/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart
+Extended Barrel,Barrel,Osprey; Stitcher; Ferro; Arpeggio; Anvil; Burletta; Kettle,Osprey; Stitcher; Ferro; Arpeggio; Anvil; Burletta; Kettle,authoritative_mapping_preserved_with_slot_matrix_conflict,lib/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart
+Angled Grip III,Underbarrel Mod,Vulcano; Osprey; Ferro; Venator; Il Toro,,structurally_aligned,lib/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart
+Vertical Grip III,Underbarrel Mod,Arpeggio; Il Toro; Vulcano,,structurally_aligned,lib/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart
+Horizontal Grip,Underbarrel Mod,Tempest; Vulcano; Osprey,,structurally_aligned,lib/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart
+Extended Light Mag III,Light Magazine Mod,Burletta; Bobcat,,structurally_aligned,lib/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart
+Extended Medium Mag III,Medium Magazine Mod,Arpeggio; Venator; Torrente; Renegade; Osprey; Tempest,Renegade,authoritative_mapping_preserved_with_slot_matrix_conflict,lib/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart
+Extended Shotgun Mag III,Shotgun Magazine Mod,Il Toro; Vulcano,,structurally_aligned,lib/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart
+Stable Stock III,Stock Mod,Bobcat; Vulcano; Osprey; Il Toro; Ferro; Renegade,,structurally_aligned,lib/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart
+Lightweight Stock,Stock Mod,Renegade; Vulcano,,structurally_aligned,lib/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart
+Padded Stock,Stock Mod,Rattler; Il Toro; Osprey; Stitcher; Ferro; Arpeggio; Renegade; Vulcano,,structurally_aligned,lib/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart
+Kinetic Converter,Converter,Arpeggio; Rattler; Kettle; Vulcano; Osprey; Torrente; Ferro; Il Toro,Arpeggio; Kettle; Vulcano; Osprey; Torrente; Ferro; Il Toro,authoritative_mapping_preserved_with_slot_matrix_conflict,lib/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart
+Anvil Splitter,Tech Mod / Special,Anvil,,structurally_aligned,lib/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart

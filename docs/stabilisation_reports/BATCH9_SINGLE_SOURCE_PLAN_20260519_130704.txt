@@ -1,0 +1,23 @@
+BATCH 9 SINGLE SOURCE FOUNDATION
+Generated: 20260519_130704
+
+Canonical owners:
+- Blueprints: arc_blueprint_seed_data.dart
+- Items/resources/weapons/tradeables: unified_item_index.dart
+- POIs: arc_poi_data.dart
+- Containers: arc_container_types.dart
+
+Files that should become adapters/wrappers later:
+- arc_trade_catalog.dart
+- trade_items_data.dart
+- arc_voice_item_database.dart
+- arc_scrappy_seed_data.dart
+- arc_bench_upgrade_seed_data.dart
+- arc_quest_requirement_seed_data.dart
+
+Next pass:
+- Wire ArcTextSanitizer.metadataLine into blueprint subtitles.
+- Move voice/trade lookups toward ArcCanonicalSources.
+- Start replacing duplicate identity definitions with canonical adapters.
+
+Duplicate ID count: 258

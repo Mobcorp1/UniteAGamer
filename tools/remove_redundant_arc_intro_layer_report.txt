@@ -1,0 +1,27 @@
+Remove Redundant ARC Intro Layer Report
+Generated: 05/22/2026 10:29:33
+
+Patched parent entry screens: 2
+- lib/features/trading_hub/trading_hub_screen.dart
+- lib/build/trading_hub_screen.dart
+
+Remaining old phrase matches in lib/: 15
+- lib\home_screen.dart :: UAG Arc Raiders Hub
+- lib\main.dart :: UAG Arc Raiders Hub
+- lib\build\animated_title.dart :: UAG Arc Raiders Hub
+- lib\build\animated_welcome_text.dart :: UAG Arc Raiders Hub
+- lib\build\app_drawer.dart :: UAG Arc Raiders Hub
+- lib\build\home_screen.dart :: UAG Arc Raiders Hub
+- lib\build\splash_screen.dart :: UAG Arc Raiders Hub
+- lib\build\auth\auth_landing_screen.dart :: UAG Arc Raiders Hub
+- lib\build\auth\auth_screen.dart :: UAG Arc Raiders Hub
+- lib\features\legal\screens\arc_data_attribution_screen.dart :: UAG Arc Raiders Hub
+- lib\features\legal\screens\legal_hub_screen.dart :: UAG Arc Raiders Hub
+- lib\features\trading_hub\arc_raiders\screens\trading_profile_screen.dart :: UAG Arc Raiders Hub
+- lib\screens\build\app_drawer.dart :: UAG Arc Raiders Hub
+- lib\screens\build\splash_screen.dart :: UAG Arc Raiders Hub
+- lib\screens\build\auth\auth_landing_screen.dart :: UAG Arc Raiders Hub
+
+Arc hub carousel preserved: True
+Repository untouched: true
+Firestore untouched: true

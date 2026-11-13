@@ -1,6 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/build/app_bar.dart';
+import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
+
+import 'package:uag_arc_raiders_hub/features/notifications/widgets/uag_notification_preferences_panel.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_account_support_workspace_bar.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_personalisation_preferences_panel.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_layout_system.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_tactical_page.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class ProfileSettingsScreen extends StatefulWidget {
+  static const routeName = '/profile-settings';
+
   const ProfileSettingsScreen({super.key});
 
   @override
@@ -20,29 +32,235 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     'Oceania',
   ];
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Profile Settings')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
+  InputDecoration _input(String label) {
+    return AppTheme.inputDecoration(label).copyWith(
+      filled: true,
+      fillColor: ArcUiTokens.surfaceInteractive.withValues(alpha: 0.74),
+      labelStyle: ArcUiTokens.body(
+        fontSize: 14,
+        color: ArcUiTokens.textSecondary,
+        weight: FontWeight.w700,
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(ArcUiTokens.radiusS),
+        borderSide: BorderSide(
+          color: ArcUiTokens.primaryAccent.withValues(alpha: 0.34),
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(ArcUiTokens.radiusS),
+        borderSide: const BorderSide(
+          color: ArcUiTokens.primaryAccent,
+          width: 1.6,
+        ),
+      ),
+    );
+  }
+
+  Widget _chip(String label, IconData icon) {
+    return Container(
+      padding: ArcUiTokens.chipPadding,
+      decoration: ArcUiTokens.chipDecoration(color: ArcUiTokens.primaryAccent),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: ArcUiTokens.primaryAccent, size: 16),
+          const SizedBox(width: 8),
+          Text(
+            label.toUpperCase(),
+            style: ArcUiTokens.label(color: ArcUiTokens.primaryAccent),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _crossplayCard() {
+    final activeColor = crossplay
+        ? ArcUiTokens.primaryAccent
+        : ArcUiTokens.textTertiary;
+    return InkWell(
+      borderRadius: BorderRadius.circular(ArcUiTokens.radiusL),
+      onTap: () => setState(() => crossplay = !crossplay),
+      child: Container(
+        padding: const EdgeInsets.all(ArcUiTokens.gapM),
+        decoration: ArcUiTokens.surfaceDecoration(
+          role: ArcSurfaceRole.interactive,
+          accent: activeColor,
+          borderOpacity: crossplay ? 0.42 : 0.16,
+          selected: crossplay,
+        ),
+        child: Row(
           children: [
-            DropdownButtonFormField(
-              initialValue: server,
-              items: servers.map((s) {
-                return DropdownMenuItem(value: s, child: Text(s));
-              }).toList(),
-              onChanged: (v) => setState(() => server = v as String),
-              decoration: const InputDecoration(labelText: 'Server Preference'),
+            Container(
+              width: 42,
+              height: 42,
+              decoration: ArcUiTokens.surfaceDecoration(
+                role: ArcSurfaceRole.raised,
+                accent: activeColor,
+                radius: ArcUiTokens.radiusS,
+                borderOpacity: 0.34,
+              ),
+              child: Icon(Icons.sync_alt_rounded, color: activeColor),
             ),
-            SwitchListTile(
+            const SizedBox(width: ArcUiTokens.gapM),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Crossplay Enabled'.toUpperCase(),
+                    style: ArcUiTokens.cardTitle(fontSize: 15),
+                  ),
+                  const SizedBox(height: ArcUiTokens.gapXS),
+                  Text(
+                    'Allow matches and trading preferences across supported platforms.',
+                    style: ArcUiTokens.bodySmall(
+                      color: ArcUiTokens.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Switch(
               value: crossplay,
-              onChanged: (v) => setState(() => crossplay = v),
-              title: const Text('Crossplay Enabled'),
+              activeThumbColor: ArcUiTokens.primaryAccent,
+              activeTrackColor: ArcUiTokens.primaryAccent.withValues(
+                alpha: 0.28,
+              ),
+              inactiveThumbColor: Colors.white54,
+              inactiveTrackColor: Colors.white12,
+              onChanged: (value) => setState(() => crossplay = value),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _accordion({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color accent,
+    required Widget child,
+    bool initiallyExpanded = false,
+  }) {
+    return Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: Container(
+        decoration: ArcUiTokens.surfaceDecoration(
+          role: ArcSurfaceRole.panel,
+          radius: ArcUiTokens.radiusL,
+          accent: accent,
+          borderOpacity: 0.28,
+        ),
+        child: ExpansionTile(
+          initiallyExpanded: initiallyExpanded,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+          childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+          iconColor: accent,
+          collapsedIconColor: accent,
+          leading: Icon(icon, color: accent, size: 20),
+          title: Text(
+            title,
+            style: ArcUiTokens.sectionTitle(fontSize: 17, color: accent),
+          ),
+          subtitle: Text(
+            subtitle,
+            style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
+          ),
+          children: [child],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      appBar: const UagAppBar(
+        title: 'Profile Settings',
+        subtitle: 'Region, crossplay, personalisation and notifications.',
+        showLogout: false,
+      ),
+      drawer: const AppDrawer(),
+      body: ArcTacticalPageList(
+        width: ArcPageWidth.standard,
+        maxWidth: 920,
+        padding: ArcLayoutTokens.pagePadding(context),
+        children: [
+          const ArcAccountSupportWorkspaceBar(
+            current: ArcAccountSupportWorkspace.settings,
+            padding: EdgeInsets.zero,
+          ),
+          const SizedBox(height: ArcUiTokens.gapM),
+          ArcTacticalPanel(
+            icon: Icons.manage_accounts_outlined,
+            title: 'COMMAND PROFILE',
+            subtitle: 'Core settings that shape your UAG experience.',
+            accent: ArcUiTokens.primaryAccent,
+            child: Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                _chip('Account Preferences', Icons.tune_rounded),
+                _chip('Matchmaking', Icons.group_work_rounded),
+                _chip('Trading Ready', Icons.handshake_rounded),
+              ],
+            ),
+          ),
+          _accordion(
+            title: 'REGION & CROSSPLAY',
+            subtitle: 'Server routing and cross-platform matchmaking.',
+            icon: Icons.public_rounded,
+            accent: ArcUiTokens.primaryAccent,
+            initiallyExpanded: true,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                DropdownButtonFormField<String>(
+                  initialValue: server,
+                  dropdownColor: ArcUiTokens.surfaceOverlay,
+                  decoration: _input('Server Preference'),
+                  iconEnabledColor: ArcUiTokens.primaryAccent,
+                  style: ArcUiTokens.body(
+                    fontSize: 15,
+                    color: ArcUiTokens.textPrimary,
+                    weight: FontWeight.w700,
+                  ),
+                  items: servers
+                      .map(
+                        (s) =>
+                            DropdownMenuItem<String>(value: s, child: Text(s)),
+                      )
+                      .toList(),
+                  onChanged: (v) {
+                    if (v != null) setState(() => server = v);
+                  },
+                ),
+                const SizedBox(height: ArcUiTokens.gapM),
+                _crossplayCard(),
+              ],
+            ),
+          ),
+          _accordion(
+            title: 'PERSONALISATION',
+            subtitle: 'Tune how UAG adapts recommendations and discovery.',
+            icon: Icons.auto_awesome_rounded,
+            accent: ArcUiTokens.secondaryAccent,
+            child: const ArcPersonalisationPreferencesPanel(),
+          ),
+          _accordion(
+            title: 'NOTIFICATIONS',
+            subtitle: 'Control relevance, alerts and beta updates.',
+            icon: Icons.notifications_active_outlined,
+            accent: ArcUiTokens.secondaryAccent,
+            child: const UagNotificationPreferencesPanel(),
+          ),
+        ],
       ),
     );
   }

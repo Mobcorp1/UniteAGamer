@@ -20,7 +20,10 @@ class ArcScrappyState {
     );
   }
 
-  factory ArcScrappyState.fromJson(Map<String, dynamic> json, {required String itemId}) {
+  factory ArcScrappyState.fromJson(
+    Map<String, dynamic> json, {
+    required String itemId,
+  }) {
     final rawCollected = json['collectedCount'];
     final rawDupes = json['dupesOwned'];
     final rawOwned = json['owned'];
@@ -45,10 +48,7 @@ class ArcScrappyState {
     );
   }
 
-  ArcScrappyState copyWith({
-    int? collectedCount,
-    DateTime? updatedAt,
-  }) {
+  ArcScrappyState copyWith({int? collectedCount, DateTime? updatedAt}) {
     return ArcScrappyState(
       itemId: itemId,
       collectedCount: collectedCount ?? this.collectedCount,
@@ -58,7 +58,9 @@ class ArcScrappyState {
 
   Map<String, dynamic> toJson({int? neededCount}) {
     final effectiveNeeded = neededCount ?? 0;
-    final owned = effectiveNeeded <= 0 ? collectedCount > 0 : collectedCount >= effectiveNeeded;
+    final owned = effectiveNeeded <= 0
+        ? collectedCount > 0
+        : collectedCount >= effectiveNeeded;
     final surplus = effectiveNeeded <= 0
         ? 0
         : (collectedCount - effectiveNeeded).clamp(0, 999999);

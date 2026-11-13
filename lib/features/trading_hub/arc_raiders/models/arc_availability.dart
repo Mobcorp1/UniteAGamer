@@ -57,10 +57,7 @@ class ArcAvailabilityWeek {
   final String label;
   final List<ArcAvailabilitySlot> slots;
 
-  const ArcAvailabilityWeek({
-    required this.label,
-    required this.slots,
-  });
+  const ArcAvailabilityWeek({required this.label, required this.slots});
 
   factory ArcAvailabilityWeek.empty(String label) {
     const dayKeys = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
@@ -71,10 +68,7 @@ class ArcAvailabilityWeek {
   }
 
   Map<String, dynamic> toMap() {
-    return {
-      'label': label,
-      'slots': slots.map((e) => e.toMap()).toList(),
-    };
+    return {'label': label, 'slots': slots.map((e) => e.toMap()).toList()};
   }
 
   factory ArcAvailabilityWeek.fromMap(Map<String, dynamic> map) {
@@ -83,8 +77,11 @@ class ArcAvailabilityWeek {
       label: (map['label'] ?? 'Week 1') as String,
       slots: rawSlots
           .whereType<Map>()
-          .map((e) => ArcAvailabilitySlot.fromMap(
-              e.map((key, value) => MapEntry(key.toString(), value))))
+          .map(
+            (e) => ArcAvailabilitySlot.fromMap(
+              e.map((key, value) => MapEntry(key.toString(), value)),
+            ),
+          )
           .toList(),
     );
   }
@@ -116,15 +113,53 @@ class ArcAvailability {
       scheduleType: 'weekly',
       useEveryWeek: true,
       weeks: const [
-        ArcAvailabilityWeek(label: 'Week 1', slots: [
-          ArcAvailabilitySlot(dayKey: 'mon', enabled: false, fromTime: '19:00', toTime: '21:00'),
-          ArcAvailabilitySlot(dayKey: 'tue', enabled: false, fromTime: '19:00', toTime: '21:00'),
-          ArcAvailabilitySlot(dayKey: 'wed', enabled: false, fromTime: '19:00', toTime: '21:00'),
-          ArcAvailabilitySlot(dayKey: 'thu', enabled: false, fromTime: '19:00', toTime: '21:00'),
-          ArcAvailabilitySlot(dayKey: 'fri', enabled: false, fromTime: '19:00', toTime: '21:00'),
-          ArcAvailabilitySlot(dayKey: 'sat', enabled: false, fromTime: '19:00', toTime: '21:00'),
-          ArcAvailabilitySlot(dayKey: 'sun', enabled: false, fromTime: '19:00', toTime: '21:00'),
-        ]),
+        ArcAvailabilityWeek(
+          label: 'Week 1',
+          slots: [
+            ArcAvailabilitySlot(
+              dayKey: 'mon',
+              enabled: false,
+              fromTime: '19:00',
+              toTime: '21:00',
+            ),
+            ArcAvailabilitySlot(
+              dayKey: 'tue',
+              enabled: false,
+              fromTime: '19:00',
+              toTime: '21:00',
+            ),
+            ArcAvailabilitySlot(
+              dayKey: 'wed',
+              enabled: false,
+              fromTime: '19:00',
+              toTime: '21:00',
+            ),
+            ArcAvailabilitySlot(
+              dayKey: 'thu',
+              enabled: false,
+              fromTime: '19:00',
+              toTime: '21:00',
+            ),
+            ArcAvailabilitySlot(
+              dayKey: 'fri',
+              enabled: false,
+              fromTime: '19:00',
+              toTime: '21:00',
+            ),
+            ArcAvailabilitySlot(
+              dayKey: 'sat',
+              enabled: false,
+              fromTime: '19:00',
+              toTime: '21:00',
+            ),
+            ArcAvailabilitySlot(
+              dayKey: 'sun',
+              enabled: false,
+              fromTime: '19:00',
+              toTime: '21:00',
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -141,8 +176,11 @@ class ArcAvailability {
     final rawWeeks = (map['weeks'] as List<dynamic>? ?? const []);
     final weeks = rawWeeks
         .whereType<Map>()
-        .map((e) => ArcAvailabilityWeek.fromMap(
-            e.map((key, value) => MapEntry(key.toString(), value))))
+        .map(
+          (e) => ArcAvailabilityWeek.fromMap(
+            e.map((key, value) => MapEntry(key.toString(), value)),
+          ),
+        )
         .toList();
 
     return ArcAvailability(

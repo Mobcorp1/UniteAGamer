@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "playing_cards",
   "name": {
     "da": "Spillekort",
@@ -41,8 +41,8 @@
     "sr": "Speranzanci vole da vide ko može da sagradi najvišu kulu - pre nego što je potresi sruše.",
     "tr": "Speranzalılar, sarsıntılar yıkmadan önce en yüksek kuleyi kimin inşa edebileceğini görmeyi sever.",
     "uk": "Сперанзанці люблять дивитися, хто зможе побудувати найвищу вежу - перш ніж поштовхи її зруйнують.",
-    "zh-CN": "斯佩兰扎人喜欢看谁能搭出最高的塔——在震动将它们推倒之前。",
-    "zh-TW": "斯佩蘭扎人喜歡看誰能搭出最高的塔——在震動將它們推倒之前。"
+    "zh-CN": "斯佩兰扎人喜欢看谁能搭出最高的塔--在震动将它们推倒之前。",
+    "zh-TW": "斯佩蘭扎人喜歡看誰能搭出最高的塔--在震動將它們推倒之前。"
   },
   "type": "Trinket",
   "rarity": "Rare",
@@ -54,3 +54,4 @@
   "updatedAt": "03/17/2026",
   "addedIn": "base"
 }
+

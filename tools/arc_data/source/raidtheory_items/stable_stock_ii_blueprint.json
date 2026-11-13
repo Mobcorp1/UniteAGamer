@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "stable_stock_ii_blueprint",
   "name": {
     "da": "Stabil kolbe II-tegning",
@@ -15,7 +15,7 @@
     "pl": "Projekt Stabilna kolba II",
     "pt": "Projeto de Coronha estavel II",
     "pt-BR": "Esquema de Coronha Estável II",
-    "ru": "Чертеж — Надежный приклад II",
+    "ru": "Чертеж - Надежный приклад II",
     "sr": "Stabilno Kundak II Nacrt",
     "tr": "Dengeli Dipçik II Taslağı",
     "uk": "Креслення Стабільний приклад II",
@@ -36,7 +36,7 @@
     "no": "Forbedrer moderat spredning og rekyltilhentingstid.",
     "pl": "Umiarkowanie poprawia rozrzut i czas regeneracji odrzutu.",
     "pt": "Melhora moderadamente a dispersao e o tempo de recuperacao do recuo.",
-    "pt-BR": "Melhora de forma moderada a dispersão e o tempo de recuperação do recuo.",
+    "pt-BR": "Melhora de forma moderada a disperso e o tempo de recuperaço do recuo.",
     "ru": "Умеренно улучшает разброс и время восстановления отдачи.",
     "sr": "Umereno poboljsava rasipanje i vreme oporavka od trzaja.",
     "tr": "Dagilma ve geri tepme toparlanma suresini orta derecede iyilestirir.",
@@ -53,3 +53,4 @@
   "updatedAt": "12/07/2025",
   "addedIn": "base"
 }
+

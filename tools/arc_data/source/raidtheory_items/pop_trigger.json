@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "pop_trigger",
   "name": {
     "da": "Pop-udløser",
@@ -19,7 +19,7 @@
     "sr": "Pop Okidač",
     "tr": "Ani Tetik",
     "uk": "Поп-тригер",
-    "zh-CN": "“爆爆”触发器",
+    "zh-CN": ""爆爆"触发器",
     "zh-TW": "彈出扳機"
   },
   "description": {
@@ -35,8 +35,8 @@
     "ko-KR": "제작 재료로 재활용할 수 있다.",
     "no": "Kan resirkuleres til håndverksmateriell.",
     "pl": "Można przetworzyć na materiały rzemieślnicze.",
-    "pt": "Pode ser reciclado em materiais de fabricação.",
-    "pt-BR": "Pode ser reciclado em materiais de fabricação.",
+    "pt": "Pode ser reciclado em materiais de fabricaço.",
+    "pt-BR": "Pode ser reciclado em materiais de fabricaço.",
     "ru": "Можно переработать в материалы для крафта.",
     "sr": "Može se reciklirati u materijale za izradu.",
     "tr": "İşleme malzemelerine geri dönüştürülebilir.",
@@ -61,3 +61,4 @@
   "updatedAt": "01/13/2026",
   "addedIn": "base"
 }
+

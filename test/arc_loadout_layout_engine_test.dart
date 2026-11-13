@@ -1,0 +1,277 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_compatibility_registry.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_layout_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
+
+void main() {
+  group('dynamic attachment slots', () {
+    test('zero-slot weapon returns zero slots', () {
+      expect(
+        ArcLoadoutCompatibilityRegistry.slotsForWeapon('Jupiter'),
+        isEmpty,
+      );
+    });
+
+    test('two-slot Aphelion retains its two verified slots', () {
+      expect(ArcLoadoutCompatibilityRegistry.slotsForWeapon('Aphelion'), [
+        'Underbarrel Mod',
+        'Stock Mod',
+      ]);
+    });
+
+    test('three-slot weapon returns three ordered slots', () {
+      expect(ArcLoadoutCompatibilityRegistry.slotsForWeapon('Bettina'), [
+        'Muzzle Mod',
+        'Underbarrel Mod',
+        'Stock Mod',
+      ]);
+    });
+
+    test('four-slot weapon returns four ordered slots', () {
+      expect(ArcLoadoutCompatibilityRegistry.slotsForWeapon('Bobcat'), [
+        'Muzzle Mod',
+        'Underbarrel Mod',
+        'Light Magazine Mod',
+        'Stock Mod',
+      ]);
+    });
+
+    test('changing primary affects only primary attachments', () {
+      final secondary = ['Vertical Grip II', 'Empty Slot', 'Padded Stock'];
+      final primary = ArcLoadoutLayoutEngine.attachmentsForWeaponChange(
+        previousWeaponName: 'Anvil',
+        nextWeaponName: 'Arpeggio',
+        previousAttachments: ['Muzzle Brake II', 'Anvil Splitter'],
+      );
+
+      expect(primary, [
+        'Muzzle Brake II',
+        'Empty Slot',
+        'Empty Slot',
+        'Empty Slot',
+      ]);
+      expect(secondary, ['Vertical Grip II', 'Empty Slot', 'Padded Stock']);
+    });
+
+    test('changing secondary affects only secondary attachments', () {
+      final primary = ['Muzzle Brake II', 'Anvil Splitter'];
+      final secondary = ArcLoadoutLayoutEngine.attachmentsForWeaponChange(
+        previousWeaponName: 'Stitcher',
+        nextWeaponName: 'Bobcat',
+        previousAttachments: [
+          'Empty Slot',
+          'Vertical Grip II',
+          'Empty Slot',
+          'Empty Slot',
+        ],
+      );
+
+      expect(primary, ['Muzzle Brake II', 'Anvil Splitter']);
+      expect(secondary, [
+        'Empty Slot',
+        'Empty Slot',
+        'Empty Slot',
+        'Empty Slot',
+      ]);
+    });
+
+    test('valid attachments survive compatible changes', () {
+      final attachments = ArcLoadoutLayoutEngine.attachmentsForWeaponChange(
+        previousWeaponName: 'Anvil',
+        nextWeaponName: 'Arpeggio',
+        previousAttachments: ['Muzzle Brake II', 'Empty Slot'],
+      );
+
+      expect(attachments.first, 'Muzzle Brake II');
+    });
+
+    test('invalid attachments are cleared', () {
+      final attachments = ArcLoadoutLayoutEngine.attachmentsForWeaponChange(
+        previousWeaponName: 'Anvil',
+        nextWeaponName: 'Bobcat',
+        previousAttachments: ['Empty Slot', 'Anvil Splitter'],
+      );
+
+      expect(attachments, [
+        'Empty Slot',
+        'Empty Slot',
+        'Empty Slot',
+        'Empty Slot',
+      ]);
+    });
+
+    test('zero-slot weapons normalise to no fake placeholders', () {
+      final attachments = ArcLoadoutLayoutEngine.normalisedAttachmentList(
+        weaponName: 'Jupiter',
+        savedAttachments: ['Compensator II'],
+      );
+
+      expect(attachments, isEmpty);
+    });
+
+    test('supplied attachment slot conflicts are documented, not removed', () {
+      final conflicts = ArcWeaponAttachmentDatabase.slotMatrixConflicts(
+        ArcLoadoutSeedData.weapons,
+      );
+      final labels = conflicts.map((conflict) => conflict.label);
+
+      expect(conflicts, hasLength(11));
+      expect(
+        labels,
+        containsAll(<String>[
+          'Extended Medium Mag I -> Renegade',
+          'Vertical Grip II -> Rattler',
+          'Extended Medium Mag II -> Renegade',
+          'Extended Medium Mag III -> Renegade',
+          'Kinetic Converter -> Arpeggio',
+          'Kinetic Converter -> Il Toro',
+        ]),
+      );
+    });
+  });
+
+  group('quick use migration', () {
+    test('six Quick Use slots always exist', () {
+      final migration = ArcLoadoutLayoutEngine.normaliseQuickUseSlots(
+        savedItems: ['Snap Hook'],
+        legacyAugment: 'Survivor',
+      );
+
+      expect(migration.quickUse, hasLength(6));
+    });
+
+    test('weapons are excluded from Quick Use', () {
+      expect(ArcLoadoutLayoutEngine.quickUseOptionForName('Bobcat'), isNull);
+    });
+
+    test('attachments are excluded from Quick Use', () {
+      expect(
+        ArcLoadoutLayoutEngine.quickUseOptionForName('Compensator II'),
+        isNull,
+      );
+    });
+
+    test('PASS51 augment remains separate from Quick Use', () {
+      final result = ArcLoadoutLayoutEngine.normaliseQuickUseSlots(
+        savedItems: ['Survivor', 'Combat Augment', 'Vita Shot'],
+      );
+      expect(result.augment, 'Survivor');
+      expect(result.quickUse, isNot(contains('Survivor')));
+      expect(result.quickUse, isNot(contains('Combat Augment')));
+      expect(result.quickUse, contains('Vita Shot'));
+      expect(result.quickUse.length, 6);
+    });
+
+    test('PASS51 legacy augment is preserved separately', () {
+      final result = ArcLoadoutLayoutEngine.normaliseQuickUseSlots(
+        savedItems: ['Snap Hook', 'Vita Shot'],
+        legacyAugment: 'Combat Augment',
+      );
+      expect(result.augment, 'Combat Augment');
+      expect(result.quickUse, isNot(contains('Combat Augment')));
+    });
+
+    test('PASS51 six full Quick Use slots do not discard augment', () {
+      final result = ArcLoadoutLayoutEngine.normaliseQuickUseSlots(
+        savedItems: ['Snap Hook', 'Vita Shot', 'Lure Grenade',
+          'Pulse Mine', 'Triggernade', 'Wolfpack'],
+        legacyAugment: 'Combat Augment',
+      );
+      expect(result.quickUse.length, 6);
+      expect(result.augment, 'Combat Augment');
+      expect(result.quickUse, isNot(contains('Combat Augment')));
+    });
+    test('save and reload preserves visible Quick Use state', () {
+      final migration = ArcLoadoutLayoutEngine.normaliseQuickUseSlots(
+        savedItems: ['Survivor', 'Snap Hook', 'Vita Shot', 'Empty Slot'],
+      );
+      final loadout = ArcSavedLoadout(
+        id: 'favourite-loadout',
+        name: 'Test Loadout',
+        category: ArcLoadoutCategory.saved,
+        playStyle: ArcPlayerPlayStyle.balanced,
+        augment: migration.augment,
+        shield: 'Shield Level 2',
+        primaryWeapon: 'Anvil',
+        primaryAttachments: ['Empty Slot', 'Empty Slot'],
+        secondaryWeapon: 'Stitcher',
+        secondaryAttachments: [
+          'Empty Slot',
+          'Empty Slot',
+          'Empty Slot',
+          'Empty Slot',
+        ],
+        equipment: ['Snap Hook'],
+        consumables: ['Vita Shot'],
+        quickUse: migration.quickUse,
+        createdAt: DateTime.utc(2026),
+        updatedAt: DateTime.utc(2026),
+      );
+
+      final reloaded = ArcSavedLoadout.fromMap(loadout.id, loadout.toMap());
+
+      expect(reloaded.quickUse, migration.quickUse);
+      expect(reloaded.augment, migration.augment);
+    });
+  });
+
+  group('wanted Blueprint targets', () {
+    test(
+      'uses priority rank as the single source of truth and caps at ten',
+      () {
+        final states = <String, ArcBlueprintState>{
+          'extended-shotgun-mag-iii': ArcBlueprintState(
+            blueprintId: 'extended-shotgun-mag-iii',
+            owned: false,
+            dupesOwned: 0,
+            priorityRank: 2,
+            updatedAt: null,
+          ),
+          'angled-grip-iii': ArcBlueprintState(
+            blueprintId: 'angled-grip-iii',
+            owned: false,
+            dupesOwned: 0,
+            priorityRank: 1,
+            updatedAt: null,
+          ),
+          'pulse-mine': ArcBlueprintState(
+            blueprintId: 'pulse-mine',
+            owned: true,
+            dupesOwned: 0,
+            priorityRank: 3,
+            updatedAt: null,
+          ),
+        };
+
+        final targets = ArcLoadoutLayoutEngine.wantedBlueprintTargets(states);
+
+        expect(ArcLoadoutLayoutEngine.wantedBlueprintSlotCount, 10);
+        expect(targets.map((blueprint) => blueprint.name), [
+          'Angled Grip III',
+          'Extended Shotgun Mag III',
+        ]);
+        expect(
+          targets.map((blueprint) => blueprint.name),
+          isNot(contains('Pulse Mine')),
+        );
+      },
+    );
+
+    test('unprioritised Blueprints do not fill wanted target slots', () {
+      final states = <String, ArcBlueprintState>{
+        'angled-grip-iii': ArcBlueprintState(
+          blueprintId: 'angled-grip-iii',
+          owned: false,
+          dupesOwned: 0,
+          priorityRank: 0,
+          updatedAt: null,
+        ),
+      };
+
+      expect(ArcLoadoutLayoutEngine.wantedBlueprintTargets(states), isEmpty);
+    });
+  });
+}

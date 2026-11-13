@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "jolt_mine_blueprint",
   "name": {
     "da": "Chok-mine tegning",
@@ -15,7 +15,7 @@
     "pl": "Projekt miny paraliżującej",
     "pt": "Projeto de mina atordoante",
     "pt-BR": "Esquema de Mina Elétrica",
-    "ru": "Чертеж — Электрическая мина",
+    "ru": "Чертеж - Электрическая мина",
     "sr": "Nacrt za Jolt minu",
     "tr": "Şok Mayını Taslağı",
     "uk": "Креслення міни-оглушувача",
@@ -53,3 +53,4 @@
   "updatedAt": "01/13/2026",
   "addedIn": "base"
 }
+

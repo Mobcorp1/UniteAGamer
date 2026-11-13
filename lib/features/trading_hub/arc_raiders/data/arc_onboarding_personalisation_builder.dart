@@ -1,0 +1,269 @@
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_user_personalisation_profile.dart';
+
+ArcUserPersonalisationProfile buildArcOnboardingPersonalisation({
+  required ArcPersonalisationGoal primaryGoal,
+  Set<ArcPersonalisationGoal> secondaryGoals = const {},
+  ArcRaiderProgressStage progressStage = ArcRaiderProgressStage.unsure,
+  ArcBlueprintOwnershipState blueprintOwnership =
+      ArcBlueprintOwnershipState.unsure,
+  ArcQuestProgressState questProgress = ArcQuestProgressState.unsure,
+  DateTime? completedAt,
+}) {
+  final goals = <ArcPersonalisationGoal>{primaryGoal, ...secondaryGoals};
+  final interests =
+      <ArcPersonalisationFeature, ArcPersonalisationInterestLevel>{};
+
+  void raise(
+    ArcPersonalisationFeature feature,
+    ArcPersonalisationInterestLevel level,
+  ) {
+    final current = interests[feature];
+    if (current == null || level.weight > current.weight) {
+      interests[feature] = level;
+    }
+  }
+
+  void applyGoal(
+    ArcPersonalisationGoal goal,
+    ArcPersonalisationInterestLevel level,
+  ) {
+    for (final feature in arcOnboardingFeaturesForGoal(goal)) {
+      raise(feature, level);
+    }
+  }
+
+  applyGoal(primaryGoal, ArcPersonalisationInterestLevel.primary);
+  for (final goal in secondaryGoals) {
+    if (goal != primaryGoal) {
+      applyGoal(goal, ArcPersonalisationInterestLevel.high);
+    }
+  }
+
+  final blueprintJourney =
+      goals.contains(ArcPersonalisationGoal.completeBlueprints) ||
+      goals.contains(ArcPersonalisationGoal.buildFavouriteLoadout) ||
+      goals.contains(ArcPersonalisationGoal.exploreEverything);
+
+  if (blueprintJourney) {
+    switch (blueprintOwnership) {
+      case ArcBlueprintOwnershipState.none:
+        interests[ArcPersonalisationFeature.blueprintTracker] =
+            ArcPersonalisationInterestLevel.high;
+        raise(
+          ArcPersonalisationFeature.favouriteLoadout,
+          ArcPersonalisationInterestLevel.primary,
+        );
+        raise(
+          ArcPersonalisationFeature.raidIntelligence,
+          ArcPersonalisationInterestLevel.high,
+        );
+        break;
+      case ArcBlueprintOwnershipState.some:
+        raise(
+          ArcPersonalisationFeature.blueprintTracker,
+          ArcPersonalisationInterestLevel.primary,
+        );
+        raise(
+          ArcPersonalisationFeature.favouriteLoadout,
+          ArcPersonalisationInterestLevel.high,
+        );
+        raise(
+          ArcPersonalisationFeature.raidIntelligence,
+          ArcPersonalisationInterestLevel.high,
+        );
+        break;
+      case ArcBlueprintOwnershipState.unsure:
+        break;
+    }
+  }
+
+  if (questProgress == ArcQuestProgressState.startingOrReset &&
+      (goals.contains(ArcPersonalisationGoal.progressQuests) ||
+          goals.contains(ArcPersonalisationGoal.exploreEverything))) {
+    raise(
+      ArcPersonalisationFeature.questTracker,
+      primaryGoal == ArcPersonalisationGoal.progressQuests
+          ? ArcPersonalisationInterestLevel.primary
+          : ArcPersonalisationInterestLevel.high,
+    );
+  }
+
+  return ArcUserPersonalisationProfile(
+    completed: true,
+    completedAt: completedAt ?? DateTime.now(),
+    source: 'progressive_onboarding_v7',
+    goals: goals,
+    featureInterests: interests,
+    commandCentre: ArcCommandCentrePreferenceSet(
+      density: ArcCommandCentreDensity.compact,
+      dailyMissions: true,
+      recommendations: true,
+      riskWarnings: true,
+      tradeActivity: goals.contains(ArcPersonalisationGoal.tradeBlueprints),
+      socialActivity: goals.contains(ArcPersonalisationGoal.findSquads),
+      progressionCards:
+          goals.contains(ArcPersonalisationGoal.completeBlueprints) ||
+          goals.contains(ArcPersonalisationGoal.findBlueprintIntel) ||
+          goals.contains(ArcPersonalisationGoal.progressQuests) ||
+          goals.contains(ArcPersonalisationGoal.upgradeBench) ||
+          goals.contains(ArcPersonalisationGoal.trackResources),
+      upcomingAvailability: goals.contains(ArcPersonalisationGoal.findSquads),
+      trackerSummaries: true,
+      raidPreparation:
+          goals.contains(ArcPersonalisationGoal.planRaids) ||
+          goals.contains(ArcPersonalisationGoal.huntARat),
+      systemShortcuts: true,
+    ),
+    squadPreference: ArcSoloSquadPreference.flexible,
+    notificationCategories: arcDefaultPersonalisationNotificationCategories,
+    progressStage: progressStage,
+    blueprintOwnership: blueprintOwnership,
+    questProgress: questProgress,
+    reduceNoise: true,
+  );
+}
+
+Set<ArcPersonalisationFeature> arcOnboardingFeaturesForGoal(
+  ArcPersonalisationGoal goal,
+) {
+  switch (goal) {
+    case ArcPersonalisationGoal.exploreEverything:
+      return const {
+        ArcPersonalisationFeature.blueprintTracker,
+        ArcPersonalisationFeature.raidIntelligence,
+        ArcPersonalisationFeature.questTracker,
+        ArcPersonalisationFeature.trading,
+      };
+    case ArcPersonalisationGoal.completeBlueprints:
+      return const {
+        ArcPersonalisationFeature.blueprintTracker,
+        ArcPersonalisationFeature.blueprintIntelligence,
+        ArcPersonalisationFeature.blueprintWatches,
+        ArcPersonalisationFeature.raidIntelligence,
+      };
+    case ArcPersonalisationGoal.findBlueprintIntel:
+      return const {
+        ArcPersonalisationFeature.blueprintIntelligence,
+        ArcPersonalisationFeature.blueprintWatches,
+        ArcPersonalisationFeature.raidIntelligence,
+      };
+    case ArcPersonalisationGoal.tradeBlueprints:
+      return const {
+        ArcPersonalisationFeature.trading,
+        ArcPersonalisationFeature.smartTrade,
+        ArcPersonalisationFeature.communications,
+      };
+    case ArcPersonalisationGoal.buildFavouriteLoadout:
+      return const {ArcPersonalisationFeature.favouriteLoadout};
+    case ArcPersonalisationGoal.progressQuests:
+      return const {
+        ArcPersonalisationFeature.questTracker,
+        ArcPersonalisationFeature.scrappyTracker,
+        ArcPersonalisationFeature.benchTracker,
+      };
+    case ArcPersonalisationGoal.upgradeBench:
+      return const {
+        ArcPersonalisationFeature.benchTracker,
+        ArcPersonalisationFeature.scrappyTracker,
+      };
+    case ArcPersonalisationGoal.trackResources:
+      return const {
+        ArcPersonalisationFeature.scrappyTracker,
+        ArcPersonalisationFeature.nomadicTrader,
+      };
+    case ArcPersonalisationGoal.planRaids:
+      return const {
+        ArcPersonalisationFeature.raidPlanner,
+        ArcPersonalisationFeature.raidIntelligence,
+        ArcPersonalisationFeature.huntTargets,
+      };
+    case ArcPersonalisationGoal.huntARat:
+      return const {
+        ArcPersonalisationFeature.huntARat,
+        ArcPersonalisationFeature.ratRadar,
+        ArcPersonalisationFeature.huntTargets,
+        ArcPersonalisationFeature.communityIntel,
+      };
+    case ArcPersonalisationGoal.findSquads:
+      return const {
+        ArcPersonalisationFeature.matchRider,
+        ArcPersonalisationFeature.availability,
+        ArcPersonalisationFeature.favouriteRiders,
+      };
+    case ArcPersonalisationGoal.followOperations:
+      return const {ArcPersonalisationFeature.operations};
+    case ArcPersonalisationGoal.manageCosmetics:
+      return const {
+        ArcPersonalisationFeature.rewardVault,
+        ArcPersonalisationFeature.operations,
+      };
+    case ArcPersonalisationGoal.receiveCommunityIntel:
+      return const {
+        ArcPersonalisationFeature.communityIntel,
+        ArcPersonalisationFeature.raidIntelligence,
+      };
+    case ArcPersonalisationGoal.improveReputation:
+      return const {ArcPersonalisationFeature.profile};
+    case ArcPersonalisationGoal.playLikeAPro:
+      return const {
+        ArcPersonalisationFeature.playLikeAPro,
+        ArcPersonalisationFeature.raidIntelligence,
+      };
+  }
+}
+
+String arcOnboardingRecommendedSystem(
+  ArcPersonalisationGoal goal, {
+  ArcRaiderProgressStage progressStage = ArcRaiderProgressStage.unsure,
+  ArcBlueprintOwnershipState blueprintOwnership =
+      ArcBlueprintOwnershipState.unsure,
+  ArcQuestProgressState questProgress = ArcQuestProgressState.unsure,
+}) {
+  switch (goal) {
+    case ArcPersonalisationGoal.completeBlueprints:
+      return blueprintOwnership == ArcBlueprintOwnershipState.none
+          ? 'favouriteLoadout'
+          : 'blueprintTracker';
+    case ArcPersonalisationGoal.findBlueprintIntel:
+      return 'blueprintIntelligence';
+    case ArcPersonalisationGoal.tradeBlueprints:
+      return 'trading';
+    case ArcPersonalisationGoal.buildFavouriteLoadout:
+      return 'favouriteLoadout';
+    case ArcPersonalisationGoal.progressQuests:
+      return 'questTracker';
+    case ArcPersonalisationGoal.upgradeBench:
+      return 'benchTracker';
+    case ArcPersonalisationGoal.trackResources:
+      return 'scrappyTracker';
+    case ArcPersonalisationGoal.planRaids:
+      return 'raidIntelligence';
+    case ArcPersonalisationGoal.huntARat:
+      return 'huntARat';
+    case ArcPersonalisationGoal.findSquads:
+      return 'matchRider';
+    case ArcPersonalisationGoal.followOperations:
+      return 'operations';
+    case ArcPersonalisationGoal.manageCosmetics:
+      return 'rewardVault';
+    case ArcPersonalisationGoal.receiveCommunityIntel:
+      return 'communityIntel';
+    case ArcPersonalisationGoal.improveReputation:
+      return 'profile';
+    case ArcPersonalisationGoal.playLikeAPro:
+      return 'playLikeAPro';
+    case ArcPersonalisationGoal.exploreEverything:
+      if (blueprintOwnership == ArcBlueprintOwnershipState.none &&
+          (progressStage == ArcRaiderProgressStage.newRaider ||
+              progressStage == ArcRaiderProgressStage.freshExpedition)) {
+        return 'favouriteLoadout';
+      }
+      if (blueprintOwnership == ArcBlueprintOwnershipState.some) {
+        return 'blueprintTracker';
+      }
+      if (questProgress == ArcQuestProgressState.startingOrReset) {
+        return 'questTracker';
+      }
+      return 'commandCentre';
+  }
+}

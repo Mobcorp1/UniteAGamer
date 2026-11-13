@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
-import 'package:uag_traders_hub/widgets/electric_charge_border.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
+import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class BlueprintTile extends StatelessWidget {
   const BlueprintTile({
@@ -16,6 +16,9 @@ class BlueprintTile extends StatelessWidget {
     required this.onLongPress,
     this.isSelectionMode = false,
     this.isSelected = false,
+    this.loadoutAction,
+    this.showOwnershipBadge = true,
+    this.contentScale = 1.0,
   });
 
   final ArcBlueprint blueprint;
@@ -26,6 +29,9 @@ class BlueprintTile extends StatelessWidget {
   final VoidCallback onLongPress;
   final bool isSelectionMode;
   final bool isSelected;
+  final Widget? loadoutAction;
+  final bool showOwnershipBadge;
+  final double contentScale;
 
   @override
   Widget build(BuildContext context) {
@@ -33,34 +39,38 @@ class BlueprintTile extends StatelessWidget {
     final accent = isSelected
         ? AppTheme.neonPink
         : owned
-            ? rarityColor
-            : Colors.redAccent.withValues(alpha: 0.55);
+        ? rarityColor
+        : Colors.redAccent.withValues(alpha: 0.55);
 
     return ElectricChargeBorder(
       active: isSelected,
-      radius: 12,
+      radius: 10,
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         onTap: onTap,
         onLongPress: onLongPress,
         child: Container(
           decoration: AppTheme.tradingCardDecoration(
-            radius: 12,
+            radius: 10,
             borderColor: accent.withValues(
-              alpha: isSelected ? 0.88 : owned ? 0.55 : 0.24,
+              alpha: isSelected
+                  ? 0.88
+                  : owned
+                  ? 0.55
+                  : 0.24,
             ),
             backgroundColor: isSelected
                 ? AppTheme.cardBackgroundAlt.withValues(alpha: 0.96)
                 : owned
-                    ? AppTheme.cardBackgroundAlt
-                    : AppTheme.cardBackground,
+                ? AppTheme.cardBackgroundAlt
+                : AppTheme.cardBackground,
           ),
           child: Padding(
             padding: EdgeInsets.fromLTRB(
-              landscape ? 3 : 5,
-              landscape ? 3 : 5,
-              landscape ? 3 : 5,
-              landscape ? 2 : 3,
+              landscape ? 3 : 4,
+              landscape ? 3 : 4,
+              landscape ? 3 : 4,
+              landscape ? 2 : 2,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -73,15 +83,17 @@ class BlueprintTile extends StatelessWidget {
                     state: state,
                     isSelectionMode: isSelectionMode,
                     isSelected: isSelected,
+                    loadoutAction: loadoutAction,
+                    showOwnershipBadge: showOwnershipBadge,
                   ),
                 ),
-                SizedBox(height: landscape ? 2 : 4),
+                SizedBox(height: landscape ? 2 : 2),
                 Text(
                   blueprint.name,
                   maxLines: landscape ? 1 : 2,
                   overflow: TextOverflow.ellipsis,
                   style: AppTheme.tradingHeading(
-                    fontSize: landscape ? 9 : 12,
+                    fontSize: (landscape ? 9 : 10) * contentScale,
                     color: owned ? Colors.white : Colors.white70,
                   ),
                 ),
@@ -91,7 +103,10 @@ class BlueprintTile extends StatelessWidget {
                     blueprint.rarityLabel,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Colors.white54, fontSize: 10),
+                    style: TextStyle(
+                      color: Colors.white54,
+                      fontSize: 9 * contentScale,
+                    ),
                   ),
                 ],
               ],
@@ -111,6 +126,8 @@ class _BlueprintTileVisual extends StatelessWidget {
     required this.state,
     required this.isSelectionMode,
     required this.isSelected,
+    this.loadoutAction,
+    required this.showOwnershipBadge,
   });
 
   final ArcBlueprint blueprint;
@@ -119,6 +136,8 @@ class _BlueprintTileVisual extends StatelessWidget {
   final ArcBlueprintState state;
   final bool isSelectionMode;
   final bool isSelected;
+  final Widget? loadoutAction;
+  final bool showOwnershipBadge;
 
   @override
   Widget build(BuildContext context) {
@@ -130,17 +149,39 @@ class _BlueprintTileVisual extends StatelessWidget {
               children: [
                 ColorFiltered(
                   colorFilter: owned
-                      ? const ColorFilter.mode(Colors.transparent, BlendMode.dst)
+                      ? const ColorFilter.mode(
+                          Colors.transparent,
+                          BlendMode.dst,
+                        )
                       : const ColorFilter.matrix(<double>[
-                          0.2126, 0.7152, 0.0722, 0, 0,
-                          0.2126, 0.7152, 0.0722, 0, 0,
-                          0.2126, 0.7152, 0.0722, 0, 0,
-                          0, 0, 0, 1, 0,
+                          0.2126,
+                          0.7152,
+                          0.0722,
+                          0,
+                          0,
+                          0.2126,
+                          0.7152,
+                          0.0722,
+                          0,
+                          0,
+                          0.2126,
+                          0.7152,
+                          0.0722,
+                          0,
+                          0,
+                          0,
+                          0,
+                          0,
+                          1,
+                          0,
                         ]),
                   child: Image.asset(
                     blueprint.imageAssetPath!,
                     fit: BoxFit.cover,
                     alignment: Alignment.center,
+                    filterQuality: FilterQuality.high,
+                    isAntiAlias: true,
+                    gaplessPlayback: true,
                     errorBuilder: (_, _, _) => _placeholder(),
                   ),
                 ),
@@ -157,14 +198,17 @@ class _BlueprintTileVisual extends StatelessWidget {
     return Stack(
       children: [
         Positioned.fill(child: image),
-        Positioned(
-          top: 4,
-          right: 4,
-          child: _cornerBadge(
-            icon: state.owned ? Icons.check_circle_rounded : Icons.close_rounded,
-            color: state.owned ? Colors.lightGreenAccent : Colors.redAccent,
+        if (showOwnershipBadge)
+          Positioned(
+            top: 4,
+            right: 4,
+            child: _cornerBadge(
+              icon: state.owned
+                  ? Icons.check_circle_rounded
+                  : Icons.close_rounded,
+              color: state.owned ? Colors.lightGreenAccent : Colors.redAccent,
+            ),
           ),
-        ),
         if (state.hasDuplicates)
           Positioned(
             right: 4,
@@ -199,6 +243,8 @@ class _BlueprintTileVisual extends StatelessWidget {
               color: isSelected ? AppTheme.neonPink : Colors.white54,
             ),
           ),
+        if (loadoutAction != null)
+          Positioned(left: 4, bottom: 4, child: loadoutAction!),
       ],
     );
   }
@@ -208,9 +254,7 @@ class _BlueprintTileVisual extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.cardBackgroundAlt,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: accent.withValues(alpha: 0.30),
-        ),
+        border: Border.all(color: accent.withValues(alpha: 0.30)),
       ),
       child: Center(
         child: Icon(

@@ -1,11 +1,17 @@
+import 'package:add_2_calendar/add_2_calendar.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:uag_arc_raiders_hub/features/notifications/models/uag_session_schedule_models.dart';
 
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/trading_session.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
-import 'package:uag_traders_hub/widgets/electric_charge_border.dart';
-import 'package:uag_traders_hub/widgets/static_watermark.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_session.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_trading_workspace_bar.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_card.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_cosmetic_identity_strip.dart';
+import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class TradingTradeSessionsScreen extends StatefulWidget {
   static const routeName = '/trading-hub/arc-raiders/sessions';
@@ -72,7 +78,7 @@ class _TradingTradeSessionsScreenState
 
   String _formatDateTime(DateTime? value) {
     if (value == null) return 'Not confirmed yet';
-    return '${_formatDate(value)} • ${_formatTime(value)}';
+    return '${_formatDate(value)} - ${_formatTime(value)}';
   }
 
   bool _isStartingSoon(TradingSession session) {
@@ -89,6 +95,165 @@ class _TradingTradeSessionsScreenState
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  String _safeActionError(String message) {
+    final trimmed = message.trimRight();
+    if (trimmed.endsWith(':')) {
+      return '${trimmed.substring(0, trimmed.length - 1)}. Try again.';
+    }
+    return trimmed.endsWith('.')
+        ? '$trimmed Try again.'
+        : '$trimmed. Try again.';
+  }
+
+  Future<void> _openSessionReadinessPanel(TradingSession session) async {
+    final confirmedBooking = session.selectedBooking ?? session.scheduledAt;
+    final isReady = _isTraderOne(session)
+        ? session.traderOneReady
+        : session.traderTwoReady;
+    final myEmbarkShared = _isTraderOne(session)
+        ? session.traderOneSharedEmbarkId
+        : session.traderTwoSharedEmbarkId;
+    final bothEmbarkIdsShared =
+        session.traderOneSharedEmbarkId && session.traderTwoSharedEmbarkId;
+    final myEmbarkId = _isTraderOne(session)
+        ? session.traderOneEmbarkId
+        : session.traderTwoEmbarkId;
+    final otherEmbarkId = _isTraderOne(session)
+        ? session.traderTwoEmbarkId
+        : session.traderOneEmbarkId;
+    final firstDropLabel = session.dropOrderAssigned
+        ? (session.firstDropUid == session.traderOneUid
+              ? session.traderOneName
+              : session.traderTwoName)
+        : 'Not assigned yet';
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return Container(
+          margin: const EdgeInsets.all(AppTheme.spaceM),
+          padding: ArcUiTokens.panelPadding,
+          decoration: ArcUiTokens.surfaceDecoration(
+            role: ArcSurfaceRole.overlay,
+            accent: ArcUiTokens.secondaryAccent,
+            borderOpacity: 0.32,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Session readiness',
+                  style: ArcUiTokens.sectionTitle(
+                    fontSize: 18,
+                    color: ArcUiTokens.secondaryAccent,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '${session.traderOneName} vs ${session.traderTwoName}',
+                  style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
+                ),
+                const SizedBox(height: AppTheme.spaceM),
+                _sessionReadinessRow(
+                  'Confirmed slot',
+                  _formatDateTime(confirmedBooking),
+                  confirmedBooking != null,
+                ),
+                _sessionReadinessRow(
+                  'My Embark ID',
+                  myEmbarkId.trim().isEmpty
+                      ? 'Not shared yet'
+                      : myEmbarkId.trim(),
+                  myEmbarkShared,
+                ),
+                _sessionReadinessRow(
+                  '${_otherTraderName(session)} Embark ID',
+                  otherEmbarkId.trim().isEmpty
+                      ? 'Waiting for trader'
+                      : otherEmbarkId.trim(),
+                  bothEmbarkIdsShared,
+                ),
+                _sessionReadinessRow(
+                  'First drop',
+                  firstDropLabel,
+                  session.dropOrderAssigned,
+                ),
+                _sessionReadinessRow(
+                  'Ready check',
+                  session.bothReady
+                      ? 'Both traders ready'
+                      : isReady
+                      ? 'Waiting for trader'
+                      : 'Mark yourself ready',
+                  session.bothReady,
+                ),
+                const SizedBox(height: AppTheme.spaceM),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [
+                    _actionButton(
+                      label: 'Share invite',
+                      icon: Icons.ios_share_rounded,
+                      onPressed: () {
+                        Navigator.of(sheetContext).pop();
+                        _shareInvite(session);
+                      },
+                    ),
+                    _actionButton(
+                      label: session.hasBookingOptions
+                          ? 'Update proposals'
+                          : 'Propose times',
+                      icon: Icons.calendar_month_rounded,
+                      highlighted: confirmedBooking == null,
+                      onPressed: () {
+                        Navigator.of(sheetContext).pop();
+                        _openBookingComposer(session);
+                      },
+                    ),
+                    _actionButton(
+                      label: myEmbarkShared
+                          ? 'Update Embark ID'
+                          : 'Share Embark ID',
+                      icon: Icons.badge_outlined,
+                      highlighted: !myEmbarkShared,
+                      onPressed: () {
+                        Navigator.of(sheetContext).pop();
+                        _shareEmbarkId(session);
+                      },
+                    ),
+                    _actionButton(
+                      label: isReady ? 'Unready' : 'I am ready',
+                      icon: isReady
+                          ? Icons.remove_circle_outline_rounded
+                          : Icons.check_circle_outline_rounded,
+                      highlighted: confirmedBooking != null && !isReady,
+                      onPressed: () {
+                        Navigator.of(sheetContext).pop();
+                        _runAction(
+                          () => _repository.setMyReadyState(session, !isReady),
+                          successMessage: isReady
+                              ? 'Ready status removed.'
+                              : 'Ready status updated.',
+                          errorPrefix: 'Could not update readiness: ',
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _runAction(
     Future<void> Function() action, {
     required String successMessage,
@@ -100,11 +265,11 @@ class _TradingTradeSessionsScreenState
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(successMessage)));
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('$errorPrefix$error')));
+      ).showSnackBar(SnackBar(content: Text(_safeActionError(errorPrefix))));
     }
   }
 
@@ -118,38 +283,30 @@ class _TradingTradeSessionsScreenState
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          backgroundColor: AppTheme.tradingCardBackground,
-          shape: AppTheme.tradingDialogShape(),
+          backgroundColor: ArcUiTokens.surfaceOverlay,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
+            side: BorderSide(color: confirmColor.withValues(alpha: 0.30)),
+          ),
           title: Text(
             title,
-            style: AppTheme.tradingHeading(fontSize: 22, color: Colors.white),
+            style: ArcUiTokens.sectionTitle(fontSize: 18, color: confirmColor),
           ),
           content: Text(
             message,
-            style: AppTheme.bodyTextStyle(
-              fontSize: 14,
-              color: AppTheme.tradingMutedText,
-            ),
+            style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
           ),
           actions: [
             TextButton(
+              style: ArcUiTokens.textButtonStyle(accent: confirmColor),
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: Text(
-                'Back',
-                style: AppTheme.bodyTextStyle(
-                  fontSize: 14,
-                  color: AppTheme.tradingFaintText,
-                ),
-              ),
+              child: const Text('Back'),
             ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: confirmColor.withValues(alpha: 0.15),
-                foregroundColor: confirmColor,
-                side: BorderSide(color: confirmColor.withValues(alpha: 0.50)),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
+            TextButton(
+              style: ArcUiTokens.textButtonStyle(
+                accent: confirmColor,
+                primary: true,
               ),
               onPressed: () => Navigator.of(dialogContext).pop(true),
               child: Text(confirmText),
@@ -174,45 +331,49 @@ class _TradingTradeSessionsScreenState
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          backgroundColor: AppTheme.tradingCardBackground,
-          shape: AppTheme.tradingDialogShape(),
+          backgroundColor: ArcUiTokens.surfaceOverlay,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
+            side: BorderSide(
+              color: ArcUiTokens.primaryAccent.withValues(alpha: 0.30),
+            ),
+          ),
           title: Text(
             'Share Embark ID',
-            style: AppTheme.tradingHeading(fontSize: 22, color: Colors.white),
+            style: ArcUiTokens.sectionTitle(
+              fontSize: 18,
+              color: ArcUiTokens.primaryAccent,
+            ),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: controller,
-                style: AppTheme.bodyTextStyle(
-                  fontSize: 15,
-                  color: Colors.white,
-                ),
-                decoration: AppTheme.tradingInputDecoration(label: 'Embark ID'),
+                style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+                decoration: ArcUiTokens.inputDecoration(labelText: 'Embark ID'),
               ),
               const SizedBox(height: 10),
               Text(
-                'Loaded from your trader profile if saved there already.',
-                style: AppTheme.bodyTextStyle(
-                  fontSize: 12,
-                  color: AppTheme.tradingFaintText,
-                ),
+                'Loaded from Your Hub Profile if saved there already.',
+                style: ArcUiTokens.bodySmall(color: ArcUiTokens.textTertiary),
               ),
             ],
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: Text(
-                'Cancel',
-                style: AppTheme.bodyTextStyle(
-                  fontSize: 14,
-                  color: AppTheme.tradingFaintText,
-                ),
+              style: ArcUiTokens.textButtonStyle(
+                accent: ArcUiTokens.primaryAccent,
               ),
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
             ),
-            ElevatedButton(
+            TextButton(
+              style: ArcUiTokens.textButtonStyle(
+                accent: ArcUiTokens.primaryAccent,
+                primary: true,
+              ),
               onPressed: () => Navigator.of(dialogContext).pop(true),
               child: const Text('Save'),
             ),
@@ -240,11 +401,20 @@ class _TradingTradeSessionsScreenState
         ];
 
         return AlertDialog(
-          backgroundColor: AppTheme.tradingCardBackground,
-          shape: AppTheme.tradingDialogShape(),
+          backgroundColor: ArcUiTokens.surfaceOverlay,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
+            side: BorderSide(
+              color: ArcUiTokens.primaryAccent.withValues(alpha: 0.30),
+            ),
+          ),
           title: Text(
             'Assign First Drop',
-            style: AppTheme.tradingHeading(fontSize: 22, color: Colors.white),
+            style: ArcUiTokens.sectionTitle(
+              fontSize: 18,
+              color: ArcUiTokens.primaryAccent,
+            ),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -252,21 +422,19 @@ class _TradingTradeSessionsScreenState
                 .map(
                   (entry) => ListTile(
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
                     ),
                     title: Text(
                       entry.value,
-                      style: AppTheme.bodyTextStyle(
-                        fontSize: 15,
-                        color: Colors.white,
-                        isBold: true,
+                      style: ArcUiTokens.body(
+                        color: ArcUiTokens.textPrimary,
+                        weight: FontWeight.w700,
                       ),
                     ),
                     subtitle: Text(
                       entry.key,
-                      style: AppTheme.bodyTextStyle(
-                        fontSize: 12,
-                        color: AppTheme.tradingFaintText,
+                      style: ArcUiTokens.metadata(
+                        color: ArcUiTokens.textTertiary,
                       ),
                     ),
                     onTap: () => Navigator.of(dialogContext).pop(entry.key),
@@ -289,7 +457,55 @@ class _TradingTradeSessionsScreenState
   }
 
   Future<void> _shareInvite(TradingSession session) async {
-    await Share.share(_repository.buildSessionInviteText(session));
+    await SharePlus.instance.share(
+      ShareParams(text: _repository.buildSessionInviteText(session)),
+    );
+  }
+
+  UagSessionCalendarPayload? _calendarPayload(TradingSession session) {
+    final scheduledAt = session.effectiveScheduledAt;
+    if (scheduledAt == null) return null;
+
+    return const UagSessionSchedulePlanner().calendarPayload(
+      sessionId: session.id,
+      kind: UagSessionScheduleKind.trade,
+      startAt: scheduledAt,
+      route: TradingTradeSessionsScreen.routeName,
+      deepLink: TradingTradeSessionsScreen.routeName,
+      location: 'ARC Raiders trade session',
+      notes:
+          'Protocol: ${session.protocolLabel}\nListing ID: ${session.listingId}',
+      participants: [
+        UagSessionParticipant(
+          uid: session.traderOneUid,
+          displayName: session.traderOneName,
+          embarkId: session.traderOneEmbarkId,
+        ),
+        UagSessionParticipant(
+          uid: session.traderTwoUid,
+          displayName: session.traderTwoName,
+          embarkId: session.traderTwoEmbarkId,
+        ),
+      ],
+    );
+  }
+
+  Future<void> _addToCalendar(TradingSession session) async {
+    final payload = _calendarPayload(session);
+    if (payload == null) {
+      _showSnack('Confirm a booking slot before adding it to your calendar.');
+      return;
+    }
+
+    await Add2Calendar.addEvent2Cal(
+      Event(
+        title: payload.title,
+        description: payload.description,
+        location: payload.location,
+        startDate: payload.startAt,
+        endDate: payload.endAt,
+      ),
+    );
   }
 
   Future<void> _openBookingComposer(TradingSession session) async {
@@ -379,7 +595,7 @@ class _TradingTradeSessionsScreenState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Propose 3 days × 3 times',
+                      'Propose 3 days ‚ 3 times',
                       style: AppTheme.tradingHeading(fontSize: 24),
                     ),
                     const SizedBox(height: 8),
@@ -530,9 +746,9 @@ class _TradingTradeSessionsScreenState
 
                             if (!sheetContext.mounted) return;
                             Navigator.of(sheetContext).pop(true);
-                          } catch (error) {
+                          } catch (_) {
                             _showSnack(
-                              'Could not save booking options: $error',
+                              'Could not save booking options. Try again.',
                             );
                           }
                         },
@@ -630,6 +846,46 @@ class _TradingTradeSessionsScreenState
               style: AppTheme.bodyTextStyle(
                 fontSize: 14,
                 color: AppTheme.tradingMutedText,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _sessionReadinessRow(String label, String value, bool complete) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            complete ? Icons.check_circle : Icons.radio_button_unchecked,
+            color: complete
+                ? AppTheme.tradingSuccess
+                : AppTheme.tradingFaintText,
+            size: 18,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: RichText(
+              text: TextSpan(
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 14,
+                  color: AppTheme.tradingMutedText,
+                ),
+                children: [
+                  TextSpan(
+                    text: '$label: ',
+                    style: AppTheme.bodyTextStyle(
+                      fontSize: 14,
+                      color: AppTheme.neonCyan,
+                      isBold: true,
+                    ),
+                  ),
+                  TextSpan(text: value),
+                ],
               ),
             ),
           ),
@@ -822,6 +1078,54 @@ class _TradingTradeSessionsScreenState
     );
   }
 
+  Widget _sessionIdentityPair(TradingSession session) {
+    final firstSubtitle = [
+      session.traderOneReady ? 'Ready' : 'Not ready',
+      session.traderOneSharedEmbarkId ? 'Embark shared' : 'Embark hidden',
+    ].join(' - ');
+    final secondSubtitle = [
+      session.traderTwoReady ? 'Ready' : 'Not ready',
+      session.traderTwoSharedEmbarkId ? 'Embark shared' : 'Embark hidden',
+    ].join(' - ');
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final first = TradingCosmeticIdentityStrip(
+          repository: _repository,
+          uid: session.traderOneUid,
+          displayName: session.traderOneName,
+          subtitle: firstSubtitle,
+          compact: true,
+        );
+        final second = TradingCosmeticIdentityStrip(
+          repository: _repository,
+          uid: session.traderTwoUid,
+          displayName: session.traderTwoName,
+          subtitle: secondSubtitle,
+          compact: true,
+        );
+
+        if (constraints.maxWidth < 620) {
+          return Column(
+            children: [
+              first,
+              const SizedBox(height: AppTheme.spaceS),
+              second,
+            ],
+          );
+        }
+
+        return Row(
+          children: [
+            Expanded(child: first),
+            const SizedBox(width: AppTheme.spaceS),
+            Expanded(child: second),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildSessionCard(TradingSession session) {
     final confirmedBooking = session.selectedBooking ?? session.scheduledAt;
     final isReady = _isTraderOne(session)
@@ -832,242 +1136,266 @@ class _TradingTradeSessionsScreenState
         : session.traderTwoSharedEmbarkId;
     final bothEmbarkIdsShared =
         session.traderOneSharedEmbarkId && session.traderTwoSharedEmbarkId;
+    final myEmbarkId = _isTraderOne(session)
+        ? session.traderOneEmbarkId
+        : session.traderTwoEmbarkId;
+    final otherEmbarkId = _isTraderOne(session)
+        ? session.traderTwoEmbarkId
+        : session.traderOneEmbarkId;
     final needsChoice = _needsBookingChoice(session);
 
-    return Container(
+    return TradingCard(
       margin: const EdgeInsets.only(bottom: 16),
-      decoration: AppTheme.tradingCardDecoration(),
-      child: Padding(
-        padding: AppTheme.sectionCardPadding,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '${session.traderOneName} ↔ ${session.traderTwoName}',
-              style: AppTheme.tradingHeading(fontSize: 22),
-            ),
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _pill(session.statusLabel, _statusColor(session.status)),
-                _pill(session.protocolLabel, AppTheme.neonCyan),
-                _pill(session.timezone, AppTheme.neonPink),
-                if (needsChoice) _pill('Action needed', AppTheme.warningAmber),
-              ],
-            ),
-            const SizedBox(height: 14),
-            _infoRow('Confirmed slot', _formatDateTime(confirmedBooking)),
-            _infoRow(
-              'Embark IDs',
-              bothEmbarkIdsShared
-                  ? 'Both traders shared'
-                  : 'Waiting on one or both traders',
-            ),
-            _infoRow(
-              'First drop',
-              session.dropOrderAssigned
-                  ? (session.firstDropUid == session.traderOneUid
-                        ? session.traderOneName
-                        : session.traderTwoName)
-                  : 'Not assigned yet',
-            ),
-            const SizedBox(height: 12),
-            _bookingPanel(session),
-            const SizedBox(height: 12),
-            if (_isStartingSoon(session)) ...[
-              Container(
-                width: double.infinity,
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(12),
-                decoration: AppTheme.tradingCardDecoration(
-                  backgroundColor: AppTheme.cardBackgroundAlt,
-                  borderColor: AppTheme.warningAmber.withValues(alpha: 0.35),
-                  radius: 16,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Trade starting within 30 minutes',
-                      style: AppTheme.tradingHeading(
-                        fontSize: 18,
-                        color: AppTheme.warningAmber,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Make sure your Embark ID is shared, the time still works, and both traders are ready.',
-                      style: AppTheme.bodyTextStyle(
-                        fontSize: 13,
-                        color: AppTheme.tradingMutedText,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: [
-                        _actionButton(
-                          label: 'Open session',
-                          icon: Icons.open_in_new_rounded,
-                          highlighted: true,
-                          onPressed: () {},
-                        ),
-                        _actionButton(
-                          label: 'Request rearrangement',
-                          icon: Icons.update_rounded,
-                          onPressed: () => _openBookingComposer(session),
-                        ),
-                        _actionButton(
-                          label: 'Message trader',
-                          icon: Icons.message_outlined,
-                          onPressed: () => _shareInvite(session),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+      accent: _statusColor(session.status),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${session.traderOneName} vs ${session.traderTwoName}',
+            style: AppTheme.tradingHeading(fontSize: 22),
+          ),
+          const SizedBox(height: 10),
+          _sessionIdentityPair(session),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _pill(session.statusLabel, _statusColor(session.status)),
+              _pill(session.protocolLabel, AppTheme.neonCyan),
+              _pill(session.timezone, AppTheme.neonPink),
+              if (needsChoice) _pill('Action needed', AppTheme.warningAmber),
             ],
-            Divider(color: AppTheme.tradingDivider),
-            const SizedBox(height: 12),
-            Text(
-              'Trade checklist',
-              style: AppTheme.tradingHeading(
-                fontSize: 20,
-                color: AppTheme.neonPink,
+          ),
+          const SizedBox(height: 14),
+          _infoRow('Confirmed slot', _formatDateTime(confirmedBooking)),
+          _infoRow(
+            'My Embark ID',
+            myEmbarkId.trim().isEmpty ? 'Not shared yet' : myEmbarkId.trim(),
+          ),
+
+          _infoRow(
+            '${_otherTraderName(session)} Embark ID',
+            otherEmbarkId.trim().isEmpty
+                ? 'Waiting for trader to share'
+                : otherEmbarkId.trim(),
+          ),
+
+          _infoRow(
+            'Friend request',
+            confirmedBooking == null
+                ? 'Confirm a time first'
+                : bothEmbarkIdsShared
+                ? 'Send/add the in-game friend request before the trade'
+                : 'Share both Embark IDs first',
+          ),
+          _infoRow(
+            'First drop',
+            session.dropOrderAssigned
+                ? (session.firstDropUid == session.traderOneUid
+                      ? session.traderOneName
+                      : session.traderTwoName)
+                : 'Not assigned yet',
+          ),
+          const SizedBox(height: 12),
+          _bookingPanel(session),
+          const SizedBox(height: 12),
+          if (_isStartingSoon(session)) ...[
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(12),
+              decoration: AppTheme.tradingCardDecoration(
+                backgroundColor: AppTheme.cardBackgroundAlt,
+                borderColor: AppTheme.warningAmber.withValues(alpha: 0.35),
+                radius: 16,
               ),
-            ),
-            const SizedBox(height: 10),
-            _checkItem('Booking slot confirmed', confirmedBooking != null),
-            _checkItem('My Embark ID shared', myEmbarkShared),
-            _checkItem('Both Embark IDs shared', bothEmbarkIdsShared),
-            _checkItem('Drop order assigned', session.dropOrderAssigned),
-            _checkItem('Both traders ready', session.bothReady),
-            _checkItem(
-              'Safe Pocket protocol selected',
-              session.protocolType ==
-                  TradingProtocolType.sequentialSafePocketSwap,
-            ),
-            const SizedBox(height: 14),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                _actionButton(
-                  label: session.hasBookingOptions
-                      ? 'Update proposals'
-                      : 'Propose times',
-                  icon: Icons.calendar_month_rounded,
-                  highlighted: !session.hasConfirmedBooking && !needsChoice,
-                  onPressed: () => _openBookingComposer(session),
-                ),
-                _actionButton(
-                  label: 'Share invite',
-                  icon: Icons.ios_share_rounded,
-                  onPressed: () => _shareInvite(session),
-                ),
-                _actionButton(
-                  label: myEmbarkShared
-                      ? 'Update Embark ID'
-                      : 'Share Embark ID',
-                  icon: Icons.badge_outlined,
-                  highlighted: confirmedBooking != null && !myEmbarkShared,
-                  onPressed: () => _shareEmbarkId(session),
-                ),
-                _actionButton(
-                  label: 'Assign first drop',
-                  icon: Icons.swap_horiz_rounded,
-                  highlighted:
-                      confirmedBooking != null && !session.dropOrderAssigned,
-                  onPressed: () => _pickDropOrder(session),
-                ),
-                _actionButton(
-                  label: isReady ? 'Unready' : 'I am ready',
-                  icon: isReady
-                      ? Icons.remove_circle_outline_rounded
-                      : Icons.check_circle_outline_rounded,
-                  highlighted: confirmedBooking != null && !isReady,
-                  onPressed: () => _runAction(
-                    () => _repository.setMyReadyState(session, !isReady),
-                    successMessage: isReady
-                        ? 'Ready status removed.'
-                        : 'Ready status updated.',
-                    errorPrefix: 'Could not update readiness: ',
-                  ),
-                ),
-                _actionButton(
-                  label: 'Mark complete',
-                  icon: Icons.task_alt_rounded,
-                  onPressed: () => _runAction(
-                    () => _repository.markMySessionOutcome(
-                      session: session,
-                      outcome: TradingSessionStatus.completed,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Trade starting within 30 minutes',
+                    style: AppTheme.tradingHeading(
+                      fontSize: 18,
+                      color: AppTheme.warningAmber,
                     ),
-                    successMessage: 'Completion marked.',
-                    errorPrefix: 'Could not mark complete: ',
                   ),
-                ),
-                _actionButton(
-                  label: 'Mark no-show',
-                  icon: Icons.person_off_outlined,
-                  onPressed: () async {
-                    final ok = await _confirmAction(
-                      title: 'Record a no-show?',
-                      message:
-                          'Only record this if the agreed session time passed and your trading partner did not turn up.',
-                      confirmText: 'Record no-show',
-                      confirmColor: AppTheme.tradingDanger,
-                    );
-                    if (!ok) return;
-                    await _runAction(
-                      () => _repository.markMySessionOutcome(
-                        session: session,
-                        outcome: TradingSessionStatus.noShow,
+                  const SizedBox(height: 8),
+                  Text(
+                    'Make sure your Embark ID is shared, the time still works, and both traders are ready.',
+                    style: AppTheme.bodyTextStyle(
+                      fontSize: 13,
+                      color: AppTheme.tradingMutedText,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: [
+                      _actionButton(
+                        label: 'Open session',
+                        icon: Icons.open_in_new_rounded,
+                        highlighted: true,
+                        onPressed: () => _openSessionReadinessPanel(session),
                       ),
-                      successMessage: 'No-show recorded.',
-                      errorPrefix: 'Could not record no-show: ',
-                    );
-                  },
-                ),
-                _actionButton(
-                  label: 'Flag betrayal',
-                  icon: Icons.gpp_bad_outlined,
-                  onPressed: () async {
-                    final ok = await _confirmAction(
-                      title: 'Flag betrayal?',
-                      message:
-                          'Use this only if the trade went bad or the agreed protocol was broken.',
-                      confirmText: 'Flag betrayal',
-                      confirmColor: AppTheme.tradingDanger,
-                    );
-                    if (!ok) return;
-                    await _runAction(
-                      () => _repository.markMySessionOutcome(
-                        session: session,
-                        outcome: TradingSessionStatus.betrayal,
+                      _actionButton(
+                        label: 'Request rearrangement',
+                        icon: Icons.update_rounded,
+                        onPressed: () => _openBookingComposer(session),
                       ),
-                      successMessage: 'Betrayal flagged.',
-                      errorPrefix: 'Could not flag betrayal: ',
-                    );
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Divider(color: AppTheme.tradingDivider),
-            const SizedBox(height: 10),
-            Text(
-              'Flow: accept offer → propose 3 days × 3 times → other trader confirms one slot → share Embark IDs → assign first drop → both mark ready.',
-              style: AppTheme.bodyTextStyle(
-                fontSize: 13,
-                color: AppTheme.tradingMutedText,
+                      _actionButton(
+                        label: 'Message trader',
+                        icon: Icons.message_outlined,
+                        onPressed: () => _shareInvite(session),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ],
-        ),
+          Divider(color: AppTheme.tradingDivider),
+          const SizedBox(height: 12),
+          Text(
+            'Trade checklist',
+            style: AppTheme.tradingHeading(
+              fontSize: 20,
+              color: AppTheme.neonPink,
+            ),
+          ),
+          const SizedBox(height: 10),
+          _checkItem('Booking slot confirmed', confirmedBooking != null),
+          _checkItem('My Embark ID shared', myEmbarkShared),
+          _checkItem('Both Embark IDs shared', bothEmbarkIdsShared),
+          _checkItem('Drop order assigned', session.dropOrderAssigned),
+          _checkItem('Both traders ready', session.bothReady),
+          _checkItem(
+            'Safe Pocket protocol selected',
+            session.protocolType ==
+                TradingProtocolType.sequentialSafePocketSwap,
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              _actionButton(
+                label: session.hasBookingOptions
+                    ? 'Update proposals'
+                    : 'Propose times',
+                icon: Icons.calendar_month_rounded,
+                highlighted: !session.hasConfirmedBooking && !needsChoice,
+                onPressed: () => _openBookingComposer(session),
+              ),
+              _actionButton(
+                label: 'Share invite',
+                icon: Icons.ios_share_rounded,
+                onPressed: () => _shareInvite(session),
+              ),
+              if (confirmedBooking != null)
+                _actionButton(
+                  label: 'Calendar',
+                  icon: Icons.event_rounded,
+                  onPressed: () => _addToCalendar(session),
+                ),
+              _actionButton(
+                label: myEmbarkShared ? 'Update Embark ID' : 'Share Embark ID',
+                icon: Icons.badge_outlined,
+                highlighted: confirmedBooking != null && !myEmbarkShared,
+                onPressed: () => _shareEmbarkId(session),
+              ),
+              _actionButton(
+                label: 'Assign first drop',
+                icon: Icons.swap_horiz_rounded,
+                highlighted:
+                    confirmedBooking != null && !session.dropOrderAssigned,
+                onPressed: () => _pickDropOrder(session),
+              ),
+              _actionButton(
+                label: isReady ? 'Unready' : 'I am ready',
+                icon: isReady
+                    ? Icons.remove_circle_outline_rounded
+                    : Icons.check_circle_outline_rounded,
+                highlighted: confirmedBooking != null && !isReady,
+                onPressed: () => _runAction(
+                  () => _repository.setMyReadyState(session, !isReady),
+                  successMessage: isReady
+                      ? 'Ready status removed.'
+                      : 'Ready status updated.',
+                  errorPrefix: 'Could not update readiness: ',
+                ),
+              ),
+              _actionButton(
+                label: 'Mark complete',
+                icon: Icons.task_alt_rounded,
+                onPressed: () => _runAction(
+                  () => _repository.markMySessionOutcome(
+                    session: session,
+                    outcome: TradingSessionStatus.completed,
+                  ),
+                  successMessage: 'Completion marked.',
+                  errorPrefix: 'Could not mark complete: ',
+                ),
+              ),
+              _actionButton(
+                label: 'Mark no-show',
+                icon: Icons.person_off_outlined,
+                onPressed: () async {
+                  final ok = await _confirmAction(
+                    title: 'Record a no-show?',
+                    message:
+                        'Only record this if the agreed session time passed and your trading partner did not turn up.',
+                    confirmText: 'Record no-show',
+                    confirmColor: AppTheme.tradingDanger,
+                  );
+                  if (!ok) return;
+                  await _runAction(
+                    () => _repository.markMySessionOutcome(
+                      session: session,
+                      outcome: TradingSessionStatus.noShow,
+                    ),
+                    successMessage: 'No-show recorded.',
+                    errorPrefix: 'Could not record no-show: ',
+                  );
+                },
+              ),
+              _actionButton(
+                label: 'Flag betrayal',
+                icon: Icons.gpp_bad_outlined,
+                onPressed: () async {
+                  final ok = await _confirmAction(
+                    title: 'Flag betrayal?',
+                    message:
+                        'Use this only if the trade went bad or the agreed protocol was broken.',
+                    confirmText: 'Flag betrayal',
+                    confirmColor: AppTheme.tradingDanger,
+                  );
+                  if (!ok) return;
+                  await _runAction(
+                    () => _repository.markMySessionOutcome(
+                      session: session,
+                      outcome: TradingSessionStatus.betrayal,
+                    ),
+                    successMessage:
+                        'Private review case opened. Add an MP4 clip in Report a Rat → Activity.',
+                    errorPrefix: 'Could not flag betrayal: ',
+                  );
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Divider(color: AppTheme.tradingDivider),
+          const SizedBox(height: 10),
+          Text(
+            'Flow: accept offer -> propose 3 days x 3 -> other trader confirms one slot -> share Embark IDs -> assign first drop -> both mark ready.',
+            style: AppTheme.bodyTextStyle(
+              fontSize: 13,
+              color: AppTheme.tradingMutedText,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1075,7 +1403,7 @@ class _TradingTradeSessionsScreenState
   Widget _emptyState() {
     return Center(
       child: Padding(
-        padding: AppTheme.pagePadding,
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
         child: Text(
           'No trade sessions yet. Once an offer is accepted, the live session will appear here for both traders.',
           textAlign: TextAlign.center,
@@ -1091,68 +1419,89 @@ class _TradingTradeSessionsScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      extendBody: true,
+      backgroundColor: Colors.transparent,
       appBar: widget.showAppBar
           ? AppBar(
+              backgroundColor: Colors.transparent,
               title: Text(
                 'Trade Sessions',
                 style: AppTheme.tradingHeading(fontSize: 25),
               ),
             )
           : null,
-      body: Stack(
-        children: [
-          const Positioned.fill(child: StaticWatermark()),
-          SafeArea(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                  maxWidth: AppTheme.pageMaxWidth,
-                ),
-                child: StreamBuilder<List<TradingSession>>(
-                  stream: _repository.watchMySessions(),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasError) {
-                      return Center(
-                        child: Padding(
-                          padding: AppTheme.pagePadding,
-                          child: Text(
-                            'Could not load trade sessions.\n${snapshot.error}',
-                            textAlign: TextAlign.center,
-                            style: AppTheme.bodyTextStyle(
-                              fontSize: 15,
-                              color: AppTheme.tradingDanger,
-                            ),
-                          ),
-                        ),
-                      );
-                    }
-
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(
-                        child: CircularProgressIndicator(
-                          color: AppTheme.neonCyan,
-                        ),
-                      );
-                    }
-
-                    final sessions = snapshot.data ?? const <TradingSession>[];
-                    if (sessions.isEmpty) {
-                      return _emptyState();
-                    }
-
-                    return ListView.builder(
-                      padding: AppTheme.pagePadding,
-                      itemCount: sessions.length,
-                      itemBuilder: (context, index) =>
-                          _buildSessionCard(sessions[index]),
-                    );
-                  },
+      body: ArcRaidersScreenShell(
+        showAdBanner: false,
+        child: SafeArea(
+          child: Column(
+            children: [
+              const Padding(
+                padding: EdgeInsets.fromLTRB(14, 12, 14, 0),
+                child: ArcTradingWorkspaceBar(
+                  current: ArcTradingWorkspace.sessions,
+                  padding: EdgeInsets.zero,
                 ),
               ),
-            ),
+              const SizedBox(height: AppTheme.spaceS),
+              Expanded(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      maxWidth: AppTheme.pageMaxWidth,
+                    ),
+                    child: StreamBuilder<List<TradingSession>>(
+                      stream: _repository.watchMySessions(),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasError) {
+                          return Center(
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                14,
+                                12,
+                                14,
+                                104,
+                              ),
+                              child: Text(
+                                'Could not load trade sessions right now.',
+                                textAlign: TextAlign.center,
+                                style: AppTheme.bodyTextStyle(
+                                  fontSize: 15,
+                                  color: AppTheme.tradingDanger,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(
+                              color: AppTheme.neonCyan,
+                            ),
+                          );
+                        }
+
+                        final sessions =
+                            snapshot.data ?? const <TradingSession>[];
+                        if (sessions.isEmpty) {
+                          return _emptyState();
+                        }
+
+                        return ListView.builder(
+                          padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
+                          itemCount: sessions.length,
+                          itemBuilder: (context, index) =>
+                              _buildSessionCard(sessions[index]),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

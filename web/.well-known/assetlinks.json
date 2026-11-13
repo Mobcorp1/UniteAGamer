@@ -1,0 +1,10 @@
+﻿[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.mobcorp.uagtradershub",
+      "sha256_cert_fingerprints": ["4B:92:85:5D:CA:43:C4:4B:7C:82:CF:DC:6B:4C:64:37:A6:8D:15:35:13:71:D4:E4:71:A7:28:1E:5E:5A:7C:B0"]
+    }
+  }
+]

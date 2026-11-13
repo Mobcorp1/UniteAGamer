@@ -1,10 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_smart_trade_terms.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_trade_bundle_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_subscription_tier.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/services/uag_entitlement_service.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_usage_gate.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/trade_items_data.dart';
-import 'package:uag_traders_hub/widgets/static_watermark.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_trade_intelligence_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/trade_items_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_intelligence_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_bundle_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_cosmetic_identity_strip.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_card.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_seed_bundle_picker.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class TradingMakeOfferScreen extends StatefulWidget {
   const TradingMakeOfferScreen({super.key, required this.listing});
@@ -18,6 +31,9 @@ class TradingMakeOfferScreen extends StatefulWidget {
 class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
   final _formKey = GlobalKey<FormState>();
   final TradingRepository _repository = TradingRepository();
+  final UagEntitlementService _entitlements = UagEntitlementService();
+  final ArcTradeIntelligenceEngine _tradeIntelligenceEngine =
+      const ArcTradeIntelligenceEngine();
 
   final TextEditingController _blueprintController = TextEditingController();
   final TextEditingController _resourcesController = TextEditingController();
@@ -29,6 +45,16 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
   List<String> _matchingDupes = <String>[];
   Set<String> _selectedDupes = <String>{};
   final List<ArcTradeItem> _selectedTradeItems = <ArcTradeItem>[];
+  final Set<String> _selectedSmartWantedIds = <String>{};
+  final Set<String> _availableSmartWantedIds = <String>{};
+
+  bool get _smartTerms => widget.listing.acceptedBundles.any(
+    (bundle) => bundle.terms.notes == ArcSmartTradeTerms.marker);
+
+  int get _smartMinimum => _selectedAcceptedBundle?.effectiveTerms.minimumRequiredComponents ?? 1;
+
+  String _selectedAcceptedBundleId = '';
+  bool _preparingExactBundle = false;
   late final List<ArcTradeItem> _tradeItems;
 
   int _smallBundles = 0;
@@ -41,15 +67,67 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
   @override
   void initState() {
     super.initState();
-    _tradeItems = List<ArcTradeItem>.from(ArcTradeItemsData.items.where((item) => item.category != ArcTradeItemCategory.containerIntel))
-      ..sort((a, b) {
-        final valueCompare = b.tradeValue.index.compareTo(a.tradeValue.index);
-        if (valueCompare != 0) return valueCompare;
-        final categoryCompare = a.categoryLabel.toLowerCase().compareTo(b.categoryLabel.toLowerCase());
-        if (categoryCompare != 0) return categoryCompare;
-        return a.name.toLowerCase().compareTo(b.name.toLowerCase());
-      });
+    _tradeItems =
+        List<ArcTradeItem>.from(
+          ArcTradeItemsData.items.where(
+            (item) => item.category != ArcTradeItemCategory.containerIntel,
+          ),
+        )..sort((a, b) {
+          final valueCompare = b.tradeValue.index.compareTo(a.tradeValue.index);
+          if (valueCompare != 0) return valueCompare;
+          final categoryCompare = a.categoryLabel.toLowerCase().compareTo(
+            b.categoryLabel.toLowerCase(),
+          );
+          if (categoryCompare != 0) return categoryCompare;
+          return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+        });
+    final activeBundles = widget.listing.acceptedBundles
+        .where((bundle) => bundle.active)
+        .toList(growable: false);
+    if (activeBundles.isNotEmpty) {
+      _selectedAcceptedBundleId = activeBundles.first.id;
+    }
+    if (_smartTerms) _loadSmartEligibleDupes();
+    _blueprintController.addListener(_onOfferInputChanged);
+    _resourcesController.addListener(_onOfferInputChanged);
     _loadMatchingDupes();
+  }
+
+  Future<void> _loadSmartEligibleDupes() async {
+    try {
+      final states = await ArcBlueprintRepository().loadMyBlueprintStates();
+      final bundle = _selectedAcceptedBundle;
+      if (!mounted || bundle == null) return;
+      final eligible = bundle.components.where((component) =>
+        (states[component.itemId]?.dupesOwned ?? 0) > 0)
+        .map((component) => component.itemId).toSet();
+      setState(() {
+        _availableSmartWantedIds
+          ..clear()
+          ..addAll(eligible);
+        _selectedSmartWantedIds
+          ..clear()
+          ..addAll(eligible.take(_smartMinimum));
+      });
+      _syncSmartOfferText();
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _availableSmartWantedIds.clear();
+        _selectedSmartWantedIds.clear();
+      });
+    }
+  }
+
+  void _syncSmartOfferText() {
+    final selected = _selectedAcceptedBundle?.components
+        .where((component) => _selectedSmartWantedIds.contains(component.itemId))
+        .map((component) => component.itemName).join(', ') ?? '';
+    _blueprintController.text = selected;
+  }
+
+  void _onOfferInputChanged() {
+    if (mounted) setState(() {});
   }
 
   Future<void> _loadMatchingDupes() async {
@@ -61,7 +139,7 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
       setState(() {
         _matchingDupes = matches;
         _selectedDupes = matches.toSet();
-        _blueprintController.text = matches.join(', ');
+        if (!_smartTerms) _blueprintController.text = matches.join(', ');
         _isLoadingMatches = false;
       });
     } catch (_) {
@@ -79,6 +157,8 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
 
   @override
   void dispose() {
+    _blueprintController.removeListener(_onOfferInputChanged);
+    _resourcesController.removeListener(_onOfferInputChanged);
     _blueprintController.dispose();
     _resourcesController.dispose();
     _noteController.dispose();
@@ -86,63 +166,22 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
   }
 
   Widget _sectionCard({required String title, required Widget child}) {
-    return Container(
-      width: double.infinity,
+    return TradingCard(
       margin: const EdgeInsets.only(bottom: 16),
-      padding: AppTheme.sectionCardPadding,
-      decoration: AppTheme.tradingCardDecoration(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: AppTheme.tradingHeading(
+            style: ArcUiTokens.sectionTitle(
               fontSize: 21,
-              color: AppTheme.neonPink,
+              color: ArcUiTokens.secondaryAccent,
             ),
           ),
           const SizedBox(height: AppTheme.spaceM),
           child,
         ],
       ),
-    );
-  }
-
-  Widget _bundleRow({
-    required String label,
-    required int value,
-    required VoidCallback onMinus,
-    required VoidCallback onPlus,
-  }) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyLarge?.copyWith(color: Colors.white),
-          ),
-        ),
-        IconButton(
-          onPressed: onMinus,
-          icon: const Icon(
-            Icons.remove_circle_outline,
-            color: AppTheme.neonPink,
-          ),
-        ),
-        Text(
-          '$value',
-          style: AppTheme.tradingHeading(
-            fontSize: 22,
-            color: AppTheme.neonCyan,
-          ),
-        ),
-        IconButton(
-          onPressed: onPlus,
-          icon: const Icon(Icons.add_circle_outline, color: AppTheme.neonPink),
-        ),
-      ],
     );
   }
 
@@ -158,8 +197,8 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
       enabled: enabled,
       maxLines: maxLines,
       validator: validator,
-      style: const TextStyle(color: Colors.white),
-      decoration: AppTheme.tradingInputDecoration(label: label),
+      style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+      decoration: ArcUiTokens.inputDecoration(labelText: label),
     );
   }
 
@@ -171,7 +210,10 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
 
   Widget _chipWrap(List<String> items) {
     if (items.isEmpty) {
-      return Text('Nothing selected yet.', style: TextStyle(color: AppTheme.tradingFaintText));
+      return Text(
+        'Nothing selected yet.',
+        style: ArcUiTokens.bodySmall(color: ArcUiTokens.textTertiary),
+      );
     }
     return Wrap(
       spacing: 8,
@@ -180,18 +222,91 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
           .map(
             (item) => Container(
               padding: AppTheme.pillPadding,
-              decoration: AppTheme.tradingPillDecoration(color: AppTheme.neonPink),
+              decoration: ArcUiTokens.chipDecoration(
+                color: ArcUiTokens.secondaryAccent,
+              ),
               child: Text(
                 item,
-                style: const TextStyle(
-                  color: AppTheme.neonPink,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12,
-                ),
+                style: ArcUiTokens.bodySmall(
+                  color: ArcUiTokens.secondaryAccent,
+                ).copyWith(fontWeight: FontWeight.w700),
               ),
             ),
           )
           .toList(growable: false),
+    );
+  }
+
+  List<String> _manualBlueprintOfferItems() {
+    return _blueprintController.text
+        .split(',')
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .toList(growable: false);
+  }
+
+  Widget _offerIntelligenceCard() {
+    final score = _tradeIntelligenceEngine.scoreOfferForListing(
+      listing: widget.listing,
+      offeredBlueprintNames: _manualBlueprintOfferItems(),
+      offeredTradeItemNames: _selectedTradeItems
+          .map((item) => item.name)
+          .toList(growable: false),
+      seedTotal: _seedTotal,
+      includesResources: _includesResources,
+      resourceText: _resourcesController.text,
+      exactBundleOffer: _buildExactBundleOffer(),
+    );
+
+    return _sectionCard(
+      title: 'Offer Intelligence',
+      child: _offerScoreContent(score),
+    );
+  }
+
+  Widget _offerScoreContent(ArcOfferValueScore score) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            _scorePill(score.label, AppTheme.neonPink),
+            _scorePill('Score ${score.score}%', AppTheme.neonCyan),
+          ],
+        ),
+        const SizedBox(height: AppTheme.spaceM),
+        Text(
+          score.summary,
+          style: ArcUiTokens.body(
+            fontSize: 13,
+            color: ArcUiTokens.textSecondary,
+            weight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: AppTheme.spaceS),
+        for (final hint in score.hints) ...[
+          Text(
+            '- $hint',
+            style: ArcUiTokens.bodySmall(color: ArcUiTokens.textTertiary),
+          ),
+          const SizedBox(height: 4),
+        ],
+      ],
+    );
+  }
+
+  Widget _scorePill(String label, Color color) {
+    return Container(
+      padding: AppTheme.pillPadding,
+      decoration: ArcUiTokens.chipDecoration(color: color),
+      child: Text(
+        label,
+        style: ArcUiTokens.bodySmall(
+          color: color,
+        ).copyWith(fontWeight: FontWeight.w700),
+      ),
     );
   }
 
@@ -200,30 +315,45 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
     final selectedIds = _selectedTradeItems.map((item) => item.id).toSet();
     var filtered = List<ArcTradeItem>.from(_tradeItems);
     String categoryFilter = 'All';
-    final categories = <String>['All', ...{for (final item in _tradeItems) item.categoryLabel}];
+    final categories = <String>[
+      'All',
+      ...{for (final item in _tradeItems) item.categoryLabel},
+    ];
 
     return showModalBottomSheet<List<ArcTradeItem>>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.cardBackgroundDeep,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      useSafeArea: true,
+      backgroundColor: ArcUiTokens.surfaceOverlay,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(ArcUiTokens.radiusXL),
+        ),
+      ),
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
             void updateFilter() {
               final query = controller.text.trim().toLowerCase();
               setModalState(() {
-                filtered = _tradeItems.where((item) {
-                  final matchesCategory = categoryFilter == 'All' || item.categoryLabel == categoryFilter;
-                  final matchesQuery = query.isEmpty ||
-                      item.name.toLowerCase().contains(query) ||
-                      item.id.toLowerCase().contains(query) ||
-                      item.categoryLabel.toLowerCase().contains(query) ||
-                      item.rarityLabel.toLowerCase().contains(query) ||
-                      item.tradeValueLabel.toLowerCase().contains(query) ||
-                      item.sourceHints.any((hint) => hint.toLowerCase().contains(query));
-                  return matchesCategory && matchesQuery;
-                }).toList(growable: false);
+                filtered = _tradeItems
+                    .where((item) {
+                      final matchesCategory =
+                          categoryFilter == 'All' ||
+                          item.categoryLabel == categoryFilter;
+                      final matchesQuery =
+                          query.isEmpty ||
+                          item.name.toLowerCase().contains(query) ||
+                          item.id.toLowerCase().contains(query) ||
+                          item.categoryLabel.toLowerCase().contains(query) ||
+                          item.rarityLabel.toLowerCase().contains(query) ||
+                          item.tradeValueLabel.toLowerCase().contains(query) ||
+                          item.sourceHints.any(
+                            (hint) => hint.toLowerCase().contains(query),
+                          );
+                      return matchesCategory && matchesQuery;
+                    })
+                    .toList(growable: false);
               });
             }
 
@@ -233,72 +363,113 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
                   left: AppTheme.spaceL,
                   right: AppTheme.spaceL,
                   top: AppTheme.spaceL,
-                  bottom: MediaQuery.of(context).viewInsets.bottom + AppTheme.spaceL,
+                  bottom:
+                      MediaQuery.of(context).viewInsets.bottom +
+                      AppTheme.spaceL,
                 ),
                 child: SizedBox(
                   height: MediaQuery.of(context).size.height * 0.82,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Select trade items', style: AppTheme.tradingHeading(fontSize: 22, color: AppTheme.neonCyan)),
+                      Text(
+                        'Select trade items',
+                        style: ArcUiTokens.sectionTitle(
+                          fontSize: 22,
+                          color: ArcUiTokens.primaryAccent,
+                        ),
+                      ),
                       const SizedBox(height: AppTheme.spaceM),
                       TextField(
                         controller: controller,
-                        style: const TextStyle(color: Colors.white),
+                        style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
                         onChanged: (_) => updateFilter(),
-                        decoration: AppTheme.tradingInputDecoration(label: 'Search weapons, ammo, attachments, materials, trinkets'),
+                        decoration: ArcUiTokens.inputDecoration(
+                          labelText:
+                              'Search weapons, ammo, attachments, materials, trinkets',
+                        ),
                       ),
                       const SizedBox(height: AppTheme.spaceM),
                       SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         child: Row(
-                          children: categories.map((category) {
-                            final selected = categoryFilter == category;
-                            return Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: FilterChip(
-                                selected: selected,
-                                selectedColor: AppTheme.neonPink.withValues(alpha: 0.25),
-                                checkmarkColor: AppTheme.neonPink,
-                                label: Text(category),
-                                labelStyle: TextStyle(
-                                  color: selected ? AppTheme.neonPink : AppTheme.neonCyan,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                                backgroundColor: AppTheme.tradingCardBackground,
-                                side: BorderSide(
-                                  color: selected
-                                      ? AppTheme.neonPink.withValues(alpha: 0.7)
-                                      : AppTheme.neonCyan.withValues(alpha: 0.25),
-                                ),
-                                onSelected: (_) {
-                                  categoryFilter = category;
-                                  updateFilter();
-                                },
-                              ),
-                            );
-                          }).toList(growable: false),
+                          children: categories
+                              .map((category) {
+                                final selected = categoryFilter == category;
+                                return Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: FilterChip(
+                                    selected: selected,
+                                    selectedColor: ArcUiTokens.secondaryAccent
+                                        .withValues(alpha: 0.25),
+                                    checkmarkColor: ArcUiTokens.secondaryAccent,
+                                    label: Text(category),
+                                    labelStyle: TextStyle(
+                                      color: selected
+                                          ? ArcUiTokens.secondaryAccent
+                                          : ArcUiTokens.primaryAccent,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                    backgroundColor:
+                                        ArcUiTokens.surfaceInteractive,
+                                    side: BorderSide(
+                                      color: selected
+                                          ? ArcUiTokens.secondaryAccent
+                                                .withValues(alpha: 0.7)
+                                          : ArcUiTokens.primaryAccent
+                                                .withValues(alpha: 0.25),
+                                    ),
+                                    onSelected: (_) {
+                                      categoryFilter = category;
+                                      updateFilter();
+                                    },
+                                  ),
+                                );
+                              })
+                              .toList(growable: false),
                         ),
                       ),
                       const SizedBox(height: AppTheme.spaceM),
-                      Text(_selectionSummary(selectedIds.length, 'item'), style: TextStyle(color: AppTheme.tradingMutedText)),
+                      Text(
+                        _selectionSummary(selectedIds.length, 'item'),
+                        style: ArcUiTokens.bodySmall(
+                          color: ArcUiTokens.textSecondary,
+                        ),
+                      ),
                       const SizedBox(height: AppTheme.spaceS),
                       Expanded(
                         child: filtered.isEmpty
-                            ? const Center(child: Text('No matching trade items.', style: TextStyle(color: Colors.white60)))
+                            ? Center(
+                                child: Text(
+                                  'No matching trade items.',
+                                  style: ArcUiTokens.bodySmall(
+                                    color: ArcUiTokens.textTertiary,
+                                  ),
+                                ),
+                              )
                             : ListView.builder(
                                 itemCount: filtered.length,
                                 itemBuilder: (context, index) {
                                   final item = filtered[index];
-                                  final isSelected = selectedIds.contains(item.id);
+                                  final isSelected = selectedIds.contains(
+                                    item.id,
+                                  );
                                   return CheckboxListTile(
                                     value: isSelected,
-                                    activeColor: AppTheme.neonPink,
-                                    controlAffinity: ListTileControlAffinity.leading,
-                                    title: Text(item.name, style: const TextStyle(color: Colors.white)),
+                                    activeColor: ArcUiTokens.secondaryAccent,
+                                    controlAffinity:
+                                        ListTileControlAffinity.leading,
+                                    title: Text(
+                                      item.name,
+                                      style: ArcUiTokens.body(
+                                        color: ArcUiTokens.textPrimary,
+                                      ),
+                                    ),
                                     subtitle: Text(
-                                      '${item.categoryLabel} • ${item.rarityLabel} • ${item.tradeValueLabel} value',
-                                      style: const TextStyle(color: Colors.white60),
+                                      '${item.categoryLabel} - ${item.rarityLabel} - ${item.tradeValueLabel} value',
+                                      style: ArcUiTokens.bodySmall(
+                                        color: ArcUiTokens.textTertiary,
+                                      ),
                                     ),
                                     onChanged: (_) {
                                       setModalState(() {
@@ -317,16 +488,16 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
+                          style: ArcUiTokens.textButtonStyle(
+                            accent: ArcUiTokens.secondaryAccent,
+                            primary: true,
+                          ),
                           onPressed: () {
-                            final selected = _tradeItems.where((item) => selectedIds.contains(item.id)).toList(growable: false);
+                            final selected = _tradeItems
+                                .where((item) => selectedIds.contains(item.id))
+                                .toList(growable: false);
                             Navigator.of(context).pop(selected);
                           },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.neonPink,
-                            foregroundColor: Colors.black,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                          ),
                           child: const Text('Done'),
                         ),
                       ),
@@ -341,11 +512,247 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
     );
   }
 
+  ArcTradeBundleTemplate? get _selectedAcceptedBundle {
+    for (final bundle in widget.listing.acceptedBundles) {
+      if (bundle.active && bundle.id == _selectedAcceptedBundleId) {
+        return bundle;
+      }
+    }
+    return null;
+  }
+
+  ArcExactTradeBundleOffer? _buildExactBundleOffer() {
+    final bundle = _selectedAcceptedBundle;
+    if (bundle == null) {
+      return null;
+    }
+    if (bundle.terms.notes == ArcSmartTradeTerms.marker) {
+      final components = bundle.components.where((component) =>
+        _selectedSmartWantedIds.contains(component.itemId)).toList(growable: false);
+      if (components.length < bundle.effectiveTerms.minimumRequiredComponents ||
+          components.any((item) => !_availableSmartWantedIds.contains(item.itemId))) {
+        return null;
+      }
+      return ArcExactTradeBundleOffer(
+        templateId: bundle.id, components: components,
+        preparing: _preparingExactBundle,
+        preparationNote: _preparingExactBundle ? _noteController.text.trim() : '',
+        completionConfirmed: !_preparingExactBundle,
+      );
+    }
+    return ArcExactTradeBundleOffer(
+      templateId: bundle.id,
+      components: bundle.components,
+      preparing: _preparingExactBundle,
+      preparationNote: _preparingExactBundle ? _noteController.text.trim() : '',
+      completionConfirmed: !_preparingExactBundle,
+    );
+  }
+
+  String _bundleComponentSummary(ArcTradeBundleComponent component) {
+    final config = component.fittedWeapon;
+    if (config == null) {
+      return '${component.quantity}x ${component.itemName}';
+    }
+    final slots = config.attachmentsBySlot.entries
+        .map((entry) {
+          final value =
+              entry.value ==
+                  ArcFittedWeaponConfiguration.anyCompatibleAttachment
+              ? 'Any compatible'
+              : entry.value;
+          return '${entry.key}: $value';
+        })
+        .join(', ');
+    return '${component.quantity}x ${component.itemName}${slots.isEmpty ? '' : ' ($slots)'}';
+  }
+
+  Widget _buildAcceptedBundlePicker() {
+    final bundles = widget.listing.acceptedBundles
+        .where((bundle) => bundle.active)
+        .toList(growable: false);
+    if (bundles.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    if (_smartTerms) {
+      final bundle = _selectedAcceptedBundle;
+      if (bundle == null) return const SizedBox.shrink();
+      final selected = _buildExactBundleOffer();
+      final check = selected == null ? null : const ArcTradeBundleEngine()
+        .compare(template: bundle, offer: selected);
+      return _sectionCard(
+        title: 'SMART TRADE · $_smartMinimum:1',
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('Select at least $_smartMinimum DIFFERENT missing Blueprints. '
+            'Only duplicates recorded in your own collection are eligible.',
+            style: ArcUiTokens.body(color: ArcUiTokens.textSecondary)),
+          for (final component in bundle.components)
+            CheckboxListTile(
+              key: Key('smart-offer-${component.itemId}'),
+              dense: true,
+              value: _selectedSmartWantedIds.contains(component.itemId),
+              onChanged: !_availableSmartWantedIds.contains(component.itemId)
+                ? null : (checked) {
+                  setState(() {
+                    if (checked == true) { _selectedSmartWantedIds.add(component.itemId); }
+                    else { _selectedSmartWantedIds.remove(component.itemId); }
+                  });
+                  _syncSmartOfferText();
+                },
+              title: Text(component.itemName, style: ArcUiTokens.bodySmall(
+                color: ArcUiTokens.textPrimary)),
+              subtitle: !_availableSmartWantedIds.contains(component.itemId)
+                ? const Text('No confirmed spare', style: TextStyle(fontSize: 10)) : null,
+            ),
+          Text(check?.isExact == true ? 'QUALIFIED · Ready to propose' :
+            'Select qualifying spares before sending.',
+            style: TextStyle(color: check?.isExact == true
+              ? AppTheme.neonCyan : AppTheme.neonPink)),
+        ]),
+      );
+    }
+    return _sectionCard(
+      title: 'Accepted Exact Bundles',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Choose one seller-approved bundle. The offer is validated before submission.',
+            style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
+          ),
+          const SizedBox(height: 12),
+          ...bundles.map((bundle) {
+            final selected = bundle.id == _selectedAcceptedBundleId;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Semantics(
+                button: true,
+                selected: selected,
+                label: 'Select accepted bundle ${bundle.name}',
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
+                  onTap: () {
+                    setState(() {
+                      _selectedAcceptedBundleId = bundle.id;
+                    });
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    padding: const EdgeInsets.all(12),
+                    decoration: ArcUiTokens.surfaceDecoration(
+                      role: ArcSurfaceRole.interactive,
+                      accent: ArcUiTokens.primaryAccent,
+                      radius: ArcUiTokens.radiusXL,
+                      selected: selected,
+                      backgroundColor: selected
+                          ? ArcUiTokens.primaryAccent.withValues(alpha: 0.10)
+                          : ArcUiTokens.surfaceInteractive.withValues(
+                              alpha: 0.74,
+                            ),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          selected
+                              ? Icons.radio_button_checked
+                              : Icons.radio_button_off,
+                          color: selected
+                              ? ArcUiTokens.primaryAccent
+                              : ArcUiTokens.textTertiary,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                bundle.name,
+                                style: ArcUiTokens.body(
+                                  color: ArcUiTokens.textPrimary,
+                                  weight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                bundle.components
+                                    .map(_bundleComponentSummary)
+                                    .join(' - '),
+                                style: ArcUiTokens.bodySmall(
+                                  color: ArcUiTokens.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }),
+          SwitchListTile.adaptive(
+            value: _preparingExactBundle,
+            activeThumbColor: ArcUiTokens.primaryAccent,
+            activeTrackColor: ArcUiTokens.primaryAccent.withValues(alpha: 0.45),
+            title: Text(
+              'I am preparing this bundle',
+              style: ArcUiTokens.body(
+                color: ArcUiTokens.textPrimary,
+                weight: FontWeight.w700,
+              ),
+            ),
+            subtitle: Text(
+              'The seller can see that you intend to farm or assemble the requested items.',
+              style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
+            ),
+            onChanged: (value) => setState(() => _preparingExactBundle = value),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _submitOffer() async {
-    if (!widget.listing.wantsNothing && !_formKey.currentState!.validate()) return;
+    if (_smartTerms) {
+      final bundle = _selectedAcceptedBundle;
+      final offered = _buildExactBundleOffer();
+      if (bundle == null || offered == null ||
+          !const ArcTradeBundleEngine().compare(template: bundle, offer: offered).isExact) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Choose the required distinct missing Blueprints first.')));
+        return;
+      }
+      try {
+        final fresh = await ArcBlueprintRepository().loadMyBlueprintStates();
+        if (offered.components.any((item) =>
+          (fresh[item.itemId]?.dupesOwned ?? 0) < item.quantity)) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('A selected spare is no longer available. Refresh your collection.')));
+          return;
+        }
+      } catch (_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Could not verify your available spares. Try again.')));
+        return;
+      }
+      if (!mounted) return;
+    }
+    if (!widget.listing.wantsNothing && !_formKey.currentState!.validate()) {
+      return;
+    }
 
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
+    final allowed = await UagUsageGate.consumeOrShowUpgrade(
+      context,
+      action: UagBillableAction.trade,
+      service: _entitlements,
+    );
+    if (!allowed || !mounted) return;
 
     setState(() {
       _isSaving = true;
@@ -354,20 +761,31 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
     try {
       await _repository.createOffer(
         listing: widget.listing,
-        offeredBlueprintText: widget.listing.wantsNothing ? '' : _blueprintController.text,
-        smallBundles: widget.listing.wantsNothing ? 0 : _smallBundles,
-        mediumBundles: widget.listing.wantsNothing ? 0 : _mediumBundles,
-        largeBundles: widget.listing.wantsNothing ? 0 : _largeBundles,
-        includesResources: widget.listing.wantsNothing ? false : _includesResources,
-        resourcesText: widget.listing.wantsNothing ? '' : _resourcesController.text,
+        offeredBlueprintText: widget.listing.wantsNothing
+            ? ''
+            : _blueprintController.text,
+        smallBundles: widget.listing.wantsNothing || _smartTerms ? 0 : _smallBundles,
+        mediumBundles: widget.listing.wantsNothing || _smartTerms ? 0 : _mediumBundles,
+        largeBundles: widget.listing.wantsNothing || _smartTerms ? 0 : _largeBundles,
+        includesResources: widget.listing.wantsNothing || _smartTerms
+            ? false
+            : _includesResources,
+        resourcesText: widget.listing.wantsNothing || _smartTerms
+            ? ''
+            : _resourcesController.text,
         note: _noteController.text,
-        offeredTradeItemIds: widget.listing.wantsNothing
+        offeredTradeItemIds: widget.listing.wantsNothing || _smartTerms
             ? const <String>[]
-            : _selectedTradeItems.map((item) => item.id).toList(growable: false),
-        offeredTradeItemNames: widget.listing.wantsNothing
+            : _selectedTradeItems
+                  .map((item) => item.id)
+                  .toList(growable: false),
+        offeredTradeItemNames: widget.listing.wantsNothing || _smartTerms
             ? const <String>[]
-            : _selectedTradeItems.map((item) => item.name).toList(growable: false),
+            : _selectedTradeItems
+                  .map((item) => item.name)
+                  .toList(growable: false),
         isGiveawayClaim: widget.listing.wantsNothing,
+        exactBundleOffer: _buildExactBundleOffer(),
       );
 
       if (!mounted) return;
@@ -378,13 +796,18 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
 
       messenger.showSnackBar(
         SnackBar(
-          content: Text(widget.listing.wantsNothing ? 'Giveaway claim sent successfully.' : 'Offer sent successfully.'),
+          content: Text(
+            widget.listing.wantsNothing
+                ? 'Giveaway claim sent successfully.'
+                : 'Offer sent successfully.',
+          ),
           backgroundColor: AppTheme.neonPink,
         ),
       );
 
       navigator.pop();
-    } catch (error) {
+    } catch (_) {
+      await _entitlements.refundAction(UagBillableAction.trade);
       if (!mounted) return;
 
       setState(() {
@@ -393,7 +816,7 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
 
       messenger.showSnackBar(
         SnackBar(
-          content: Text('Could not send offer: $error'),
+          content: Text('Could not send offer. Try again.'),
           backgroundColor: AppTheme.dangerRed,
         ),
       );
@@ -405,281 +828,289 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
     final listing = widget.listing;
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      extendBody: true,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
         title: Text('Make Offer', style: AppTheme.tradingHeading(fontSize: 25)),
       ),
-      body: Stack(
-        children: [
-          const Positioned.fill(child: StaticWatermark()),
-          SafeArea(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                  maxWidth: AppTheme.pageMaxWidth,
-                ),
-                child: Form(
-                  key: _formKey,
-                  child: ListView(
-                    padding: AppTheme.pagePadding,
-                    children: [
-                      _sectionCard(
-                        title: 'Listing Summary',
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              listing.title,
-                              style: AppTheme.tradingHeading(fontSize: 22),
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              'Offering: ${listing.offeredSummary}',
+      body: ArcRaidersScreenShell(
+        showAdBanner: false,
+        child: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                maxWidth: AppTheme.pageMaxWidth,
+              ),
+              child: Form(
+                key: _formKey,
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
+                  children: [
+                    _sectionCard(
+                      title: 'Listing Summary',
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            listing.title,
+                            style: AppTheme.tradingHeading(fontSize: 22),
+                          ),
+                          const SizedBox(height: 10),
+                          TradingCosmeticIdentityStrip(
+                            repository: _repository,
+                            uid: listing.ownerUid,
+                            displayName: listing.traderName,
+                            subtitle: [
+                              if (listing.gamerTag.isNotEmpty) listing.gamerTag,
+                              if (listing.preferredPlatform.isNotEmpty)
+                                listing.preferredPlatform,
+                              listing.reputationSummary,
+                            ].join(' - '),
+                            compact: true,
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            'Offering: ${listing.offeredSummary}',
+                            style: TextStyle(color: AppTheme.tradingMutedText),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Wants: ${listing.wantedSummary}',
+                            style: TextStyle(color: AppTheme.tradingMutedText),
+                          ),
+                        ],
+                      ),
+                    ),
+                    _buildAcceptedBundlePicker(),
+                    if (!_smartTerms) _sectionCard(
+                      title: 'Auto Matches',
+                      child: _isLoadingMatches
+                          ? const Center(
+                              child: CircularProgressIndicator(
+                                color: AppTheme.neonCyan,
+                              ),
+                            )
+                          : _matchingDupes.isEmpty
+                          ? Text(
+                              'No matching dupes found in your collection yet. You can still type a manual offer below.',
                               style: TextStyle(
                                 color: AppTheme.tradingMutedText,
                               ),
+                            )
+                          : Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: _matchingDupes
+                                  .map((name) {
+                                    final selected = _selectedDupes.contains(
+                                      name,
+                                    );
+                                    return FilterChip(
+                                      selected: selected,
+                                      label: Text(name),
+                                      labelStyle: TextStyle(
+                                        color: selected
+                                            ? Colors.black
+                                            : Colors.white,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                      selectedColor: AppTheme.neonCyan,
+                                      checkmarkColor: Colors.black,
+                                      backgroundColor:
+                                          AppTheme.tradingCardBackground,
+                                      side: BorderSide(
+                                        color: selected
+                                            ? AppTheme.neonCyan
+                                            : AppTheme.tradingSoftBorder,
+                                      ),
+                                      onSelected: (value) {
+                                        setState(() {
+                                          if (value) {
+                                            _selectedDupes.add(name);
+                                          } else {
+                                            _selectedDupes.remove(name);
+                                          }
+                                          _syncBlueprintTextFromSelection();
+                                        });
+                                      },
+                                    );
+                                  })
+                                  .toList(growable: false),
                             ),
-                            const SizedBox(height: 6),
-                            Text(
-                              'Wants: ${listing.wantedSummary}',
-                              style: TextStyle(
-                                color: AppTheme.tradingMutedText,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      _sectionCard(
-                        title: 'Auto Matches',
-                        child: _isLoadingMatches
-                            ? const Center(
-                                child: CircularProgressIndicator(
-                                  color: AppTheme.neonCyan,
-                                ),
-                              )
-                            : _matchingDupes.isEmpty
-                                ? Text(
-                                    'No matching dupes found in your collection yet. You can still type a manual offer below.',
-                                    style: TextStyle(color: AppTheme.tradingMutedText),
-                                  )
-                                : Wrap(
-                                    spacing: 8,
-                                    runSpacing: 8,
-                                    children: _matchingDupes.map((name) {
-                                      final selected = _selectedDupes.contains(name);
-                                      return FilterChip(
-                                        selected: selected,
-                                        label: Text(name),
-                                        labelStyle: TextStyle(
-                                          color: selected
-                                              ? Colors.black
-                                              : Colors.white,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                        selectedColor: AppTheme.neonCyan,
-                                        checkmarkColor: Colors.black,
-                                        backgroundColor: AppTheme.tradingCardBackground,
-                                        side: BorderSide(
-                                          color: selected
-                                              ? AppTheme.neonCyan
-                                              : AppTheme.tradingSoftBorder,
-                                        ),
-                                        onSelected: (value) {
-                                          setState(() {
-                                            if (value) {
-                                              _selectedDupes.add(name);
-                                            } else {
-                                              _selectedDupes.remove(name);
-                                            }
-                                            _syncBlueprintTextFromSelection();
-                                          });
-                                        },
-                                      );
-                                    }).toList(growable: false),
-                                  ),
-                      ),
-                      _sectionCard(
-                        title: 'Your Offer',
-                        child: Column(
-                          children: [
-                            _buildTextField(
-                              controller: _blueprintController,
-                              label: 'Blueprints You Are Offering',
-                              enabled: !listing.wantsNothing,
-                              validator: (value) {
-                                final hasBlueprint =
-                                    value != null && value.trim().isNotEmpty;
-                                final hasSeeds = _seedTotal > 0;
-                                final hasResources =
-                                    _includesResources &&
-                                    _resourcesController.text.trim().isNotEmpty;
-                                final hasTradeItems = _selectedTradeItems.isNotEmpty;
+                    ),
+                    if (!listing.wantsNothing && !_smartTerms) _offerIntelligenceCard(),
+                    if (_smartTerms)
+                      _sectionCard(title: 'Your Offer', child: _buildTextField(
+                        controller: _noteController, label: 'Message To Trader', maxLines: 3))
+                    else _sectionCard(
+                      title: 'Your Offer',
+                      child: Column(
+                        children: [
+                          _buildTextField(
+                            controller: _blueprintController,
+                            label: 'Blueprints You Are Offering',
+                            enabled: !listing.wantsNothing,
+                            validator: (value) {
+                              final hasBlueprint =
+                                  value != null && value.trim().isNotEmpty;
+                              final hasSeeds = _seedTotal > 0;
+                              final hasResources =
+                                  _includesResources &&
+                                  _resourcesController.text.trim().isNotEmpty;
+                              final hasTradeItems =
+                                  _selectedTradeItems.isNotEmpty;
 
-                                if (!hasBlueprint && !hasSeeds && !hasResources && !hasTradeItems) {
-                                  return 'Add at least one blueprint, item, seed bundle or resource.';
-                                }
-                                return null;
-                              },
+                              if (!hasBlueprint &&
+                                  !hasSeeds &&
+                                  !hasResources &&
+                                  !hasTradeItems) {
+                                return 'Add at least one blueprint, item, seed bundle or resource.';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 14),
+                          InkWell(
+                            onTap: listing.wantsNothing
+                                ? null
+                                : () async {
+                                    final picked = await _showTradeItemPicker();
+                                    if (!mounted || picked == null) return;
+                                    setState(() {
+                                      _selectedTradeItems
+                                        ..clear()
+                                        ..addAll(picked);
+                                    });
+                                  },
+                            borderRadius: BorderRadius.circular(
+                              ArcUiTokens.radiusL,
                             ),
-                            const SizedBox(height: 14),
-                            InkWell(
-                              onTap: listing.wantsNothing
-                                  ? null
-                                  : () async {
-                                      final picked = await _showTradeItemPicker();
-                                      if (!mounted || picked == null) return;
-                                      setState(() {
-                                        _selectedTradeItems
-                                          ..clear()
-                                          ..addAll(picked);
-                                      });
-                                    },
-                              borderRadius: BorderRadius.circular(16),
-                              child: InputDecorator(
-                                decoration: AppTheme.tradingInputDecoration(label: 'Trade Items You Are Offering'),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        listing.wantsNothing ? 'No return needed for giveaway claim' : _selectionSummary(_selectedTradeItems.length, 'item'),
-                                        style: const TextStyle(color: Colors.white),
+                            child: InputDecorator(
+                              decoration: ArcUiTokens.inputDecoration(
+                                labelText: 'Trade Items You Are Offering',
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      listing.wantsNothing
+                                          ? 'No return needed for giveaway claim'
+                                          : _selectionSummary(
+                                              _selectedTradeItems.length,
+                                              'item',
+                                            ),
+                                      style: ArcUiTokens.body(
+                                        color: ArcUiTokens.textPrimary,
                                       ),
                                     ),
-                                    const Icon(Icons.arrow_drop_down_rounded, color: Colors.white70),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: AppTheme.spaceS),
-                            _chipWrap(_selectedTradeItems.map((item) => item.name).toList(growable: false)),
-                            const SizedBox(height: 14),
-                            SwitchListTile(
-                              value: listing.wantsNothing ? false : _includesResources,
-                              activeThumbColor: AppTheme.neonPink,
-                              title: const Text(
-                                'Include Resources',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                              onChanged: listing.wantsNothing
-                                  ? null
-                                  : (value) {
-                                      setState(() {
-                                        _includesResources = value;
-                                      });
-                                    },
-                            ),
-                            const SizedBox(height: AppTheme.spaceS),
-                            _buildTextField(
-                              controller: _resourcesController,
-                              label: 'Resource Summary',
-                              maxLines: 3,
-                              enabled: !listing.wantsNothing && _includesResources,
-                            ),
-                            const SizedBox(height: 16),
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                'Seed Bundles',
-                                style: AppTheme.tradingHeading(
-                                  fontSize: 18,
-                                  color: AppTheme.neonCyan,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            _bundleRow(
-                              label: '10 Seed Bundles',
-                              value: _smallBundles,
-                              onMinus: () {
-                                if (_smallBundles == 0) return;
-                                setState(() => _smallBundles -= 1);
-                              },
-                              onPlus: () {
-                                setState(() => _smallBundles += 1);
-                              },
-                            ),
-                            _bundleRow(
-                              label: '50 Seed Bundles',
-                              value: _mediumBundles,
-                              onMinus: () {
-                                if (_mediumBundles == 0) return;
-                                setState(() => _mediumBundles -= 1);
-                              },
-                              onPlus: () {
-                                setState(() => _mediumBundles += 1);
-                              },
-                            ),
-                            _bundleRow(
-                              label: '100 Seed Bundles',
-                              value: _largeBundles,
-                              onMinus: () {
-                                if (_largeBundles == 0) return;
-                                setState(() => _largeBundles -= 1);
-                              },
-                              onPlus: () {
-                                setState(() => _largeBundles += 1);
-                              },
-                            ),
-                            const SizedBox(height: 12),
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                'Seed Total: $_seedTotal',
-                                style: AppTheme.tradingHeading(
-                                  fontSize: 18,
-                                  color: AppTheme.neonPink,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            _buildTextField(
-                              controller: _noteController,
-                              label: 'Message To Trader',
-                              maxLines: 3,
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: _isSaving ? null : _submitOffer,
-                          icon: _isSaving
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.black,
                                   ),
-                                )
-                              : const Icon(Icons.send_rounded),
-                          label: Text(
-                            _isSaving
-                                ? (listing.wantsNothing ? 'Claiming...' : 'Sending Offer...')
-                                : (listing.wantsNothing ? 'Claim Giveaway' : 'Send Offer'),
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 16,
+                                  const Icon(
+                                    Icons.arrow_drop_down_rounded,
+                                    color: ArcUiTokens.textSecondary,
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.neonPink,
-                            foregroundColor: Colors.black,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
+                          const SizedBox(height: AppTheme.spaceS),
+                          _chipWrap(
+                            _selectedTradeItems
+                                .map((item) => item.name)
+                                .toList(growable: false),
+                          ),
+                          const SizedBox(height: 14),
+                          SwitchListTile(
+                            value: listing.wantsNothing
+                                ? false
+                                : _includesResources,
+                            activeThumbColor: ArcUiTokens.secondaryAccent,
+                            title: Text(
+                              'Include Resources',
+                              style: ArcUiTokens.body(
+                                color: ArcUiTokens.textPrimary,
+                              ),
                             ),
+                            onChanged: listing.wantsNothing
+                                ? null
+                                : (value) {
+                                    setState(() {
+                                      _includesResources = value;
+                                    });
+                                  },
+                          ),
+                          const SizedBox(height: AppTheme.spaceS),
+                          _buildTextField(
+                            controller: _resourcesController,
+                            label: 'Resource Summary',
+                            maxLines: 3,
+                            enabled:
+                                !listing.wantsNothing && _includesResources,
+                          ),
+                          const SizedBox(height: 16),
+                          TradingSeedBundlePicker(
+                            smallBundles: _smallBundles,
+                            mediumBundles: _mediumBundles,
+                            largeBundles: _largeBundles,
+                            onSmallChanged: (value) =>
+                                setState(() => _smallBundles = value),
+                            onMediumChanged: (value) =>
+                                setState(() => _mediumBundles = value),
+                            onLargeChanged: (value) =>
+                                setState(() => _largeBundles = value),
+                          ),
+                          const SizedBox(height: 16),
+                          _buildTextField(
+                            controller: _noteController,
+                            label: 'Message To Trader',
+                            maxLines: 3,
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _isSaving ? null : _submitOffer,
+                        icon: _isSaving
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.black,
+                                ),
+                              )
+                            : const Icon(Icons.send_rounded),
+                        label: Text(
+                          _isSaving
+                              ? (listing.wantsNothing
+                                    ? 'Claiming...'
+                                    : 'Sending Offer...')
+                              : (listing.wantsNothing
+                                    ? 'Claim Giveaway'
+                                    : 'Send Offer'),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 16,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.neonPink,
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
                           ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }

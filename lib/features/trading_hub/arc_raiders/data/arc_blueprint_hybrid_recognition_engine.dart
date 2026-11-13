@@ -1,0 +1,430 @@
+import 'dart:math' as math;
+
+import 'package:flutter/foundation.dart';
+import 'package:image/image.dart' as img;
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_cell_analyzer.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_photo_occupancy_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_recognition_evidence_policy.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_recognition_diagnostics.dart';
+
+@immutable
+class ArcBlueprintHybridRecognitionResult {
+  const ArcBlueprintHybridRecognitionResult({
+    required this.samples,
+    required this.diagnostics,
+    required this.captureConfidence,
+    required this.error,
+  });
+
+  final List<ArcBlueprintPhotoOccupancySample> samples;
+  final List<ArcBlueprintCellDiagnostic> diagnostics;
+  final double captureConfidence;
+  final String error;
+
+  bool get succeeded => error.isEmpty && samples.isNotEmpty;
+}
+
+class ArcBlueprintHybridRecognitionEngine {
+  const ArcBlueprintHybridRecognitionEngine({
+    this.columns = 10,
+    this.rows = 5,
+    this.validColumnCountsByRow = const <int>[],
+  });
+
+  final int columns;
+  final int rows;
+  final List<int> validColumnCountsByRow;
+
+  ArcBlueprintHybridRecognitionResult analyze({
+    required Uint8List bytes,
+    required String captureId,
+  }) {
+    final decoded = _decode(bytes);
+    if (decoded == null) {
+      return const ArcBlueprintHybridRecognitionResult(
+        samples: <ArcBlueprintPhotoOccupancySample>[],
+        diagnostics: <ArcBlueprintCellDiagnostic>[],
+        captureConfidence: 0,
+        error: 'The selected image could not be decoded.',
+      );
+    }
+    if (decoded.width < columns * 20 || decoded.height < rows * 20) {
+      return const ArcBlueprintHybridRecognitionResult(
+        samples: <ArcBlueprintPhotoOccupancySample>[],
+        diagnostics: <ArcBlueprintCellDiagnostic>[],
+        captureConfidence: 0,
+        error: 'The image is too small to analyse the Blueprint grid.',
+      );
+    }
+
+    final expectedWidth = columns * 100;
+    final expectedHeight = rows * 100;
+    final normalized =
+        decoded.width == expectedWidth && decoded.height == expectedHeight
+        ? decoded
+        : img.copyResize(
+            decoded,
+            width: expectedWidth,
+            height: expectedHeight,
+            interpolation: img.Interpolation.cubic,
+          );
+
+    final primary = ArcBlueprintCellAnalyzer(
+      columns: columns,
+      rows: rows,
+      validColumnCountsByRow: validColumnCountsByRow,
+    ).analyze(normalized);
+    final positions = _positions();
+
+    if (primary.length != positions.length) {
+      return const ArcBlueprintHybridRecognitionResult(
+        samples: <ArcBlueprintPhotoOccupancySample>[],
+        diagnostics: <ArcBlueprintCellDiagnostic>[],
+        captureConfidence: 0,
+        error: 'The Blueprint grid section geometry could not be analysed.',
+      );
+    }
+
+    final samples = <ArcBlueprintPhotoOccupancySample>[];
+    final diagnostics = <ArcBlueprintCellDiagnostic>[];
+
+    for (var index = 0; index < primary.length; index++) {
+      final position = positions[index];
+      final row = position.rowIndex;
+      final column = position.columnIndex;
+      final base = primary[index];
+
+      var score = base.occupancyScore;
+      var confidence = base.confidence;
+      var retryCount = 0;
+
+      // The proven primary analyzer remains authoritative for decisive cells.
+      // Only uncertain cells are retried with targeted expanded/shifted crops.
+      if (score > 0.28 && score < 0.72) {
+        final retry = _retryUncertainCell(normalized, row, column);
+        retryCount = retry.attempts;
+
+        if (retry.decisive && retry.confidence >= 0.66) {
+          if (retry.score <= 0.28 || base.occupancyScore >= 0.68) {
+            score = retry.score;
+            confidence = math.max(confidence, retry.confidence);
+          }
+        }
+      }
+
+      // A flat, low-information cell can never become owned through fallback.
+      if (base.texture < 0.09 &&
+          base.edgeDensity < 0.09 &&
+          base.saturation < 0.10 &&
+          base.foregroundCoverage < 0.08 &&
+          base.luminanceRange < 0.12) {
+        score = math.min(score, 0.16);
+        confidence = math.max(confidence, 0.88);
+      }
+
+      final calibrated = const ArcBlueprintRecognitionEvidencePolicy()
+          .calibrate(base);
+      if (calibrated.promoted || calibrated.suppressed) {
+        score = calibrated.score;
+      } else if (score >= 0.84 && calibrated.score < 0.84) {
+        score = calibrated.score;
+      }
+
+      samples.add(
+        ArcBlueprintPhotoOccupancySample(
+          captureId: captureId,
+          rowIndex: row,
+          columnIndex: column,
+          occupancyScore: score.clamp(0.0, 1.0).toDouble(),
+        ),
+      );
+      if (kDebugMode) {
+        debugPrint(
+          'ARC RECOGNITION: $captureId '
+          'R${row + 1}C${column + 1} '
+          'score=${score.toStringAsFixed(3)} '
+          'confidence=${confidence.toStringAsFixed(3)} '
+          'blue=${base.blueprintBlueCoverage.toStringAsFixed(3)} '
+          'bright=${base.brightFeatureCoverage.toStringAsFixed(3)} '
+          'texture=${base.texture.toStringAsFixed(3)} '
+          'edge=${base.edgeDensity.toStringAsFixed(3)} '
+          'agreement=${base.windowAgreement.toStringAsFixed(3)} '
+          'calibration=${calibrated.reason}',
+        );
+      }
+
+      diagnostics.add(
+        ArcBlueprintCellDiagnostic(
+          rowIndex: row,
+          columnIndex: column,
+          occupancyScore: score,
+          confidence: confidence,
+          textureVote: base.texture,
+          edgeVote: base.edgeDensity,
+          colourVote: base.saturation,
+          foregroundVote: base.foregroundCoverage,
+          silhouetteVote: base.luminanceRange,
+          retryCount: retryCount,
+        ),
+      );
+    }
+
+    final captureConfidence = diagnostics.isEmpty
+        ? 0.0
+        : diagnostics.map((item) => item.confidence).reduce((a, b) => a + b) /
+              diagnostics.length;
+
+    if (kDebugMode) {
+      final ownedCandidates = samples
+          .where((sample) => sample.occupancyScore >= 0.84)
+          .length;
+      final missingCandidates = samples
+          .where((sample) => sample.occupancyScore <= 0.22)
+          .length;
+      final uncertainCandidates =
+          samples.length - ownedCandidates - missingCandidates;
+      debugPrint(
+        'ARC RECOGNITION: $captureId summary '
+        'owned=$ownedCandidates missing=$missingCandidates '
+        'uncertain=$uncertainCandidates '
+        'captureConfidence=${captureConfidence.toStringAsFixed(3)}',
+      );
+    }
+
+    return ArcBlueprintHybridRecognitionResult(
+      samples: List<ArcBlueprintPhotoOccupancySample>.unmodifiable(samples),
+      diagnostics: List<ArcBlueprintCellDiagnostic>.unmodifiable(diagnostics),
+      captureConfidence: captureConfidence,
+      error: '',
+    );
+  }
+
+  _RetryResult _retryUncertainCell(img.Image image, int row, int column) {
+    final cellWidth = image.width / columns;
+    final cellHeight = image.height / rows;
+    final shifts = <double>[0, -0.06, 0.06];
+    final insets = <double>[0.02, 0.10, 0.18];
+    final scores = <double>[];
+
+    for (final shift in shifts) {
+      for (final inset in insets) {
+        scores.add(
+          _scoreWindow(image, row, column, cellWidth, cellHeight, inset, shift),
+        );
+      }
+    }
+
+    scores.sort();
+    final median = scores[scores.length ~/ 2];
+    final high = scores.last;
+    final low = scores.first;
+    final consensus = ((median * 0.78) + (high * 0.22)).clamp(0.0, 1.0);
+    final agreement = (1 - ((high - low) / 0.70)).clamp(0.0, 1.0);
+    final distance = ((consensus - 0.5).abs() * 2).clamp(0.0, 1.0);
+    final confidence = ((agreement * 0.45) + (distance * 0.55)).clamp(0.0, 1.0);
+
+    return _RetryResult(
+      score: consensus,
+      confidence: confidence,
+      decisive: consensus <= 0.28 || consensus >= 0.72,
+      attempts: scores.length,
+    );
+  }
+
+  List<_CellPosition> _positions() {
+    return <_CellPosition>[
+      for (var row = 0; row < rows; row++)
+        for (var column = 0; column < _validColumnsForRow(row); column++)
+          _CellPosition(rowIndex: row, columnIndex: column),
+    ];
+  }
+
+  int _validColumnsForRow(int row) {
+    if (validColumnCountsByRow.isEmpty ||
+        row < 0 ||
+        row >= validColumnCountsByRow.length) {
+      return columns;
+    }
+    return validColumnCountsByRow[row].clamp(0, columns);
+  }
+
+  double _scoreWindow(
+    img.Image image,
+    int row,
+    int column,
+    double cellWidth,
+    double cellHeight,
+    double inset,
+    double horizontalShift,
+  ) {
+    final originX = column * cellWidth;
+    final originY = row * cellHeight;
+    final shiftPixels = cellWidth * horizontalShift;
+
+    final left = (originX + (cellWidth * inset) + shiftPixels).round().clamp(
+      0,
+      image.width - 2,
+    );
+    final right = (originX + (cellWidth * (1 - inset)) + shiftPixels)
+        .round()
+        .clamp(left + 1, image.width - 1);
+    final top = (originY + (cellHeight * inset)).round().clamp(
+      0,
+      image.height - 2,
+    );
+    final bottom = (originY + (cellHeight * (1 - inset))).round().clamp(
+      top + 1,
+      image.height - 1,
+    );
+
+    final stride = math.max(
+      1,
+      math.min(
+        math.max(1, (right - left) ~/ 24),
+        math.max(1, (bottom - top) ~/ 20),
+      ),
+    );
+
+    final lumas = <double>[];
+    var saturationSum = 0.0;
+    var edgeSum = 0.0;
+    var foreground = 0;
+    var blueprintBlue = 0;
+    var brightFeature = 0;
+    var count = 0;
+
+    for (var y = top; y < bottom; y += stride) {
+      for (var x = left; x < right; x += stride) {
+        final pixel = image.getPixelSafe(x, y);
+        final luma = _luma(pixel);
+        final saturation = _saturation(pixel);
+        lumas.add(luma);
+        saturationSum += saturation;
+
+        final nx = math.min(right - 1, x + stride);
+        final ny = math.min(bottom - 1, y + stride);
+        final dx = (luma - _luma(image.getPixelSafe(nx, y))).abs();
+        final dy = (luma - _luma(image.getPixelSafe(x, ny))).abs();
+        edgeSum += dx + dy;
+
+        if ((saturation >= 0.15 && luma >= 20) || dx >= 22 || dy >= 22) {
+          foreground++;
+        }
+
+        final red = pixel.r.toDouble();
+        final green = pixel.g.toDouble();
+        final blue = pixel.b.toDouble();
+        if (blue >= 92 &&
+            blue >= (red * 1.30) &&
+            blue >= (green * 1.04) &&
+            saturation >= 0.34 &&
+            luma >= 32) {
+          blueprintBlue++;
+        }
+        if (luma >= 128 || (red >= 118 && green >= 118 && blue >= 118)) {
+          brightFeature++;
+        }
+        count++;
+      }
+    }
+
+    if (count == 0 || lumas.isEmpty) return 0;
+    lumas.sort();
+    final mean = lumas.reduce((a, b) => a + b) / count;
+    var variance = 0.0;
+    for (final value in lumas) {
+      final delta = value - mean;
+      variance += delta * delta;
+    }
+
+    final texture = (math.sqrt(variance / count) / 70).clamp(0.0, 1.0);
+    final edges = ((edgeSum / (count * 2)) / 68).clamp(0.0, 1.0);
+    final saturation = (saturationSum / count).clamp(0.0, 1.0);
+    final coverage = (foreground / count).clamp(0.0, 1.0);
+    final range = ((_percentile(lumas, 0.90) - _percentile(lumas, 0.10)) / 145)
+        .clamp(0.0, 1.0);
+
+    if (texture < 0.09 &&
+        edges < 0.09 &&
+        saturation < 0.10 &&
+        coverage < 0.08 &&
+        range < 0.12) {
+      return 0.12;
+    }
+
+    final blueCoverage = (blueprintBlue / count).clamp(0.0, 1.0);
+    final brightCoverage = (brightFeature / count).clamp(0.0, 1.0);
+
+    final combined =
+        ((blueCoverage * 0.42) +
+                (brightCoverage * 0.24) +
+                (texture * 0.12) +
+                (edges * 0.10) +
+                (coverage * 0.06) +
+                (range * 0.06))
+            .clamp(0.0, 1.0);
+
+    var score = 1 / (1 + math.exp(-((combined - 0.205) * 13.5)));
+    final strongSignature =
+        blueCoverage >= 0.135 &&
+        brightCoverage >= 0.035 &&
+        (texture >= 0.13 || edges >= 0.11) &&
+        range >= 0.10;
+    if (!strongSignature) {
+      score = math.min(score, 0.79);
+    }
+    return score;
+  }
+
+  img.Image? _decode(Uint8List bytes) {
+    try {
+      final decoded = img.decodeImage(bytes);
+      return decoded == null ? null : img.bakeOrientation(decoded);
+    } on Object {
+      return null;
+    }
+  }
+
+  double _luma(img.Pixel pixel) =>
+      (pixel.r.toDouble() * 0.2126) +
+      (pixel.g.toDouble() * 0.7152) +
+      (pixel.b.toDouble() * 0.0722);
+
+  double _saturation(img.Pixel pixel) {
+    final red = pixel.r.toDouble();
+    final green = pixel.g.toDouble();
+    final blue = pixel.b.toDouble();
+    final maximum = math.max(red, math.max(green, blue));
+    final minimum = math.min(red, math.min(green, blue));
+    return maximum <= 0 ? 0 : (maximum - minimum) / maximum;
+  }
+
+  double _percentile(List<double> sorted, double percentile) {
+    if (sorted.isEmpty) return 0;
+    final position = ((sorted.length - 1) * percentile).round();
+    return sorted[position.clamp(0, sorted.length - 1)];
+  }
+}
+
+@immutable
+class _CellPosition {
+  const _CellPosition({required this.rowIndex, required this.columnIndex});
+
+  final int rowIndex;
+  final int columnIndex;
+}
+
+@immutable
+class _RetryResult {
+  const _RetryResult({
+    required this.score,
+    required this.confidence,
+    required this.decisive,
+    required this.attempts,
+  });
+
+  final double score;
+  final double confidence;
+  final bool decisive;
+  final int attempts;
+}

@@ -1,10 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:uag_traders_hub/features/legal/screens/arc_data_attribution_screen.dart';
-import 'package:uag_traders_hub/features/legal/screens/privacy_policy_screen.dart';
-import 'package:uag_traders_hub/features/legal/screens/terms_of_use_screen.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/build/app_bar.dart';
+import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
+import 'package:uag_arc_raiders_hub/features/legal/models/uag_policy_catalog.dart';
+import 'package:uag_arc_raiders_hub/features/legal/screens/arc_data_attribution_screen.dart';
+import 'package:uag_arc_raiders_hub/features/legal/screens/privacy_policy_screen.dart';
+import 'package:uag_arc_raiders_hub/features/legal/screens/subscription_refunds_screen.dart';
+import 'package:uag_arc_raiders_hub/features/legal/screens/support_screen.dart';
+import 'package:uag_arc_raiders_hub/features/legal/screens/terms_of_use_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_account_support_workspace_bar.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_layout_system.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_tactical_page.dart';
 
 class LegalHubScreen extends StatelessWidget {
+  static const routeName = '/legal';
+
   const LegalHubScreen({super.key});
 
   void _open(BuildContext context, Widget screen) {
@@ -14,11 +24,31 @@ class LegalHubScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
-      appBar: AppBar(title: const Text('Legal')),
-      body: ListView(
-        padding: const EdgeInsets.all(AppTheme.spaceL),
+      backgroundColor: Colors.transparent,
+      appBar: const UagAppBar(
+        title: 'Legal',
+        subtitle: 'Terms, privacy, attribution and network policies.',
+        showLogout: false,
+      ),
+      drawer: const AppDrawer(),
+      body: ArcTacticalPageList(
+        width: ArcPageWidth.standard,
+        maxWidth: 980,
+        padding: ArcLayoutTokens.pagePadding(context),
         children: [
+          const ArcAccountSupportWorkspaceBar(
+            current: ArcAccountSupportWorkspace.legal,
+            padding: EdgeInsets.zero,
+          ),
+          const SizedBox(height: ArcUiTokens.gapM),
+          const ArcTacticalPanel(
+            icon: Icons.policy_outlined,
+            title: 'Policy Command',
+            subtitle:
+                'Operational terms, privacy controls and source attribution for the UAG ARC Raiders Hub.',
+            accent: ArcUiTokens.primaryAccent,
+            child: SizedBox.shrink(),
+          ),
           _LegalTile(
             title: 'Terms of Use',
             subtitle: 'Trading rules, account rules, and platform terms.',
@@ -32,21 +62,125 @@ class LegalHubScreen extends StatelessWidget {
             onTap: () => _open(context, const PrivacyPolicyScreen()),
           ),
           _LegalTile(
+            title: 'Subscriptions & Refunds',
+            subtitle:
+                'Google Play, Stripe, renewals, cancellation and refunds.',
+            icon: Icons.receipt_long_outlined,
+            onTap: () => _open(context, const SubscriptionRefundsScreen()),
+          ),
+          _LegalTile(
+            title: 'Support & Contact',
+            subtitle: 'Official MobCorp support and public policy links.',
+            icon: Icons.contact_support_outlined,
+            onTap: () => _open(context, const UagSupportScreen()),
+          ),
+          _LegalTile(
             title: 'Data Attribution',
             subtitle:
                 'Community data, licensing, fan-project notice, and source use.',
             icon: Icons.dataset_linked_outlined,
             onTap: () => _open(context, const ArcDataAttributionScreen()),
           ),
-          const SizedBox(height: AppTheme.spaceM),
-          Container(
-            padding: const EdgeInsets.all(AppTheme.spaceL),
-            decoration: AppTheme.tradingCardDecoration(
-              borderColor: AppTheme.neonPink.withValues(alpha: 0.14),
+          ArcTacticalPanel(
+            icon: Icons.fact_check_outlined,
+            title: 'Compliance assurance',
+            subtitle:
+                'Internal UK compliance self-audit active; independent professional review is planned once UAG generates revenue or before material commercial/international scale.',
+            accent: ArcUiTokens.primaryAccent,
+            child: Text(
+              'The operational policies are maintained against current UK government, ICO and platform guidance. This internal review supports beta readiness but is not solicitor sign-off and does not remove statutory consumer or data-protection rights.',
+              style: ArcUiTokens.body(fontSize: 13),
             ),
-            child: const Text(
-              'UAG Arc Raiders Hub is an unofficial fan-made companion tool. ARC Raiders and all related rights belong to their respective owners.',
-              style: TextStyle(color: Colors.white70, height: 1.45),
+          ),
+          const ArcTacticalPanel(
+            icon: Icons.folder_copy_outlined,
+            title: 'Policy Catalogue',
+            subtitle: 'Additional operational policy records and beta notices.',
+            accent: ArcUiTokens.secondaryAccent,
+            child: SizedBox.shrink(),
+          ),
+          for (final policy in UagPolicyCatalog.documents.where(
+            (document) => !const <String>{
+              'terms_of_use',
+              'privacy_policy',
+              'data_attribution',
+            }.contains(document.id),
+          ))
+            _LegalTile(
+              title: policy.title,
+              subtitle: policy.summary,
+              icon: policy.requiresLegalReview
+                  ? Icons.gavel_outlined
+                  : Icons.verified_user_outlined,
+              onTap: () => _open(context, _PolicyDocumentScreen(policy)),
+            ),
+          ArcTacticalPanel(
+            icon: Icons.info_outline_rounded,
+            title: 'Fan Project Notice',
+            accent: ArcUiTokens.secondaryAccent,
+            child: Text(
+              UagFanProjectNotice.text,
+              style: ArcUiTokens.body(fontSize: 13),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PolicyDocumentScreen extends StatelessWidget {
+  const _PolicyDocumentScreen(this.policy);
+
+  final UagPolicyDocument policy;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          policy.title,
+          style: ArcUiTokens.pageTitle(color: ArcUiTokens.primaryAccent),
+        ),
+      ),
+      body: ArcTacticalPageList(
+        width: ArcPageWidth.standard,
+        maxWidth: 920,
+        padding: ArcLayoutTokens.pagePadding(context),
+        children: [
+          ArcTacticalPanel(
+            icon: policy.requiresLegalReview
+                ? Icons.gavel_outlined
+                : Icons.verified_user_outlined,
+            title: policy.title,
+            subtitle:
+                'Version ${policy.version} - Effective ${policy.effectiveDate}',
+            accent: policy.requiresLegalReview
+                ? ArcUiTokens.warning
+                : ArcUiTokens.primaryAccent,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  policy.summary,
+                  style: ArcUiTokens.sectionTitle(fontSize: 18),
+                ),
+                const SizedBox(height: ArcUiTokens.gapM),
+                Text(policy.body, style: ArcUiTokens.body(fontSize: 13)),
+                if (policy.requiresLegalReview) ...[
+                  const SizedBox(height: ArcUiTokens.gapM),
+                  Text(
+                    UagPolicyCatalog.legalReviewNotice,
+                    style: ArcUiTokens.body(
+                      color: ArcUiTokens.warning,
+                      weight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ],
@@ -70,43 +204,33 @@ class _LegalTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppTheme.spaceM),
+    return Material(
+      color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(ArcUiTokens.radiusL),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.all(AppTheme.spaceM),
-          decoration: AppTheme.tradingCardDecoration(
-            borderColor: AppTheme.neonCyan.withValues(alpha: 0.14),
+          padding: const EdgeInsets.all(ArcUiTokens.gapL),
+          decoration: ArcUiTokens.surfaceDecoration(
+            role: ArcSurfaceRole.interactive,
+            accent: ArcUiTokens.primaryAccent,
+            borderOpacity: 0.18,
           ),
           child: Row(
             children: [
-              Icon(icon, color: AppTheme.neonCyan),
-              const SizedBox(width: AppTheme.spaceM),
+              Icon(icon, color: ArcUiTokens.primaryAccent, size: 22),
+              const SizedBox(width: ArcUiTokens.gapM),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: AppTheme.tradingHeading(
-                        fontSize: 20,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: const TextStyle(
-                        color: Colors.white60,
-                        height: 1.35,
-                      ),
-                    ),
+                    Text(title, style: ArcUiTokens.cardTitle(fontSize: 16)),
+                    const SizedBox(height: ArcUiTokens.gapXS),
+                    Text(subtitle, style: ArcUiTokens.bodySmall()),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: Colors.white54),
+              const Icon(Icons.chevron_right, color: ArcUiTokens.textTertiary),
             ],
           ),
         ),

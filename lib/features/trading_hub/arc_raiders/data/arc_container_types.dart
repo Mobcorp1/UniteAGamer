@@ -108,6 +108,18 @@ class ArcContainerTypes {
     description: 'Field depot or larger staged supply source.',
   );
 
+  static const ArcContainerType weaponCase = ArcContainerType(
+    id: 'weapon_case',
+    label: 'Weapon Case',
+    description: 'Dedicated weapon case loot source.',
+  );
+
+  static const ArcContainerType weaponTube = ArcContainerType(
+    id: 'weapon_tube',
+    label: 'Weapon Tube',
+    description: 'Long weapon tube or weapon storage tube.',
+  );
+
   static const ArcContainerType weaponCache = ArcContainerType(
     id: 'weapon_cache',
     label: 'Weapon Cache',
@@ -138,6 +150,11 @@ class ArcContainerTypes {
     description: 'Fridge or cooler-style loot source.',
   );
 
+  static const ArcContainerType blackCrateSecurityContainer = ArcContainerType(
+    id: 'black_crate_security_container',
+    label: 'Black Crate / Security Container',
+    description: 'Black crate or secured security container loot source.',
+  );
   static const ArcContainerType securityLocker = ArcContainerType(
     id: 'security_locker',
     label: 'Security Locker',
@@ -160,6 +177,14 @@ class ArcContainerTypes {
     id: 'garbage_bin',
     label: 'Garbage Bin / Dumpster',
     description: 'Large rubbish bin, dumpster, or waste container.',
+  );
+
+  static const String wheelieBinId = 'wheelie_bin';
+  static const String wheelieBinLabel = 'Wheelie Bin';
+  static const ArcContainerType wheelieBin = ArcContainerType(
+    id: wheelieBinId,
+    label: wheelieBinLabel,
+    description: 'Wheeled rubbish bin or waste container.',
   );
 
   static const ArcContainerType electricalBox = ArcContainerType(
@@ -205,7 +230,6 @@ class ArcContainerTypes {
     isPrimaryBlueprintSource: false,
   );
 
-
   static const ArcContainerType assessor = ArcContainerType(
     id: 'assessor',
     label: 'Assessor',
@@ -244,13 +268,17 @@ class ArcContainerTypes {
     metalCrate,
     netNest,
     raiderCache,
+    blackCrateSecurityContainer,
     securityLocker,
     shippingContainer,
     suitcase,
     toolbox,
     trailer,
+    weaponCase,
+    weaponTube,
     weaponCache,
     wickerBasket,
+    wheelieBin,
     looseLoot,
     unknown,
   ];

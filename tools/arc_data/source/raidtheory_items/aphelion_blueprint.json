@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "aphelion_blueprint",
   "name": {
     "da": "Aphelion-tegning",
@@ -15,7 +15,7 @@
     "pl": "Projekt Aphelion",
     "pt": "Projeto de Afelio",
     "pt-BR": "Esquema de Afélio",
-    "ru": "Чертеж — Афелий",
+    "ru": "Чертеж - Афелий",
     "sr": "Aphelion Nacrt",
     "tr": "Aphelion Taslağı",
     "uk": "Креслення Афелій",
@@ -53,3 +53,4 @@
   "updatedAt": "01/13/2026",
   "addedIn": "1.2"
 }
+

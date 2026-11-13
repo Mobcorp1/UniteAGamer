@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "smoke_grenade_blueprint",
   "name": {
     "da": "Roggranat-tegning",
@@ -15,7 +15,7 @@
     "pl": "Projekt Granat dymny",
     "pt": "Projeto de Granada de fumaca",
     "pt-BR": "Esquema de Granada de Fumaça",
-    "ru": "Чертеж — Дымовая граната",
+    "ru": "Чертеж - Дымовая граната",
     "sr": "Dimna granata Nacrt",
     "tr": "Sis Bombası Taslağı",
     "uk": "Креслення Димова граната",
@@ -53,3 +53,4 @@
   "updatedAt": "01/13/2026",
   "addedIn": "base"
 }
+

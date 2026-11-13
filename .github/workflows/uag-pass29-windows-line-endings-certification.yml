@@ -1,0 +1,49 @@
+name: UAG PASS29 Windows Blueprint Intel Certification
+
+on:
+  push:
+    branches:
+      - codex/raid-setup-endpoints-20261005
+    paths:
+      - .github/workflows/uag-pass29-windows-line-endings-certification.yml
+
+permissions:
+  contents: read
+
+jobs:
+  verify-windows-crlf:
+    runs-on: windows-latest
+    timeout-minutes: 35
+    steps:
+      - name: Check out certified source with native Windows line endings
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Configure Flutter stable
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.41.0'
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Verify source is parsed with Windows CRLF and run regression
+        shell: pwsh
+        run: |
+          $source = Get-Content -LiteralPath lib/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart -Raw
+          $source = $source -replace "\r?\n", "`r`n"
+          [System.IO.File]::WriteAllText(
+            (Join-Path (Get-Location).Path 'lib/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart'),
+            $source
+          )
+          flutter test --reporter expanded test/blueprint_intel_entry_restoration_test.dart
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Run locked grid and source tests on Windows
+        run: |
+          flutter test --reporter expanded test/pass26_furniture_design_grid_order_test.dart test/pass27_favourite_snapshot_relevance_regression_test.dart test/arc_furniture_design_artwork_wiring_test.dart
+
+      # No Firebase deploy or Android install

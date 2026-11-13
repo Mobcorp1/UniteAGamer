@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 
+import '../models/uag_commercial_economy.dart';
+import '../models/uag_match_intelligence_copy.dart';
 import '../models/uag_subscription_tier.dart';
 import '../screens/monetisation_screen.dart';
 import '../services/uag_entitlement_service.dart';
+import 'uag_raider_mark_panel.dart';
 
 class UagUsageGate {
   const UagUsageGate._();
@@ -21,25 +24,49 @@ class UagUsageGate {
     await showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppTheme.cardBackgroundDeep,
-        shape: AppTheme.tradingDialogShape(),
-        title: Text(
-          'Limit Reached',
-          style: AppTheme.tradingHeading(
-            fontSize: 22,
-            color: AppTheme.neonPink,
+        backgroundColor: ArcUiTokens.surfaceOverlay,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
+          side: BorderSide(
+            color: ArcUiTokens.secondaryAccent.withValues(alpha: 0.30),
           ),
         ),
-        content: Text(
-          '${result.reason ?? 'Your weekly limit has been reached.'}\n\nUpgrade to Essential for 5 weekly uses or Premium for unlimited access.',
-          style: const TextStyle(color: Colors.white70, height: 1.4),
+        title: Text(
+          'Upgrade for more ${action.label.toLowerCase()}s',
+          style: ArcUiTokens.sectionTitle(
+            fontSize: 22,
+            color: ArcUiTokens.secondaryAccent,
+          ),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                _upgradeBody(action, result.reason),
+                style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
+              ),
+              if (UagCommercialEconomy.usesMonthlyAllowance(action)) ...[
+                const SizedBox(height: 12),
+                const UagRaiderMarkPanel(),
+              ],
+            ],
+          ),
         ),
         actions: [
           TextButton(
+            style: ArcUiTokens.textButtonStyle(
+              accent: ArcUiTokens.secondaryAccent,
+            ),
             onPressed: () => Navigator.of(dialogContext).pop(),
             child: const Text('Close'),
           ),
-          ElevatedButton(
+          TextButton(
+            style: ArcUiTokens.textButtonStyle(
+              accent: ArcUiTokens.secondaryAccent,
+              primary: true,
+            ),
             onPressed: () {
               Navigator.of(dialogContext).pop();
               Navigator.of(context).pushNamed(MonetisationScreen.routeName);
@@ -50,5 +77,13 @@ class UagUsageGate {
       ),
     );
     return false;
+  }
+
+  static String _upgradeBody(UagBillableAction action, String? reason) {
+    final intro = reason ?? 'Your current plan limit has been reached.';
+    if (action == UagBillableAction.matchmakingSearch) {
+      return '$intro\n\nFree includes ${UagMatchIntelligenceCopy.free.label.toLowerCase()}. Essential unlocks ${UagMatchIntelligenceCopy.essential.label.toLowerCase()} with deeper schedule, communication and squad-intent analysis. Premium unlocks ${UagMatchIntelligenceCopy.premium.label.toLowerCase()} for the strongest private-signal recommendations.';
+    }
+    return '$intro\n\nFree users keep the core app, Intel contribution, Collections Tracker and basic UAG Raider access. Essential unlocks regular-player limits. Premium unlocks unlimited power-user tools and no ads.';
   }
 }

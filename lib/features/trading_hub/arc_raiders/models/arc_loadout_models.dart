@@ -1,0 +1,446 @@
+enum ArcLoadoutCategory { saved, meta, pvp, pve, balanced }
+
+extension ArcLoadoutCategoryLabel on ArcLoadoutCategory {
+  String get label {
+    switch (this) {
+      case ArcLoadoutCategory.saved:
+        return 'Saved Loadouts';
+      case ArcLoadoutCategory.meta:
+        return 'Meta Loadouts';
+      case ArcLoadoutCategory.pvp:
+        return 'PvP Loadouts';
+      case ArcLoadoutCategory.pve:
+        return 'PvE Loadouts';
+      case ArcLoadoutCategory.balanced:
+        return 'Balanced PvP/PvE';
+    }
+  }
+
+  String get shortLabel {
+    switch (this) {
+      case ArcLoadoutCategory.saved:
+        return 'Saved';
+      case ArcLoadoutCategory.meta:
+        return 'Meta';
+      case ArcLoadoutCategory.pvp:
+        return 'PvP';
+      case ArcLoadoutCategory.pve:
+        return 'PvE';
+      case ArcLoadoutCategory.balanced:
+        return 'Balanced';
+    }
+  }
+}
+
+enum ArcLoadoutSlotType {
+  augment,
+  primaryWeapon,
+  primaryAttachments,
+  secondaryWeapon,
+  secondaryAttachments,
+  equipment,
+  consumables,
+}
+
+extension ArcLoadoutSlotTypeLabel on ArcLoadoutSlotType {
+  String get label {
+    switch (this) {
+      case ArcLoadoutSlotType.augment:
+        return 'Augment';
+      case ArcLoadoutSlotType.primaryWeapon:
+        return 'Primary Weapon';
+      case ArcLoadoutSlotType.primaryAttachments:
+        return 'Primary Attachments';
+      case ArcLoadoutSlotType.secondaryWeapon:
+        return 'Secondary Weapon';
+      case ArcLoadoutSlotType.secondaryAttachments:
+        return 'Secondary Attachments';
+      case ArcLoadoutSlotType.equipment:
+        return 'Equipment';
+      case ArcLoadoutSlotType.consumables:
+        return 'Consumables';
+    }
+  }
+}
+
+class ArcLoadoutWeaponSpec {
+  const ArcLoadoutWeaponSpec({
+    required this.name,
+    required this.category,
+    required this.role,
+    required this.slots,
+    this.craftable = false,
+    this.gunsmithLevel,
+    this.blueprintBased = false,
+    this.notes,
+  });
+
+  final String name;
+  final String category;
+  final String role;
+  final List<String> slots;
+  final bool craftable;
+  final int? gunsmithLevel;
+  final bool blueprintBased;
+  final String? notes;
+}
+
+class ArcLoadoutOption {
+  const ArcLoadoutOption({
+    required this.name,
+    required this.type,
+    required this.description,
+    this.blueprintBased = false,
+    this.craftable = false,
+    this.gunsmithLevel,
+  });
+
+  final String name;
+  final ArcLoadoutSlotType type;
+  final String description;
+  final bool blueprintBased;
+  final bool craftable;
+  final int? gunsmithLevel;
+}
+
+enum ArcAttachmentSlotType {
+  muzzle,
+  shotgunMuzzle,
+  underbarrel,
+  lightMagazine,
+  mediumMagazine,
+  shotgunMagazine,
+  stock,
+  barrel,
+  converter,
+  special,
+}
+
+extension ArcAttachmentSlotTypeLabel on ArcAttachmentSlotType {
+  String get label {
+    switch (this) {
+      case ArcAttachmentSlotType.muzzle:
+        return 'Muzzle';
+      case ArcAttachmentSlotType.shotgunMuzzle:
+        return 'Shotgun Muzzle';
+      case ArcAttachmentSlotType.underbarrel:
+        return 'Grip';
+      case ArcAttachmentSlotType.lightMagazine:
+        return 'Light Mag';
+      case ArcAttachmentSlotType.mediumMagazine:
+        return 'Medium Mag';
+      case ArcAttachmentSlotType.shotgunMagazine:
+        return 'Shotgun Mag';
+      case ArcAttachmentSlotType.stock:
+        return 'Stock';
+      case ArcAttachmentSlotType.barrel:
+        return 'Barrel';
+      case ArcAttachmentSlotType.converter:
+        return 'Converter';
+      case ArcAttachmentSlotType.special:
+        return 'Special';
+    }
+  }
+}
+
+class ArcCraftingRequirement {
+  const ArcCraftingRequirement({
+    required this.itemName,
+    required this.quantity,
+  });
+
+  final String itemName;
+  final int quantity;
+
+  String get label => '${quantity}x $itemName';
+}
+
+class ArcAttachmentEffect {
+  const ArcAttachmentEffect({
+    required this.description,
+    required this.stat,
+    required this.value,
+    required this.unit,
+    this.isPenalty = false,
+  });
+
+  final String description;
+  final String stat;
+  final num value;
+  final String unit;
+  final bool isPenalty;
+}
+
+class ArcLoadoutAttachmentSpec {
+  const ArcLoadoutAttachmentSpec({
+    required this.id,
+    required this.name,
+    required this.slotType,
+    required this.benchLevel,
+    required this.compatibleWeapons,
+    this.craftable = true,
+    this.findOnly = false,
+    this.craftingRequirements = const <ArcCraftingRequirement>[],
+    this.effects = const <ArcAttachmentEffect>[],
+    this.materials = const <String>[],
+    this.effect = '',
+    this.blueprintItemId,
+    this.imageAssetPath,
+    this.notes,
+  });
+
+  final String id;
+  final String name;
+  final ArcAttachmentSlotType slotType;
+  final int benchLevel;
+  final List<String> compatibleWeapons;
+  final bool craftable;
+  final bool findOnly;
+  final List<ArcCraftingRequirement> craftingRequirements;
+  final List<ArcAttachmentEffect> effects;
+  final List<String> materials;
+  final String effect;
+  final String? blueprintItemId;
+  final String? imageAssetPath;
+  final String? notes;
+
+  bool supportsWeapon(String weaponName) {
+    final normalised = weaponName.trim().toLowerCase();
+    return compatibleWeapons.any(
+      (weapon) => weapon.trim().toLowerCase() == normalised,
+    );
+  }
+
+  String get benchLabel {
+    if (findOnly) return 'Find Only';
+    return benchLevel <= 0 ? 'Special' : 'Bench Level $benchLevel';
+  }
+
+  String get materialSummary =>
+      materials.isEmpty ? 'No bench recipe' : materials.join(' / ');
+
+  String get effectSummary {
+    if (effects.isNotEmpty) {
+      return effects.map((entry) => entry.description).join(' / ');
+    }
+    return effect;
+  }
+}
+
+class ArcSavedLoadoutSeed {
+  const ArcSavedLoadoutSeed({
+    required this.name,
+    required this.category,
+    required this.description,
+    required this.augment,
+    this.shield,
+    required this.primaryWeapon,
+    required this.secondaryWeapon,
+    required this.equipment,
+    required this.consumables,
+  });
+
+  final String name;
+  final ArcLoadoutCategory category;
+  final String description;
+  final String augment;
+  final String? shield;
+  final String primaryWeapon;
+  final String secondaryWeapon;
+  final List<String> equipment;
+  final List<String> consumables;
+}
+
+enum ArcPlayerPlayStyle {
+  pve,
+  pvp,
+  balanced,
+  blueprintHunter,
+  lootRunner,
+  trader,
+  squadSupport,
+  soloSurvivor,
+}
+
+extension ArcPlayerPlayStyleLabel on ArcPlayerPlayStyle {
+  String get label {
+    switch (this) {
+      case ArcPlayerPlayStyle.pve:
+        return 'PvE-focused';
+      case ArcPlayerPlayStyle.pvp:
+        return 'PvP-focused';
+      case ArcPlayerPlayStyle.balanced:
+        return 'Balanced PvP/PvE';
+      case ArcPlayerPlayStyle.blueprintHunter:
+        return 'Blueprint hunter';
+      case ArcPlayerPlayStyle.lootRunner:
+        return 'Loot runner';
+      case ArcPlayerPlayStyle.trader:
+        return 'Trader';
+      case ArcPlayerPlayStyle.squadSupport:
+        return 'Squad support';
+      case ArcPlayerPlayStyle.soloSurvivor:
+        return 'Solo survivor';
+    }
+  }
+
+  String get shortLabel {
+    switch (this) {
+      case ArcPlayerPlayStyle.pve:
+        return 'PvE';
+      case ArcPlayerPlayStyle.pvp:
+        return 'PvP';
+      case ArcPlayerPlayStyle.balanced:
+        return 'Balanced';
+      case ArcPlayerPlayStyle.blueprintHunter:
+        return 'Blueprints';
+      case ArcPlayerPlayStyle.lootRunner:
+        return 'Loot';
+      case ArcPlayerPlayStyle.trader:
+        return 'Trader';
+      case ArcPlayerPlayStyle.squadSupport:
+        return 'Support';
+      case ArcPlayerPlayStyle.soloSurvivor:
+        return 'Solo';
+    }
+  }
+}
+
+class ArcSavedLoadout {
+  const ArcSavedLoadout({
+    required this.id,
+    required this.name,
+    required this.category,
+    required this.playStyle,
+    required this.augment,
+    this.shield,
+    required this.primaryWeapon,
+    required this.primaryAttachments,
+    required this.secondaryWeapon,
+    required this.secondaryAttachments,
+    this.primaryStencilSlot,
+    this.secondaryStencilSlot,
+    required this.equipment,
+    required this.consumables,
+    this.quickUse = const <String>[],
+    this.smartBuildData,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  final String id;
+  final String name;
+  final ArcLoadoutCategory category;
+  final ArcPlayerPlayStyle playStyle;
+  final String augment;
+  final String? shield;
+  final String primaryWeapon;
+  final List<String> primaryAttachments;
+  final String secondaryWeapon;
+  final List<String> secondaryAttachments;
+
+  /// Cosmetic 1-based catalogue slots, independent of attachment compatibility.
+  final int? primaryStencilSlot;
+  final int? secondaryStencilSlot;
+  final List<String> equipment;
+  final List<String> consumables;
+  final List<String> quickUse;
+  final Map<String, dynamic>? smartBuildData;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  Map<String, dynamic> toMap() {
+    return {
+      'name': name,
+      'category': category.name,
+      'playStyle': playStyle.name,
+      'augment': augment,
+      'shield': shield,
+      'primaryWeapon': primaryWeapon,
+      'primaryAttachments': primaryAttachments,
+      'secondaryWeapon': secondaryWeapon,
+      'secondaryAttachments': secondaryAttachments,
+      // Explicit null clears a previously saved choice under Firestore merge.
+      'primaryStencilSlot': primaryStencilSlot,
+      'secondaryStencilSlot': secondaryStencilSlot,
+      'equipment': equipment,
+      'consumables': consumables,
+      'quickUse': quickUse,
+      if (smartBuildData != null) 'smartBuild': smartBuildData,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+    };
+  }
+
+  static ArcSavedLoadout fromMap(String id, Map<String, dynamic> data) {
+    ArcLoadoutCategory parseCategory(String? value) {
+      return ArcLoadoutCategory.values.firstWhere(
+        (category) => category.name == value,
+        orElse: () => ArcLoadoutCategory.saved,
+      );
+    }
+
+    ArcPlayerPlayStyle parsePlayStyle(String? value) {
+      return ArcPlayerPlayStyle.values.firstWhere(
+        (style) => style.name == value,
+        orElse: () => ArcPlayerPlayStyle.balanced,
+      );
+    }
+
+    DateTime parseDate(dynamic value) {
+      if (value is DateTime) return value;
+      if (value is String) return DateTime.tryParse(value) ?? DateTime.now();
+      return DateTime.now();
+    }
+
+    List<String> parseList(dynamic value) {
+      if (value is List) {
+        return value.map((item) => item.toString()).toList(growable: false);
+      }
+      return const <String>[];
+    }
+
+    int? parseStencilSlot(dynamic value) {
+      final slot = value is num ? value.toInt() : int.tryParse('$value');
+      return slot != null && slot >= 1 && slot <= 14 ? slot : null;
+    }
+
+    String parseShield(dynamic value) {
+      final raw = (value ?? 'Medium Shield').toString().trim();
+      switch (raw.toLowerCase()) {
+        case '':
+        case 'shield level 2':
+          return 'Medium Shield';
+        case 'shield level 1':
+          return 'Light Shield';
+        case 'shield level 3':
+          return 'Heavy Shield';
+        default:
+          return raw;
+      }
+    }
+
+    return ArcSavedLoadout(
+      id: id,
+      name: (data['name'] ?? 'Saved Loadout').toString(),
+      category: parseCategory(data['category']?.toString()),
+      playStyle: parsePlayStyle(data['playStyle']?.toString()),
+      augment: (data['augment'] ?? 'Survivor').toString(),
+      shield: parseShield(data['shield']),
+      primaryWeapon: (data['primaryWeapon'] ?? 'Anvil').toString(),
+      primaryAttachments: parseList(data['primaryAttachments']),
+      secondaryWeapon: (data['secondaryWeapon'] ?? 'Stitcher').toString(),
+      secondaryAttachments: parseList(data['secondaryAttachments']),
+      primaryStencilSlot: parseStencilSlot(data['primaryStencilSlot']),
+      secondaryStencilSlot: parseStencilSlot(data['secondaryStencilSlot']),
+      equipment: parseList(data['equipment']),
+      consumables: parseList(data['consumables']),
+      quickUse: parseList(data['quickUse']),
+      smartBuildData: data['smartBuild'] is Map
+          ? Map<String, dynamic>.from(data['smartBuild'] as Map)
+          : null,
+      createdAt: parseDate(data['createdAt']),
+      updatedAt: parseDate(data['updatedAt']),
+    );
+  }
+}

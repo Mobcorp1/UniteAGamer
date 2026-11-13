@@ -1,0 +1,15 @@
+Arc Hub Feature Restore Pass 02 Report
+Generated: 05/22/2026 19:39:06
+
+UAG title present: True
+ARC Assistant present: True
+Play Like a Pro present: True
+Feedback/Admin present: True
+Old intro copy removed from hub: True
+
+Added features:
+- ARC Assistant
+- Feedback/Admin -> AdminMonetisationDashboard
+
+Repository untouched: true
+Firestore untouched: true

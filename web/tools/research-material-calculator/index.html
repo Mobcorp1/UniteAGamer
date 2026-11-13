@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#03060a">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<meta name="description" content="Free ARC Raiders Outpost and Research Station material calculator. Add Bantam and Stiletto unlocks and crafts, subtract your stash and download a checklist.">
+<meta name="google-adsense-account" content="ca-pub-2994575443987525">
+<title>ARC Raiders Research Material Calculator: Outpost, Bantam &amp; Stiletto | UAG</title>
+<link rel="canonical" href="https://uniteagamer.com/tools/research-material-calculator/">
+<link rel="icon" href="/favicon-uag-v2.png" type="image/png">
+<link rel="stylesheet" href="/public-assets/site.css">
+<link rel="stylesheet" href="/public-assets/seo.css">
+<link rel="stylesheet" href="/public-assets/research-planner.css">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Free ARC Raiders Research Materials Calculator | UAG">
+<meta property="og:description" content="Calculate actual recorded Outpost and Research Station upgrade costs, blueprint research and Tier I weapon materials.">
+<meta property="og:url" content="https://uniteagamer.com/tools/research-material-calculator/">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"UAG ARC Raiders Research Material Calculator","applicationCategory":"GameApplication","operatingSystem":"Any modern browser","description":"Build a no-account material checklist using recorded Outpost, Research Station, Bantam and Stiletto costs.","url":"https://uniteagamer.com/tools/research-material-calculator/","isAccessibleForFree":true,"publisher":{"@type":"Organization","name":"Unite A Gamer","url":"https://uniteagamer.com/about/"}}</script>
+<script defer src="/public-assets/research-planner.js"></script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header"><div class="container header-inner">
+<a href="/" aria-label="UAG ARC Hub home" class="brand"><img src="/public-assets/uag-mark.png" width="40" height="40" alt=""><span>UAG <span class="brand-sub">ARC HUB</span></span></a>
+<nav aria-label="Main navigation"><a href="/tools/" aria-current="page">Tools</a><a href="/guides/">Guides</a><a href="/maps/">Maps</a><a href="/about/">About</a><a class="button button-small" href="/app.html">Open app ↗</a></nav>
+</div></header>
+<main id="main" class="container page-main seo-main">
+<nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">Home</a><span aria-hidden="true">/</span><a href="/tools/">Tools</a><span aria-hidden="true">/</span><span>Research material calculator</span></nav>
+<header class="article-heading">
+<p class="eyebrow">UAG FREE TOOL / FROZEN TRAIL 2.0</p>
+<h1>ARC Raiders Research Material Calculator</h1>
+<p class="page-lead">Turn the Outpost and Research Station upgrades you still need into one material checklist. Add the Bantam and Stiletto unlocks, plan a few Tier I crafts, and subtract the resources already in your stash.</p>
+<p class="article-meta">Maintained by Unite A Gamer · UAG reference dataset: PASS 11D REV4, 18 October 2026 · Page created <time datetime="2026-11-02">2 November 2026</time></p>
+</header>
+<p class="planner-reference"><strong>No account required.</strong> The calculator works in your browser. Your selections and entered stash amounts are stored only in this browser's local storage; nothing is uploaded to UAG. You can reset them whenever you want. It's a preparation checklist, not a live read of your ARC Raiders inventory.</p>
+<div class="planner-layout">
+<section class="planner-panel" aria-labelledby="setup-title">
+<h2 id="setup-title">1. Choose your progression</h2>
+<form id="material-form">
+<div class="planner-field-grid">
+<div class="planner-field"><label for="currentOutpost">Current Outpost level</label><select name="currentOutpost" id="currentOutpost"><option value="0">Not built</option><option value="1">I</option><option value="2">II</option><option value="3">III</option><option value="4">IV</option></select></div>
+<div class="planner-field"><label for="targetOutpost">Target Outpost level</label><select name="targetOutpost" id="targetOutpost"><option value="0">No additional target</option><option value="1">I</option><option value="2">II</option><option value="3">III</option><option value="4">IV</option></select></div>
+<div class="planner-field"><label for="currentResearch">Current Research Station</label><select name="currentResearch" id="currentResearch"><option value="0">Not built</option><option value="1">I</option><option value="2">II</option><option value="3">III</option><option value="4">IV</option></select></div>
+<div class="planner-field"><label for="targetResearch">Target Research Station</label><select name="targetResearch" id="targetResearch"><option value="0">No additional target</option><option value="1">I</option><option value="2">II</option><option value="3">III</option><option value="4">IV</option></select></div>
+</div>
+<h3>Optional weapon research</h3>
+<p class="planner-note">Select these only when you still need the blueprint research unlock. Research Points and Drivers are counted once for an unlock, never once per weapon crafted.</p>
+<label class="planner-check"><input type="checkbox" name="bantamUnlock"><span>Research Bantam blueprint — 3,000 Research Points + 8 Hornet Drivers</span></label>
+<label class="planner-check"><input type="checkbox" name="stilettoUnlock"><span>Research Stiletto blueprint — 3,000 Research Points + 15 Wasp Drivers</span></label>
+<h3>Optional Tier I crafts</h3>
+<div class="planner-field-grid">
+<div class="planner-field"><label for="bantamCraft">Bantam I copies</label><input type="number" id="bantamCraft" name="bantamCraft" value="0" min="0" max="99" step="1" inputmode="numeric"></div>
+<div class="planner-field"><label for="stilettoCraft">Stiletto I copies</label><input type="number" id="stilettoCraft" name="stilettoCraft" value="0" min="0" max="99" step="1" inputmode="numeric"></div>
+</div>
+<p class="planner-note">Tier I recipe per recorded craft: 4 Simple Gun Parts and 4 Mechanical Components. Additional crafting levels and unsupported repair or amplification costs are deliberately excluded.</p>
+</form>
+</section>
+<section class="planner-panel" aria-labelledby="result-title">
+<h2 id="result-title">2. Your resource checklist</h2>
+<p id="plan-summary" class="planner-highlight" aria-live="polite">Choose a goal to calculate your checklist.</p>
+<ul class="planner-warnings" id="plan-warnings" hidden></ul>
+<h3>Included progression steps</h3>
+<ul class="planner-stages" id="included-stages"></ul>
+<div class="planner-scroll"><table class="planner-table"><caption>Materials aggregated from the selected steps. Enter the number you already hold to see what remains.</caption><thead><tr><th scope="col">Material</th><th scope="col">Required</th><th scope="col">You have</th><th scope="col">Still need</th></tr></thead><tbody id="materials-body"></tbody></table></div>
+<p class="planner-note" id="calculator-status" role="status">Enable JavaScript to calculate your custom checklist; the fixed reference tables below remain available without it.</p>
+<div class="planner-actions"><button id="download-checklist" type="button" disabled>Download checklist (.txt)</button><button id="reset-checklist" type="button" class="secondary-action">Reset my plan</button></div>
+</section></div>
+<article class="prose" aria-labelledby="how-title">
+<section id="how-to-use">
+<h2 id="how-title">How to use this calculator without double-counting</h2>
+<p>First select the Outpost and Research Station levels you already completed <strong>in the game</strong>. Then select a target. The checklist adds each unfinished level exactly once. If you request Research Station IV while your Outpost is only at II, the calculator includes Outpost III and IV automatically because each Research Station level has a corresponding Outpost prerequisite in UAG's reference data.</p>
+<p>Next choose any weapon blueprint unlocks you still need, and enter the number of Tier I weapons you actually intend to craft. The blueprint research unlock and crafting the physical weapon are separate actions: you don't spend 3,000 Research Points every time you make another Bantam. Finally, enter the quantities already in your stash. The <em>Still need</em> column subtracts each amount without displaying negative shortages.</p>
+<p>As a worked example, a fresh player aiming for <strong>Research Station I</strong> would need both Outpost I and Research Station I in this planning model. Those two levels together call for <strong>38 Planks</strong> (3 for Outpost and 35 for Research), 5 Sheet Metal, 10 ARC Alloy, 3 Advanced Electrical Components, 5 Battered Paperbacks and 3 Mini Pumps. Enter 12 Planks as already owned and the remaining Planks requirement becomes 26. That calculation is useful before recycling or using up a resource you need elsewhere.</p>
+<p>For another example, selecting both Bantam and Stiletto blueprint research adds <strong>6,000 Research Points, 8 Hornet Drivers and 15 Wasp Drivers</strong>. If Research Station I is not yet completed, its own physical material costs—and Outpost I if needed—are added separately. Crafting two Bantam I and one Stiletto I then adds 12 Simple Gun Parts and 12 Mechanical Components; it does <strong>not</strong> add more Research Points.</p>
+</section>
+<section id="reference-costs">
+<h2>Reference: Outpost and Research Station I–IV</h2>
+<p>These are the recorded material values in UAG's 18 October 2026 certified content dataset, not invented loot prices or guaranteed future recipes. Read the individual <a href="/guides/outpost-upgrades/">Outpost guide</a> and <a href="/guides/research-station/">Research Station guide</a> for their progression notes and limitations.</p>
+<div class="planner-scroll"><table class="planner-reference-table"><caption>Outpost progression resource reference</caption><thead><tr><th scope="col">Upgrade</th><th scope="col">Recorded materials</th></tr></thead><tbody><tr><th scope="row">Outpost I</th><td>3 Planks · 5 Sheet Metal · 10 ARC Alloy · 3 Advanced Electrical Components</td></tr>
+<tr><th scope="row">Outpost II</th><td>3 Steel Cable · 20 Sheet Metal · 3 Cable Strippers</td></tr>
+<tr><th scope="row">Outpost III</th><td>3 Epoxy Buckets · 35 Planks · 3 Hand Drills</td></tr>
+<tr><th scope="row">Outpost IV</th><td>40 Sheet Metal · 3 Laser Levels · 3 Insulation Rolls</td></tr></tbody></table></div>
+<div class="planner-scroll"><table class="planner-reference-table"><caption>Research Station progression resource reference</caption><thead><tr><th scope="col">Upgrade</th><th scope="col">Recorded materials</th></tr></thead><tbody><tr><th scope="row">Research Station I</th><td>35 Planks · 5 Battered Paperbacks · 3 Mini Pumps</td></tr>
+<tr><th scope="row">Research Station II</th><td>3 Calculators · 3 Raider Logbooks · 5 Skulker Targeters</td></tr>
+<tr><th scope="row">Research Station III</th><td>3 Differential Microphones · 3 Exodus Technical Handbooks · 6 Bully Fragmenters</td></tr>
+<tr><th scope="row">Research Station IV</th><td>3 Thermal Shakers · 3 ARC Data Modules · 1 Frigate Inductor</td></tr></tbody></table></div>
+</section>
+<section id="limits">
+<h2>What this checklist can—and cannot—tell you</h2>
+<p><strong>It can:</strong> aggregate recorded costs, include documented prerequisite levels, keep research currency separate from physical resources and account for material amounts you enter. You can download the current plan as a normal text file to compare with your in-game stash.</p>
+<p><strong>It cannot:</strong> confirm that a room is unlocked, prove that the displayed ingredients still match the latest live patch, read your account, estimate drop rates, calculate unknown amplification node costs, or guarantee that an item can be transferred between players. The source dataset explicitly does not establish full Outpost progress persistence or prerequisite enforcement in UAG; in-game progression is authoritative. If a cost has changed, use <a href="/support">support</a> to report the item, level and new in-game evidence.</p>
+<p>Research Points are a progression currency, not a physical trading item. As an additional check, the <a href="/guides/bantam-stiletto/">Bantam and Stiletto research guide</a> explains which attachment layouts differ and why a researched blueprint is not equivalent to a crafted copy.</p>
+</section>
+<section id="next">
+<h2>After building your list</h2>
+<p>Use <a href="/tools/crafting-planner/">Crafting Planner</a> for more recipes, <a href="/guides/frozen-trail-upgrades/">Frozen Trail upgrade notes</a> for the wider progression chain and <a href="/maps/">Maps</a> when choosing routes. This free calculator is deliberately available without registering for UAG; saving your full account-wide progression still happens in the companion app.</p>
+</section></article>
+</main>
+<footer class="site-footer"><div class="container"><div class="footer-top"><a href="/" class="brand" aria-label="UAG ARC Hub home">UAG <span class="brand-sub">ARC HUB</span></a><nav aria-label="Footer links"><a href="/tools/">Tools</a><a href="/guides/">Guides</a><a href="/about/">About</a><a href="/support">Support</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a></nav></div><p>Original UAG tools and guides · Operated by MobCorp Limited.</p><p>Independent, unofficial fan-made companion. Not affiliated with or endorsed by Embark Studios. ARC Raiders and related marks belong to their respective owners.</p><p><a href="mailto:contact@mobcorp.co.uk">contact@mobcorp.co.uk</a></p></div></footer>
+</body></html>

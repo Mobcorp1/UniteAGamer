@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class ScrappyProgressHeader extends StatelessWidget {
   const ScrappyProgressHeader({
@@ -26,53 +26,62 @@ class ScrappyProgressHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final value = completion.clamp(0.0, 1.0);
+    final percent = (value * 100).round();
     return Container(
-      padding: AppTheme.sectionCardPadding,
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: accentColor.withValues(alpha: 0.22),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.panel,
+        radius: ArcUiTokens.radiusM,
+        accent: accentColor,
+        borderOpacity: 0.20,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Text(
-            title,
-            style: AppTheme.tradingHeading(
-              fontSize: 26,
-              color: AppTheme.neonCyan,
+          SizedBox(
+            width: 40,
+            child: Text(
+              '$percent%',
+              style: ArcUiTokens.cardTitle(color: accentColor, fontSize: 12.5),
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            description ??
-                (landscape
-                    ? 'Track your scrappy materials the same way as the blueprint grid. Tap a missing item for the requirement, tap or hold an owned item to edit dupes.'
-                    : 'Portrait is supported, but landscape gives you a roomier tracker view for quick updates.'),
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(color: Colors.white70),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            footer ??
-                'Use this to log collection progress and extras you could trade later once the wider resource system is added.',
-            style: const TextStyle(color: Colors.white54, fontSize: 12, height: 1.35),
-          ),
-          const SizedBox(height: AppTheme.spaceM),
-          LinearProgressIndicator(
-            value: completion.clamp(0.0, 1.0),
-            minHeight: 10,
-            borderRadius: BorderRadius.circular(999),
-            backgroundColor: Colors.white.withValues(alpha: 0.07),
-            valueColor: AlwaysStoppedAnimation<Color>(accentColor),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '$ownedCount / $totalCount items complete',
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall
-                ?.copyWith(color: Colors.white70),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title.toUpperCase(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: ArcUiTokens.label(color: accentColor),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '$ownedCount / $totalCount',
+                      style: ArcUiTokens.metadata(
+                        color: ArcUiTokens.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 5),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: LinearProgressIndicator(
+                    value: value,
+                    minHeight: 4,
+                    backgroundColor: Colors.white.withValues(alpha: 0.06),
+                    valueColor: AlwaysStoppedAnimation<Color>(accentColor),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

@@ -43,3 +43,27 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+*.bak_*
+*.bak_encoding_*
+*.tmp
+*.bak_textclean_*
+*.bak_mojibake_*
+*.bak_apostrophe_recovery_*
+*.bak_bigbatch_*
+*.bak_batch5_*
+*.bak_batch6_*
+*.bak_runtime_separator_*
+*.bak_feedback_rules_hardfix_*
+*.bak_batch*
+*.bak_separatorfix_*
+Thumbs.db
+*.bak_batch9_fixed_*
+
+.uag_patch_backups/
+
+.uag_patch_reports/
+
+*.pass*.bak
+
+# Local UAG pass backups
+.pass_backups/

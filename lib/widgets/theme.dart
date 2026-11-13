@@ -2,33 +2,34 @@ import 'package:flutter/material.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 
 class AppTheme {
-  static const Color neonPink = Color.fromARGB(255, 255, 20, 147);
-  static const Color neonCyan = Color.fromARGB(255, 0, 255, 255);
-  static const Color darkBackground = Color.fromARGB(255, 10, 9, 37);
-  static const Color cardBackground = Color(0xFF090529);
-  static const Color cardBackgroundAlt = Color(0xFF0D1030);
-  static const Color cardBackgroundDeep = Color(0xFF06071C);
-  static const Color dangerRed = Color.fromARGB(255, 255, 80, 80);
-  static const Color warningAmber = Color.fromARGB(255, 255, 190, 70);
+  static const Color neonPink = Color(0xFFFF3B8D);
+  static const Color neonCyan = Color(0xFF19E6F2);
+  static const Color darkBackground = Color(0xFF03060A);
+  static const Color cardBackground = Color(0xFF09131A);
+  static const Color cardBackgroundAlt = Color(0xFF0B1820);
+  static const Color cardBackgroundDeep = Color(0xFF071016);
+  static const Color dangerRed = Color(0xFFFF6B6B);
+  static const Color warningAmber = Color(0xFFFFC857);
 
-  static const String heroFontFamily = 'VT323';
+  // ARC display text shares the bundled modern heading family.
+  static const String heroFontFamily = headingFontFamily;
   static const String headingFontFamily = 'SpaceGrotesk';
   static const String bodyFontFamily = 'Inter';
 
-  static const double buttonRadius = 12.0;
-  static const double cardRadius = 20.0;
-  static const double inputRadius = 8.0;
-  static const double buttonBorderWidth = 1.2;
-  static const double cardBorderWidth = 1.1;
+  static const double buttonRadius = 10.0;
+  static const double cardRadius = 12.0;
+  static const double inputRadius = 10.0;
+  static const double buttonBorderWidth = 1.0;
+  static const double cardBorderWidth = 1.0;
   static const double pillBorderWidth = 1.0;
 
-  static const double glowSoft = 4.0;
-  static const double glowMedium = 6.0;
-  static const double glowStrong = 12.0;
+  static const double glowSoft = 2.0;
+  static const double glowMedium = 4.0;
+  static const double glowStrong = 8.0;
 
-  static const double bodyLetterSpacing = 0.20;
-  static const double titleLetterSpacing = 0.55;
-  static const double heroLetterSpacing = 0.60;
+  static const double bodyLetterSpacing = 0;
+  static const double titleLetterSpacing = 0;
+  static const double heroLetterSpacing = 0;
 
   static const double pageMaxWidth = 720.0;
 
@@ -42,11 +43,15 @@ class AppTheme {
   static const double space = spaceS;
 
   static const EdgeInsets pagePadding = EdgeInsets.all(spaceL);
-  static const EdgeInsets buttonPadding =
-      EdgeInsets.symmetric(horizontal: 14, vertical: 12);
+  static const EdgeInsets buttonPadding = EdgeInsets.symmetric(
+    horizontal: 14,
+    vertical: 12,
+  );
   static const EdgeInsets sectionCardPadding = EdgeInsets.all(spaceL);
-  static const EdgeInsets pillPadding =
-      EdgeInsets.symmetric(horizontal: 10, vertical: 6);
+  static const EdgeInsets pillPadding = EdgeInsets.symmetric(
+    horizontal: 10,
+    vertical: 6,
+  );
 
   static const Duration fastAnimation = Duration(milliseconds: 160);
 
@@ -70,25 +75,23 @@ class AppTheme {
   static ThemeData get theme {
     return ThemeData(
       useMaterial3: true,
+      fontFamily: bodyFontFamily,
       brightness: Brightness.dark,
-      scaffoldBackgroundColor: darkBackground,
+      scaffoldBackgroundColor: Colors.transparent,
       primaryColor: darkBackground,
       colorScheme: const ColorScheme.dark(
-        primary: neonPink,
-        secondary: neonCyan,
-        surface: darkBackground,
+        primary: neonCyan,
+        secondary: neonPink,
+        surface: cardBackgroundDeep,
       ),
-      iconTheme: const IconThemeData(color: neonPink),
+      iconTheme: const IconThemeData(color: neonCyan),
       textTheme: TextTheme(
-        bodyLarge: bodyTextStyle(fontSize: 18, color: neonCyan),
-        bodyMedium: bodyTextStyle(fontSize: 16, color: neonCyan),
-        bodySmall: bodyTextStyle(
-          fontSize: 14,
-          color: neonCyan.withValues(alpha: 0.88),
-        ),
+        bodyLarge: bodyTextStyle(fontSize: 18, color: Colors.white),
+        bodyMedium: bodyTextStyle(fontSize: 16, color: tradingMutedText),
+        bodySmall: bodyTextStyle(fontSize: 14, color: tradingFaintText),
         titleLarge: titleTextStyle(
           fontSize: 28.0,
-          color: neonPink,
+          color: Colors.white,
           isBold: true,
         ),
         titleMedium: titleTextStyle(
@@ -98,20 +101,16 @@ class AppTheme {
         ),
         titleSmall: titleTextStyle(
           fontSize: 18.0,
-          color: neonPink,
+          color: Colors.white,
           isBold: true,
         ),
-        headlineSmall: heroTextStyle(
-          fontSize: 32.0,
-          color: neonPink,
-        ),
-        labelSmall: buttonTextStyle(
-          color: neonCyan,
-          fontSize: 13.0,
-        ),
+        headlineSmall: heroTextStyle(fontSize: 32.0, color: neonCyan),
+        labelSmall: buttonTextStyle(color: neonCyan, fontSize: 13.0),
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: darkBackground,
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
         elevation: 0,
         iconTheme: const IconThemeData(color: neonPink),
         titleTextStyle: titleTextStyle(
@@ -122,28 +121,28 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ButtonStyle(
-          backgroundColor:
-              WidgetStateProperty.all(neonPink.withValues(alpha: 0.14)),
-          foregroundColor: WidgetStateProperty.all(neonPink),
-          shadowColor:
-              WidgetStateProperty.all(neonPink.withValues(alpha: 0.16)),
+          backgroundColor: WidgetStateProperty.all(
+            neonCyan.withValues(alpha: 0.92),
+          ),
+          foregroundColor: WidgetStateProperty.all(darkBackground),
+          shadowColor: WidgetStateProperty.all(
+            neonCyan.withValues(alpha: 0.12),
+          ),
           elevation: WidgetStateProperty.all(0),
-          overlayColor:
-              WidgetStateProperty.all(neonPink.withValues(alpha: 0.08)),
+          overlayColor: WidgetStateProperty.all(
+            Colors.black.withValues(alpha: 0.08),
+          ),
           shape: WidgetStateProperty.all(
             RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(buttonRadius),
               side: BorderSide(
-                color: neonPink.withValues(alpha: 0.82),
+                color: neonCyan.withValues(alpha: 0.82),
                 width: buttonBorderWidth,
               ),
             ),
           ),
           textStyle: WidgetStateProperty.all(
-            buttonTextStyle(
-              color: neonPink,
-              fontSize: 16,
-            ),
+            buttonTextStyle(color: darkBackground, fontSize: 16),
           ),
           padding: WidgetStateProperty.all(buttonPadding),
         ),
@@ -157,14 +156,9 @@ class AppTheme {
           return Colors.transparent;
         }),
         side: WidgetStateBorderSide.resolveWith(
-          (_) => const BorderSide(
-            color: neonPink,
-            width: 2.0,
-          ),
+          (_) => const BorderSide(color: neonPink, width: 2.0),
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(4),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -194,10 +188,7 @@ class AppTheme {
         ),
       ),
       dropdownMenuTheme: DropdownMenuThemeData(
-        textStyle: bodyTextStyle(
-          fontSize: 16.0,
-          color: neonCyan,
-        ),
+        textStyle: bodyTextStyle(fontSize: 16.0, color: neonCyan),
         menuStyle: MenuStyle(
           backgroundColor: WidgetStateProperty.all(cardBackground),
         ),
@@ -213,25 +204,83 @@ class AppTheme {
           ),
         ),
       ),
-      dialogTheme: const DialogThemeData(
-        backgroundColor: darkBackground,
+      dialogTheme: DialogThemeData(
+        backgroundColor: cardBackgroundDeep,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(cardRadius),
+          side: BorderSide(color: glassBorder, width: cardBorderWidth),
+        ),
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: cardBackgroundDeep,
+        modalBackgroundColor: cardBackgroundDeep,
+        surfaceTintColor: Colors.transparent,
+        showDragHandle: true,
+        dragHandleColor: neonCyan.withValues(alpha: 0.42),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(cardRadius)),
+        ),
+      ),
+      listTileTheme: ListTileThemeData(
+        dense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+        iconColor: neonCyan,
+        textColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(buttonRadius),
+        ),
+      ),
+      dividerTheme: DividerThemeData(
+        color: neonCyan.withValues(alpha: 0.16),
+        thickness: 1,
+        space: spaceL,
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: cardBackgroundDeep.withValues(alpha: 0.96),
+        indicatorColor: neonCyan.withValues(alpha: 0.14),
+        surfaceTintColor: Colors.transparent,
+        height: 68,
+        labelTextStyle: WidgetStateProperty.all(
+          buttonTextStyle(color: Colors.white70, fontSize: 12),
+        ),
+      ),
+      navigationRailTheme: NavigationRailThemeData(
+        backgroundColor: cardBackgroundDeep.withValues(alpha: 0.94),
+        indicatorColor: neonCyan.withValues(alpha: 0.14),
+        selectedIconTheme: const IconThemeData(color: neonCyan),
+        unselectedIconTheme: const IconThemeData(color: Colors.white54),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: cardBackgroundDeep,
+        contentTextStyle: bodyTextStyle(fontSize: 14, color: Colors.white),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(buttonRadius),
+          side: BorderSide(color: neonCyan.withValues(alpha: 0.34)),
+        ),
+      ),
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: neonCyan,
+        linearTrackColor: cardBackgroundAlt,
+        circularTrackColor: cardBackgroundAlt,
       ),
       scrollbarTheme: ScrollbarThemeData(
         thumbColor: WidgetStateProperty.all(neonCyan.withValues(alpha: 0.60)),
-        trackColor: WidgetStateProperty.all(Colors.white.withValues(alpha: 0.05)),
+        trackColor: WidgetStateProperty.all(
+          Colors.white.withValues(alpha: 0.05),
+        ),
         thickness: WidgetStateProperty.all(6),
         radius: const Radius.circular(999),
       ),
       cardTheme: CardThemeData(
-        color: cardBackground,
+        color: cardBackgroundDeep.withValues(alpha: 0.84),
         elevation: 0,
         shadowColor: glassShadow,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(cardRadius),
-          side: BorderSide(
-            color: glassBorder,
-            width: cardBorderWidth,
-          ),
+          side: BorderSide(color: glassBorder, width: cardBorderWidth),
         ),
       ),
     );
@@ -263,10 +312,7 @@ class AppTheme {
       letterSpacing: bodyLetterSpacing,
       color: color,
       shadows: [
-        Shadow(
-          color: color.withValues(alpha: 0.16),
-          blurRadius: glowSoft,
-        ),
+        Shadow(color: color.withValues(alpha: 0.16), blurRadius: glowSoft),
       ],
     );
   }
@@ -283,10 +329,7 @@ class AppTheme {
       letterSpacing: titleLetterSpacing,
       color: color,
       shadows: [
-        Shadow(
-          color: color.withValues(alpha: 0.10),
-          blurRadius: glowSoft,
-        ),
+        Shadow(color: color.withValues(alpha: 0.10), blurRadius: glowSoft),
       ],
     );
   }
@@ -298,15 +341,12 @@ class AppTheme {
     return TextStyle(
       fontSize: fontSize,
       fontFamily: heroFontFamily,
-      fontWeight: FontWeight.w400,
+      fontWeight: FontWeight.w600,
       letterSpacing: heroLetterSpacing,
-      height: 1.0,
+      height: 1.15,
       color: color,
       shadows: [
-        Shadow(
-          color: color.withValues(alpha: 0.30),
-          blurRadius: glowStrong,
-        ),
+        Shadow(color: color.withValues(alpha: 0.30), blurRadius: glowStrong),
       ],
     );
   }
@@ -322,10 +362,7 @@ class AppTheme {
       letterSpacing: 0.35,
       color: color,
       shadows: [
-        Shadow(
-          color: color.withValues(alpha: 0.12),
-          blurRadius: glowSoft,
-        ),
+        Shadow(color: color.withValues(alpha: 0.12), blurRadius: glowSoft),
       ],
     );
   }
@@ -333,10 +370,7 @@ class AppTheme {
   static OutlineInputBorder neonBorder({double width = 1.5}) {
     return OutlineInputBorder(
       borderRadius: BorderRadius.circular(inputRadius),
-      borderSide: BorderSide(
-        color: neonPink,
-        width: width,
-      ),
+      borderSide: BorderSide(color: neonPink, width: width),
     );
   }
 
@@ -353,11 +387,7 @@ class AppTheme {
         color: neonCyan.withValues(alpha: 0.65),
       ),
       prefixIconColor: neonPink,
-      labelStyle: bodyTextStyle(
-        fontSize: 14.0,
-        color: neonCyan,
-        isBold: true,
-      ),
+      labelStyle: bodyTextStyle(fontSize: 14.0, color: neonCyan, isBold: true),
     );
   }
 
@@ -394,9 +424,7 @@ class AppTheme {
         color: glowColor.withValues(alpha: 0.78),
         width: cardBorderWidth,
       ),
-      boxShadow: dualOutlineGlow(
-        glowColor: glowColor,
-      ),
+      boxShadow: dualOutlineGlow(glowColor: glowColor),
     );
   }
 
@@ -425,10 +453,7 @@ class AppTheme {
   static const LinearGradient dualToneGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [
-      neonCyan,
-      neonPink,
-    ],
+    colors: [neonCyan, neonPink],
   );
 
   static BoxDecoration dualToneOuterDecoration({
@@ -476,36 +501,30 @@ class AppTheme {
   ) {
     return TypewriterAnimatedText(
       text,
-      textStyle: textStyle ??
-          titleTextStyle(
-            fontSize: 20.0,
-            color: neonCyan,
-            isBold: true,
-          ),
+      textStyle:
+          textStyle ??
+          titleTextStyle(fontSize: 20.0, color: neonCyan, isBold: true),
       speed: const Duration(milliseconds: 100),
     );
   }
 
   static TextStyle drawerItemTextStyle({required Color color}) {
-    return buttonTextStyle(
-      color: color,
-      fontSize: 16.0,
-    );
+    return buttonTextStyle(color: color, fontSize: 16.0);
   }
 
   static Color primaryButtonBorder(bool enabled) => enabled
-      ? neonPink.withValues(alpha: 0.92)
-      : neonPink.withValues(alpha: 0.24);
+      ? neonCyan.withValues(alpha: 0.88)
+      : neonCyan.withValues(alpha: 0.24);
 
   static Color primaryButtonText(bool enabled) =>
-      enabled ? darkBackground : neonPink.withValues(alpha: 0.35);
+      enabled ? darkBackground : neonCyan.withValues(alpha: 0.35);
 
   static Color primaryButtonFill(bool enabled) => enabled
-      ? neonPink.withValues(alpha: 0.92)
+      ? neonCyan.withValues(alpha: 0.90)
       : Colors.white.withValues(alpha: 0.04);
 
   static Color primaryButtonGlow(bool enabled) =>
-      enabled ? neonPink.withValues(alpha: 0.26) : Colors.transparent;
+      enabled ? neonCyan.withValues(alpha: 0.16) : Colors.transparent;
 
   static Color secondaryButtonBorder(bool enabled) => enabled
       ? neonCyan.withValues(alpha: 0.82)
@@ -549,22 +568,22 @@ class AppTheme {
   static Color sectionCardTitle([Color? color]) => color ?? neonPink;
   static Color sectionCardBackground([Color? color]) => color ?? glassSurface;
 
-  static Color get tradingCardBackground => cardBackgroundAlt;
-  static Color get tradingCardBorder => neonCyan.withValues(alpha: 0.20);
-  static Color get tradingSoftBorder => neonCyan.withValues(alpha: 0.12);
-  static Color get tradingMutedText => Colors.white70;
-  static Color get tradingFaintText => Colors.white60;
-  static Color get tradingDivider => neonCyan.withValues(alpha: 0.15);
-  static Color get tradingSuccess => Colors.greenAccent;
-  static Color get tradingWarning => Colors.amberAccent;
-  static Color get tradingDanger => Colors.redAccent;
+  static Color get tradingCardBackground => const Color(0xFF0D151E);
+  static Color get tradingCardBorder => neonCyan.withValues(alpha: 0.16);
+  static Color get tradingSoftBorder => Colors.white.withValues(alpha: 0.10);
+  static Color get tradingMutedText => const Color(0xFFC6D3DA);
+  static Color get tradingFaintText => const Color(0xFF91A4AF);
+  static Color get tradingDivider => Colors.white.withValues(alpha: 0.09);
+  static Color get tradingSuccess => const Color(0xFF6EE7B7);
+  static Color get tradingWarning => const Color(0xFFFFC857);
+  static Color get tradingDanger => const Color(0xFFFF6B6B);
 
   static TextStyle tradingHeading({
     double fontSize = 24,
     Color? color,
     bool isBold = true,
   }) {
-    return neonTextStyle(
+    return titleTextStyle(
       fontSize: fontSize,
       color: color ?? neonCyan,
       isBold: isBold,
@@ -574,58 +593,72 @@ class AppTheme {
   static BoxDecoration tradingCardDecoration({
     Color? borderColor,
     Color? backgroundColor,
-    double radius = 18,
+    double radius = 16,
   }) {
     return BoxDecoration(
       color: backgroundColor ?? tradingCardBackground,
       borderRadius: BorderRadius.circular(radius),
-      border: Border.all(
-        color: borderColor ?? tradingCardBorder,
-      ),
+      border: Border.all(color: borderColor ?? tradingCardBorder),
       boxShadow: [
         BoxShadow(
-          color: neonCyan.withValues(alpha: 0.05),
-          blurRadius: 12,
+          color: Colors.black.withValues(alpha: 0.18),
+          blurRadius: 14,
+          offset: const Offset(0, 8),
+        ),
+        BoxShadow(
+          color: (borderColor ?? neonCyan).withValues(alpha: 0.035),
+          blurRadius: 18,
           spreadRadius: 0.4,
         ),
       ],
     );
   }
 
-  static BoxDecoration tradingPillDecoration({
-    required Color color,
-  }) {
+  static BoxDecoration tradingPillDecoration({required Color color}) {
     return BoxDecoration(
-      color: color.withValues(alpha: 0.12),
+      color: color.withValues(alpha: 0.09),
       borderRadius: BorderRadius.circular(999),
       border: Border.all(
-        color: color.withValues(alpha: 0.45),
+        color: color.withValues(alpha: 0.34),
         width: pillBorderWidth,
       ),
     );
   }
 
-  static InputDecoration tradingInputDecoration({
-    required String label,
-  }) {
+  static InputDecoration tradingInputDecoration({required String label}) {
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: neonCyan.withValues(alpha: 0.22)),
+    );
+
     return InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(color: neonPink),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(
-          color: neonCyan.withValues(alpha: 0.25),
-        ),
+      filled: true,
+      fillColor: const Color(0xFF111B25).withValues(alpha: 0.82),
+      labelStyle: bodyTextStyle(fontSize: 13, color: tradingFaintText),
+      floatingLabelStyle: bodyTextStyle(
+        fontSize: 13,
+        color: neonCyan,
+        isBold: true,
       ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: neonPink),
+      hintStyle: bodyTextStyle(
+        fontSize: 13,
+        color: tradingFaintText.withValues(alpha: 0.75),
       ),
-      disabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(
-          color: Colors.white.withValues(alpha: 0.15),
-        ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      border: border,
+      enabledBorder: border,
+      focusedBorder: border.copyWith(
+        borderSide: BorderSide(color: neonCyan.withValues(alpha: 0.86)),
+      ),
+      disabledBorder: border.copyWith(
+        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+      ),
+      errorBorder: border.copyWith(
+        borderSide: BorderSide(color: tradingDanger.withValues(alpha: 0.72)),
+      ),
+      focusedErrorBorder: border.copyWith(
+        borderSide: BorderSide(color: tradingDanger.withValues(alpha: 0.92)),
       ),
     );
   }
@@ -633,9 +666,7 @@ class AppTheme {
   static ShapeBorder tradingDialogShape() {
     return RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(18),
-      side: BorderSide(
-        color: neonCyan.withValues(alpha: 0.25),
-      ),
+      side: BorderSide(color: neonCyan.withValues(alpha: 0.25)),
     );
   }
 

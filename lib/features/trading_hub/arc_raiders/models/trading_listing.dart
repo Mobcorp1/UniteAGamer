@@ -1,15 +1,22 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_listing_queue.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_bundle_models.dart';
 
-enum TradingRiskLevel {
-  low,
-  medium,
-  high,
-}
+enum TradingRiskLevel { low, medium, high }
 
-enum TradingListingType {
-  specificWant,
-  openToOffers,
+enum TradingListingType { specificWant, openToOffers }
+
+enum TradingListingMode {
+  availableNow,
+  laterToday,
+  collectOffers,
+  nextLogin,
+  scheduledWindow,
+  gift,
+  favouriteRidersFirst,
+  fixedReturn,
+  bestSuitableOffer,
 }
 
 class TradingListing {
@@ -47,6 +54,19 @@ class TradingListing {
   final bool seriousOffersOnly;
   final bool tradeAsBundle;
   final bool allowPartialOffers;
+  final List<ArcTradeBundleTemplate> acceptedBundles;
+  final bool allowCustomBundleOffers;
+  final TradingListingMode listingMode;
+  final String scheduledWindow;
+  final String sellerTimezone;
+  final ArcDuplicateReleasePolicy duplicateReleasePolicy;
+  final bool favouriteRidersFirst;
+  final bool fixedReturn;
+  final bool bestSuitableOffer;
+  final int maxActiveOffers;
+  final String queueId;
+  final String queueSourceListingId;
+  final int queueReleaseNumber;
   final DateTime expiresAt;
   final String notes;
   final bool active;
@@ -88,6 +108,19 @@ class TradingListing {
     required this.seriousOffersOnly,
     required this.tradeAsBundle,
     required this.allowPartialOffers,
+    this.acceptedBundles = const <ArcTradeBundleTemplate>[],
+    this.allowCustomBundleOffers = false,
+    this.listingMode = TradingListingMode.availableNow,
+    this.scheduledWindow = '',
+    this.sellerTimezone = '',
+    this.duplicateReleasePolicy = ArcDuplicateReleasePolicy.askBeforeRelisting,
+    this.favouriteRidersFirst = false,
+    this.fixedReturn = false,
+    this.bestSuitableOffer = false,
+    this.maxActiveOffers = 5,
+    this.queueId = '',
+    this.queueSourceListingId = '',
+    this.queueReleaseNumber = 0,
     required this.expiresAt,
     required this.notes,
     required this.active,
@@ -132,6 +165,19 @@ class TradingListing {
       seriousOffersOnly: false,
       tradeAsBundle: true,
       allowPartialOffers: false,
+      acceptedBundles: const <ArcTradeBundleTemplate>[],
+      allowCustomBundleOffers: false,
+      listingMode: TradingListingMode.availableNow,
+      scheduledWindow: '',
+      sellerTimezone: '',
+      duplicateReleasePolicy: ArcDuplicateReleasePolicy.askBeforeRelisting,
+      favouriteRidersFirst: false,
+      fixedReturn: false,
+      bestSuitableOffer: false,
+      maxActiveOffers: 5,
+      queueId: '',
+      queueSourceListingId: '',
+      queueReleaseNumber: 0,
       expiresAt: now.add(const Duration(days: 3)),
       notes: '',
       active: true,
@@ -191,6 +237,48 @@ class TradingListing {
     }
   }
 
+  String get listingModeLabel {
+    switch (listingMode) {
+      case TradingListingMode.availableNow:
+        return 'Available now';
+      case TradingListingMode.laterToday:
+        return 'Later today';
+      case TradingListingMode.collectOffers:
+        return 'Collect offers';
+      case TradingListingMode.nextLogin:
+        return 'Next login';
+      case TradingListingMode.scheduledWindow:
+        return scheduledWindow.trim().isEmpty
+            ? 'Scheduled window'
+            : 'Scheduled: ${scheduledWindow.trim()}';
+      case TradingListingMode.gift:
+        return 'Gift';
+      case TradingListingMode.favouriteRidersFirst:
+        return 'Favourite Raiders first';
+      case TradingListingMode.fixedReturn:
+        return 'Fixed return';
+      case TradingListingMode.bestSuitableOffer:
+        return 'Best suitable offer';
+    }
+  }
+
+  String get duplicateReleasePolicyLabel {
+    switch (duplicateReleasePolicy) {
+      case ArcDuplicateReleasePolicy.immediatelyAfterCompletion:
+        return 'Relist after completion';
+      case ArcDuplicateReleasePolicy.afterThirtyMinutes:
+        return 'Relist after 30 minutes';
+      case ArcDuplicateReleasePolicy.afterTwoHours:
+        return 'Relist after 2 hours';
+      case ArcDuplicateReleasePolicy.nextLogin:
+        return 'Relist next login';
+      case ArcDuplicateReleasePolicy.askBeforeRelisting:
+        return 'Ask before relisting';
+      case ArcDuplicateReleasePolicy.neverAutomaticallyRelist:
+        return 'Never auto relist';
+    }
+  }
+
   bool get isFreeGiveaway => wantsNothing;
 
   String get giveawayLabel => wantsNothing ? 'Free Giveaway' : listingTypeLabel;
@@ -220,6 +308,7 @@ class TradingListing {
   bool get isLive => active && expiresAt.isAfter(DateTime.now());
 
   bool get hasSeedOffer => seedTotalOffered > 0;
+  bool get isQueueLinked => queueId.trim().isNotEmpty;
 
   String expiryLabel() {
     if (!active) return 'Closed';
@@ -237,7 +326,7 @@ class TradingListing {
   }
 
   String get acceptedTradeTypesLabel {
-    if (wantsNothing) return 'Free giveaway • no return wanted';
+    if (wantsNothing) return 'Free giveaway - no return wanted';
     final types = <String>[];
     if (acceptsBlueprints) types.add('Blueprints');
     if (acceptsSeeds) types.add('Seeds');
@@ -245,21 +334,23 @@ class TradingListing {
     if (wantedTradeItemNames.isNotEmpty || wantedTradeItemIds.isNotEmpty) {
       types.add('Trade Items');
     }
-    return types.isEmpty ? 'None set' : types.join(' • ');
+    return types.isEmpty ? 'None set' : types.join(' - ');
   }
 
   String get traderDisplayLine {
-    final name = traderName.trim().isNotEmpty ? traderName.trim() : 'Unknown Trader';
+    final name = traderName.trim().isNotEmpty
+        ? traderName.trim()
+        : 'Unknown Trader';
     final tag = gamerTag.trim();
     final platform = preferredPlatform.trim();
     final parts = <String>[name];
     if (tag.isNotEmpty) parts.add(tag);
     if (platform.isNotEmpty) parts.add(platform);
-    return parts.join(' • ');
+    return parts.join(' - ');
   }
 
   String get reputationSummary =>
-      'Trades: $completedTrades • No-shows: $noShows • Betrayal flags: $betrayalFlags';
+      'Trades: $completedTrades - No-shows: $noShows - Betrayal flags: $betrayalFlags';
 
   List<String> get allOfferedItems {
     final items = <String>[];
@@ -287,18 +378,47 @@ class TradingListing {
     return items;
   }
 
+  bool get hasExactAcceptedBundles =>
+      acceptedBundles.any((bundle) => bundle.active);
+
+  String get structuredTermsSummary {
+    final activeBundles = acceptedBundles
+        .where((bundle) => bundle.active)
+        .toList(growable: false);
+    if (activeBundles.isEmpty) {
+      return allowCustomBundleOffers
+          ? 'Custom structured offers allowed'
+          : 'No exact bundle terms set';
+    }
+    return activeBundles
+        .map((bundle) => '${bundle.name}: ${bundle.effectiveTerms.summary}')
+        .join(' - ');
+  }
+
   String get tradeFormatLabel => tradeAsBundle
-      ? (allowPartialOffers ? 'Bundle preferred • partial offers allowed' : 'Bundle only')
-      : (allowPartialOffers ? 'Mix and match • partial offers allowed' : 'Mix and match');
+      ? (allowPartialOffers
+            ? 'Bundle preferred - partial offers allowed'
+            : 'Bundle only')
+      : (allowPartialOffers
+            ? 'Mix and match - partial offers allowed'
+            : 'Mix and match');
 
   String get offeredSummary {
-    if (allOfferedItems.isEmpty) return offeredItem.trim().isNotEmpty ? offeredItem.trim() : 'Nothing listed';
+    if (allOfferedItems.isEmpty) {
+      return offeredItem.trim().isNotEmpty
+          ? offeredItem.trim()
+          : 'Nothing listed';
+    }
     return allOfferedItems.join(', ');
   }
 
   String get wantedSummary {
-    if (wantsNothing) return 'Nothing wanted • free giveaway';
-    if (allWantedItems.isEmpty) return wantedText.trim().isNotEmpty ? wantedText.trim() : 'Open to offers';
+    if (wantsNothing) return 'Nothing wanted - free giveaway';
+    if (allWantedItems.isEmpty) {
+      return wantedText.trim().isNotEmpty
+          ? wantedText.trim()
+          : 'Open to offers';
+    }
     return allWantedItems.join(', ');
   }
 
@@ -338,6 +458,21 @@ class TradingListing {
       'seriousOffersOnly': seriousOffersOnly,
       'tradeAsBundle': tradeAsBundle,
       'allowPartialOffers': allowPartialOffers,
+      'acceptedBundles': acceptedBundles
+          .map((bundle) => bundle.toMap())
+          .toList(),
+      'allowCustomBundleOffers': allowCustomBundleOffers,
+      'listingMode': listingMode.name,
+      'scheduledWindow': scheduledWindow,
+      'sellerTimezone': sellerTimezone,
+      'duplicateReleasePolicy': duplicateReleasePolicy.name,
+      'favouriteRidersFirst': favouriteRidersFirst,
+      'fixedReturn': fixedReturn,
+      'bestSuitableOffer': bestSuitableOffer,
+      'maxActiveOffers': maxActiveOffers,
+      'queueId': queueId,
+      'queueSourceListingId': queueSourceListingId,
+      'queueReleaseNumber': queueReleaseNumber,
       'expiresAt': Timestamp.fromDate(expiresAt),
       'notes': notes,
       'active': active,
@@ -362,10 +497,12 @@ class TradingListing {
       wantedAssetNames: _readStringList(map['wantedAssetNames']),
       offeredTradeItemIds: _readStringList(map['offeredTradeItemIds']),
       wantedTradeItemIds: _readStringList(map['wantedTradeItemIds']),
-      offeredTradeItemNames: _readStringList(map['offeredTradeItemNames']).isNotEmpty
+      offeredTradeItemNames:
+          _readStringList(map['offeredTradeItemNames']).isNotEmpty
           ? _readStringList(map['offeredTradeItemNames'])
           : _readStringList(map['offeredAssetNames']),
-      wantedTradeItemNames: _readStringList(map['wantedTradeItemNames']).isNotEmpty
+      wantedTradeItemNames:
+          _readStringList(map['wantedTradeItemNames']).isNotEmpty
           ? _readStringList(map['wantedTradeItemNames'])
           : _readStringList(map['wantedAssetNames']),
       wantsNothing: _readBool(map['wantsNothing']),
@@ -392,11 +529,158 @@ class TradingListing {
       seriousOffersOnly: _readBool(map['seriousOffersOnly']),
       tradeAsBundle: _readBool(map['tradeAsBundle'], true),
       allowPartialOffers: _readBool(map['allowPartialOffers']),
+      acceptedBundles: map['acceptedBundles'] is List
+          ? (map['acceptedBundles'] as List)
+                .whereType<Map>()
+                .map(
+                  (item) => ArcTradeBundleTemplate.fromMap(
+                    item.map((key, value) => MapEntry(key.toString(), value)),
+                  ),
+                )
+                .where((bundle) => bundle.isValid)
+                .toList(growable: false)
+          : const <ArcTradeBundleTemplate>[],
+      allowCustomBundleOffers: _readBool(map['allowCustomBundleOffers']),
+      listingMode: TradingListingMode.values.firstWhere(
+        (value) => value.name == _readString(map['listingMode']),
+        orElse: () => _readBool(map['wantsNothing'])
+            ? TradingListingMode.gift
+            : TradingListingMode.availableNow,
+      ),
+      scheduledWindow: _readString(map['scheduledWindow']),
+      sellerTimezone: _readString(map['sellerTimezone']),
+      duplicateReleasePolicy: ArcDuplicateReleasePolicy.values.firstWhere(
+        (value) => value.name == _readString(map['duplicateReleasePolicy']),
+        orElse: () => ArcDuplicateReleasePolicy.askBeforeRelisting,
+      ),
+      favouriteRidersFirst: _readBool(map['favouriteRidersFirst']),
+      fixedReturn: _readBool(map['fixedReturn']),
+      bestSuitableOffer: _readBool(map['bestSuitableOffer']),
+      maxActiveOffers: _readInt(map['maxActiveOffers'], 5).clamp(1, 25).toInt(),
+      queueId: _readString(map['queueId']),
+      queueSourceListingId: _readString(map['queueSourceListingId']),
+      queueReleaseNumber: _readInt(map['queueReleaseNumber']),
       expiresAt: _readDate(map['expiresAt']) ?? DateTime.now(),
       notes: _readString(map['notes']),
       active: _readBool(map['active'], true),
       createdAt: _readDate(map['createdAt']),
       updatedAt: _readDate(map['updatedAt']),
+    );
+  }
+
+  TradingListing copyWith({
+    String? id,
+    String? ownerUid,
+    String? traderName,
+    String? gamerTag,
+    String? preferredPlatform,
+    String? title,
+    String? offeredItem,
+    String? wantedText,
+    List<String>? offeredBlueprintNames,
+    List<String>? wantedBlueprintNames,
+    List<String>? offeredAssetNames,
+    List<String>? wantedAssetNames,
+    List<String>? offeredTradeItemIds,
+    List<String>? wantedTradeItemIds,
+    List<String>? offeredTradeItemNames,
+    List<String>? wantedTradeItemNames,
+    bool? wantsNothing,
+    TradingListingType? listingType,
+    TradingRiskLevel? riskLevel,
+    int? completedTrades,
+    int? noShows,
+    int? betrayalFlags,
+    String? region,
+    String? playWindow,
+    int? smallBundles,
+    int? mediumBundles,
+    int? largeBundles,
+    int? seedTotalOffered,
+    bool? acceptsBlueprints,
+    bool? acceptsSeeds,
+    bool? acceptsResources,
+    bool? seriousOffersOnly,
+    bool? tradeAsBundle,
+    bool? allowPartialOffers,
+    List<ArcTradeBundleTemplate>? acceptedBundles,
+    bool? allowCustomBundleOffers,
+    TradingListingMode? listingMode,
+    String? scheduledWindow,
+    String? sellerTimezone,
+    ArcDuplicateReleasePolicy? duplicateReleasePolicy,
+    bool? favouriteRidersFirst,
+    bool? fixedReturn,
+    bool? bestSuitableOffer,
+    int? maxActiveOffers,
+    String? queueId,
+    String? queueSourceListingId,
+    int? queueReleaseNumber,
+    DateTime? expiresAt,
+    String? notes,
+    bool? active,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return TradingListing(
+      id: id ?? this.id,
+      ownerUid: ownerUid ?? this.ownerUid,
+      traderName: traderName ?? this.traderName,
+      gamerTag: gamerTag ?? this.gamerTag,
+      preferredPlatform: preferredPlatform ?? this.preferredPlatform,
+      title: title ?? this.title,
+      offeredItem: offeredItem ?? this.offeredItem,
+      wantedText: wantedText ?? this.wantedText,
+      offeredBlueprintNames:
+          offeredBlueprintNames ?? this.offeredBlueprintNames,
+      wantedBlueprintNames: wantedBlueprintNames ?? this.wantedBlueprintNames,
+      offeredAssetNames: offeredAssetNames ?? this.offeredAssetNames,
+      wantedAssetNames: wantedAssetNames ?? this.wantedAssetNames,
+      offeredTradeItemIds: offeredTradeItemIds ?? this.offeredTradeItemIds,
+      wantedTradeItemIds: wantedTradeItemIds ?? this.wantedTradeItemIds,
+      offeredTradeItemNames:
+          offeredTradeItemNames ?? this.offeredTradeItemNames,
+      wantedTradeItemNames: wantedTradeItemNames ?? this.wantedTradeItemNames,
+      wantsNothing: wantsNothing ?? this.wantsNothing,
+      listingType: listingType ?? this.listingType,
+      riskLevel: riskLevel ?? this.riskLevel,
+      completedTrades: completedTrades ?? this.completedTrades,
+      noShows: noShows ?? this.noShows,
+      betrayalFlags: betrayalFlags ?? this.betrayalFlags,
+      region: region ?? this.region,
+      playWindow: playWindow ?? this.playWindow,
+      smallBundles: smallBundles ?? this.smallBundles,
+      mediumBundles: mediumBundles ?? this.mediumBundles,
+      largeBundles: largeBundles ?? this.largeBundles,
+      seedTotalOffered: seedTotalOffered ?? this.seedTotalOffered,
+      acceptsBlueprints: acceptsBlueprints ?? this.acceptsBlueprints,
+      acceptsSeeds: acceptsSeeds ?? this.acceptsSeeds,
+      acceptsResources: acceptsResources ?? this.acceptsResources,
+      seriousOffersOnly: seriousOffersOnly ?? this.seriousOffersOnly,
+      tradeAsBundle: tradeAsBundle ?? this.tradeAsBundle,
+      allowPartialOffers: allowPartialOffers ?? this.allowPartialOffers,
+      acceptedBundles: acceptedBundles ?? this.acceptedBundles,
+      allowCustomBundleOffers:
+          allowCustomBundleOffers ?? this.allowCustomBundleOffers,
+      listingMode: listingMode ?? this.listingMode,
+      scheduledWindow: scheduledWindow ?? this.scheduledWindow,
+      sellerTimezone: sellerTimezone ?? this.sellerTimezone,
+      duplicateReleasePolicy:
+          duplicateReleasePolicy ?? this.duplicateReleasePolicy,
+      favouriteRidersFirst: favouriteRidersFirst ?? this.favouriteRidersFirst,
+      fixedReturn: fixedReturn ?? this.fixedReturn,
+      bestSuitableOffer: bestSuitableOffer ?? this.bestSuitableOffer,
+      maxActiveOffers: (maxActiveOffers ?? this.maxActiveOffers)
+          .clamp(1, 25)
+          .toInt(),
+      queueId: queueId ?? this.queueId,
+      queueSourceListingId: queueSourceListingId ?? this.queueSourceListingId,
+      queueReleaseNumber: queueReleaseNumber ?? this.queueReleaseNumber,
+      expiresAt: expiresAt ?? this.expiresAt,
+      notes: notes ?? this.notes,
+      active: active ?? this.active,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 }

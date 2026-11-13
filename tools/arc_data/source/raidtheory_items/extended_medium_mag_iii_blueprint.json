@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "extended_medium_mag_iii_blueprint",
   "name": {
     "da": "Udvidet medium magasin III-tegning",
@@ -15,7 +15,7 @@
     "pl": "Projekt rozszerzonego średniego magazynka III",
     "pt": "Projeto de carregador médio estendido III",
     "pt-BR": "Esquema de Carregador Médio Estendido III",
-    "ru": "Чертеж — Увеличенный магазин для оружия среднего калибра III",
+    "ru": "Чертеж - Увеличенный магазин для оружия среднего калибра III",
     "sr": "Nacrt za produženi srednji spremnik III",
     "tr": "Uzatılmış Orta Şarjör III Taslağı",
     "uk": "Креслення розширеного середнього магазину III",
@@ -35,8 +35,8 @@
     "ko-KR": "중량 탄약을 사용하는 호환 무기의 탄약 용량을 크게 확장합니다.",
     "no": "Utvider ammunisjonskapasiteten til kompatible våpen som bruker medium ammunisjon betydelig.",
     "pl": "Znacznie zwiększa pojemność amunicji kompatybilnych broni używających średniej amunicji.",
-    "pt": "Estende significativamente a capacidade de munição de armas compatíveis que usam munição média.",
-    "pt-BR": "Aumenta significativamente a capacidade de munição de armas compatíveis que usam munição média.",
+    "pt": "Estende significativamente a capacidade de muniço de armas compatíveis que usam muniço média.",
+    "pt-BR": "Aumenta significativamente a capacidade de muniço de armas compatíveis que usam muniço média.",
     "ru": "Значительно увеличивает емкость магазина совместимого оружия, использующего средние патроны.",
     "sr": "Značajno povećava kapacitet municije kompatibilnog oružja koje koristi srednju municiju.",
     "tr": "Orta mermi kullanan uyumlu silahların mermi kapasitesini önemli ölçüde artırır.",
@@ -78,3 +78,4 @@
   "updatedAt": "11/12/2025",
   "addedIn": "base"
 }
+

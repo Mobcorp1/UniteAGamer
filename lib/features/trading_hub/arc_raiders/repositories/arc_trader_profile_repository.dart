@@ -1,11 +1,18 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../data/arc_player_archetype_catalog.dart';
+import '../data/arc_game_platform_catalog.dart';
+import '../data/arc_player_session_catalog.dart';
+import '../data/arc_profile_completion_evaluator.dart';
 import '../models/arc_availability.dart';
 import '../models/arc_away_status.dart';
+import '../models/arc_profile_social_models.dart';
 import '../models/arc_trader_profile.dart';
+import 'arc_operations_repository.dart';
 
 class ArcTraderProfileRepository {
   ArcTraderProfileRepository({FirebaseFirestore? firestore, FirebaseAuth? auth})
@@ -29,6 +36,9 @@ class ArcTraderProfileRepository {
 
   DocumentReference<Map<String, dynamic>> profileDoc(String uid) =>
       _userDoc(uid).collection('trading_activity').doc('profile');
+
+  DocumentReference<Map<String, dynamic>> publicProfileDoc(String uid) =>
+      _firestore.collection('public_profiles').doc(uid);
 
   DocumentReference<Map<String, dynamic>> availabilityDoc(String uid) =>
       _userDoc(uid).collection('trading_activity').doc('availability');
@@ -68,6 +78,21 @@ class ArcTraderProfileRepository {
     return fallback;
   }
 
+  List<String> _stringList(dynamic value, [List<String> fallback = const []]) {
+    if (value == null) return fallback;
+    if (value is Iterable) {
+      return value
+          .map((item) => item.toString().trim())
+          .where((item) => item.isNotEmpty)
+          .toSet()
+          .toList(growable: false);
+    }
+    if (value is String && value.trim().isNotEmpty) {
+      return <String>[value.trim()];
+    }
+    return fallback;
+  }
+
   String _formatUagId(int number) =>
       '$_uagPrefix${number.toString().padLeft(_uagNumericPadding, '0')}';
 
@@ -78,7 +103,10 @@ class ArcTraderProfileRepository {
   }
 
   String _normalizeUagId(String rawValue) {
-    final cleaned = rawValue.trim().toUpperCase().replaceAll(RegExp(r'\s+'), '');
+    final cleaned = rawValue.trim().toUpperCase().replaceAll(
+      RegExp(r'\s+'),
+      '',
+    );
     if (cleaned.isEmpty) return '';
     if (!cleaned.startsWith(_uagPrefix)) return '';
 
@@ -125,9 +153,7 @@ class ArcTraderProfileRepository {
     await _userDoc(uid).set({
       'uagId': uagId,
       'updatedAt': now,
-      'traderProfile': {
-        'uagId': uagId,
-      },
+      'traderProfile': {'uagId': uagId},
     }, SetOptions(merge: true));
 
     await profileDoc(uid).set({
@@ -172,7 +198,8 @@ class ArcTraderProfileRepository {
     await _firestore.runTransaction((transaction) async {
       final counterSnap = await transaction.get(_uagCounterDoc);
       final current =
-          ((counterSnap.data() ?? const <String, dynamic>{})['lastIssuedNumber'] ??
+          ((counterSnap.data() ??
+                      const <String, dynamic>{})['lastIssuedNumber'] ??
                   0)
               as num;
       var lastIssuedNumber = current.toInt();
@@ -202,14 +229,10 @@ class ArcTraderProfileRepository {
 
       lastIssuedNumber = max(lastIssuedNumber, candidateNumber);
 
-      transaction.set(
-        _uagCounterDoc,
-        {
-          'lastIssuedNumber': lastIssuedNumber,
-          'updatedAt': FieldValue.serverTimestamp(),
-        },
-        SetOptions(merge: true),
-      );
+      transaction.set(_uagCounterDoc, {
+        'lastIssuedNumber': lastIssuedNumber,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
 
       transaction.set(uagIdRef, {
         'uagId': candidateId,
@@ -355,6 +378,15 @@ class ArcTraderProfileRepository {
       ),
     );
 
+    final platforms = ArcGamePlatformCatalog.normalize(<Object?>[
+      ..._stringList(profileData['platforms']),
+      ..._stringList(traderProfile['platforms']),
+      ..._stringList(basicProfile['platforms']),
+      ..._stringList(baseProfile['platforms']),
+      platform,
+    ], fallback: platform);
+    final primaryPlatform = ArcGamePlatformCatalog.primary(platforms);
+
     final timezone = _string(
       profileData['timezone'],
       _string(
@@ -369,6 +401,27 @@ class ArcTraderProfileRepository {
     );
 
     final uagId = _string(profileData['uagId'], gamerTag);
+    final archetypes = ArcPlayerArchetypeCatalog.normalizeLabels(<dynamic>[
+      ..._stringList(profileData['archetypes']),
+      ..._stringList(traderProfile['archetypes']),
+      ..._stringList(basicProfile['archetypes']),
+      _string(profileData['playStyle']),
+      _string(traderProfile['playStyle']),
+      _string(basicProfile['playStyle']),
+    ], includeDefaultWhenEmpty: true);
+    final playStyles = _stringList(
+      profileData['playStyles'],
+      _stringList(
+        profileData['playStyle'],
+        _stringList(
+          traderProfile['playStyles'],
+          _stringList(
+            traderProfile['playStyle'],
+            _stringList(basicProfile['playStyle']),
+          ),
+        ),
+      ),
+    );
 
     final createdAt = (profileData['createdAt'] as Timestamp?)?.toDate();
     final updatedAt = (profileData['updatedAt'] as Timestamp?)?.toDate();
@@ -378,10 +431,16 @@ class ArcTraderProfileRepository {
       uid: uid,
       uagId: uagId,
       uagName: uagName,
-      embarkId: _string(profileData['embarkId']),
+      avatarId: _string(profileData['avatarId'], 'shadow'),
+      avatarType: _string(profileData['avatarType'], 'preset'),
+      embarkId: _string(
+        profileData['embarkId'],
+        _string(traderProfile['embarkId'], _string(basicProfile['embarkId'])),
+      ),
       region: region,
       serverPreference: serverPreference,
-      platform: platform,
+      platform: primaryPlatform,
+      platforms: platforms,
       timezone: timezone,
       visibleInSearch: _bool(profileData['visibleInSearch'], true),
       micOk: _bool(profileData['micOk'], true),
@@ -392,7 +451,36 @@ class ArcTraderProfileRepository {
         uagId.isNotEmpty &&
             uagName.isNotEmpty &&
             region.isNotEmpty &&
-            platform.isNotEmpty,
+            platforms.isNotEmpty,
+      ),
+      archetypes: archetypes,
+      playStyles: playStyles.isEmpty ? const ['PvE defensive'] : playStyles,
+      communicationStyle: _string(
+        profileData['communicationStyle'],
+        _string(traderProfile['communicationStyle'], 'Flexible'),
+      ),
+      squadIntent: _string(
+        profileData['squadIntent'],
+        _string(traderProfile['squadIntent'], 'Flexible'),
+      ),
+      socialEnergy: _string(
+        profileData['socialEnergy'],
+        _string(traderProfile['socialEnergy'], 'Depends on the day'),
+      ),
+      sessionIntent: ArcPlayerSessionCatalog.normalizeIntent(
+        _string(
+          profileData['sessionIntent'],
+          _string(
+            traderProfile['sessionIntent'],
+            profileData['squadIntent']?.toString() ?? '',
+          ),
+        ),
+      ),
+      currentPriority: ArcPlayerSessionCatalog.normalizePriority(
+        _string(
+          profileData['currentPriority'],
+          _string(traderProfile['currentPriority']),
+        ),
       ),
       referralCode: _string(profileData['referralCode']),
       referredByCode: _string(
@@ -411,6 +499,23 @@ class ArcTraderProfileRepository {
         profileData['subscriptionStatus'],
         _string(userData['subscriptionStatus'], 'inactive'),
       ),
+      socialLinks: ArcProfileSocialLinks.fromProfileMaps(<Map<String, dynamic>>[
+        profileData,
+        traderProfile,
+        basicProfile,
+        userData,
+      ]),
+      creatorProgramme: ArcCreatorProgrammeProfile.fromMap(
+        profileData['creatorProgramme'],
+        fallbackReferralCode: _string(
+          profileData['referralCode'],
+          _string(userData['referralCode']),
+        ),
+        affiliateEnabled: _bool(
+          profileData['affiliateEnabled'],
+          _bool(userData['affiliateApplied']),
+        ),
+      ),
       createdAt: createdAt,
       updatedAt: updatedAt,
       lastActiveAt: lastActiveAt,
@@ -422,17 +527,27 @@ class ArcTraderProfileRepository {
     required dynamic serverNow,
   }) {
     final isComplete = profile.hasCoreDetails;
+    final socialLinks = ArcProfileSocialLinks.merge(profile.socialLinks);
+    final creatorProgramme = profile.creatorProgramme.normalised(
+      referralCode: profile.referralCode,
+      affiliateRequested: profile.affiliateEnabled,
+    );
 
     return {
       'uid': profile.uid,
       'uagId': profile.uagId.trim(),
       'uagName': profile.uagName.trim(),
+      'avatarId': profile.avatarId.trim().isEmpty
+          ? 'shadow'
+          : profile.avatarId.trim(),
+      'avatarType': 'preset',
       'embarkId': profile.embarkId.trim(),
       'region': profile.region.trim(),
       'serverPreference': profile.serverPreference.trim().isEmpty
           ? 'Automatic'
           : profile.serverPreference.trim(),
-      'platform': profile.platform.trim(),
+      'platform': profile.primaryPlatform,
+      'platforms': profile.normalisedPlatforms,
       'timezone': profile.timezone.trim(),
       'visibleInSearch': profile.visibleInSearch,
       'micOk': profile.micOk,
@@ -440,30 +555,67 @@ class ArcTraderProfileRepository {
       'crossPlatformOk': profile.crossPlatformOk,
       'crossplayEnabled': profile.crossPlatformOk,
       'isProfileComplete': isComplete,
+      'archetypes': ArcPlayerArchetypeCatalog.normalizeLabels(
+        profile.archetypes,
+        includeDefaultWhenEmpty: true,
+      ),
+      'playStyles': profile.playStyles,
+      'playStyle': profile.playStyles.isNotEmpty
+          ? profile.playStyles.first
+          : profile.archetypes.isNotEmpty
+          ? profile.archetypes.first
+          : ArcPlayerArchetypeCatalog.defaultLabel,
+      'communicationStyle': profile.communicationStyle.trim().isEmpty
+          ? 'Flexible'
+          : profile.communicationStyle.trim(),
+      'squadIntent': profile.squadIntent.trim().isEmpty
+          ? 'Flexible'
+          : profile.squadIntent.trim(),
+      'socialEnergy': profile.socialEnergy.trim().isEmpty
+          ? 'Depends on the day'
+          : profile.socialEnergy.trim(),
+      'sessionIntent': ArcPlayerSessionCatalog.normalizeIntent(
+        profile.sessionIntent,
+      ),
+      'currentPriority': ArcPlayerSessionCatalog.normalizePriority(
+        profile.currentPriority,
+      ),
       'referralCode': profile.referralCode.trim(),
       'referredByCode': profile.referredByCode.trim(),
       'affiliateEnabled': profile.affiliateEnabled,
       'payoutMethod': profile.payoutMethod.trim(),
       'subscriptionStatus': profile.subscriptionStatus.trim(),
+      'socialLinks': socialLinks
+          .map((link) => link.toMap())
+          .toList(growable: false),
+      'publicSocialLinks': ArcProfileSocialLinks.publicLinks(
+        socialLinks,
+      ).map((link) => link.toPublicMap()).toList(growable: false),
+      'creatorProgramme': creatorProgramme.toMap(),
+      'publicCreatorProgramme': creatorProgramme.toPublicMap(),
+      'creatorProgrammeStatus': creatorProgramme.status.name,
+      'creatorProgrammeApproved': creatorProgramme.adminApproved,
       'displayName': profile.uagName.trim().isEmpty
           ? 'New Trader'
           : profile.uagName.trim(),
       'gamerTag': profile.uagId.trim(),
-      'preferredPlatform': profile.platform.trim(),
-      'completedTrades': 0,
-      'noShows': 0,
-      'betrayalFlags': 0,
-      'cancelledTrades': 0,
-      'successfulTradeStreak': 0,
-      'totalOffersSent': 0,
-      'totalOffersReceived': 0,
-      'foundingTrader': false,
+      'preferredPlatform': profile.primaryPlatform,
       'updatedAt': serverNow,
       'lastActiveAt': serverNow,
       'createdAt': profile.createdAt == null
           ? serverNow
           : Timestamp.fromDate(profile.createdAt!),
     };
+  }
+
+  Future<void> _syncPublicProfile(
+    ArcTraderProfile profile, {
+    required Object serverNow,
+  }) async {
+    await publicProfileDoc(profile.uid).set(
+      profile.toPublicProfileMap(updatedAt: serverNow),
+      SetOptions(merge: true),
+    );
   }
 
   Future<void> ensureDocsExist() async {
@@ -520,6 +672,16 @@ class ArcTraderProfileRepository {
       await profileDoc(uid).set(updates, SetOptions(merge: true));
     }
 
+    final publicProfileSnapshot = await profileDoc(uid).get();
+    await _syncPublicProfile(
+      _profileFromMaps(
+        uid: uid,
+        userData: userData,
+        profileData: publicProfileSnapshot.data() ?? <String, dynamic>{},
+      ).copyWith(uagId: resolvedUagId),
+      serverNow: now,
+    );
+
     final availabilitySnapshot = await availabilityDoc(uid).get();
     if (!availabilitySnapshot.exists) {
       await availabilityDoc(uid).set(ArcAvailability.initial().toMap());
@@ -564,7 +726,10 @@ class ArcTraderProfileRepository {
     });
   }
 
-  Future<void> saveProfile(ArcTraderProfile profile) async {
+  Future<void> saveProfile(
+    ArcTraderProfile profile, {
+    bool confirmProfileSetup = false,
+  }) async {
     final serverNow = FieldValue.serverTimestamp();
     final referralCode = profile.referralCode.trim().isEmpty
         ? await _ensureReferralCodeForUid(profile.uid)
@@ -574,21 +739,69 @@ class ArcTraderProfileRepository {
       preferredUagId: profile.uagId.trim(),
     );
 
-    await profileDoc(profile.uid).set(
-      _arcProfileToUnifiedMap(
-        profile.copyWith(
-          uagId: uagId,
-          referralCode: referralCode,
-          isProfileComplete: profile.hasCoreDetails,
-          updatedAt: DateTime.now(),
-          lastActiveAt: DateTime.now(),
-        ),
-        serverNow: serverNow,
-      ),
-      SetOptions(merge: true),
+    final normalisedProfile = profile.copyWith(
+      uagId: uagId,
+      referralCode: referralCode,
+      isProfileComplete: false,
+      updatedAt: DateTime.now(),
+      lastActiveAt: DateTime.now(),
     );
 
+    final profileMap = _arcProfileToUnifiedMap(
+      normalisedProfile,
+      serverNow: serverNow,
+    );
+    if (confirmProfileSetup) {
+      profileMap
+        ..['profileSetupConfirmed'] = true
+        ..['profileSetupVersion'] = 1
+        ..['profileSetupConfirmedAt'] = serverNow;
+    }
+
+    await profileDoc(profile.uid).set(profileMap, SetOptions(merge: true));
+    await _syncPublicProfile(normalisedProfile, serverNow: serverNow);
     await _syncUagIdAcrossUserDocs(profile.uid, uagId);
+    await _evaluateAndPersistProfileCompletion(
+      profile.uid,
+      profileDataOverride: profileMap,
+    );
+  }
+
+  Future<void> savePlatformSelection(Iterable<String> platforms) async {
+    final uid = currentUid;
+    if (uid == null) throw StateError('No authenticated user found.');
+
+    final normalised = ArcGamePlatformCatalog.normalize(platforms);
+    if (normalised.isEmpty) {
+      throw ArgumentError('Choose at least one supported gaming platform.');
+    }
+    final primary = ArcGamePlatformCatalog.primary(normalised);
+    final now = FieldValue.serverTimestamp();
+    final batch = _firestore.batch();
+
+    batch.set(_userDoc(uid), <String, dynamic>{
+      'platform': primary,
+      'platforms': normalised,
+      'preferredPlatform': primary,
+      'basicProfile': <String, dynamic>{
+        'platform': primary,
+        'platforms': normalised,
+      },
+      'traderProfile': <String, dynamic>{
+        'platform': primary,
+        'platforms': normalised,
+        'preferredPlatform': primary,
+      },
+      'updatedAt': now,
+    }, SetOptions(merge: true));
+    batch.set(profileDoc(uid), <String, dynamic>{
+      'platform': primary,
+      'platforms': normalised,
+      'preferredPlatform': primary,
+      'updatedAt': now,
+      'lastActiveAt': now,
+    }, SetOptions(merge: true));
+    await batch.commit();
   }
 
   Future<ArcAvailability> getAvailability() async {
@@ -611,9 +824,217 @@ class ArcTraderProfileRepository {
   Future<void> saveAvailability(ArcAvailability availability) async {
     final uid = currentUid;
     if (uid == null) throw StateError('No authenticated user found.');
-    await availabilityDoc(
+    final now = FieldValue.serverTimestamp();
+    final dayKeys = _activeAvailabilityDayKeys(availability);
+    final batch = _firestore.batch();
+    batch.set(availabilityDoc(uid), {
+      ...availability.toMap(),
+      'completed': true,
+      'availabilityCompleted': true,
+      'availabilityDayKeys': dayKeys,
+      'updatedAt': now,
+    }, SetOptions(merge: true));
+    batch.set(profileDoc(uid), {
+      'availabilityCompleted': true,
+      'availabilityDayKeys': dayKeys,
+      'traderProfile': {'availabilityCompleted': true},
+      'updatedAt': now,
+    }, SetOptions(merge: true));
+    batch.set(_userDoc(uid), {
+      'availabilityCompleted': true,
+      'availabilityDayKeys': dayKeys,
+      'traderProfile': {
+        'availabilityCompleted': true,
+        'availabilityDayKeys': dayKeys,
+      },
+      'updatedAt': now,
+      'lastActiveAt': now,
+    }, SetOptions(merge: true));
+    await batch.commit();
+    await _evaluateAndPersistProfileCompletion(
       uid,
-    ).set(availability.toMap(), SetOptions(merge: true));
+      availabilityOverride: availability,
+      availabilityDataOverride: <String, dynamic>{
+        ...availability.toMap(),
+        'completed': true,
+        'availabilityCompleted': true,
+        'availabilityDayKeys': dayKeys,
+      },
+    );
+    await ArcOperationsRepository(
+      firestore: _firestore,
+      auth: _auth,
+    ).recordAvailabilitySaved();
+  }
+
+  Future<ArcProfileCompletionResult> getProfileCompletion() async {
+    final uid = currentUid;
+    if (uid == null) {
+      throw StateError('No authenticated user found.');
+    }
+    await ensureDocsExist();
+    return _evaluateAndPersistProfileCompletion(uid);
+  }
+
+  Stream<ArcProfileCompletionResult> watchProfileCompletion() {
+    final uid = currentUid;
+    if (uid == null) {
+      return Stream<ArcProfileCompletionResult>.value(
+        ArcProfileCompletionResult.completeResult,
+      );
+    }
+
+    final controller = StreamController<ArcProfileCompletionResult>();
+    StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
+    userSubscription;
+    StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
+    profileSubscription;
+    StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
+    availabilitySubscription;
+    var disposed = false;
+    var loadVersion = 0;
+    var latestUser = const <String, dynamic>{};
+    var latestProfile = const <String, dynamic>{};
+    var latestAvailability = const <String, dynamic>{};
+
+    void addError(Object error, StackTrace stackTrace) {
+      if (!disposed && !controller.isClosed) {
+        controller.addError(error, stackTrace);
+      }
+    }
+
+    Future<void> emitState() async {
+      final version = ++loadVersion;
+      try {
+        final availability = ArcAvailability.fromMap(latestAvailability);
+        final result = const ArcProfileCompletionEvaluator().evaluate(
+          userData: latestUser,
+          profileData: latestProfile,
+          availabilityData: latestAvailability,
+          availability: availability,
+        );
+        if (!disposed && !controller.isClosed && version == loadVersion) {
+          controller.add(result);
+        }
+      } catch (error, stackTrace) {
+        addError(error, stackTrace);
+      }
+    }
+
+    controller.onListen = () {
+      userSubscription = _userDoc(uid).snapshots().listen((snapshot) {
+        latestUser = snapshot.data() ?? const <String, dynamic>{};
+        unawaited(emitState());
+      }, onError: addError);
+      profileSubscription = profileDoc(uid).snapshots().listen((snapshot) {
+        latestProfile = snapshot.data() ?? const <String, dynamic>{};
+        unawaited(emitState());
+      }, onError: addError);
+      availabilitySubscription = availabilityDoc(uid).snapshots().listen((
+        snapshot,
+      ) {
+        latestAvailability = snapshot.data() ?? const <String, dynamic>{};
+        unawaited(emitState());
+      }, onError: addError);
+    };
+
+    controller.onCancel = () async {
+      disposed = true;
+      await userSubscription?.cancel();
+      await profileSubscription?.cancel();
+      await availabilitySubscription?.cancel();
+    };
+
+    return controller.stream;
+  }
+
+  Future<ArcProfileCompletionResult> refreshProfileCompletion() async {
+    final uid = currentUid;
+    if (uid == null) {
+      throw StateError('No authenticated user found.');
+    }
+    return _evaluateAndPersistProfileCompletion(uid);
+  }
+
+  Future<ArcProfileCompletionResult> _evaluateAndPersistProfileCompletion(
+    String uid, {
+    Map<String, dynamic>? profileDataOverride,
+    ArcAvailability? availabilityOverride,
+    Map<String, dynamic>? availabilityDataOverride,
+  }) async {
+    final userSnapshot = await _userDoc(uid).get();
+    final profileSnapshot = profileDataOverride == null
+        ? await profileDoc(uid).get()
+        : null;
+    final availabilitySnapshot =
+        availabilityOverride == null && availabilityDataOverride == null
+        ? await availabilityDoc(uid).get()
+        : null;
+
+    final userData = userSnapshot.data() ?? const <String, dynamic>{};
+    final profileData =
+        profileDataOverride ??
+        profileSnapshot?.data() ??
+        const <String, dynamic>{};
+    final availabilityData =
+        availabilityDataOverride ??
+        availabilitySnapshot?.data() ??
+        const <String, dynamic>{};
+    final availability =
+        availabilityOverride ?? ArcAvailability.fromMap(availabilityData);
+
+    final result = const ArcProfileCompletionEvaluator().evaluate(
+      userData: userData,
+      profileData: profileData,
+      availabilityData: availabilityData,
+      availability: availability,
+    );
+    final now = FieldValue.serverTimestamp();
+    final completionMap = <String, dynamic>{
+      'complete': result.complete,
+      'completedFieldCount': result.completedFieldCount,
+      'requiredFieldCount': result.requiredFieldCount,
+      'completionPercent': result.completionPercent,
+      'missingFieldIds': result.missingFieldIds,
+      'missingFieldLabels': result.missingFieldLabels,
+      'resumeRouteName': result.resumeRouteName,
+      'resumeSection': result.resumeSection,
+      'updatedAt': now,
+    };
+
+    final batch = _firestore.batch();
+    batch.set(profileDoc(uid), {
+      'isProfileComplete': result.complete,
+      'profileCompletion': completionMap,
+      'updatedAt': now,
+    }, SetOptions(merge: true));
+    batch.set(_userDoc(uid), {
+      'profileCompletion': completionMap,
+      'traderProfile': {'isProfileComplete': result.complete},
+      'updatedAt': now,
+    }, SetOptions(merge: true));
+    await batch.commit();
+
+    if (result.complete) {
+      await ArcOperationsRepository(
+        firestore: _firestore,
+        auth: _auth,
+      ).recordProfileCompleted();
+    }
+
+    return result;
+  }
+
+  List<String> _activeAvailabilityDayKeys(ArcAvailability availability) {
+    final dayKeys = <String>{};
+    for (final week in availability.weeks) {
+      for (final slot in week.slots) {
+        if (!slot.enabled) continue;
+        final key = slot.dayKey.trim().toLowerCase();
+        if (key.isNotEmpty) dayKeys.add(key);
+      }
+    }
+    return dayKeys.toList(growable: false)..sort();
   }
 
   Future<ArcAwayStatus> getAwayStatus() async {

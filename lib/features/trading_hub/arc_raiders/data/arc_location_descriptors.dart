@@ -1,5 +1,5 @@
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_container_types.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_poi_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_container_types.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_poi_data.dart';
 
 class ArcLocationDescriptorPack {
   const ArcLocationDescriptorPack({
@@ -26,8 +26,7 @@ class ArcLocationDescriptors {
     };
 
     final examples = <String>[
-      if (poi != null)
-        'Behind ${poi.name.toLowerCase()} near the outer wall',
+      if (poi != null) 'Behind ${poi.name.toLowerCase()} near the outer wall',
       if (containerType.id == ArcContainerTypes.weaponCache.id)
         'Weapon cache on broken bridge / platform edge',
       if (containerType.id == ArcContainerTypes.lockedRoom.id)

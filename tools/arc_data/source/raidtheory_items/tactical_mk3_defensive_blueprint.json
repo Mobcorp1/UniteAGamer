@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "tactical_mk3_defensive_blueprint",
   "name": {
     "da": "Taktisk Mk. 3 (Defensiv) Tegning",
@@ -15,7 +15,7 @@
     "pl": "Projekt Taktyczny Mk. 3 (Obronny)",
     "pt": "Projeto Tatico Mk. 3 (Defensivo)",
     "pt-BR": "Projeto Tático Mk. 3 (Defensivo)",
-    "ru": "Чертеж — Тактический Mk. 3 (Оборонительный)",
+    "ru": "Чертеж - Тактический Mk. 3 (Оборонительный)",
     "sr": "Takticki Mk. 3 (Odbrambeni) Nacrt",
     "tr": "Taktiksel Mod. 3 (Savunma) Taslağı",
     "uk": "Креслення Тактичний Mk. 3 (Оборонний)",
@@ -53,3 +53,4 @@
   "updatedAt": "12/07/2025",
   "addedIn": "base"
 }
+

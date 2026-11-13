@@ -1,11 +1,12 @@
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
-import 'package:uag_traders_hub/build/trading_hub_screen.dart';
-import 'package:uag_traders_hub/screens/build/app_drawer.dart';
-import 'package:uag_traders_hub/widgets/animated_logo.dart';
-import 'package:uag_traders_hub/widgets/dose_action_button.dart';
-import 'package:uag_traders_hub/widgets/static_watermark.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raiders_hub_screen.dart';
+import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
+import 'package:uag_arc_raiders_hub/widgets/animated_logo.dart';
+import 'package:uag_arc_raiders_hub/widgets/dose_action_button.dart';
+import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class HomeScreen extends StatefulWidget {
   static const String routeName = '/home';
@@ -42,14 +43,56 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _cinematicBackground() {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.asset(
+          'assets/arc_raiders/hub/auth_bg_landscape.webp',
+          fit: BoxFit.cover,
+          errorBuilder: (_, _, _) => const StaticWatermark(),
+        ),
+        Container(color: Colors.black.withValues(alpha: 0.58)),
+        const StaticWatermark(),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.black.withValues(alpha: 0.78),
+                Colors.transparent,
+                Colors.black.withValues(alpha: 0.90),
+              ],
+            ),
+          ),
+        ),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: const Alignment(0.0, -0.08),
+              radius: 0.82,
+              colors: [
+                AppTheme.neonCyan.withValues(alpha: 0.10),
+                AppTheme.neonPink.withValues(alpha: 0.07),
+                Colors.transparent,
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.sizeOf(context).width;
+    final compact = screenWidth < 650;
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
         titleSpacing: 12,
@@ -71,36 +114,49 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       drawer: const AppDrawer(drawerWidth: 250),
-      body: SizedBox.expand(
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            const Positioned.fill(child: StaticWatermark()),
-            SafeArea(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  return SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppTheme.spaceXL,
-                      vertical: AppTheme.spaceL,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          _cinematicBackground(),
+          SafeArea(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: compact ? AppTheme.spaceL : AppTheme.spaceXL,
+                    vertical: compact ? AppTheme.spaceL : AppTheme.spaceXL,
+                  ),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight - (compact ? 32 : 48),
                     ),
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minWidth: constraints.maxWidth - (AppTheme.spaceXL * 2),
-                        minHeight:
-                            constraints.maxHeight - (AppTheme.spaceL * 2),
-                      ),
-                      child: Center(
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 980),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 980),
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: compact
+                                ? AppTheme.spaceM
+                                : AppTheme.spaceXL,
+                            vertical: compact
+                                ? AppTheme.spaceL
+                                : AppTheme.spaceXL,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.22),
+                            borderRadius: BorderRadius.circular(26),
+                            border: Border.all(
+                              color: AppTheme.neonCyan.withValues(alpha: 0.12),
+                            ),
+                          ),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               AnimatedLogo(
                                 assetPath:
-                                    'assets/icon/uag_traders_icon_transparent.webp',
-                                size: screenWidth >= 900 ? 180 : 150,
+                                    'assets/icon/uag_traders_header_mark.png',
+                                size: compact ? 132 : 176,
                               ),
                               const SizedBox(height: 24),
                               if (_showText) ...[
@@ -131,12 +187,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                   maxWidth: 520,
                                 ),
                                 child: DoseActionButton(
-                                  label: 'Enter UAG Arc Raiders Hub',
+                                  label: 'Explore UAG Arc Raiders Hub',
                                   icon: Icons.swap_horiz_rounded,
                                   onPressed: () {
                                     Navigator.of(
                                       context,
-                                    ).pushNamed(TradingHubScreen.routeName);
+                                    ).pushNamed(ArcRaidersHubScreen.routeName);
                                   },
                                 ),
                               ),
@@ -145,12 +201,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ),
-                  );
-                },
-              ),
+                  ),
+                );
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

@@ -37,10 +37,7 @@ class ArcMatchRiderInvite {
     };
   }
 
-  ArcMatchRiderInvite copyWith({
-    String? status,
-    String? note,
-  }) {
+  ArcMatchRiderInvite copyWith({String? status, String? note}) {
     return ArcMatchRiderInvite(
       id: id,
       senderUid: senderUid,

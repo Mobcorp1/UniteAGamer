@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "showstopper_blueprint",
   "name": {
     "da": "Showstopper-tegning",
@@ -15,7 +15,7 @@
     "pl": "Projekt Showstopper",
     "pt": "Projeto de Showstopper",
     "pt-BR": "Esquema de Para-Tudo",
-    "ru": "Чертеж — Коронный номер",
+    "ru": "Чертеж - Коронный номер",
     "sr": "Showstopper Nacrt",
     "tr": "Efsane Taslağı",
     "uk": "Креслення Шоустопер",
@@ -36,7 +36,7 @@
     "no": "En granat som detonerer etter en forsinkelse og bedover fiender innenfor dens radius.",
     "pl": "Granat, ktory detonuje po opoznieniu, ogluszajac wrogow w swoim promieniu.",
     "pt": "Uma granada que detona apos um atraso, atordoando inimigos dentro de seu raio.",
-    "pt-BR": "Granada que detona após um intervalo, atordoando inimigos em seu raio de ação.",
+    "pt-BR": "Granada que detona após um intervalo, atordoando inimigos em seu raio de aço.",
     "ru": "Граната с задержкой взрыва, оглушающая врагов в радиусе действия.",
     "sr": "Granata koja detonira nakon odlaganja, omamljujuci neprijatelje u svom radijusu.",
     "tr": "Bir gecikmeden sonra patlayan ve yaricapindaki dusmanlari sersemletеn bir bomba.",
@@ -53,3 +53,4 @@
   "updatedAt": "12/07/2025",
   "addedIn": "base"
 }
+

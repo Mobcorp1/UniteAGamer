@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_drop_report.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/utils/arc_labels.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_drop_report.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/utils/arc_labels.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class ArcRecentReportsFeed extends StatelessWidget {
   const ArcRecentReportsFeed({
@@ -78,7 +78,9 @@ class _ReportRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final blueprintName = ArcRecentReportsFeed.blueprintNameForId(report.blueprintId);
+    final blueprintName = ArcRecentReportsFeed.blueprintNameForId(
+      report.blueprintId,
+    );
     final weather = ArcLabels.fallbackWeather(report.weatherConditionLabel);
     final mapEvent = ArcLabels.fallbackMapEvent(report.mapEventLabel);
 
@@ -101,7 +103,7 @@ class _ReportRow extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            '${report.mapName} • ${report.areaLabel}',
+            '${report.mapName} - ${report.areaLabel}',
             style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.w600,
@@ -109,12 +111,12 @@ class _ReportRow extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            '${ArcLabels.sourceType(report.sourceType)} • ${report.resolvedContainerLabel} • ${report.raidType.label} • ${report.timeOfDay.label}',
+            '${ArcLabels.sourceType(report.sourceType)} - ${report.resolvedContainerLabel} - ${report.raidType.label} - ${report.timeOfDay.label}',
             style: const TextStyle(color: Colors.white60, height: 1.3),
           ),
           const SizedBox(height: 4),
           Text(
-            '$weather • $mapEvent',
+            '$weather - $mapEvent',
             style: const TextStyle(color: Colors.white60, height: 1.3),
           ),
           if (report.notes.trim().isNotEmpty) ...[

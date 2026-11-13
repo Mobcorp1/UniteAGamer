@@ -1,15 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:uag_traders_hub/build/app_bar.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/build/app_bar.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/screens/monetisation_screen.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_layout_system.dart';
+import '../widgets/foundation/arc_ui_tokens.dart';
+import '../widgets/foundation/uag_profile_glyph.dart';
 
+import '../data/arc_player_archetype_catalog.dart';
+import '../data/arc_player_session_catalog.dart';
+import '../data/arc_loadout_asset_registry.dart';
+import '../data/arc_profile_completion_evaluator.dart';
+import '../data/uag_avatar_catalog.dart';
+import '../models/arc_loadout_models.dart';
+import '../models/arc_operations_models.dart';
+import '../models/arc_profile_social_models.dart';
 import '../models/arc_trader_profile.dart';
+import '../repositories/arc_operations_repository.dart';
+import '../repositories/arc_saved_loadout_repository.dart';
 import '../repositories/arc_trader_profile_repository.dart';
 import '../screens/arc_availability_screen.dart';
 import '../screens/arc_away_screen.dart';
 import '../screens/arc_profile_edit_screen.dart';
 import '../screens/arc_profile_setup_screen.dart';
+import '../screens/favourite_loadout_screen.dart';
+import '../screens/operations_command_screen.dart';
+import '../screens/wall_of_legends_screen.dart';
+import '../widgets/arc_companion_bottom_dock.dart';
+import '../widgets/arc_raiders_screen_shell.dart';
+import '../widgets/uag_avatar_locker_sheet.dart';
+import '../widgets/uag_profile_cosmetic_locker.dart';
 
 class TradingProfileScreen extends StatefulWidget {
   static const routeName = '/trading-hub/arc-raiders/profile';
@@ -24,9 +44,18 @@ class TradingProfileScreen extends StatefulWidget {
 
 class _TradingProfileScreenState extends State<TradingProfileScreen> {
   final ArcTraderProfileRepository _repository = ArcTraderProfileRepository();
+  final ArcOperationsRepository _operationsRepository =
+      ArcOperationsRepository();
+  final ArcSavedLoadoutRepository _savedLoadoutRepository =
+      ArcSavedLoadoutRepository();
+  late final Stream<ArcProfileCompletionResult> _profileCompletionStream =
+      _repository.watchProfileCompletion();
 
   bool _isInitialising = true;
   String? _initError;
+  int _selectedProfileTab = 0;
+  String? _openRaiderSection = 'raider_identity';
+  String? _openReputationSection = 'overall_reputation';
 
   @override
   void initState() {
@@ -48,26 +77,9 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
       if (!mounted) return;
       setState(() {
         _isInitialising = false;
-        _initError = 'Trader profile init failed: $error';
+        _initError = 'Could not load Raider Profile. Try again.';
       });
     }
-  }
-
-  Future<void> _copyReferralCode(String code) async {
-    if (code.trim().isEmpty) return;
-    await Clipboard.setData(ClipboardData(text: code));
-    if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Referral code copied')));
-  }
-
-  Future<void> _shareReferralCode(String code) async {
-    if (code.trim().isEmpty) return;
-    await Share.share(
-      'Join UAG Arc Raiders Hub using my referral code: $code',
-      subject: 'UAG Arc Raiders Hub Referral',
-    );
   }
 
   Future<void> _openSetupIfNeeded() async {
@@ -77,7 +89,10 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
 
       if (!profile.hasCoreDetails) {
         await Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const ArcProfileSetupScreen()),
+          MaterialPageRoute(
+            builder: (_) =>
+                const ArcProfileSetupScreen(requireCompletionFields: true),
+          ),
         );
         if (!mounted) return;
         setState(() {});
@@ -87,7 +102,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
       debugPrintStack(stackTrace: stackTrace);
       if (!mounted) return;
       setState(() {
-        _initError = 'Could not open profile setup: $error';
+        _initError = 'Could not open profile setup. Try again.';
       });
     }
   }
@@ -100,49 +115,142 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
     await _init();
   }
 
+  Future<void> _openProfileEditor() async {
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const ArcProfileEditScreen()));
+    if (!mounted) return;
+    setState(() {});
+  }
+
+  Future<void> _openProfileCompletionField(
+    ArcProfileCompletionMissingField field,
+  ) async {
+    try {
+      if (field.routeName ==
+          ArcProfileCompletionEvaluator.profileSetupRouteName) {
+        await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) =>
+                const ArcProfileSetupScreen(requireCompletionFields: true),
+          ),
+        );
+      } else if (field.routeName ==
+          ArcProfileCompletionEvaluator.availabilityRouteName) {
+        await Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const ArcAvailabilityScreen()),
+        );
+      } else {
+        await Navigator.of(context).pushNamed(
+          field.routeName,
+          arguments: <String, dynamic>{if (field.section == 'legal') 'step': 1},
+        );
+      }
+
+      await _repository.refreshProfileCompletion();
+      if (!mounted) return;
+      setState(() {});
+    } catch (error, stackTrace) {
+      debugPrint(
+        'TradingProfileScreen._openProfileCompletionField failed: $error',
+      );
+      debugPrintStack(stackTrace: stackTrace);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not open that profile step. Try again.'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _openAvatarLocker(ArcTraderProfile profile) async {
+    final selectedId = await UagAvatarLockerSheet.show(
+      context,
+      currentAvatarId: profile.avatarId,
+    );
+    if (!mounted || selectedId == null || selectedId == profile.avatarId) {
+      return;
+    }
+
+    try {
+      await _repository.saveProfile(
+        profile.copyWith(avatarId: selectedId, avatarType: 'preset'),
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${UagAvatarCatalog.byId(selectedId).label} equipped.'),
+        ),
+      );
+    } catch (error, stackTrace) {
+      debugPrint('TradingProfileScreen._openAvatarLocker failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not equip that avatar. Please try again.'),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isInitialising) {
       return const Scaffold(
-        backgroundColor: AppTheme.darkBackground,
-        body: Center(child: CircularProgressIndicator()),
+        extendBody: true,
+        backgroundColor: Colors.transparent,
+        body: ArcRaidersScreenShell(
+          showAdBanner: false,
+          child: Center(child: CircularProgressIndicator()),
+        ),
       );
     }
 
     if (_initError != null) {
       return Scaffold(
-        backgroundColor: AppTheme.darkBackground,
+        extendBody: true,
+        backgroundColor: Colors.transparent,
         appBar: widget.showAppBar
             ? const UagAppBar(
-                title: 'Trader Profile',
+                title: 'Raider Profile',
                 subtitle:
-                    'Identity, visibility, availability and referral tools.',
+                    'Identity, reputation, availability and match readiness.',
               )
             : null,
-        body: Center(
-          child: Container(
-            margin: const EdgeInsets.all(AppTheme.spaceL),
-            padding: const EdgeInsets.all(AppTheme.spaceL),
-            decoration: AppTheme.tradingCardDecoration(
-              borderColor: Colors.redAccent.withValues(alpha: 0.28),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.error_outline,
-                  color: Colors.redAccent,
-                  size: 34,
-                ),
-                const SizedBox(height: AppTheme.spaceM),
-                Text(
-                  _initError!,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white70, height: 1.35),
-                ),
-                const SizedBox(height: AppTheme.spaceL),
-                ElevatedButton(onPressed: _retry, child: const Text('Retry')),
-              ],
+        body: ArcRaidersScreenShell(
+          showAdBanner: false,
+          child: Center(
+            child: Container(
+              margin: const EdgeInsets.all(AppTheme.spaceL),
+              padding: const EdgeInsets.fromLTRB(
+                AppTheme.spaceM,
+                AppTheme.spaceS,
+                AppTheme.spaceM,
+                AppTheme.spaceL,
+              ),
+              decoration: AppTheme.tradingCardDecoration(
+                borderColor: Colors.redAccent.withValues(alpha: 0.28),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    color: Colors.redAccent,
+                    size: 34,
+                  ),
+                  const SizedBox(height: AppTheme.spaceM),
+                  Text(
+                    _initError!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.white70, height: 1.35),
+                  ),
+                  const SizedBox(height: AppTheme.spaceM),
+                  ElevatedButton(onPressed: _retry, child: const Text('Retry')),
+                ],
+              ),
             ),
           ),
         ),
@@ -150,220 +258,512 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      extendBody: false,
+      backgroundColor: Colors.transparent,
+      bottomNavigationBar: widget.showAppBar
+          ? const ArcCompanionBottomDock(activeLabel: 'profile')
+          : null,
       appBar: widget.showAppBar
           ? const UagAppBar(
-              title: 'Trader Profile',
-              subtitle:
-                  'Identity, visibility, availability and referral tools.',
+              title: 'Raider Profile',
+              subtitle: 'Your UAG identity, readiness, reputation and locker.',
             )
           : null,
-      body: SafeArea(
-        child: StreamBuilder<ArcTraderProfile>(
-          stream: _repository.watchProfile(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting &&
-                !snapshot.hasData) {
-              return const Center(child: CircularProgressIndicator());
-            }
+      body: ArcRaidersScreenShell(
+        showAdBanner: true,
+        child: SafeArea(
+          child: StreamBuilder<ArcTraderProfile>(
+            stream: _repository.watchProfile(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting &&
+                  !snapshot.hasData) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-            if (snapshot.hasError) {
-              return Center(
-                child: Container(
-                  margin: const EdgeInsets.all(AppTheme.spaceL),
-                  padding: const EdgeInsets.all(AppTheme.spaceL),
-                  decoration: AppTheme.tradingCardDecoration(
-                    borderColor: Colors.redAccent.withValues(alpha: 0.28),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Could not load trader profile data: ${snapshot.error}',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.white70),
-                      ),
-                      const SizedBox(height: AppTheme.spaceL),
-                      ElevatedButton(
-                        onPressed: _retry,
-                        child: const Text('Retry'),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }
-
-            final profile = snapshot.data;
-            if (profile == null) {
-              return Center(
-                child: ElevatedButton(
-                  onPressed: _openSetupIfNeeded,
-                  child: const Text('Set Up Profile'),
-                ),
-              );
-            }
-
-            return ListView(
-              padding: const EdgeInsets.all(AppTheme.spaceL),
-              children: [
-                _summaryCard(profile),
-                const SizedBox(height: AppTheme.spaceL),
-                _detailCard(
-                  title: 'Public Profile Details',
-                  children: [
-                    _detailRow('UAG ID', profile.uagId),
-                    _detailRow('UAG Name', profile.uagName),
-                    _detailRow('Region', profile.region),
-                    _detailRow('Preferred Platform', profile.platform),
-                    _detailRow(
-                      'Embark ID',
-                      profile.embarkId.isEmpty
-                          ? 'Hidden until trade confirmed'
-                          : profile.embarkId,
+              if (snapshot.hasError) {
+                return Center(
+                  child: Container(
+                    margin: const EdgeInsets.all(AppTheme.spaceL),
+                    padding: const EdgeInsets.fromLTRB(
+                      AppTheme.spaceM,
+                      AppTheme.spaceS,
+                      AppTheme.spaceM,
+                      AppTheme.spaceL,
                     ),
-                    _detailRow('Timezone', profile.timezone),
-                    _detailRow('Referral Code', profile.referralCode),
-                    _detailRow(
-                      'Referred By',
-                      profile.referredByCode.isEmpty
-                          ? 'No referral code used'
-                          : profile.referredByCode,
+                    decoration: AppTheme.tradingCardDecoration(
+                      borderColor: Colors.redAccent.withValues(alpha: 0.28),
                     ),
-                    _detailRow(
-                      'Affiliate Programme',
-                      profile.affiliateEnabled ? 'Applied' : 'Not applied',
-                    ),
-                    _detailRow('Payout Method', profile.payoutMethod),
-                    _detailRow(
-                      'Subscription Status',
-                      profile.subscriptionStatus,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppTheme.spaceL),
-                Container(
-                  padding: const EdgeInsets.all(AppTheme.spaceL),
-                  decoration: AppTheme.tradingCardDecoration(
-                    borderColor: AppTheme.neonPink.withValues(alpha: 0.20),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Referral Tools',
-                        style: AppTheme.tradingHeading(
-                          fontSize: 20,
-                          color: AppTheme.neonPink,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Could not load Raider Profile right now.',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.white70),
                         ),
-                      ),
-                      const SizedBox(height: AppTheme.spaceS),
-                      const Text(
-                        'Copy or share your referral code for signup tracking and future affiliate rewards.',
-                        style: TextStyle(color: Colors.white70, height: 1.35),
-                      ),
-                      const SizedBox(height: AppTheme.spaceM),
-                      Row(
+                        const SizedBox(height: AppTheme.spaceM),
+                        ElevatedButton(
+                          onPressed: _retry,
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              final profile = snapshot.data;
+              if (profile == null) {
+                return Center(
+                  child: ElevatedButton(
+                    onPressed: _openSetupIfNeeded,
+                    child: const Text('Set Up Profile'),
+                  ),
+                );
+              }
+
+              return StreamBuilder<ArcProfileCompletionResult>(
+                stream: _profileCompletionStream,
+                builder: (context, completionSnapshot) {
+                  if (completionSnapshot.connectionState ==
+                          ConnectionState.waiting &&
+                      !completionSnapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  final profileCompletion =
+                      completionSnapshot.data ??
+                      ArcProfileCompletionResult.completeResult;
+                  return StreamBuilder<ArcOperationsUserState>(
+                    stream: _operationsRepository.watchUserState(),
+                    builder: (context, operationsSnapshot) {
+                      final operationsState =
+                          operationsSnapshot.data ??
+                          ArcOperationsUserState.empty;
+                      return ListView(
+                        padding: EdgeInsets.zero,
                         children: [
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: profile.referralCode.trim().isEmpty
-                                  ? null
-                                  : () =>
-                                        _copyReferralCode(profile.referralCode),
-                              icon: const Icon(Icons.copy_all_rounded),
-                              label: const Text('Copy Code'),
-                            ),
-                          ),
-                          const SizedBox(width: AppTheme.spaceM),
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: profile.referralCode.trim().isEmpty
-                                  ? null
-                                  : () => _shareReferralCode(
-                                      profile.referralCode,
-                                    ),
-                              icon: const Icon(Icons.share_outlined),
-                              label: const Text('Share Code'),
+                          ArcPageViewport(
+                            width: ArcPageWidth.wide,
+                            child: _profileDashboard(
+                              profile,
+                              operationsState,
+                              MediaQuery.sizeOf(context).width,
+                              profileCompletion,
                             ),
                           ),
                         ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spaceL),
-                _actionTile(
-                  icon: Icons.edit_outlined,
-                  title: 'Edit Trader Profile',
-                  subtitle:
-                      'Update your UAG identity, platform, region and visibility.',
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const ArcProfileEditScreen(),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spaceM),
-                _actionTile(
-                  icon: Icons.schedule_outlined,
-                  title: 'Availability',
-                  subtitle:
-                      'Set a weekly, rotation or flexible trade schedule.',
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const ArcAvailabilityScreen(),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spaceM),
-                _actionTile(
-                  icon: Icons.beach_access_outlined,
-                  title: 'Away Mode',
-                  subtitle:
-                      'Hide yourself from search while on holiday or away.',
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const ArcAwayScreen()),
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spaceL),
-                Container(
-                  padding: const EdgeInsets.all(AppTheme.spaceL),
-                  decoration: AppTheme.tradingCardDecoration(
-                    borderColor: AppTheme.neonPink.withValues(alpha: 0.16),
-                  ),
-                  child: const Text(
-                    'Embark ID and exact scheduling should stay private until a trade has actually been set up and confirmed.',
-                    style: TextStyle(color: Colors.white70, height: 1.4),
-                  ),
-                ),
-              ],
-            );
-          },
+                      );
+                    },
+                  );
+                },
+              );
+            },
+          ),
         ),
       ),
     );
   }
 
-  Widget _summaryCard(ArcTraderProfile profile) {
-    final statusColor = profile.isProfileComplete
-        ? AppTheme.neonCyan
-        : AppTheme.neonPink;
+  Widget _profileDashboard(
+    ArcTraderProfile profile,
+    ArcOperationsUserState operationsState,
+    double viewportWidth,
+    ArcProfileCompletionResult profileCompletion,
+  ) {
+    final gap = viewportWidth >= 1040 ? AppTheme.spaceM : AppTheme.spaceS;
 
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceL),
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: statusColor.withValues(alpha: 0.24),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _profileCommandHero(profile, operationsState),
+        SizedBox(height: gap),
+        _profileSectionTabs(),
+        SizedBox(height: gap),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 180),
+          child: KeyedSubtree(
+            key: ValueKey<int>(_selectedProfileTab),
+            child: _profileTabBody(
+              profile,
+              operationsState,
+              profileCompletion,
+              gap,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _profileSectionTabs() {
+    const labels = ['OVERVIEW', 'RAIDER', 'REPUTATION', 'LOCKER'];
+
+    Widget buildTab(int index) {
+      final selected = _selectedProfileTab == index;
+      return Semantics(
+        button: true,
+        selected: selected,
+        label: '${labels[index]} profile tab',
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () => setState(() => _selectedProfileTab = index),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+            decoration: BoxDecoration(
+              color: selected
+                  ? AppTheme.neonCyan.withValues(alpha: 0.12)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
+              border: Border(
+                bottom: BorderSide(
+                  color: selected ? AppTheme.neonCyan : Colors.transparent,
+                  width: 2,
+                ),
+              ),
+            ),
+            child: Text(
+              labels[index],
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.visible,
+              style: TextStyle(
+                color: selected ? AppTheme.neonCyan : Colors.white60,
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.35,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 560;
+        final decoration = BoxDecoration(
+          color: AppTheme.cardBackground.withValues(alpha: 0.94),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.18)),
+        );
+
+        if (compact) {
+          return Container(
+            padding: const EdgeInsets.all(4),
+            decoration: decoration,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              child: Row(
+                children: List.generate(
+                  labels.length,
+                  (index) => SizedBox(width: 126, child: buildTab(index)),
+                ),
+              ),
+            ),
+          );
+        }
+
+        return Container(
+          padding: const EdgeInsets.all(4),
+          decoration: decoration,
+          child: Row(
+            children: List.generate(
+              labels.length,
+              (index) => Expanded(child: buildTab(index)),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _profileTabBody(
+    ArcTraderProfile profile,
+    ArcOperationsUserState operationsState,
+    ArcProfileCompletionResult profileCompletion,
+    double gap,
+  ) {
+    switch (_selectedProfileTab) {
+      case 1:
+        final completionPercent = profileCompletion.completionPercent;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _profileDisclosure(
+              id: 'raider_identity',
+              openId: _openRaiderSection,
+              onOpenChanged: (value) =>
+                  setState(() => _openRaiderSection = value),
+              title: 'Raider Identity',
+              summary: '$completionPercent% complete · identity and readiness',
+              icon: Icons.radar_rounded,
+              accent: AppTheme.neonCyan,
+              child: _identityProgressPanel(
+                profile,
+                profileCompletion,
+                bodyOnly: true,
+              ),
+            ),
+            _profileDisclosure(
+              id: 'playstyle',
+              openId: _openRaiderSection,
+              onOpenChanged: (value) =>
+                  setState(() => _openRaiderSection = value),
+              title: 'Playstyle & Archetypes',
+              summary: profile.archetypes.isEmpty
+                  ? 'Flexible Raider profile'
+                  : profile.archetypes.take(2).join(_separator()),
+              icon: Icons.groups_rounded,
+              accent: AppTheme.neonPink,
+              child: _raiderIdentityPanel(profile),
+            ),
+            _profileDisclosure(
+              id: 'session',
+              openId: _openRaiderSection,
+              onOpenChanged: (value) =>
+                  setState(() => _openRaiderSection = value),
+              title: 'Session & Communication',
+              summary: '${profile.communicationStyle} · ${profile.squadIntent}',
+              icon: Icons.record_voice_over_rounded,
+              accent: AppTheme.neonCyan,
+              child: _sessionProfilePanel(profile),
+            ),
+            _profileDisclosure(
+              id: 'public_details',
+              openId: _openRaiderSection,
+              onOpenChanged: (value) =>
+                  setState(() => _openRaiderSection = value),
+              title: 'Public Profile Details',
+              summary: 'Bio, platform and public-facing Raider details',
+              icon: Icons.public_rounded,
+              accent: ArcUiTokens.tertiaryAccent,
+              child: _publicDetailsPanel(profile),
+            ),
+            _profileDisclosure(
+              id: 'social_links',
+              openId: _openRaiderSection,
+              onOpenChanged: (value) =>
+                  setState(() => _openRaiderSection = value),
+              title: 'Social Links',
+              summary: 'Creator and platform links',
+              icon: Icons.link_rounded,
+              accent: AppTheme.neonPink,
+              child: _socialLinksPanel(profile),
+            ),
+            _profileDisclosure(
+              id: 'profile_actions',
+              openId: _openRaiderSection,
+              onOpenChanged: (value) =>
+                  setState(() => _openRaiderSection = value),
+              title: 'Profile Actions',
+              summary: 'Edit identity, availability and account settings',
+              icon: Icons.tune_rounded,
+              accent: Colors.white70,
+              child: _profileActionsPanel(),
+            ),
+          ],
+        );
+      case 2:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _profileDisclosure(
+              id: 'overall_reputation',
+              openId: _openReputationSection,
+              onOpenChanged: (value) =>
+                  setState(() => _openReputationSection = value),
+              title: 'Overall Reputation',
+              summary: 'Trusted, trader, guardian and intel standing',
+              icon: Icons.verified_user_rounded,
+              accent: AppTheme.neonPink,
+              child: _reputationCommandPanel(
+                profile,
+                operationsState,
+                bodyOnly: true,
+              ),
+            ),
+            _profileDisclosure(
+              id: 'community_contribution',
+              openId: _openReputationSection,
+              onOpenChanged: (value) =>
+                  setState(() => _openReputationSection = value),
+              title: 'Community Contribution',
+              summary: 'Trophies, slots and Operation Credits',
+              icon: Icons.hub_rounded,
+              accent: Colors.amberAccent,
+              child: _communityContributionPanel(operationsState),
+            ),
+            _profileDisclosure(
+              id: 'guardian_community',
+              openId: _openReputationSection,
+              onOpenChanged: (value) =>
+                  setState(() => _openReputationSection = value),
+              title: 'Guardian & Community Reputation',
+              summary: 'Guardian, trading, intel and goodwill standing',
+              icon: Icons.shield_rounded,
+              accent: Colors.lightGreenAccent,
+              child: _guardianCommunitySystemPanel(profile, operationsState),
+            ),
+            _profileDisclosure(
+              id: 'creator_ambassador',
+              openId: _openReputationSection,
+              onOpenChanged: (value) =>
+                  setState(() => _openReputationSection = value),
+              title: 'Creator & Ambassador',
+              summary: 'Creator recognition and community status',
+              icon: Icons.campaign_rounded,
+              accent: AppTheme.neonPink,
+              child: _creatorProgrammePanel(profile),
+            ),
+          ],
+        );
+      case 3:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            UagProfileCosmeticLocker(
+              profile: profile,
+              operationsState: operationsState,
+              onManageAvatars: () => _openAvatarLocker(profile),
+            ),
+          ],
+        );
+      default:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _profileCompletionPanel(profileCompletion),
+            SizedBox(height: gap),
+            _overviewReadiness(profile, profileCompletion),
+            SizedBox(height: gap),
+            _overviewReputation(profile, operationsState),
+            SizedBox(height: gap),
+            _loadoutPreview(),
+          ],
+        );
+    }
+  }
+
+  Widget _profileDisclosure({
+    required String id,
+    required String? openId,
+    required ValueChanged<String?> onOpenChanged,
+    required String title,
+    required String summary,
+    required IconData icon,
+    required Color accent,
+    required Widget child,
+  }) {
+    final expanded = openId == id;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      margin: const EdgeInsets.only(bottom: AppTheme.spaceS),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: expanded ? ArcSurfaceRole.raised : ArcSurfaceRole.panel,
+        accent: accent,
+        borderOpacity: expanded ? 0.34 : 0.15,
+        radius: ArcUiTokens.radiusXXL,
+        selected: expanded,
+        glow: expanded,
       ),
+      clipBehavior: Clip.antiAlias,
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          key: ValueKey<String>('profile-disclosure-$id-$expanded'),
+          initiallyExpanded: expanded,
+          maintainState: false,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          childrenPadding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+          iconColor: accent,
+          collapsedIconColor: ArcUiTokens.textTertiary,
+          onExpansionChanged: (isExpanded) =>
+              onOpenChanged(isExpanded ? id : null),
+          leading: Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  accent.withValues(alpha: expanded ? 0.22 : 0.12),
+                  accent.withValues(alpha: 0.035),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: accent.withValues(alpha: expanded ? 0.44 : 0.22),
+              ),
+            ),
+            child: Icon(icon, color: accent, size: 19),
+          ),
+          title: Text(
+            title,
+            style: ArcUiTokens.sectionTitle(
+              fontSize: 15,
+              color: ArcUiTokens.textPrimary,
+            ),
+          ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text(
+              summary,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: ArcUiTokens.bodySmall(
+                color: expanded
+                    ? ArcUiTokens.textSecondary
+                    : ArcUiTokens.textTertiary,
+              ),
+            ),
+          ),
+          children: [child],
+        ),
+      ),
+    );
+  }
+
+  Widget _profileCompletionPanel(ArcProfileCompletionResult profileCompletion) {
+    final complete = profileCompletion.complete;
+    final percent = profileCompletion.completionPercent;
+
+    return _profilePanel(
+      accent: AppTheme.neonCyan,
+      title: 'Profile Completion',
+      icon: complete ? Icons.verified_rounded : Icons.fact_check_rounded,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              CircleAvatar(
-                radius: 26,
-                backgroundColor: statusColor.withValues(alpha: 0.16),
-                child: Icon(Icons.person_outline, color: statusColor),
+              SizedBox(
+                width: 72,
+                height: 72,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      value: profileCompletion.completionFraction,
+                      strokeWidth: 7,
+                      backgroundColor: Colors.white10,
+                      color: complete
+                          ? AppTheme.neonCyan
+                          : AppTheme.neonPink,
+                    ),
+                    Text(
+                      '$percent%',
+                      style: TextStyle(
+                        color: ArcUiTokens.textPrimary,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 17,
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(width: AppTheme.spaceM),
               Expanded(
@@ -371,94 +771,2717 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      profile.uagName.isEmpty
-                          ? 'No UAG Name yet'
-                          : profile.uagName,
-                      style: AppTheme.tradingHeading(
-                        fontSize: 24,
-                        color: Colors.white,
+                      complete
+                          ? 'RAIDER PROFILE COMPLETE'
+                          : '${profileCompletion.completedFieldCount} OF ${profileCompletion.requiredFieldCount} COMPLETE',
+                      style: ArcUiTokens.sectionTitle(
+                        fontSize: 16,
+                        color: ArcUiTokens.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      profile.uagId.isEmpty
-                          ? 'Set up your profile to appear in searches later.'
-                          : profile.uagId,
-                      style: const TextStyle(color: Colors.white70),
+                      complete
+                          ? 'Your identity, availability and account setup are ready.'
+                          : 'Finish the missing items below. Each button opens the exact setup step you need.',
+                      style: ArcUiTokens.bodySmall(
+                        color: ArcUiTokens.textSecondary,
+                      ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: AppTheme.spaceM),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                decoration: AppTheme.tradingPillDecoration(color: statusColor),
-                child: Text(
-                  profile.isProfileComplete ? 'Ready' : 'Incomplete',
-                  style: TextStyle(
-                    color: statusColor,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
             ],
           ),
-          const SizedBox(height: AppTheme.spaceL),
-          Wrap(
+          if (!complete) ...[
+            const SizedBox(height: AppTheme.spaceM),
+            ...profileCompletion.missingFields.map(
+              (field) => Container(
+                margin: const EdgeInsets.only(bottom: AppTheme.spaceS),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.spaceS,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: AppTheme.cardBackgroundAlt.withValues(alpha: 0.72),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppTheme.neonPink.withValues(alpha: 0.16),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.radio_button_unchecked_rounded,
+                      color: AppTheme.neonPink,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            field.label,
+                            style: ArcUiTokens.cardTitle(
+                              fontSize: 14,
+                              color: ArcUiTokens.textPrimary,
+                            ),
+                          ),
+                          Text(
+                            field.section.toUpperCase(),
+                            style: ArcUiTokens.label(
+                              color: ArcUiTokens.textTertiary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: () => _openProfileCompletionField(field),
+                      icon: const Icon(Icons.arrow_forward_rounded, size: 16),
+                      label: const Text('Complete'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _overviewReadiness(
+    ArcTraderProfile profile,
+    ArcProfileCompletionResult profileCompletion,
+  ) {
+    final missing = profileCompletion.missingFieldIds.toSet();
+    final readiness = profileCompletion.completionPercent;
+    return _profilePanel(
+      accent: AppTheme.neonCyan,
+      title: 'Match Readiness',
+      icon: Icons.radar_rounded,
+      onEdit: _openProfileEditor,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final narrow = constraints.maxWidth < 620;
+          final cards = <Widget>[
+            _overviewStat(
+              icon: Icons.verified_rounded,
+              label: 'Identity',
+              value: '$readiness%',
+              detail: readiness == 100
+                  ? 'Match-ready'
+                  : 'Profile needs attention',
+              accent: AppTheme.neonCyan,
+            ),
+            _overviewStat(
+              icon: Icons.flag_rounded,
+              label: "Today's goal",
+              value: missing.contains('squadIntent')
+                  ? 'Not set'
+                  : profile.squadIntent,
+              detail: missing.contains('squadIntent')
+                  ? 'Complete your Raider profile'
+                  : _squadIntentCopy(profile.squadIntent),
+              accent: AppTheme.neonPink,
+            ),
+            _overviewStat(
+              icon: Icons.shield_rounded,
+              label: 'Playstyle',
+              value: missing.contains('archetypes')
+                  ? 'Not set'
+                  : profile.playStyles.isEmpty
+                  ? 'Flexible'
+                  : profile.playStyles.first,
+              detail: missing.contains('archetypes')
+                  ? 'Choose at least one archetype'
+                  : profile.archetypes.take(2).join(_separator()),
+              accent: Colors.lightGreenAccent,
+            ),
+            _overviewStat(
+              icon: Icons.record_voice_over_rounded,
+              label: 'Communication',
+              value: missing.contains('communicationStyle')
+                  ? 'Not set'
+                  : profile.communicationStyle,
+              detail: missing.contains('socialSessionState')
+                  ? 'Session state still required'
+                  : profile.socialEnergy,
+              accent: Colors.amberAccent,
+            ),
+          ];
+          if (narrow) {
+            return GridView.count(
+              crossAxisCount: 2,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              mainAxisSpacing: AppTheme.spaceS,
+              crossAxisSpacing: AppTheme.spaceS,
+              childAspectRatio: 1.42,
+              children: cards,
+            );
+          }
+          return Wrap(
             spacing: AppTheme.spaceS,
             runSpacing: AppTheme.spaceS,
-            children: [
-              _miniTag(
-                icon: Icons.public_outlined,
-                text: profile.region.isEmpty
-                    ? 'Region not set'
-                    : profile.region,
-              ),
-              _miniTag(
-                icon: Icons.sports_esports_outlined,
-                text: profile.platform.isEmpty
-                    ? 'Platform not set'
-                    : profile.platform,
-              ),
-              _miniTag(
-                icon: Icons.mic_outlined,
-                text: profile.micOk ? 'Mic okay' : 'Mic off',
-              ),
-              _miniTag(
-                icon: Icons.travel_explore_outlined,
-                text: profile.crossRegionOk
-                    ? 'Cross-region okay'
-                    : 'Local only',
-              ),
-            ],
+            children: cards
+                .map((card) => SizedBox(width: 250, child: card))
+                .toList(),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _overviewStat({
+    required IconData icon,
+    required String label,
+    required String value,
+    required String detail,
+    required Color accent,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spaceS),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundAlt.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: accent.withValues(alpha: 0.18)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          UagProfileGlyph(
+            kind: UagProfileGlyphKind.fromLabel(label),
+            accent: accent,
+            size: 24,
+          ),
+          const Spacer(),
+          Text(
+            label.toUpperCase(),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Colors.white54,
+              fontSize: 9,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.6,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            value.isEmpty ? 'Not set' : value,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            detail.isEmpty ? 'Ready to configure' : detail,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(color: Colors.white54, fontSize: 10),
           ),
         ],
       ),
     );
   }
 
-  Widget _detailCard({required String title, required List<Widget> children}) {
+  Widget _overviewReputation(
+    ArcTraderProfile profile,
+    ArcOperationsUserState operationsState,
+  ) {
+    final trustedScore = profile.isProfileComplete ? 82 : 28;
+    final communityScore = (operationsState.completedCount * 7 + 20).clamp(
+      0,
+      100,
+    );
+    return _profilePanel(
+      accent: AppTheme.neonPink,
+      title: 'Reputation Snapshot',
+      icon: Icons.verified_user_rounded,
+      child: Column(
+        children: [
+          _reputationMeter('Trusted Raider', trustedScore, AppTheme.neonCyan),
+          const SizedBox(height: AppTheme.spaceS),
+          _reputationMeter(
+            'Community Contribution',
+            communityScore,
+            Colors.lightGreenAccent,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ignore: unused_element
+  Widget _avatarLockerEntry(ArcTraderProfile profile) {
+    final avatar = UagAvatarCatalog.byId(profile.avatarId);
+    return _profilePanel(
+      accent: AppTheme.neonCyan,
+      title: 'Avatar',
+      icon: Icons.person_rounded,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: () => _openAvatarLocker(profile),
+        child: Container(
+          padding: const EdgeInsets.all(AppTheme.spaceS),
+          decoration: BoxDecoration(
+            color: AppTheme.cardBackgroundAlt.withValues(alpha: 0.72),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: AppTheme.neonCyan.withValues(alpha: 0.18),
+            ),
+          ),
+          child: Row(
+            children: [
+              ClipOval(
+                child: Image.asset(
+                  avatar.assetPath,
+                  width: 72,
+                  height: 72,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              const SizedBox(width: AppTheme.spaceM),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'EQUIPPED AVATAR',
+                      style: TextStyle(
+                        color: Colors.white54,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      avatar.label,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Tap to open Avatar Locker',
+                      style: TextStyle(color: Colors.white60, fontSize: 11),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right_rounded, color: AppTheme.neonCyan),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _identityProgressPanel(
+    ArcTraderProfile profile,
+    ArcProfileCompletionResult profileCompletion, {
+    bool bodyOnly = false,
+  }) {
+    final missing = profileCompletion.missingFieldIds.toSet();
+    final sections = <({String label, bool complete})>[
+      (label: 'Identity', complete: profile.hasCoreDetails),
+      (label: 'Embark ID', complete: !missing.contains('embarkId')),
+      (label: 'Archetypes', complete: !missing.contains('archetypes')),
+      (
+        label: 'Communication',
+        complete: !missing.contains('communicationStyle'),
+      ),
+      (
+        label: 'Session intent',
+        complete:
+            !missing.contains('squadIntent') &&
+            !missing.contains('socialSessionState'),
+      ),
+      (label: 'Availability', complete: !missing.contains('availability')),
+      (label: 'Onboarding', complete: !missing.contains('onboarding')),
+      (label: 'Legal', complete: !missing.contains('legal')),
+    ];
+    final completed = profileCompletion.completedFieldCount;
+    final progress = profileCompletion.completionFraction;
+
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            SizedBox(
+              width: 84,
+              height: 84,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  CircularProgressIndicator(
+                    value: progress,
+                    strokeWidth: 7,
+                    backgroundColor: Colors.white10,
+                    color: AppTheme.neonCyan,
+                  ),
+                  Text(
+                    '${(progress * 100).round()}%',
+                    style: const TextStyle(
+                      color: AppTheme.neonPink,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 19,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: AppTheme.spaceM),
+            Expanded(
+              child: Text(
+                profileCompletion.complete
+                    ? 'Your Raider profile is complete.'
+                    : '$completed of ${profileCompletion.requiredFieldCount} profile requirements complete.',
+                style: const TextStyle(color: Colors.white70, height: 1.35),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppTheme.spaceM),
+        Wrap(
+          spacing: AppTheme.spaceS,
+          runSpacing: AppTheme.spaceS,
+          children: sections
+              .map(
+                (section) => _profileChip(
+                  icon: section.complete
+                      ? Icons.check_circle_rounded
+                      : Icons.radio_button_unchecked_rounded,
+                  label: section.label,
+                  accent: section.complete ? AppTheme.neonCyan : Colors.white54,
+                ),
+              )
+              .toList(growable: false),
+        ),
+      ],
+    );
+    if (bodyOnly) return content;
+    return _profilePanel(
+      accent: AppTheme.neonCyan,
+      title: 'Raider Identity',
+      icon: Icons.radar_rounded,
+      onEdit: _openProfileEditor,
+      child: content,
+    );
+  }
+
+  Widget _raiderIdentityPanel(ArcTraderProfile profile) {
+    return _profilePanel(
+      accent: AppTheme.neonPink,
+      title: 'Playstyle & Archetypes',
+      icon: Icons.groups_rounded,
+      onEdit: _openProfileEditor,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _identityLabel('Archetypes'),
+          const SizedBox(height: AppTheme.spaceS),
+          if (profile.archetypes.isEmpty)
+            _profileEmptyState(
+              icon: Icons.person_search_rounded,
+              title: 'No archetypes selected',
+              copy: 'Add the roles that best describe how you play.',
+            )
+          else
+            Wrap(
+              spacing: AppTheme.spaceS,
+              runSpacing: AppTheme.spaceS,
+              children: profile.archetypes
+                  .map(
+                    (value) => _archetypeBadge(
+                      icon: _archetypeIcon(value),
+                      label: value,
+                      copy: _archetypeCopy(value),
+                    ),
+                  )
+                  .toList(growable: false),
+            ),
+          const SizedBox(height: AppTheme.spaceM),
+          _identityLabel('Playstyle'),
+          const SizedBox(height: AppTheme.spaceS),
+          if (profile.playStyles.isEmpty)
+            _profileEmptyState(
+              icon: Icons.route_rounded,
+              title: 'No playstyle selected',
+              copy: 'Choose one or more playstyles to improve squad matching.',
+            )
+          else
+            Wrap(
+              spacing: AppTheme.spaceS,
+              runSpacing: AppTheme.spaceS,
+              children: profile.playStyles
+                  .map(
+                    (value) => _profileChip(
+                      icon: _playStyleIcon(value),
+                      label: value,
+                      accent: AppTheme.neonCyan,
+                    ),
+                  )
+                  .toList(growable: false),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _sessionProfilePanel(ArcTraderProfile profile) {
+    return _profilePanel(
+      accent: AppTheme.neonCyan,
+      title: 'Match Readiness',
+      icon: Icons.hub_rounded,
+      onEdit: _openProfileEditor,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final wide = constraints.maxWidth >= 620;
+          final tiles = <Widget>[
+            _sessionStatusTile(
+              icon: Icons.record_voice_over_rounded,
+              title: 'Communication',
+              value: profile.communicationStyle,
+              copy: _communicationCopy(profile.communicationStyle),
+            ),
+            _sessionStatusTile(
+              icon: Icons.flag_rounded,
+              title: "Today's goal",
+              value: profile.squadIntent,
+              copy: _squadIntentCopy(profile.squadIntent),
+            ),
+            _sessionStatusTile(
+              icon: ArcPlayerSessionCatalog.iconFor(profile.sessionIntent),
+              title: 'This session',
+              value: profile.sessionIntent,
+              copy: ArcPlayerSessionCatalog.intentDescription(
+                profile.sessionIntent,
+              ),
+            ),
+            _sessionStatusTile(
+              icon: ArcPlayerSessionCatalog.iconFor(profile.currentPriority),
+              title: 'Current priority',
+              value: profile.currentPriority,
+              copy: ArcPlayerSessionCatalog.priorityDescription(
+                profile.currentPriority,
+              ),
+            ),
+            _sessionStatusTile(
+              icon: Icons.bolt_rounded,
+              title: 'Social energy',
+              value: profile.socialEnergy,
+              copy: _socialEnergyCopy(profile.socialEnergy),
+            ),
+          ];
+
+          if (!wide) {
+            return Column(
+              children: [
+                for (var index = 0; index < tiles.length; index++) ...[
+                  if (index > 0) const SizedBox(height: AppTheme.spaceS),
+                  tiles[index],
+                ],
+              ],
+            );
+          }
+
+          return Wrap(
+            spacing: AppTheme.spaceS,
+            runSpacing: AppTheme.spaceS,
+            children: tiles
+                .map((tile) => SizedBox(width: 292, child: tile))
+                .toList(growable: false),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _sessionStatusTile({
+    required IconData icon,
+    required String title,
+    required String value,
+    required String copy,
+  }) {
     return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceL),
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: AppTheme.neonCyan.withValues(alpha: 0.18),
+      width: double.infinity,
+      padding: const EdgeInsets.all(10),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        accent: AppTheme.neonCyan,
+        borderOpacity: 0.15,
+        radius: ArcUiTokens.radiusL,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: AppTheme.neonCyan.withValues(alpha: 0.09),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: AppTheme.neonCyan.withValues(alpha: 0.22),
+              ),
+            ),
+            child: Icon(icon, color: AppTheme.neonCyan, size: 19),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title.toUpperCase(),
+                  style: ArcUiTokens.label().copyWith(letterSpacing: 0.65),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: ArcUiTokens.cardTitle(
+                    fontSize: 16,
+                    color: ArcUiTokens.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  copy,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: ArcUiTokens.bodySmall(color: ArcUiTokens.textTertiary),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _publicDetailsPanel(ArcTraderProfile profile) {
+    final details = <({String label, String value, IconData icon})>[
+      (label: 'UAG ID', value: profile.uagId, icon: Icons.badge_outlined),
+      (label: 'UAG Name', value: profile.uagName, icon: Icons.person_rounded),
+      (label: 'Region', value: profile.region, icon: Icons.public_rounded),
+      (
+        label: 'Preferred Platform',
+        value: profile.platform,
+        icon: Icons.sports_esports_rounded,
+      ),
+      (
+        label: 'Embark ID',
+        value: profile.embarkId.isEmpty
+            ? 'Private until trade confirmed'
+            : profile.embarkId,
+        icon: Icons.verified_user_outlined,
+      ),
+      (
+        label: 'Timezone',
+        value: profile.timezone,
+        icon: Icons.schedule_rounded,
+      ),
+      (
+        label: 'Visibility',
+        value: profile.visibleInSearch
+            ? 'Visible in player and trader discovery'
+            : 'Hidden from player and trader discovery',
+        icon: profile.visibleInSearch
+            ? Icons.visibility_rounded
+            : Icons.visibility_off_rounded,
+      ),
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: ArcUiTokens.tertiaryAccent,
+        borderOpacity: 0.18,
+        radius: ArcUiTokens.radiusXXL,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: ArcUiTokens.tertiaryAccent.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(9),
+                  border: Border.all(
+                    color: ArcUiTokens.tertiaryAccent.withValues(alpha: 0.22),
+                  ),
+                ),
+                child: const Icon(
+                  Icons.public_rounded,
+                  color: ArcUiTokens.tertiaryAccent,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 9),
+              Expanded(
+                child: Text(
+                  'Public Profile Details',
+                  style: ArcUiTokens.sectionTitle(
+                    fontSize: 17,
+                    color: ArcUiTokens.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              const gap = 8.0;
+              final columns = constraints.maxWidth >= 700 ? 2 : 1;
+              final width = columns == 1
+                  ? constraints.maxWidth
+                  : (constraints.maxWidth - gap) / 2;
+              return Wrap(
+                spacing: gap,
+                runSpacing: gap,
+                children: [
+                  for (final detail in details)
+                    SizedBox(
+                      width: width,
+                      child: _profileDetailTile(
+                        label: detail.label,
+                        value: detail.value,
+                        icon: detail.icon,
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _profileDetailTile({
+    required String label,
+    required String value,
+    required IconData icon,
+  }) {
+    final displayValue = value.trim().isEmpty ? 'Not set' : value;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        accent: ArcUiTokens.tertiaryAccent,
+        borderOpacity: 0.10,
+        radius: ArcUiTokens.radiusM,
+      ),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            color: ArcUiTokens.tertiaryAccent.withValues(alpha: 0.88),
+            size: 17,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  label.toUpperCase(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: ArcUiTokens.label(),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  displayValue,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: ArcUiTokens.body(
+                    fontSize: 13,
+                    color: ArcUiTokens.textPrimary,
+                    weight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _socialLinksPanel(ArcTraderProfile profile) {
+    final publicLinks = profile.publicSocialLinks;
+    return _profilePanel(
+      accent: AppTheme.neonCyan,
+      title: 'Public Social Links',
+      icon: Icons.link_rounded,
+      onEdit: _openProfileEditor,
+      child: publicLinks.isEmpty
+          ? _profileEmptyState(
+              icon: Icons.link_off_rounded,
+              title: 'No public social links',
+              copy:
+                  'Add TikTok, YouTube, Twitch, Kick, Discord, Steam or platform links when you want other Raiders to find you.',
+            )
+          : Wrap(
+              spacing: AppTheme.spaceS,
+              runSpacing: AppTheme.spaceS,
+              children: publicLinks.map(_socialLinkTile).toList(),
+            ),
+    );
+  }
+
+  Widget _socialLinkTile(ArcProfileSocialLink link) {
+    final destination = link.destinationUrl;
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: destination.isEmpty ? null : () => _copySocialLink(link),
+      child: Container(
+        width: 210,
+        padding: const EdgeInsets.all(AppTheme.spaceS),
+        decoration: BoxDecoration(
+          color: AppTheme.cardBackgroundAlt.withValues(alpha: 0.74),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.18)),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              _socialPlatformIcon(link.platform),
+              color: AppTheme.neonCyan,
+              size: 20,
+            ),
+            const SizedBox(width: AppTheme.spaceS),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    link.platform.label,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    link.displayValue,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: Colors.white60, fontSize: 11),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 6),
+            const Icon(Icons.copy_rounded, color: Colors.white54, size: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _copySocialLink(ArcProfileSocialLink link) async {
+    final destination = link.destinationUrl;
+    if (destination.isEmpty) return;
+    await Clipboard.setData(ClipboardData(text: destination));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${link.platform.label} link copied.')),
+    );
+  }
+
+  IconData _socialPlatformIcon(ArcSocialPlatform platform) {
+    return switch (platform) {
+      ArcSocialPlatform.tiktok => Icons.music_note_rounded,
+      ArcSocialPlatform.youtube => Icons.play_circle_fill_rounded,
+      ArcSocialPlatform.twitch => Icons.live_tv_rounded,
+      ArcSocialPlatform.kick => Icons.sports_esports_rounded,
+      ArcSocialPlatform.discord => Icons.forum_rounded,
+      ArcSocialPlatform.steam => Icons.gamepad_rounded,
+      ArcSocialPlatform.xbox => Icons.sports_esports_rounded,
+      ArcSocialPlatform.playStation => Icons.videogame_asset_rounded,
+      ArcSocialPlatform.epicGames => Icons.extension_rounded,
+    };
+  }
+
+  Widget _profileActionsPanel() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _actionTile(
+          icon: Icons.edit_outlined,
+          title: 'Edit Raider Identity',
+          subtitle: 'Update identity, playstyle, communication and visibility.',
+          onTap: _openProfileEditor,
+        ),
+        const SizedBox(height: AppTheme.spaceS),
+        _actionTile(
+          icon: Icons.schedule_outlined,
+          title: 'Availability',
+          subtitle: 'Set weekly, rotation or flexible squad availability.',
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const ArcAvailabilityScreen()),
+          ),
+        ),
+        const SizedBox(height: AppTheme.spaceS),
+        _actionTile(
+          icon: Icons.beach_access_outlined,
+          title: 'Away Mode',
+          subtitle: 'Temporarily hide from squad and trade discovery.',
+          onTap: () => Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const ArcAwayScreen())),
+        ),
+      ],
+    );
+  }
+
+  Widget _identityLabel(String value) {
+    return Text(
+      value.toUpperCase(),
+      style: const TextStyle(
+        color: Colors.white54,
+        fontSize: 10,
+        fontWeight: FontWeight.w900,
+        letterSpacing: 1,
+      ),
+    );
+  }
+
+  IconData _archetypeIcon(String value) {
+    final catalogIcon = ArcPlayerArchetypeCatalog.iconFor(value);
+    if (catalogIcon != Icons.person_pin_circle_rounded) return catalogIcon;
+
+    final normalized = value.toLowerCase();
+    if (normalized.contains('quest')) return Icons.assignment_turned_in_rounded;
+    if (normalized.contains('blueprint') || normalized.contains('collector')) {
+      return Icons.grid_view_rounded;
+    }
+    if (normalized.contains('trade')) return Icons.handshake_rounded;
+    if (normalized.contains('help') || normalized.contains('mentor')) {
+      return Icons.volunteer_activism_rounded;
+    }
+    if (normalized.contains('leader')) return Icons.flag_rounded;
+    if (normalized.contains('pvp')) return Icons.local_fire_department_rounded;
+    if (normalized.contains('support')) return Icons.health_and_safety_rounded;
+    return Icons.explore_rounded;
+  }
+
+  IconData _playStyleIcon(String value) {
+    final normalized = value.toLowerCase();
+    if (normalized.contains('pvp')) return Icons.gps_fixed_rounded;
+    if (normalized.contains('aggressive')) return Icons.bolt_rounded;
+    if (normalized.contains('defensive')) return Icons.shield_rounded;
+    return Icons.route_rounded;
+  }
+
+  String _archetypeCopy(String value) {
+    final catalogCopy = ArcPlayerArchetypeCatalog.descriptionFor(value);
+    if (catalogCopy != 'Custom raider identity') return catalogCopy;
+
+    final normalized = value.toLowerCase();
+    if (normalized.contains('quest')) return 'Objectives first';
+    if (normalized.contains('blueprint')) return 'Blueprint focused';
+    if (normalized.contains('trade')) return 'Trade ready';
+    if (normalized.contains('help') || normalized.contains('mentor')) {
+      return 'Supports others';
+    }
+    if (normalized.contains('leader')) return 'Squad direction';
+    if (normalized.contains('pvp')) return 'Combat focused';
+    return 'Raider identity';
+  }
+
+  String _communicationCopy(String value) {
+    final normalized = value.toLowerCase();
+    if (normalized.contains('ping')) {
+      return 'Prefers concise ping-based coordination.';
+    }
+    if (normalized.contains('quiet')) {
+      return 'Low-comms, focused squad experience.';
+    }
+    if (normalized.contains('voice') || normalized.contains('mic')) {
+      return 'Comfortable coordinating over voice.';
+    }
+    if (normalized.contains('chat')) return 'Social and conversation friendly.';
+    return 'Adapts communication to the squad.';
+  }
+
+  String _squadIntentCopy(String value) {
+    final normalized = value.toLowerCase();
+    if (normalized.contains('solo')) return 'Open to running independently.';
+    if (normalized.contains('help')) return 'Looking to support other raiders.';
+    if (normalized.contains('quest')) return 'Prioritising quest progression.';
+    if (normalized.contains('blueprint')) {
+      return 'Farming blueprint opportunities.';
+    }
+    if (normalized.contains('squad')) return 'Actively looking for squadmates.';
+    return 'Flexible about the next operation.';
+  }
+
+  String _socialEnergyCopy(String value) {
+    final normalized = value.toLowerCase();
+    if (normalized.contains('quiet')) {
+      return 'Prefers a calm, low-pressure session.';
+    }
+    if (normalized.contains('chat') || normalized.contains('social')) {
+      return 'Ready for an outgoing squad session.';
+    }
+    if (normalized.contains('lead')) {
+      return 'Comfortable taking squad direction.';
+    }
+    if (normalized.contains('grind') || normalized.contains('focus')) {
+      return 'Focused on efficient progression.';
+    }
+    return 'Energy can adapt to the squad.';
+  }
+
+  Widget _profileCommandHero(
+    ArcTraderProfile profile,
+    ArcOperationsUserState operationsState,
+  ) {
+    final equipped = operationsState.equippedCosmetics;
+    final equippedBadge = operationsState.equippedBadge();
+    final equippedTitle = operationsState.equippedTitle();
+    final equippedFrame = operationsState.equippedProfileFrame();
+    final equippedBanner = operationsState.equippedProfileBanner();
+    final title = _cosmeticLabelOrFallback(
+      item: equippedTitle,
+      persistedLabel: equipped.titleLabel,
+      persistedId: equipped.titleId,
+      fallback: 'Raider Profile',
+    );
+    final badgeAsset = _cosmeticAssetPath(
+      equippedBadge,
+      equipped.badgeAssetPath,
+    );
+    final frameAsset = _cosmeticAssetPath(
+      equippedFrame,
+      equipped.profileFrameAssetPath,
+    );
+    final bannerAsset = _cosmeticAssetPath(
+      equippedBanner,
+      equipped.profileBannerAssetPath,
+    );
+    final hasFrame = equippedFrame != null || equipped.hasFrame;
+    final hasBanner = equippedBanner != null || equipped.hasBanner;
+    final frameAccent = equippedFrame == null
+        ? AppTheme.neonCyan
+        : _rarityAccent(equippedFrame.rarity);
+    final bannerAccent = equippedBanner == null
+        ? AppTheme.neonCyan
+        : _rarityAccent(equippedBanner.rarity);
+
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration:
+          AppTheme.tradingCardDecoration(
+            borderColor: bannerAccent.withValues(alpha: 0.28),
+          ).copyWith(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                bannerAccent.withValues(alpha: 0.12),
+                AppTheme.cardBackground.withValues(alpha: 0.94),
+                AppTheme.neonPink.withValues(alpha: 0.08),
+              ],
+            ),
+          ),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: _profileBannerBackdrop(
+              assetPath: bannerAsset,
+              accent: bannerAccent,
+              isEquipped: hasBanner,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(AppTheme.spaceM),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final compact = constraints.maxWidth < 620;
+                final avatar = _profileAvatarShowcase(
+                  profile: profile,
+                  badgeAsset: badgeAsset,
+                  frameAsset: frameAsset,
+                  frameAccent: frameAccent,
+                  hasFrame: hasFrame,
+                );
+                final content = Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title.toUpperCase(),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: AppTheme.headingFontFamily,
+                        fontSize: compact ? 28 : 36,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.35,
+                        color: AppTheme.neonPink,
+                        height: 0.95,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      profile.uagName.isEmpty
+                          ? 'Unnamed Raider'
+                          : profile.uagName,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spaceS),
+                    Wrap(
+                      spacing: AppTheme.spaceS,
+                      runSpacing: AppTheme.spaceS,
+                      children: [
+                        _profileChip(
+                          icon: Icons.military_tech_rounded,
+                          label: 'Ops Lv ${operationsState.operationLevel}',
+                          accent: AppTheme.neonCyan,
+                        ),
+                        _profileChip(
+                          icon: Icons.auto_awesome_rounded,
+                          label: '${operationsState.completedCount} trophies',
+                          accent: AppTheme.neonPink,
+                        ),
+                        _profileChip(
+                          icon: Icons.bolt_rounded,
+                          label: '${operationsState.intelXp} Intel XP',
+                          accent: Colors.amberAccent,
+                        ),
+                      ],
+                    ),
+                  ],
+                );
+
+                if (compact) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      avatar,
+                      const SizedBox(height: AppTheme.spaceM),
+                      content,
+                    ],
+                  );
+                }
+
+                return Row(
+                  children: [
+                    avatar,
+                    const SizedBox(width: AppTheme.spaceL),
+                    Expanded(child: content),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _profileBannerBackdrop({
+    required String? assetPath,
+    required Color accent,
+    required bool isEquipped,
+  }) {
+    if (assetPath != null && assetPath.isNotEmpty) {
+      return Opacity(
+        opacity: 0.34,
+        child: Image.asset(
+          assetPath,
+          fit: BoxFit.contain,
+          alignment: Alignment.center,
+          errorBuilder: (_, _, _) =>
+              _profileBannerFallback(accent: accent, isEquipped: isEquipped),
+        ),
+      );
+    }
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.asset(
+          'assets/arc_raiders/hub/arc_hub_profile_reputation.webp',
+          fit: BoxFit.cover,
+          alignment: Alignment.centerRight,
+          errorBuilder: (_, _, _) =>
+              _profileBannerFallback(accent: accent, isEquipped: isEquipped),
+        ),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: [
+                AppTheme.cardBackground.withValues(alpha: 0.90),
+                AppTheme.cardBackground.withValues(alpha: 0.50),
+                AppTheme.cardBackground.withValues(alpha: 0.18),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _profileBannerFallback({
+    required Color accent,
+    required bool isEquipped,
+  }) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            accent.withValues(alpha: isEquipped ? 0.18 : 0.08),
+            Colors.transparent,
+            AppTheme.neonPink.withValues(alpha: isEquipped ? 0.12 : 0.06),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _profileAvatarShowcase({
+    required ArcTraderProfile profile,
+    required String? badgeAsset,
+    required String? frameAsset,
+    required Color frameAccent,
+    required bool hasFrame,
+  }) {
+    final accent = hasFrame ? frameAccent : AppTheme.neonCyan;
+    final avatar = UagAvatarCatalog.byId(profile.avatarId);
+    return Semantics(
+      button: true,
+      label: 'Change avatar. Current avatar ${avatar.label}',
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: () => _openAvatarLocker(profile),
+        child: Container(
+          width: 118,
+          height: 118,
+          padding: const EdgeInsets.all(3),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: accent.withValues(alpha: 0.72), width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: accent.withValues(alpha: 0.22),
+                blurRadius: 24,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              if (frameAsset != null && frameAsset.isNotEmpty)
+                Positioned.fill(
+                  child: ClipOval(
+                    child: Image.asset(
+                      frameAsset,
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                    ),
+                  ),
+                ),
+              Positioned.fill(
+                child: Padding(
+                  padding: EdgeInsets.all(hasFrame ? 4 : 0),
+                  child: ClipOval(
+                    child: Image.asset(
+                      avatar.assetPath,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => ColoredBox(
+                        color: AppTheme.cardBackgroundAlt,
+                        child: Center(
+                          child: Text(
+                            (profile.uagName.isNotEmpty
+                                    ? profile.uagName[0]
+                                    : 'U')
+                                .toUpperCase(),
+                            style: AppTheme.tradingHeading(
+                              fontSize: 34,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: -4,
+                bottom: -4,
+                child: Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppTheme.cardBackground.withValues(alpha: 0.96),
+                    border: Border.all(
+                      color: AppTheme.neonCyan.withValues(alpha: 0.75),
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.edit_rounded,
+                    size: 16,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              Positioned(
+                right: -5,
+                bottom: -5,
+                child: _cosmeticBadgeOrb(badgeAsset),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _cosmeticBadgeOrb(String? badgeAsset) {
+    return Container(
+      width: 34,
+      height: 34,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: AppTheme.cardBackground.withValues(alpha: 0.92),
+        border: Border.all(
+          color: AppTheme.neonCyan.withValues(alpha: 0.72),
+          width: 1.4,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.neonCyan.withValues(alpha: 0.24),
+            blurRadius: 14,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: ClipOval(
+        child: badgeAsset != null && badgeAsset.isNotEmpty
+            ? Image.asset(
+                badgeAsset,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => Icon(
+                  Icons.military_tech_rounded,
+                  color: AppTheme.neonCyan,
+                  size: 18,
+                ),
+              )
+            : Icon(
+                Icons.military_tech_rounded,
+                color: AppTheme.neonCyan,
+                size: 18,
+              ),
+      ),
+    );
+  }
+
+  String? _cosmeticAssetPath(
+    ArcRewardInventoryItem? item,
+    String? persistedAssetPath,
+  ) {
+    final itemAsset = item?.assetPath;
+    if (itemAsset != null && itemAsset.isNotEmpty) return itemAsset;
+    if (persistedAssetPath != null && persistedAssetPath.isNotEmpty) {
+      return persistedAssetPath;
+    }
+    return null;
+  }
+
+  String _cosmeticLabelOrFallback({
+    required ArcRewardInventoryItem? item,
+    required String? persistedLabel,
+    required String? persistedId,
+    required String fallback,
+  }) {
+    if (item != null && item.label.isNotEmpty) return item.label;
+    if (persistedLabel != null && persistedLabel.isNotEmpty) {
+      return persistedLabel;
+    }
+    if (persistedId != null && persistedId.isNotEmpty) return persistedId;
+    return fallback;
+  }
+
+  Color _rarityAccent(ArcCosmeticRarity rarity) {
+    return switch (rarity) {
+      ArcCosmeticRarity.common => AppTheme.neonCyan,
+      ArcCosmeticRarity.uncommon => Colors.lightGreenAccent,
+      ArcCosmeticRarity.rare => Colors.lightBlueAccent,
+      ArcCosmeticRarity.epic => AppTheme.neonPink,
+      ArcCosmeticRarity.legendary => Colors.amberAccent,
+      ArcCosmeticRarity.founder => Colors.amberAccent,
+      ArcCosmeticRarity.closedBeta => AppTheme.neonCyan,
+      ArcCosmeticRarity.community => Colors.lightGreenAccent,
+      ArcCosmeticRarity.creator => AppTheme.neonPink,
+    };
+  }
+
+  Widget _reputationCommandPanel(
+    ArcTraderProfile profile,
+    ArcOperationsUserState operationsState, {
+    bool bodyOnly = false,
+  }) {
+    final ready = profile.isProfileComplete;
+    final trustedScore = ready ? 82 : 28;
+    final traderScore = (operationsState.completedCount * 8).clamp(12, 96);
+    final guardianScore =
+        operationsState.inventory
+            .where((item) => item.label.toLowerCase().contains('guardian'))
+            .length
+            .clamp(0, 5) *
+        18;
+    final intelScore = (operationsState.intelXp / 10).round().clamp(0, 99);
+
+    final content = LayoutBuilder(
+      builder: (context, constraints) {
+        final narrow = constraints.maxWidth < 620;
+        final items = [
+          _reputationMeter('Trusted Raider', trustedScore, AppTheme.neonCyan),
+          _reputationMeter('Trader Rep', traderScore, AppTheme.neonPink),
+          _reputationMeter(
+            'Guardian Rep',
+            guardianScore,
+            Colors.lightGreenAccent,
+          ),
+          _reputationMeter('Intel Rep', intelScore, Colors.amberAccent),
+        ];
+        if (narrow) {
+          return Column(
+            children: items
+                .map(
+                  (item) => Padding(
+                    padding: const EdgeInsets.only(bottom: AppTheme.spaceS),
+                    child: item,
+                  ),
+                )
+                .toList(),
+          );
+        }
+        return Wrap(
+          spacing: AppTheme.spaceS,
+          runSpacing: AppTheme.spaceS,
+          children: items
+              .map((item) => SizedBox(width: 250, child: item))
+              .toList(),
+        );
+      },
+    );
+    if (bodyOnly) return content;
+    return _profilePanel(
+      accent: AppTheme.neonPink,
+      title: 'Overall Reputation',
+      icon: Icons.verified_user_rounded,
+      child: content,
+    );
+  }
+
+  Widget _reputationMeter(String label, int value, Color accent) {
+    final clamped = value.clamp(0, 100);
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spaceS),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundAlt.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: accent.withValues(alpha: 0.18)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              Text(
+                '$clamped%',
+                style: TextStyle(color: accent, fontWeight: FontWeight.w900),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              minHeight: 7,
+              value: clamped / 100,
+              backgroundColor: Colors.white.withValues(alpha: 0.08),
+              valueColor: AlwaysStoppedAnimation<Color>(accent),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ignore: unused_element
+  // ignore: unused_element
+  Widget _rewardShowcasePanel(ArcOperationsUserState operationsState) {
+    final equipped = operationsState.equippedCosmetics;
+    final inventory = operationsState.inventory.take(8).toList();
+
+    return _profilePanel(
+      accent: AppTheme.neonCyan,
+      title: 'Reward Showcase',
+      icon: Icons.workspace_premium_rounded,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: AppTheme.spaceS,
+            runSpacing: AppTheme.spaceS,
+            children: [
+              _rewardStatusTile(
+                title: 'Equipped Badge',
+                onTap: _openRewardVault,
+                value: equipped.badgeId ?? 'None equipped',
+                assetPath: equipped.badgeAssetPath,
+                accent: AppTheme.neonCyan,
+              ),
+              _rewardStatusTile(
+                title: 'Equipped Title',
+                onTap: _openRewardVault,
+                value: equipped.titleLabel ?? 'No title equipped',
+                icon: Icons.title_rounded,
+                accent: AppTheme.neonPink,
+              ),
+              _rewardStatusTile(
+                title: 'Profile Frame',
+                onTap: _openRewardVault,
+                value: equipped.profileFrameId ?? 'Default frame',
+                assetPath: equipped.profileFrameAssetPath,
+                icon: Icons.crop_square_rounded,
+                accent: Colors.amberAccent,
+              ),
+              _rewardStatusTile(
+                title: 'Profile Banner',
+                onTap: _openRewardVault,
+                value: equipped.profileBannerId ?? 'Default banner',
+                assetPath: equipped.profileBannerAssetPath,
+                icon: Icons.crop_16_9_rounded,
+                accent: Colors.lightBlueAccent,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spaceM),
+          Text(
+            'Earned Trophies',
+            style: AppTheme.tradingHeading(fontSize: 16, color: Colors.white),
+          ),
+          const SizedBox(height: AppTheme.spaceS),
+          if (inventory.isEmpty)
+            const Text(
+              'Claim rewards from Operations Command to populate your public trophy case.',
+              style: TextStyle(color: Colors.white70, height: 1.35),
+            )
+          else
+            Wrap(
+              spacing: AppTheme.spaceS,
+              runSpacing: AppTheme.spaceS,
+              children: inventory
+                  .map(
+                    (item) => _rewardThumb(
+                      label: item.label,
+                      assetPath: item.assetPath,
+                      betaExclusive: item.betaExclusive,
+                    ),
+                  )
+                  .toList(),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _rewardStatusTile({
+    required String title,
+    required String value,
+    required Color accent,
+    required VoidCallback onTap,
+    String? assetPath,
+    IconData icon = Icons.military_tech_rounded,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: onTap,
+      child: Container(
+        width: 190,
+        padding: const EdgeInsets.all(AppTheme.spaceS),
+        decoration: BoxDecoration(
+          color: AppTheme.cardBackgroundAlt.withValues(alpha: 0.74),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: accent.withValues(alpha: 0.18)),
+        ),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 38,
+              height: 38,
+              child: assetPath != null && assetPath.isNotEmpty
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.asset(
+                        assetPath,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => Icon(icon, color: accent),
+                      ),
+                    )
+                  : Icon(icon, color: accent),
+            ),
+            const SizedBox(width: AppTheme.spaceS),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: Colors.white60,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    value,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _rewardThumb({
+    required String label,
+    required String? assetPath,
+    required bool betaExclusive,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: _openRewardVault,
+      child: Container(
+        width: 86,
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: AppTheme.cardBackgroundAlt.withValues(alpha: 0.78),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: (betaExclusive ? AppTheme.neonPink : AppTheme.neonCyan)
+                .withValues(alpha: 0.22),
+          ),
+        ),
+        child: Column(
+          children: [
+            SizedBox(
+              width: 48,
+              height: 48,
+              child: assetPath != null && assetPath.isNotEmpty
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.asset(
+                        assetPath,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => const Icon(
+                          Icons.workspace_premium_rounded,
+                          color: AppTheme.neonCyan,
+                        ),
+                      ),
+                    )
+                  : Icon(
+                      betaExclusive
+                          ? Icons.auto_awesome_rounded
+                          : Icons.workspace_premium_rounded,
+                      color: betaExclusive
+                          ? AppTheme.neonPink
+                          : AppTheme.neonCyan,
+                    ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _communityContributionPanel(ArcOperationsUserState operationsState) {
+    final cards = <({IconData icon, String label, String value, Color accent})>[
+      (
+        icon: Icons.military_tech_rounded,
+        label: 'Lifetime Trophies',
+        value: operationsState.completedCount.toString(),
+        accent: AppTheme.neonCyan,
+      ),
+      (
+        icon: Icons.handshake_rounded,
+        label: 'Bonus Trade Slots',
+        value: '+${operationsState.extraTradeSlots}',
+        accent: AppTheme.neonPink,
+      ),
+      (
+        icon: Icons.groups_rounded,
+        label: 'Bonus Matchmaking',
+        value: '+${operationsState.extraMatchmakingSlots}',
+        accent: Colors.lightGreenAccent,
+      ),
+      (
+        icon: Icons.bolt_rounded,
+        label: 'Operation Credits',
+        value: operationsState.operationCredits.toString(),
+        accent: Colors.amberAccent,
+      ),
+    ];
+
+    return _profilePanel(
+      accent: Colors.amberAccent,
+      title: 'Community Contribution',
+      icon: Icons.hub_rounded,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final gap = AppTheme.spaceS;
+          final tileWidth = (constraints.maxWidth - gap) / 2;
+          return Wrap(
+            spacing: gap,
+            runSpacing: gap,
+            children: cards
+                .map(
+                  (card) => SizedBox(
+                    width: tileWidth,
+                    child: _contributionStat(
+                      icon: card.icon,
+                      label: card.label,
+                      value: card.value,
+                      accent: card.accent,
+                    ),
+                  ),
+                )
+                .toList(growable: false),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _creatorProgrammePanel(ArcTraderProfile profile) {
+    final creator = profile.creatorProgramme.normalised(
+      referralCode: profile.referralCode,
+      affiliateRequested: profile.affiliateEnabled,
+    );
+    final accent = creator.hasPublicRecognition
+        ? AppTheme.neonPink
+        : Colors.white54;
+
+    if (!creator.hasPublicRecognition && !profile.affiliateEnabled) {
+      return _profilePanel(
+        accent: AppTheme.neonPink,
+        title: 'Creator & Ambassador',
+        icon: Icons.campaign_rounded,
+        child: _actionTile(
+          icon: Icons.campaign_rounded,
+          title: 'Creator Programme',
+          subtitle:
+              'Not enrolled. Apply when you want creator rewards, referral tools and public recognition.',
+          onTap: _openProfileEditor,
+        ),
+      );
+    }
+
+    return _profilePanel(
+      accent: AppTheme.neonPink,
+      title: 'Creator & Ambassador',
+      icon: Icons.campaign_rounded,
+      onEdit: _openProfileEditor,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: AppTheme.spaceS,
+            runSpacing: AppTheme.spaceS,
+            children: [
+              _profileChip(
+                icon: Icons.workspace_premium_rounded,
+                label: creator.displayBadgeLabel,
+                accent: accent,
+              ),
+              _profileChip(
+                icon: creator.adminApproved
+                    ? Icons.verified_rounded
+                    : Icons.hourglass_bottom_rounded,
+                label: creator.adminApproved
+                    ? 'Admin approved'
+                    : profile.affiliateEnabled
+                    ? 'Review requested'
+                    : 'Not requested',
+                accent: creator.adminApproved
+                    ? Colors.lightGreenAccent
+                    : Colors.white54,
+              ),
+              if (creator.rewardEligible)
+                _profileChip(
+                  icon: Icons.card_giftcard_rounded,
+                  label: 'Reward eligible',
+                  accent: Colors.amberAccent,
+                ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spaceM),
+          Text(
+            creator.hasPublicRecognition
+                ? '${creator.displayTitle} is visible on public community surfaces.'
+                : 'Creator, partner and ambassador recognition is admin-approved before it becomes public.',
+            style: const TextStyle(color: Colors.white70, height: 1.35),
+          ),
+          if (profile.referralCode.trim().isNotEmpty) ...[
+            const SizedBox(height: AppTheme.spaceM),
+            _detailRow('Referral Code', profile.referralCode),
+          ],
+          const SizedBox(height: AppTheme.spaceS),
+          _actionTile(
+            icon: Icons.workspace_premium_rounded,
+            title: 'Plans & Referrals',
+            subtitle:
+                'View Premium plans, beta and Founder pricing, passes and referral rewards.',
+            onTap: () =>
+                Navigator.of(context).pushNamed(MonetisationScreen.routeName),
+          ),
+          const SizedBox(height: AppTheme.spaceS),
+          _actionTile(
+            icon: Icons.emoji_events_rounded,
+            title: 'Wall of Legends',
+            subtitle:
+                'View admin-curated founders, beta raiders, creators and community heroes.',
+            onTap: () =>
+                Navigator.of(context).pushNamed(WallOfLegendsScreen.routeName),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _guardianCommunitySystemPanel(
+    ArcTraderProfile profile,
+    ArcOperationsUserState operationsState,
+  ) {
+    final contributionScore = _communityContributionScore(
+      profile,
+      operationsState,
+    );
+    final guardianTier = _reputationTier(contributionScore, [
+      'Recruit',
+      'Guardian I',
+      'Guardian II',
+      'Guardian III',
+      'Guardian V',
+    ]);
+    final traderTier = _reputationTier(
+      operationsState.completedCount * 14 + operationsState.extraTradeSlots * 8,
+      ['New Trader', 'Trusted Trader', 'Trade Veteran', 'Trade Master'],
+    );
+    final intelTier = _reputationTier(operationsState.intelXp, [
+      'Intel Recruit',
+      'Intel Specialist',
+      'Blueprint Sage',
+      'Intel Commander',
+    ]);
+    final generosityTier = _reputationTier(
+      operationsState.operationCredits * 8 +
+          operationsState.extraMatchmakingSlots * 12,
+      [
+        'Helpful Raider',
+        'Helping Hand',
+        'Community Hero',
+        'Saint of the Rust Belt',
+      ],
+    );
+
+    final contributionItems =
+        <({IconData icon, String title, String value, Color accent})>[
+          (
+            icon: Icons.health_and_safety_rounded,
+            title: 'Guardian Standing',
+            value: guardianTier,
+            accent: Colors.lightGreenAccent,
+          ),
+          (
+            icon: Icons.handshake_rounded,
+            title: 'Trading Standing',
+            value: traderTier,
+            accent: AppTheme.neonPink,
+          ),
+          (
+            icon: Icons.radar_rounded,
+            title: 'Intel Standing',
+            value: intelTier,
+            accent: Colors.amberAccent,
+          ),
+          (
+            icon: Icons.volunteer_activism_rounded,
+            title: 'Goodwill Standing',
+            value: generosityTier,
+            accent: AppTheme.neonCyan,
+          ),
+        ];
+
+    return _profilePanel(
+      accent: Colors.lightGreenAccent,
+      title: 'Guardian & Community Reputation',
+      icon: Icons.shield_rounded,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Your trust standing across guardian, trading, intel and goodwill activity.',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.72),
+              height: 1.35,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spaceM),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final tileWidth = (constraints.maxWidth - AppTheme.spaceS) / 2;
+              return Wrap(
+                spacing: AppTheme.spaceS,
+                runSpacing: AppTheme.spaceS,
+                children: contributionItems
+                    .map(
+                      (item) => _standingTile(
+                        icon: item.icon,
+                        title: item.title,
+                        value: item.value,
+                        accent: item.accent,
+                      ),
+                    )
+                    .map((child) => SizedBox(width: tileWidth, child: child))
+                    .toList(),
+              );
+            },
+          ),
+          const SizedBox(height: AppTheme.spaceM),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final compact = constraints.maxWidth < 680;
+              final children = [
+                _communityMilestoneColumn(
+                  title: 'Guardian Track',
+                  accent: Colors.lightGreenAccent,
+                  milestones: const [
+                    'Match with new Raiders',
+                    'Help complete trials',
+                    'Guide first blueprint runs',
+                    'Earn positive session ratings',
+                  ],
+                ),
+                _communityMilestoneColumn(
+                  title: 'Goodwill Track',
+                  accent: AppTheme.neonCyan,
+                  milestones: const [
+                    'Complete gift trades',
+                    'Offer basic blueprints free',
+                    'Support squad recovery runs',
+                    'Act as backup during objectives',
+                  ],
+                ),
+              ];
+
+              if (compact) {
+                return Column(
+                  children: children
+                      .map(
+                        (child) => Padding(
+                          padding: const EdgeInsets.only(
+                            bottom: AppTheme.spaceS,
+                          ),
+                          child: child,
+                        ),
+                      )
+                      .toList(),
+                );
+              }
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: children.first),
+                  const SizedBox(width: AppTheme.spaceS),
+                  Expanded(child: children.last),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: AppTheme.spaceM),
+          _communityScoreBar(contributionScore),
+        ],
+      ),
+    );
+  }
+
+  int _communityContributionScore(
+    ArcTraderProfile profile,
+    ArcOperationsUserState operationsState,
+  ) {
+    var score = 0;
+    if (profile.isProfileComplete) score += 18;
+    if (profile.visibleInSearch) score += 8;
+    if (profile.micOk) score += 6;
+    if (profile.crossPlatformOk) score += 6;
+    score += operationsState.completedCount * 9;
+    score += operationsState.extraTradeSlots * 6;
+    score += operationsState.extraMatchmakingSlots * 8;
+    score += operationsState.operationCredits * 4;
+    score += (operationsState.intelXp / 10).floor();
+    return score.clamp(0, 100);
+  }
+
+  String _reputationTier(int score, List<String> tiers) {
+    if (tiers.isEmpty) return 'Unranked';
+    if (score >= 80 && tiers.length >= 4) return tiers[3];
+    if (score >= 55 && tiers.length >= 3) return tiers[2];
+    if (score >= 25 && tiers.length >= 2) return tiers[1];
+    return tiers.first;
+  }
+
+  Widget _standingTile({
+    required IconData icon,
+    required String title,
+    required String value,
+    required Color accent,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppTheme.spaceS),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundAlt.withValues(alpha: 0.74),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: accent.withValues(alpha: 0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withValues(alpha: 0.08),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: accent.withValues(alpha: 0.12),
+              border: Border.all(color: accent.withValues(alpha: 0.24)),
+            ),
+            child: Icon(icon, color: accent, size: 21),
+          ),
+          const SizedBox(width: AppTheme.spaceS),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white60,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  value,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: accent,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _communityMilestoneColumn({
+    required String title,
+    required Color accent,
+    required List<String> milestones,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spaceS),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundAlt.withValues(alpha: 0.62),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: accent.withValues(alpha: 0.16)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: AppTheme.tradingHeading(
-              fontSize: 20,
-              color: AppTheme.neonPink,
+            style: AppTheme.tradingHeading(fontSize: 15, color: accent),
+          ),
+          const SizedBox(height: AppTheme.spaceS),
+          ...milestones.map(
+            (milestone) => Padding(
+              padding: const EdgeInsets.only(bottom: 7),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.arrow_right_rounded, color: accent, size: 18),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      milestone,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                        height: 1.25,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: AppTheme.spaceM),
-          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _communityScoreBar(int contributionScore) {
+    final score = contributionScore.clamp(0, 100);
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spaceS),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: Colors.lightGreenAccent.withValues(alpha: 0.14),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Community Contribution Score',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              Text(
+                '$score%',
+                style: const TextStyle(
+                  color: Colors.lightGreenAccent,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              minHeight: 8,
+              value: score / 100,
+              backgroundColor: Colors.white.withValues(alpha: 0.08),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                Colors.lightGreenAccent,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _contributionStat({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color accent,
+  }) {
+    return Container(
+      width: 156,
+      padding: const EdgeInsets.all(AppTheme.spaceS),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundAlt.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: accent.withValues(alpha: 0.18)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: accent, size: 20),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: AppTheme.tradingHeading(fontSize: 22, color: Colors.white),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white60,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ignore: unused_element
+  // ignore: unused_element
+  Widget _badgeGallery(ArcOperationsUserState operationsState) {
+    final badges = operationsState.badges;
+    return _profilePanel(
+      accent: AppTheme.neonCyan,
+      title: 'Badges',
+      icon: Icons.auto_awesome_rounded,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (badges.isEmpty)
+            const Text(
+              'No earned badges yet. Complete Operations and community milestones to unlock them.',
+              style: TextStyle(color: Colors.white70, height: 1.35),
+            )
+          else
+            Wrap(
+              spacing: AppTheme.spaceS,
+              runSpacing: AppTheme.spaceS,
+              children: badges
+                  .take(12)
+                  .map(
+                    (badge) => _rewardThumb(
+                      label: badge.label,
+                      assetPath: badge.assetPath,
+                      betaExclusive: badge.betaExclusive,
+                    ),
+                  )
+                  .toList(growable: false),
+            ),
+          const SizedBox(height: AppTheme.spaceS),
+          TextButton.icon(
+            onPressed: _openRewardVault,
+            icon: const Icon(Icons.inventory_2_outlined),
+            label: const Text('OPEN REWARD VAULT'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _loadoutPreview() {
+    return StreamBuilder<ArcSavedLoadout?>(
+      stream: _savedLoadoutRepository.watchFavouriteLoadout(),
+      builder: (context, snapshot) {
+        final loadout = snapshot.data;
+        return _profilePanel(
+          accent: AppTheme.neonPink,
+          title: 'Favourite Loadout',
+          icon: Icons.inventory_2_rounded,
+          onEdit: _openFavouriteLoadout,
+          child: loadout == null
+              ? Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        'No Favourite Loadout saved.',
+                        style: TextStyle(color: Colors.white70),
+                      ),
+                    ),
+                    FilledButton.icon(
+                      onPressed: _openFavouriteLoadout,
+                      icon: const Icon(Icons.add_rounded),
+                      label: const Text('BUILD'),
+                    ),
+                  ],
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            loadout.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTheme.tradingHeading(
+                              fontSize: 15,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        TextButton.icon(
+                          onPressed: _openFavouriteLoadout,
+                          icon: const Icon(Icons.edit_outlined, size: 16),
+                          label: const Text('OPEN'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    SizedBox(
+                      height: 104,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: _loadoutVisualEntries(loadout)
+                            .map(
+                              (entry) => Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: _loadoutVisualTile(
+                                  label: entry.label,
+                                  value: entry.value,
+                                  kind: entry.kind,
+                                ),
+                              ),
+                            )
+                            .toList(growable: false),
+                      ),
+                    ),
+                  ],
+                ),
+        );
+      },
+    );
+  }
+
+  List<({String label, String value, ArcLoadoutAssetKind kind})>
+  _loadoutVisualEntries(ArcSavedLoadout loadout) {
+    final entries = <({String label, String value, ArcLoadoutAssetKind kind})>[
+      (
+        label: 'PRIMARY',
+        value: loadout.primaryWeapon,
+        kind: ArcLoadoutAssetKind.primaryWeapon,
+      ),
+      (
+        label: 'SECONDARY',
+        value: loadout.secondaryWeapon,
+        kind: ArcLoadoutAssetKind.secondaryWeapon,
+      ),
+    ];
+
+    final shield = loadout.shield?.trim() ?? '';
+    if (shield.isNotEmpty) {
+      entries.add((
+        label: 'SHIELD',
+        value: shield,
+        kind: ArcLoadoutAssetKind.equipment,
+      ));
+    } else if (loadout.augment.trim().isNotEmpty) {
+      entries.add((
+        label: 'AUGMENT',
+        value: loadout.augment,
+        kind: ArcLoadoutAssetKind.augment,
+      ));
+    }
+
+    for (final item in loadout.equipment.take(2)) {
+      if (item.trim().isEmpty) continue;
+      entries.add((
+        label: 'EQUIPMENT',
+        value: item,
+        kind: ArcLoadoutAssetKind.equipment,
+      ));
+    }
+    for (final item in loadout.quickUse.take(2)) {
+      if (item.trim().isEmpty) continue;
+      entries.add((
+        label: 'QUICK USE',
+        value: item,
+        kind: ArcLoadoutAssetKind.equipment,
+      ));
+    }
+    return entries;
+  }
+
+  Widget _loadoutVisualTile({
+    required String label,
+    required String value,
+    required ArcLoadoutAssetKind kind,
+  }) {
+    final assetPath = ArcLoadoutAssetRegistry.assetFor(
+      itemName: value,
+      kind: kind,
+    );
+    return InkWell(
+      onTap: _openFavouriteLoadout,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: 82,
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: AppTheme.cardBackgroundAlt.withValues(alpha: 0.76),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppTheme.neonPink.withValues(alpha: 0.18)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: assetPath == null
+                    ? const Icon(
+                        Icons.inventory_2_outlined,
+                        color: Colors.white38,
+                      )
+                    : Image.asset(
+                        assetPath,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => const Icon(
+                          Icons.inventory_2_outlined,
+                          color: Colors.white38,
+                        ),
+                      ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white38,
+                fontSize: 7.5,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _separator() => ' ${String.fromCharCode(0x2022)} ';
+
+  void _openRewardVault() {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const OperationsCommandScreen()));
+  }
+
+  void _openFavouriteLoadout() {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const FavouriteLoadoutScreen()));
+  }
+
+  Widget _profilePanel({
+    required Color accent,
+    required String title,
+    required IconData icon,
+    required Widget child,
+    VoidCallback? onEdit,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: accent,
+        borderOpacity: 0.18,
+        radius: ArcUiTokens.radiusXXL,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.09),
+                  borderRadius: BorderRadius.circular(9),
+                  border: Border.all(color: accent.withValues(alpha: 0.22)),
+                ),
+                child: Icon(icon, color: accent, size: 18),
+              ),
+              const SizedBox(width: 9),
+              Expanded(
+                child: Text(
+                  title,
+                  style: ArcUiTokens.sectionTitle(
+                    fontSize: 17,
+                    color: ArcUiTokens.textPrimary,
+                  ),
+                ),
+              ),
+              if (onEdit != null)
+                IconButton(
+                  tooltip: 'Edit',
+                  visualDensity: VisualDensity.compact,
+                  onPressed: onEdit,
+                  icon: Icon(Icons.edit_outlined, color: accent, size: 18),
+                ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spaceS),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _profileEmptyState({
+    required IconData icon,
+    required String title,
+    required String copy,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppTheme.spaceS),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundAlt.withValues(alpha: 0.62),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: Colors.white54, size: 20),
+          const SizedBox(width: AppTheme.spaceS),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  copy,
+                  style: const TextStyle(
+                    color: Colors.white60,
+                    fontSize: 11,
+                    height: 1.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          TextButton(onPressed: _openProfileEditor, child: const Text('Add')),
+        ],
+      ),
+    );
+  }
+
+  Widget _profileChip({
+    required IconData icon,
+    required String label,
+    required Color accent,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: AppTheme.tradingPillDecoration(color: accent),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: accent),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              color: accent,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _archetypeBadge({
+    required IconData icon,
+    required String label,
+    required String copy,
+  }) {
+    return Container(
+      width: 126,
+      padding: const EdgeInsets.all(AppTheme.spaceS),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundAlt.withValues(alpha: 0.76),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppTheme.neonPink.withValues(alpha: 0.18)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: AppTheme.neonPink, size: 20),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            copy,
+            style: const TextStyle(color: Colors.white60, fontSize: 11),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ignore: unused_element
+  Widget _badgeThumb({required IconData icon, required String label}) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: () => showDialog<void>(
+        context: context,
+        builder: (_) => AlertDialog(
+          backgroundColor: AppTheme.cardBackground,
+          title: Text(label, style: const TextStyle(color: Colors.white)),
+          content: Icon(icon, size: 72, color: AppTheme.neonCyan),
+        ),
+      ),
+      child: Container(
+        width: 78,
+        height: 86,
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: AppTheme.cardBackgroundAlt.withValues(alpha: 0.78),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.18)),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: AppTheme.neonCyan, size: 22),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              maxLines: 2,
+              overflow: TextOverflow.fade,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ignore: unused_element
+  Widget _loadoutSlot(String label, IconData icon) {
+    return Container(
+      height: 76,
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundAlt.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: Colors.white70, size: 20),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white60,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ],
       ),
     );
@@ -469,36 +3492,28 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppTheme.spaceS),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppTheme.spaceM,
-        vertical: AppTheme.spaceM,
-      ),
-      decoration: BoxDecoration(
-        color: AppTheme.cardBackgroundAlt.withValues(alpha: 0.65),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        accent: AppTheme.neonPink,
+        borderOpacity: 0.10,
+        radius: ArcUiTokens.radiusM,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 118,
-            child: Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white60,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            width: 112,
+            child: Text(label.toUpperCase(), style: ArcUiTokens.label()),
           ),
-          const SizedBox(width: AppTheme.spaceM),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
               displayValue,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-                height: 1.25,
+              style: ArcUiTokens.body(
+                fontSize: 13,
+                color: ArcUiTokens.textPrimary,
+                weight: FontWeight.w600,
               ),
             ),
           ),
@@ -517,7 +3532,12 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
       borderRadius: BorderRadius.circular(16),
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(AppTheme.spaceL),
+        padding: const EdgeInsets.fromLTRB(
+          AppTheme.spaceM,
+          AppTheme.spaceS,
+          AppTheme.spaceM,
+          AppTheme.spaceL,
+        ),
         decoration: AppTheme.tradingCardDecoration(
           borderColor: Colors.white.withValues(alpha: 0.10),
         ),
@@ -559,32 +3579,6 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
             const Icon(Icons.chevron_right, color: Colors.white54),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _miniTag({required IconData icon, required String text}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: BoxDecoration(
-        color: AppTheme.cardBackgroundAlt.withValues(alpha: 0.8),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: Colors.white70),
-          const SizedBox(width: 6),
-          Text(
-            text,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
       ),
     );
   }

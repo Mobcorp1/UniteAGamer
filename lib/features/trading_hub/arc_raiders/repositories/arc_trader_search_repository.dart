@@ -4,7 +4,7 @@ import '../models/arc_trader_search_result.dart';
 
 class ArcTraderSearchRepository {
   ArcTraderSearchRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
 
@@ -13,8 +13,9 @@ class ArcTraderSearchRepository {
     String? platform,
     String? wantedBlueprintId,
   }) async {
-    Query<Map<String, dynamic>> query =
-        _firestore.collection('arc_trader_profiles').where('visibleInSearch', isEqualTo: true);
+    Query<Map<String, dynamic>> query = _firestore
+        .collection('arc_trader_profiles')
+        .where('visibleInSearch', isEqualTo: true);
 
     if (region != null && region.isNotEmpty) {
       query = query.where('region', isEqualTo: region);
@@ -32,7 +33,8 @@ class ArcTraderSearchRepository {
         .get();
 
     final awayByUser = <String, bool>{
-      for (final doc in awaySnapshot.docs) doc.id: (doc.data()['isAway'] ?? false) as bool,
+      for (final doc in awaySnapshot.docs)
+        doc.id: (doc.data()['isAway'] ?? false) as bool,
     };
 
     final listingsByUser = <String, List<Map<String, dynamic>>>{};
@@ -49,9 +51,14 @@ class ArcTraderSearchRepository {
       final data = doc.data();
       final userId = doc.id;
       final userListings = listingsByUser[userId] ?? const [];
-      final matchingCount = wantedBlueprintId == null || wantedBlueprintId.isEmpty
+      final matchingCount =
+          wantedBlueprintId == null || wantedBlueprintId.isEmpty
           ? 0
-          : userListings.where((item) => item['offeredBlueprintId'] == wantedBlueprintId).length;
+          : userListings
+                .where(
+                  (item) => item['offeredBlueprintId'] == wantedBlueprintId,
+                )
+                .length;
 
       results.add(
         ArcTraderSearchResult(

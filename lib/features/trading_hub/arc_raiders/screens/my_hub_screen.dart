@@ -1,0 +1,2699 @@
+import 'dart:async';
+import 'dart:math' as math;
+
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import '../widgets/arc_ad_banner_card.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/screens/monetisation_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_user_personalisation_profile.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_user_personalisation_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raid_intelligence_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_match_rider_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/my_intel_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/nomadic_trader_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/operations_command_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/play_like_a_pro_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/referral_tools_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/smart_trade_assist_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_profile_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/wall_of_legends_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/voice/voice_assistant_sheet.dart';
+import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
+import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_responsive_chrome.dart';
+import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
+
+class MyHubScreen extends StatefulWidget {
+  static const routeName = '/my-hub';
+  static const toolDeckRouteName = '/trading-hub/arc-raiders/my-hub';
+
+  const MyHubScreen({super.key});
+
+  @override
+  State<MyHubScreen> createState() => _MyHubScreenState();
+}
+
+class _MyHubScreenState extends State<MyHubScreen> {
+  final ArcBlueprintRepository _blueprintRepository = ArcBlueprintRepository();
+  final ArcUserPersonalisationRepository _personalisationRepository =
+      ArcUserPersonalisationRepository();
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_personalisationRepository.migrateLegacyIfNeeded());
+  }
+
+  late final List<_ArcHubFeature> _features = [
+    _ArcHubFeature(
+      title: 'Collections Tracker',
+      subtitle:
+          'Owned, missing, duplicates and priority blueprint hunt progress.',
+      icon: Icons.grid_on_rounded,
+      accent: AppTheme.neonCyan,
+      art: _ArcHubArtKind.blueprints,
+      assetName: 'arc_hub_blueprint_grid.webp',
+      builder: (_) => const BlueprintGridScreen(),
+    ),
+    _ArcHubFeature(
+      title: 'Raid Intelligence',
+      subtitle: 'Open map intel, Blueprint signals and raid locations.',
+      icon: Icons.map_rounded,
+      accent: AppTheme.neonCyan,
+      art: _ArcHubArtKind.raid,
+      assetName: 'arc_hub_raid_planner.webp',
+      builder: (_) => const ArcRaidIntelligenceScreen(),
+    ),
+    _ArcHubFeature(
+      title: 'Raid Planner',
+      subtitle: 'Plan raid objectives, routes and active hunt targets.',
+      icon: Icons.route_rounded,
+      accent: AppTheme.neonCyan,
+      art: _ArcHubArtKind.raid,
+      assetName: 'arc_hub_raid_planner.webp',
+      builder: (_) => const RaidPlannerScreen(),
+    ),
+    _ArcHubFeature(
+      title: 'Match Raider',
+      subtitle: 'Find Raiders that fit your platform, style and availability.',
+      icon: Icons.groups_rounded,
+      accent: AppTheme.neonPink,
+      art: _ArcHubArtKind.smart,
+      assetName: 'arc_hub_match_a_raider.webp',
+      builder: (_) => const ArcMatchRiderScreen(),
+    ),
+    _ArcHubFeature(
+      title: 'Scrappy Tracker',
+      subtitle:
+          'Track upgrade materials, useful resources and collection progress.',
+      icon: Icons.egg_alt_rounded,
+      accent: AppTheme.neonPink,
+      art: _ArcHubArtKind.scrappy,
+      assetName: 'arc_hub_scrappy_tracker.webp',
+      builder: (_) => const ScrappyGridScreen(),
+    ),
+    _ArcHubFeature(
+      title: 'Bench Tracker',
+      subtitle:
+          'Track bench materials, upgrade tiers and missing requirements.',
+      icon: Icons.build_rounded,
+      accent: AppTheme.neonCyan,
+      art: _ArcHubArtKind.targets,
+      assetName: 'arc_hub_bench_tracker.webp',
+      builder: (_) => const ScrappyGridScreen.bench(),
+    ),
+    _ArcHubFeature(
+      title: 'Quest Tracker',
+      subtitle: 'Track trader quest items, hand-ins and collection progress.',
+      icon: Icons.assignment_rounded,
+      accent: AppTheme.neonPink,
+      art: _ArcHubArtKind.intel,
+      assetName: 'arc_hub_quest_tracker.webp',
+      builder: (_) => const ScrappyGridScreen.quest(),
+    ),
+    _ArcHubFeature(
+      title: 'My Loadout',
+      subtitle: 'Build one personal go-to ARC loadout for quick access.',
+      icon: Icons.inventory_2_outlined,
+      accent: AppTheme.neonPink,
+      art: _ArcHubArtKind.targets,
+      assetName: 'arc_hub_favourite_loadout.webp',
+      builder: (_) => const FavouriteLoadoutScreen(),
+    ),
+    _ArcHubFeature(
+      title: 'My Intel',
+      subtitle: 'Review your reports, correct mistakes and manage submissions.',
+      icon: Icons.article_outlined,
+      accent: Colors.amberAccent,
+      art: _ArcHubArtKind.intel,
+      assetName: 'arc_hub_community_intel.webp',
+      builder: (_) => const MyIntelScreen(),
+    ),
+    _ArcHubFeature(
+      title: 'Smart Trade Assist',
+      subtitle: 'Scan duplicate value, wanted items and smart offer routes.',
+      icon: Icons.auto_awesome_rounded,
+      accent: Colors.lightGreenAccent,
+      art: _ArcHubArtKind.smart,
+      assetName: 'arc_hub_smart_trade.webp',
+      builder: (_) => const SmartTradeAssistScreen(),
+    ),
+    _ArcHubFeature(
+      title: 'Trading Overview',
+      subtitle: 'Review your trade tools, sessions, listings and swap flow.',
+      icon: Icons.swap_horiz_rounded,
+      accent: AppTheme.neonPink,
+      art: _ArcHubArtKind.trading,
+      assetName: 'arc_hub_trading.webp',
+      builder: (_) => const TraderHubScreen(),
+    ),
+    _ArcHubFeature(
+      title: 'Nomadic Trader',
+      subtitle:
+          'Track Ermal target value, accepted resource tiers and progression goals.',
+      icon: Icons.calculate_outlined,
+      accent: Colors.amberAccent,
+      art: _ArcHubArtKind.trading,
+      assetName: 'arc_nomadic_trader_hero.webp',
+      builder: (_) => const NomadicTraderScreen(),
+    ),
+    _ArcHubFeature(
+      title: 'Profile & Reputation',
+      subtitle: 'Your Hub Profile, trust layer and account reputation.',
+      icon: Icons.verified_user_outlined,
+      accent: Colors.lightGreenAccent,
+      art: _ArcHubArtKind.smart,
+      assetName: 'arc_hub_profile_reputation.webp',
+      builder: (_) => const TradingProfileScreen(),
+    ),
+    _ArcHubFeature(
+      title: 'Play Like a Pro',
+      subtitle: 'Open Play Like a Pro coaching, setups and improvement tools.',
+      icon: Icons.psychology_outlined,
+      accent: AppTheme.neonCyan,
+      art: _ArcHubArtKind.smart,
+      assetName: 'arc_hub_play_like_a_pro.webp',
+      builder: (_) => const PlayLikeAProScreen(),
+    ),
+    _ArcHubFeature(
+      title: 'Wall of Legends',
+      subtitle: 'Founders, beta raiders, trusted traders and community heroes.',
+      icon: Icons.emoji_events_outlined,
+      accent: Colors.amberAccent,
+      art: _ArcHubArtKind.smart,
+      assetName: 'arc_hub_wall_of_legends.webp',
+      builder: (_) => const WallOfLegendsScreen(),
+    ),
+    _ArcHubFeature(
+      title: 'Community Rewards',
+      subtitle:
+          'Referrals, Reward Locker, Community Growth and Creator earnings.',
+      icon: Icons.hub_outlined,
+      accent: AppTheme.neonPink,
+      art: _ArcHubArtKind.trading,
+      assetName: 'arc_hub_referral_tools.webp',
+      builder: (_) => const ReferralToolsScreen(),
+    ),
+    _ArcHubFeature(
+      title: 'Plans & Referrals',
+      subtitle:
+          'Premium access, beta and Founder pricing, passes and referrals.',
+      icon: Icons.workspace_premium_outlined,
+      accent: AppTheme.neonCyan,
+      art: _ArcHubArtKind.trading,
+      assetName: 'arc_hub_subscriptions.webp',
+      builder: (_) => const MonetisationScreen(),
+    ),
+    _ArcHubFeature(
+      title: 'Operation Rewards',
+      subtitle: 'Monthly goals, reward progress and future operation badges.',
+      icon: Icons.assignment_turned_in_outlined,
+      accent: Colors.amberAccent,
+      art: _ArcHubArtKind.raid,
+      assetName: 'arc_hub_operations.webp',
+      builder: (_) => const OperationsCommandScreen(),
+    ),
+  ];
+
+  Future<void> _openFeature(_ArcHubFeature feature) async {
+    final navigator = Navigator.of(context);
+    final isAdminOrDev = await FeatureAccess.isAdminOrDev();
+    if (!mounted) return;
+
+    if (isAdminOrDev) {
+      navigator.push(MaterialPageRoute(builder: feature.builder));
+      return;
+    }
+
+    const betaOpenTitles = {
+      'Nomadic Trader',
+      'Operation Rewards',
+      'Operations',
+      'My Hub',
+    };
+
+    if (betaOpenTitles.contains(feature.title)) {
+      navigator.push(MaterialPageRoute(builder: feature.builder));
+      return;
+    }
+
+    final flag = _featureAccessFlagForTitle(feature.title);
+    final availability = flag == null
+        ? FeatureAvailability.hidden
+        : await FeatureAccess.getAvailability(flag);
+
+    if (!mounted) return;
+
+    if (availability.isLive) {
+      navigator.push(MaterialPageRoute(builder: feature.builder));
+      return;
+    }
+
+    navigator.push(
+      MaterialPageRoute(
+        builder: (_) => availability.isComingSoon
+            ? FeatureComingSoonScreen(title: feature.title)
+            : FeatureLockedScreen(
+                title: feature.title,
+                availability: FeatureAvailability.hidden,
+              ),
+      ),
+    );
+  }
+
+  String? _featureAccessFlagForTitle(String title) {
+    switch (title) {
+      case 'Collections Tracker':
+      case 'Collections Tracker Beta':
+      case 'Blueprint Grid':
+        return FeatureAccessFlag.blueprintTracker;
+      case 'Scrappy Tracker':
+        return FeatureAccessFlag.scrappyTracker;
+      case 'Bench Tracker':
+        return FeatureAccessFlag.benchTracker;
+      case 'Quest Tracker':
+        return FeatureAccessFlag.questTracker;
+      case 'Trading':
+      case 'Trading Overview':
+      case 'Trader Hub':
+        return FeatureAccessFlag.traderHub;
+      case 'Match a Raider':
+      case 'Match Raider':
+        return FeatureAccessFlag.matchRaider;
+      case 'Raid Planner':
+      case 'Hunt Targets':
+        return FeatureAccessFlag.raidPlanner;
+      case 'Community Intel':
+      case 'My Intel':
+      case 'Intel Explorer':
+      case 'Raid Intelligence':
+        return FeatureAccessFlag.intelExplorer;
+      case 'Smart Trade':
+      case 'Smart Trade Assist':
+        return FeatureAccessFlag.smartTradeAssist;
+      case 'Subscriptions':
+      case 'Plans & Referrals':
+      case 'Community Rewards':
+      case 'Referral Tools':
+      case 'Refer a Raider':
+      case 'Operations':
+      case 'Operation Rewards':
+        return FeatureAccessFlag.monetisation;
+      case 'Voice Assistant':
+        return FeatureAccessFlag.voiceAssistant;
+      case 'Play Like A Pro':
+      case 'Play Like a Pro':
+      case 'Play Locker Pro':
+        return FeatureAccessFlag.playLockerPro;
+      default:
+        return null;
+    }
+  }
+
+  _ArcHubFeature _featureByTitle(String title) {
+    return _features.firstWhere((feature) => feature.title == title);
+  }
+
+  ArcPersonalisationFeature? _personalisationFeatureForTitle(String title) {
+    return switch (title) {
+      'Collections Tracker' => ArcPersonalisationFeature.blueprintTracker,
+      'Raid Intelligence' => ArcPersonalisationFeature.raidIntelligence,
+      'Raid Planner' => ArcPersonalisationFeature.raidPlanner,
+      'Match Raider' => ArcPersonalisationFeature.matchRider,
+      'Scrappy Tracker' => ArcPersonalisationFeature.scrappyTracker,
+      'Bench Tracker' => ArcPersonalisationFeature.benchTracker,
+      'Quest Tracker' => ArcPersonalisationFeature.questTracker,
+      'My Loadout' => ArcPersonalisationFeature.favouriteLoadout,
+      'My Intel' => ArcPersonalisationFeature.communityIntel,
+      'Smart Trade Assist' => ArcPersonalisationFeature.smartTrade,
+      'Trading Overview' => ArcPersonalisationFeature.trading,
+      'Nomadic Trader' => ArcPersonalisationFeature.nomadicTrader,
+      'Profile & Reputation' => ArcPersonalisationFeature.profile,
+      'Play Like a Pro' => ArcPersonalisationFeature.playLikeAPro,
+      'Operation Rewards' => ArcPersonalisationFeature.operations,
+      _ => null,
+    };
+  }
+
+  bool _showEverything(ArcUserPersonalisationProfile personalisation) {
+    return personalisation.goals.contains(
+      ArcPersonalisationGoal.exploreEverything,
+    );
+  }
+
+  bool _isRelevant(
+    ArcUserPersonalisationProfile personalisation,
+    _ArcHubFeature feature,
+  ) {
+    if (feature.title == 'Profile & Reputation') return true;
+    if (_showEverything(personalisation)) return true;
+    final personalisationFeature = _personalisationFeatureForTitle(
+      feature.title,
+    );
+    if (personalisationFeature == null) return false;
+    return personalisation.interestFor(personalisationFeature).isHighSignal;
+  }
+
+  bool _blueprintFocus(ArcUserPersonalisationProfile personalisation) {
+    return _showEverything(personalisation) ||
+        personalisation
+            .interestFor(ArcPersonalisationFeature.blueprintTracker)
+            .isHighSignal;
+  }
+
+  _ArcHubFeature _recommendedFeature(
+    ArcUserPersonalisationProfile personalisation,
+  ) {
+    if (personalisation.goals.contains(
+      ArcPersonalisationGoal.tradeBlueprints,
+    )) {
+      return _featureByTitle('Trading Overview');
+    }
+    if (personalisation.goals.contains(ArcPersonalisationGoal.progressQuests)) {
+      return _featureByTitle('Quest Tracker');
+    }
+    if (personalisation.goals.contains(
+      ArcPersonalisationGoal.buildFavouriteLoadout,
+    )) {
+      return _featureByTitle('My Loadout');
+    }
+    if (personalisation.goals.contains(ArcPersonalisationGoal.findSquads)) {
+      return _featureByTitle('Match Raider');
+    }
+    if (personalisation.goals.contains(ArcPersonalisationGoal.planRaids)) {
+      return _featureByTitle('Raid Intelligence');
+    }
+
+    final blueprintJourney =
+        personalisation.goals.contains(
+          ArcPersonalisationGoal.completeBlueprints,
+        ) ||
+        personalisation.goals.contains(
+          ArcPersonalisationGoal.exploreEverything,
+        );
+
+    if (blueprintJourney &&
+        personalisation.blueprintOwnership ==
+            ArcBlueprintOwnershipState.none) {
+      return _featureByTitle('My Loadout');
+    }
+
+    return _featureByTitle('Collections Tracker');
+  }
+
+  String get _displayName {
+    final user = FirebaseAuth.instance.currentUser;
+    final display = user?.displayName?.trim();
+    if (display != null && display.isNotEmpty) return display;
+    final email = user?.email?.trim();
+    if (email != null && email.isNotEmpty) return email.split('@').first;
+    return 'Raider';
+  }
+
+  String get _periodGreeting {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  }
+
+  Widget _referenceHeader() {
+    return Builder(
+      builder: (context) {
+        return SizedBox(
+          height: 44,
+          child: Row(
+            children: [
+              IconButton(
+                tooltip: 'Open navigation',
+                onPressed: () => Scaffold.of(context).openDrawer(),
+                icon: const Icon(Icons.menu_rounded),
+                color: ArcUiTokens.primaryAccent,
+                iconSize: 20,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 38, minHeight: 38),
+              ),
+              Expanded(
+                child: Text(
+                  'My Hub',
+                  textAlign: TextAlign.center,
+                  style: ArcUiTokens.pageTitle(
+                    color: ArcUiTokens.primaryAccent,
+                  ),
+                ),
+              ),
+              IconButton(
+                tooltip: 'Open ARC assistant',
+                onPressed: () => UagVoiceArcAssistantSheet.show(context),
+                icon: const Icon(Icons.center_focus_strong_rounded),
+                color: ArcUiTokens.textSecondary,
+                iconSize: 18,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 38, minHeight: 38),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _identityHero(ArcUserPersonalisationProfile personalisation) {
+    final width = MediaQuery.sizeOf(context).width;
+    final compact = width < 640;
+
+    return Container(
+      clipBehavior: Clip.hardEdge,
+      constraints: BoxConstraints(minHeight: compact ? 154 : 126),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.panel,
+        radius: ArcUiTokens.radiusL,
+        accent: ArcUiTokens.secondaryAccent,
+        borderOpacity: 0.30,
+      ),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              'assets/arc_raiders/banners/arc_raiders_hub_banner.webp',
+              fit: BoxFit.cover,
+              alignment: Alignment.center,
+              errorBuilder: (_, _, _) => const SizedBox.shrink(),
+            ),
+          ),
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [
+                    ArcUiTokens.background.withValues(alpha: 0.93),
+                    ArcUiTokens.background.withValues(alpha: 0.70),
+                    ArcUiTokens.background.withValues(alpha: 0.86),
+                  ],
+                  stops: const [0.0, 0.48, 1.0],
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: compact ? 14 : 18,
+              vertical: compact ? 12 : 14,
+            ),
+            child: compact
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _heroGreeting(compact: true),
+                      const SizedBox(height: 10),
+                      _nextBestAction(_recommendedFeature(personalisation)),
+                    ],
+                  )
+                : Row(
+                    children: [
+                      Expanded(flex: 4, child: _heroGreeting(compact: false)),
+                      const SizedBox(width: 18),
+                      Expanded(
+                        flex: 6,
+                        child: _nextBestAction(
+                          _recommendedFeature(personalisation),
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _heroGreeting({required bool compact}) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '$_periodGreeting, $_displayName',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: ArcUiTokens.sectionTitle(fontSize: compact ? 16 : 18),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Next actions, alerts and personal tools are ready.',
+          maxLines: compact ? 2 : 1,
+          overflow: TextOverflow.ellipsis,
+          style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
+        ),
+      ],
+    );
+  }
+
+  Widget _nextBestAction(_ArcHubFeature feature) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
+      onTap: () => _openFeature(feature),
+      child: Container(
+        padding: ArcUiTokens.densePanelPadding,
+        decoration: ArcUiTokens.surfaceDecoration(
+          role: ArcSurfaceRole.overlay,
+          radius: ArcUiTokens.radiusM,
+          accent: ArcUiTokens.secondaryAccent,
+          borderOpacity: 0.38,
+          selected: true,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: ArcUiTokens.surfaceDecoration(
+                role: ArcSurfaceRole.interactive,
+                radius: ArcUiTokens.radiusS,
+                accent: feature.accent,
+                borderOpacity: 0.28,
+              ),
+              child: Icon(feature.icon, color: feature.accent, size: 21),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'NEXT BEST ACTION',
+                    style: ArcUiTokens.label(color: ArcUiTokens.primaryAccent),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    'Open ${feature.title}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: ArcUiTokens.cardTitle(fontSize: 14.5),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    feature.subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: ArcUiTokens.metadata(
+                      color: ArcUiTokens.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              width: 34,
+              height: 34,
+              decoration: ArcUiTokens.chipDecoration(
+                color: ArcUiTokens.secondaryAccent,
+                selected: true,
+              ),
+              child: const Icon(
+                Icons.chevron_right_rounded,
+                color: ArcUiTokens.secondaryAccent,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _alertRow(IconData icon, String text, Color color) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 7),
+      child: Row(
+        children: [
+          Icon(icon, size: 15, color: color),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: ArcUiTokens.metadata(color: ArcUiTokens.textSecondary),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _hubPanel({
+    required String title,
+    required Widget child,
+    String? subtitle,
+    Color accent = ArcUiTokens.primaryAccent,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.panel,
+        radius: ArcUiTokens.radiusL,
+        accent: accent,
+        borderOpacity: 0.18,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title.toUpperCase(), style: ArcUiTokens.label(color: accent)),
+          if (subtitle != null) ...[
+            const SizedBox(height: 3),
+            Text(
+              subtitle,
+              style: ArcUiTokens.metadata(color: ArcUiTokens.textTertiary),
+            ),
+          ],
+          const SizedBox(height: 12),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _hubOverview() {
+    return StreamBuilder<Map<String, ArcBlueprintState>>(
+      stream: _blueprintRepository.watchMyBlueprintStates(),
+      builder: (context, snapshot) {
+        final states = snapshot.data ?? const <String, ArcBlueprintState>{};
+        final blueprints = ArcBlueprintSeedData.blueprints;
+        var owned = 0;
+        var dupes = 0;
+
+        for (final blueprint in blueprints) {
+          final state =
+              states[blueprint.id] ?? ArcBlueprintState.empty(blueprint.id);
+          if (state.owned) owned++;
+          dupes += state.dupesOwned;
+        }
+
+        final total = blueprints.length;
+        final missing = total - owned;
+
+        final metrics =
+            <({String label, String value, IconData icon, Color color})>[
+              (
+                label: 'Collected',
+                value: '$owned / $total',
+                icon: Icons.grid_view_rounded,
+                color: ArcUiTokens.primaryAccent,
+              ),
+              (
+                label: 'Missing',
+                value: '$missing',
+                icon: Icons.track_changes_rounded,
+                color: ArcUiTokens.secondaryAccent,
+              ),
+              (
+                label: 'Duplicates',
+                value: '$dupes',
+                icon: Icons.swap_horiz_rounded,
+                color: ArcUiTokens.success,
+              ),
+            ];
+
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final columns = constraints.maxWidth >= 720
+                ? 4
+                : constraints.maxWidth >= 390
+                ? 2
+                : 1;
+            final gap = 10.0;
+            final tileWidth =
+                (constraints.maxWidth - (gap * (columns - 1))) / columns;
+
+            return Wrap(
+              spacing: gap,
+              runSpacing: gap,
+              children: [
+                for (final metric in metrics)
+                  SizedBox(
+                    width: tileWidth,
+                    child: _overviewTile(
+                      label: metric.label,
+                      value: metric.value,
+                      icon: metric.icon,
+                      color: metric.color,
+                    ),
+                  ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _overviewTile({
+    required String label,
+    required String value,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Container(
+      constraints: const BoxConstraints(minHeight: 96),
+      padding: const EdgeInsets.all(12),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        radius: ArcUiTokens.radiusM,
+        accent: color,
+        borderOpacity: 0.20,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 16, color: color),
+              const SizedBox(width: 7),
+              Expanded(
+                child: Text(
+                  label.toUpperCase(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: ArcUiTokens.label(color: color).copyWith(fontSize: 10),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: ArcUiTokens.sectionTitle(fontSize: 22, color: color),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _personalTools(ArcUserPersonalisationProfile personalisation) {
+    const candidateTitles = <String>[
+      'Collections Tracker',
+      'Raid Intelligence',
+      'Raid Planner',
+      'Match Raider',
+      'Quest Tracker',
+      'Scrappy Tracker',
+      'Bench Tracker',
+      'My Loadout',
+      'My Intel',
+      'Smart Trade Assist',
+      'Trading Overview',
+      'Nomadic Trader',
+      'Play Like a Pro',
+      'Operation Rewards',
+      'Profile & Reputation',
+    ];
+    final focusedTools = candidateTitles
+        .map(_featureByTitle)
+        .where((feature) => _isRelevant(personalisation, feature))
+        .take(4)
+        .toList(growable: false);
+    final tools = <_ArcHubFeature>[
+      ...focusedTools,
+      _featureByTitle('Community Rewards'),
+      _featureByTitle('Plans & Referrals'),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth >= 760
+            ? 3
+            : constraints.maxWidth >= 430
+            ? 2
+            : 1;
+        final gap = 10.0;
+        final cardWidth =
+            (constraints.maxWidth - (gap * (columns - 1))) / columns;
+
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: [
+            for (final feature in tools)
+              SizedBox(width: cardWidth, child: _personalToolCard(feature)),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _personalToolCard(_ArcHubFeature feature) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
+      onTap: () => _openFeature(feature),
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 92),
+        padding: const EdgeInsets.all(12),
+        decoration: ArcUiTokens.surfaceDecoration(
+          role: ArcSurfaceRole.interactive,
+          radius: ArcUiTokens.radiusM,
+          accent: feature.accent,
+          borderOpacity: 0.18,
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: ArcUiTokens.surfaceDecoration(
+                role: ArcSurfaceRole.overlay,
+                radius: ArcUiTokens.radiusS,
+                accent: feature.accent,
+                borderOpacity: 0.26,
+              ),
+              child: Icon(feature.icon, size: 18, color: feature.accent),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    feature.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: ArcUiTokens.cardTitle(fontSize: 13),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    feature.subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: ArcUiTokens.metadata(
+                      color: ArcUiTokens.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: feature.accent.withValues(alpha: 0.76),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _alertFeedBody() {
+    return StreamBuilder<Map<String, ArcBlueprintState>>(
+      stream: _blueprintRepository.watchMyBlueprintStates(),
+      builder: (context, snapshot) {
+        final states = snapshot.data ?? const <String, ArcBlueprintState>{};
+        final blueprints = ArcBlueprintSeedData.blueprints;
+        var owned = 0;
+        var dupes = 0;
+        for (final blueprint in blueprints) {
+          final state =
+              states[blueprint.id] ?? ArcBlueprintState.empty(blueprint.id);
+          if (state.owned) owned++;
+          dupes += state.dupesOwned;
+        }
+        final missing = blueprints.length - owned;
+        final alerts = <Widget>[];
+
+        if (missing > 0) {
+          alerts.add(
+            _alertRow(
+              Icons.track_changes_rounded,
+              'Hunt queue: $missing blueprints still missing.',
+              ArcUiTokens.secondaryAccent,
+            ),
+          );
+        }
+        if (dupes > 0) {
+          alerts.add(
+            _alertRow(
+              Icons.swap_horiz_rounded,
+              'Trade opportunity: $dupes duplicate blueprints available.',
+              ArcUiTokens.success,
+            ),
+          );
+        }
+        if (alerts.isEmpty) {
+          alerts.add(
+            _alertRow(
+              Icons.check_circle_outline_rounded,
+              'No urgent Blueprint priorities right now.',
+              ArcUiTokens.success,
+            ),
+          );
+        }
+
+        return Column(children: alerts);
+      },
+    );
+  }
+
+  Widget _quickActionsBody(ArcUserPersonalisationProfile personalisation) {
+    final candidateActions = [
+      ('Report Drop', _featureByTitle('My Intel'), Icons.inventory_outlined),
+      (
+        'Start Hunt',
+        _featureByTitle('Collections Tracker'),
+        Icons.track_changes_rounded,
+      ),
+      (
+        'Create Trade',
+        _featureByTitle('Trading Overview'),
+        Icons.handshake_outlined,
+      ),
+      ('My Loadout', _featureByTitle('My Loadout'), Icons.inventory_2_outlined),
+    ];
+    var actions = candidateActions
+        .where((action) => _isRelevant(personalisation, action.$2))
+        .toList(growable: false);
+    if (actions.isEmpty) {
+      actions = [
+        (
+          'Profile',
+          _featureByTitle('Profile & Reputation'),
+          Icons.person_outline_rounded,
+        ),
+      ];
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final twoColumns = constraints.maxWidth >= 330;
+        final gap = 8.0;
+        final width = twoColumns
+            ? (constraints.maxWidth - gap) / 2
+            : constraints.maxWidth;
+
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: [
+            for (final action in actions)
+              SizedBox(
+                width: width,
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: action.$2.accent,
+                    side: BorderSide(
+                      color: action.$2.accent.withValues(alpha: 0.36),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 11,
+                    ),
+                    minimumSize: const Size(0, 42),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(ArcUiTokens.radiusS),
+                    ),
+                  ),
+                  onPressed: () => _openFeature(action.$2),
+                  icon: Icon(action.$3, size: 17),
+                  label: Text(
+                    action.$1,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: ArcUiTokens.buttonLabel(color: action.$2.accent),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _desktopDashboard(ArcUserPersonalisationProfile personalisation) {
+    final blueprintFocus = _blueprintFocus(personalisation);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          flex: 7,
+          child: Column(
+            children: [
+              if (blueprintFocus) ...[
+                _hubPanel(
+                  title: 'Hub Overview',
+                  subtitle: 'Your live Blueprint collection snapshot',
+                  child: _hubOverview(),
+                ),
+                const SizedBox(height: 12),
+              ],
+              _hubPanel(
+                title: 'Your Focus',
+                subtitle: 'Tools surfaced from your onboarding priorities',
+                child: _personalTools(personalisation),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          flex: 4,
+          child: Column(
+            children: [
+              if (blueprintFocus) ...[
+                _hubPanel(title: 'Priorities', child: _alertFeedBody()),
+                const SizedBox(height: 12),
+              ],
+              _hubPanel(
+                title: 'Quick Actions',
+                accent: ArcUiTokens.secondaryAccent,
+                child: _quickActionsBody(personalisation),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _mobileDashboard(ArcUserPersonalisationProfile personalisation) {
+    final blueprintFocus = _blueprintFocus(personalisation);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (blueprintFocus) ...[
+          _hubPanel(
+            title: 'Hub Overview',
+            subtitle: 'Your live Blueprint collection snapshot',
+            child: _hubOverview(),
+          ),
+          const SizedBox(height: 12),
+          _hubPanel(title: 'Priorities', child: _alertFeedBody()),
+          const SizedBox(height: 12),
+        ],
+        _hubPanel(
+          title: 'Quick Actions',
+          accent: ArcUiTokens.secondaryAccent,
+          child: _quickActionsBody(personalisation),
+        ),
+        const SizedBox(height: 12),
+        _hubPanel(
+          title: 'Your Focus',
+          subtitle: 'Tools surfaced from your onboarding priorities',
+          child: _personalTools(personalisation),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      drawer: const AppDrawer(),
+      bottomNavigationBar: const ArcCompanionBottomDock(activeLabel: 'my hub'),
+      body: ArcRaidersScreenShell(
+        showAdBanner: false,
+        child: SafeArea(
+          child: StreamBuilder<ArcUserPersonalisationProfile>(
+            stream: _personalisationRepository.watchProfile(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting &&
+                  !snapshot.hasData) {
+                return const Center(
+                  child: CircularProgressIndicator(
+                    color: ArcUiTokens.primaryAccent,
+                  ),
+                );
+              }
+              final personalisation =
+                  snapshot.data ??
+                  const ArcUserPersonalisationProfile(
+                    completed: true,
+                    goals: <ArcPersonalisationGoal>{},
+                    reduceNoise: true,
+                  );
+              return ArcRaidersPageList(
+                maxWidth: 1240,
+                bottomPadding: 96,
+                children: [
+                  _referenceHeader(),
+                  const SizedBox(height: 8),
+                  _identityHero(personalisation),
+                  const SizedBox(height: 12),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      return constraints.maxWidth >= 940
+                          ? _desktopDashboard(personalisation)
+                          : _mobileDashboard(personalisation);
+                    },
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MyHubDividerSpacer extends StatelessWidget {
+  const _MyHubDividerSpacer({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 8, 18, 16),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(height: 1, color: color.withValues(alpha: 0.22)),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Text(
+              label.toUpperCase(),
+              style: AppTheme.bodyTextStyle(
+                fontSize: 10,
+                color: color,
+                isBold: true,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Container(height: 1, color: color.withValues(alpha: 0.22)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PremiumFeatureCarousel extends StatelessWidget {
+  const _PremiumFeatureCarousel({
+    required PageController controller,
+    required this.selectedIndex,
+    required this.features,
+    required this.onPageChanged,
+    required this.onOpen,
+  });
+
+  final int selectedIndex;
+  final List<_ArcHubFeature> features;
+  final ValueChanged<int> onPageChanged;
+  final ValueChanged<_ArcHubFeature> onOpen;
+
+  int _wrap(int value) => (value + features.length) % features.length;
+
+  void _step(int direction) {
+    onPageChanged(_wrap(selectedIndex + direction));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (features.isEmpty) return const SizedBox.shrink();
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isPhone = constraints.maxWidth < 430;
+        final isWide = constraints.maxWidth >= 900;
+        final isTablet =
+            constraints.maxWidth >= 650 && constraints.maxWidth < 900;
+        final isCompactHeight = constraints.maxHeight < 640;
+        final slots = isWide ? const [-2, 2, -1, 1, 0] : const [-1, 1, 0];
+
+        final stageWidth = isWide
+            ? math.min(constraints.maxWidth, 1180.0)
+            : constraints.maxWidth;
+        final stageHeight = isPhone
+            ? math.min(constraints.maxHeight, 462.0)
+            : math.min(constraints.maxHeight, isTablet ? 560.0 : 474.0);
+
+        final centreCardHeight = isWide
+            ? (isCompactHeight ? 268.0 : 292.0)
+            : isTablet
+            ? 332.0
+            : 318.0;
+
+        final dotsTop = centreCardHeight + (isPhone ? 14.0 : 16.0);
+        final stripTop = dotsTop + (isPhone ? 24.0 : 24.0);
+        final stripWidth = isPhone
+            ? math.min(stageWidth - 38.0, 360.0)
+            : math.min(stageWidth - 64.0, 560.0);
+
+        final arrowTop = ((centreCardHeight - 48.0) / 2)
+            .clamp(72.0, math.max(72.0, stageHeight - 180.0))
+            .toDouble();
+        final arrowInset = isPhone ? 8.0 : 26.0;
+
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onHorizontalDragEnd: (details) {
+            final velocity = details.primaryVelocity ?? 0;
+            if (velocity < -100) {
+              _step(1);
+            } else if (velocity > 100) {
+              _step(-1);
+            }
+          },
+          child: Center(
+            child: SizedBox(
+              width: stageWidth,
+              height: stageHeight,
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.topCenter,
+                children: [
+                  for (final slot in slots)
+                    _StaticRingFeatureSlot(
+                      key: ValueKey('${selectedIndex}_$slot'),
+                      canvasWidth: stageWidth,
+                      canvasHeight: stageHeight,
+                      slot: slot,
+                      isWide: isWide,
+                      isTablet: isTablet,
+                      isCompactHeight: isCompactHeight,
+                      feature: features[_wrap(selectedIndex + slot)],
+                      selected: slot == 0,
+                      onTap: slot == 0
+                          ? () => onOpen(features[selectedIndex])
+                          : () => onPageChanged(_wrap(selectedIndex + slot)),
+                    ),
+                  Positioned(
+                    top: dotsTop,
+                    child: _HubPageIndicator(
+                      count: features.length,
+                      selectedIndex: selectedIndex,
+                      accent: features[selectedIndex].accent,
+                    ),
+                  ),
+                  Positioned(
+                    top: stripTop,
+                    child: SizedBox(
+                      width: stripWidth,
+                      child: _HubQuickStrip(
+                        selected: features[selectedIndex],
+                        onOpen: () => onOpen(features[selectedIndex]),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    left: arrowInset,
+                    top: arrowTop,
+                    child: _ChevronButton(
+                      icon: Icons.chevron_left_rounded,
+                      onPressed: () => _step(-1),
+                    ),
+                  ),
+                  Positioned(
+                    right: arrowInset,
+                    top: arrowTop,
+                    child: _ChevronButton(
+                      icon: Icons.chevron_right_rounded,
+                      onPressed: () => _step(1),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _StaticRingFeatureSlot extends StatelessWidget {
+  const _StaticRingFeatureSlot({
+    super.key,
+    required this.canvasWidth,
+    required this.canvasHeight,
+    required this.slot,
+    required this.isWide,
+    required this.isTablet,
+    required this.isCompactHeight,
+    required this.feature,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final double canvasWidth;
+  final double canvasHeight;
+  final int slot;
+  final bool isWide;
+  final bool isTablet;
+  final bool isCompactHeight;
+  final _ArcHubFeature feature;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final isPhone = canvasWidth < 430;
+    final distance = slot.abs();
+
+    final centerWidth = isWide
+        ? (isCompactHeight ? 274.0 : 298.0)
+        : isTablet
+        ? 316.0
+        : math.min(canvasWidth - 56.0, 312.0);
+    final centerHeight = isWide
+        ? (isCompactHeight ? 278.0 : 304.0)
+        : isTablet
+        ? 350.0
+        : 356.0;
+
+    final nearWidth = isWide
+        ? (isCompactHeight ? 196.0 : 214.0)
+        : isTablet
+        ? 236.0
+        : math.min(canvasWidth - 132.0, 210.0);
+    final nearHeight = isWide
+        ? (isCompactHeight ? 226.0 : 248.0)
+        : isTablet
+        ? 294.0
+        : 302.0;
+
+    final outerWidth = isWide ? (isCompactHeight ? 124.0 : 138.0) : 0.0;
+    final outerHeight = isWide ? (isCompactHeight ? 172.0 : 192.0) : 0.0;
+
+    final width = selected
+        ? centerWidth
+        : distance == 1
+        ? nearWidth
+        : outerWidth;
+    final height = selected
+        ? centerHeight
+        : distance == 1
+        ? nearHeight
+        : outerHeight;
+
+    final offset = selected
+        ? 0.0
+        : distance == 1
+        ? (isWide
+              ? (isCompactHeight ? 198.0 : 216.0)
+              : isTablet
+              ? 214.0
+              : math.min(canvasWidth * 0.50, 186.0))
+        : (isWide ? (isCompactHeight ? 334.0 : 362.0) : 0.0);
+
+    final top = selected
+        ? (isWide
+              ? (isCompactHeight ? 0.0 : -6.0)
+              : isTablet
+              ? 8.0
+              : 0.0)
+        : distance == 1
+        ? (isWide
+              ? (isCompactHeight ? 34.0 : 30.0)
+              : isTablet
+              ? 42.0
+              : 38.0)
+        : (isCompactHeight ? 62.0 : 58.0);
+
+    final opacity = selected
+        ? 1.0
+        : distance == 1
+        ? (isPhone ? 0.52 : 0.76)
+        : 0.32;
+
+    final scale = selected ? 1.0 : (isPhone ? 0.96 : 1.0);
+    final left = ((canvasWidth - width) / 2) + (slot < 0 ? -offset : offset);
+
+    return AnimatedPositioned(
+      duration: const Duration(milliseconds: 260),
+      curve: Curves.easeOutCubic,
+      left: left,
+      top: top,
+      width: width,
+      height: height,
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 200),
+        opacity: opacity,
+        child: Transform.scale(
+          scale: scale,
+          child: IgnorePointer(
+            ignoring: !selected && isPhone,
+            child: _StaticRingFeatureCard(
+              feature: feature,
+              selected: selected,
+              compact: !selected,
+              onTap: onTap,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ArcHubRealAssetBackdrop extends StatelessWidget {
+  const _ArcHubRealAssetBackdrop({required this.feature});
+
+  final _ArcHubFeature feature;
+
+  @override
+  Widget build(BuildContext context) {
+    final path = feature.assetName.startsWith('assets/')
+        ? feature.assetName
+        : 'assets/arc_raiders/hub/${feature.assetName}';
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.asset(
+          path,
+          fit: BoxFit.cover,
+          alignment: const Alignment(0, -0.12),
+          errorBuilder: (context, error, stackTrace) {
+            return _ArcHubArtBackdrop(
+              accent: feature.accent,
+              kind: feature.art,
+            );
+          },
+        ),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: const Alignment(0, -0.36),
+              radius: 1.08,
+              colors: [
+                feature.accent.withValues(alpha: 0.18),
+                Colors.transparent,
+                Colors.black.withValues(alpha: 0.38),
+              ],
+              stops: const [0.0, 0.48, 1.0],
+            ),
+          ),
+        ),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.black.withValues(alpha: 0.02),
+                Colors.black.withValues(alpha: 0.10),
+                Colors.black.withValues(alpha: 0.66),
+                Colors.black.withValues(alpha: 0.92),
+              ],
+              stops: const [0.0, 0.42, 0.74, 1.0],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _StaticRingFeatureCard extends StatelessWidget {
+  const _StaticRingFeatureCard({
+    required this.feature,
+    required this.selected,
+    required this.compact,
+    required this.onTap,
+  });
+
+  final _ArcHubFeature feature;
+  final bool selected;
+  final bool compact;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final phone = MediaQuery.sizeOf(context).width < 430;
+    final titleSize = selected ? (phone ? 23.0 : 28.0) : (phone ? 16.0 : 19.0);
+    final bodySize = selected ? (phone ? 12.5 : 15.0) : (phone ? 10.5 : 12.0);
+    final iconSize = selected ? (phone ? 28.0 : 34.0) : 24.0;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(selected ? 30 : 22),
+      onTap: onTap,
+      child: Container(
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.94),
+          borderRadius: BorderRadius.circular(selected ? 30 : 22),
+          border: Border.all(
+            color: feature.accent.withValues(alpha: selected ? 0.88 : 0.58),
+            width: selected ? 1.5 : 1.0,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: feature.accent.withValues(alpha: selected ? 0.30 : 0.16),
+              blurRadius: selected ? 30 : 16,
+              offset: const Offset(0, 14),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            Positioned.fill(child: _ArcHubRealAssetBackdrop(feature: feature)),
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.black.withValues(alpha: 0.02),
+                      Colors.black.withValues(alpha: compact ? 0.42 : 0.18),
+                      Colors.black.withValues(alpha: compact ? 0.92 : 0.74),
+                    ],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              top: selected ? 16 : 14,
+              left: selected ? 16 : 14,
+              child: Container(
+                width: selected ? (phone ? 50 : 58) : 44,
+                height: selected ? (phone ? 50 : 58) : 44,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.black.withValues(alpha: 0.38),
+                  border: Border.all(
+                    color: feature.accent.withValues(alpha: 0.64),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: feature.accent.withValues(alpha: 0.34),
+                      blurRadius: 20,
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  feature.icon,
+                  color: feature.accent,
+                  size: iconSize,
+                ),
+              ),
+            ),
+            if (selected && !phone)
+              Positioned(
+                top: 18,
+                right: 18,
+                child: _ArcHubStatusPill(accent: feature.accent),
+              ),
+            Positioned(
+              left: selected ? (phone ? 18 : 24) : 16,
+              right: selected ? (phone ? 18 : 24) : 16,
+              bottom: selected ? (phone ? 18 : 24) : 18,
+              child: Column(
+                crossAxisAlignment: phone && selected
+                    ? CrossAxisAlignment.center
+                    : CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    feature.title.toUpperCase(),
+                    textAlign: phone && selected
+                        ? TextAlign.center
+                        : TextAlign.start,
+                    maxLines: phone ? 2 : (compact ? 2 : 3),
+                    overflow: TextOverflow.ellipsis,
+                    style:
+                        AppTheme.neonTextStyle(
+                          fontSize: titleSize,
+                          color: Colors.white,
+                          isBold: true,
+                        ).copyWith(
+                          letterSpacing: phone ? 0.35 : 0.8,
+                          height: 1.02,
+                          shadows: [
+                            Shadow(
+                              color: feature.accent.withValues(alpha: 0.80),
+                              blurRadius: selected ? 18 : 10,
+                            ),
+                          ],
+                        ),
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    feature.subtitle,
+                    textAlign: phone && selected
+                        ? TextAlign.center
+                        : TextAlign.start,
+                    maxLines: phone ? 3 : (compact ? 3 : 4),
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTheme.bodyTextStyle(
+                      fontSize: bodySize,
+                      color: Colors.white.withValues(alpha: 0.84),
+                      isBold: true,
+                    ).copyWith(height: 1.22),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: phone && selected
+                        ? MainAxisAlignment.center
+                        : MainAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.touch_app_rounded,
+                        color: feature.accent,
+                        size: compact ? 14 : 17,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Tap to open',
+                        style: AppTheme.bodyTextStyle(
+                          fontSize: compact ? 10 : 11,
+                          color: feature.accent,
+                          isBold: true,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ignore: unused_element
+class _HubHeader extends StatelessWidget {
+  const _HubHeader({required this.selected});
+
+  final _ArcHubFeature selected;
+
+  @override
+  Widget build(BuildContext context) {
+    final wide = ArcResponsiveChrome.width(context) >= 1100;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        AppTheme.spaceM,
+        wide ? 4 : 8,
+        AppTheme.spaceM,
+        0,
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 4,
+            height: wide ? 34 : 40,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(99),
+              gradient: const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  ArcUiTokens.secondaryAccent,
+                  ArcUiTokens.primaryAccent,
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'MY HUB',
+                  style: TextStyle(
+                    fontFamily: AppTheme.headingFontFamily,
+                    fontSize: wide ? 28 : 32,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                    color: ArcUiTokens.secondaryAccent,
+                  ),
+                ),
+                Text(
+                  selected.title.toUpperCase(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: ArcUiTokens.label(color: ArcUiTokens.primaryAccent),
+                ),
+              ],
+            ),
+          ),
+          _TinySystemChip(label: 'BETA', accent: ArcUiTokens.secondaryAccent),
+        ],
+      ),
+    );
+  }
+}
+
+class _HubQuickStrip extends StatelessWidget {
+  const _HubQuickStrip({required this.selected, required this.onOpen});
+
+  final _ArcHubFeature selected;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final phone = MediaQuery.sizeOf(context).width < 430;
+
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 180),
+      child: Container(
+        key: ValueKey(selected.title),
+        padding: EdgeInsets.fromLTRB(
+          phone ? 12 : AppTheme.spaceM,
+          phone ? 9 : 11,
+          phone ? 12 : AppTheme.spaceM,
+          phone ? 9 : 11,
+        ),
+        decoration: BoxDecoration(
+          color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.78),
+          borderRadius: BorderRadius.circular(phone ? 24 : 28),
+          border: Border.all(color: selected.accent.withValues(alpha: 0.36)),
+          boxShadow: [
+            BoxShadow(
+              color: selected.accent.withValues(alpha: 0.12),
+              blurRadius: 18,
+            ),
+          ],
+        ),
+        child: Text(
+          selected.subtitle,
+          textAlign: TextAlign.center,
+          maxLines: phone ? 3 : 2,
+          overflow: TextOverflow.ellipsis,
+          style: AppTheme.bodyTextStyle(
+            fontSize: phone ? 13 : 14,
+            color: AppTheme.tradingMutedText,
+            isBold: true,
+          ).copyWith(height: 1.32),
+        ),
+      ),
+    );
+  }
+}
+
+class _TrackingMenuScreen extends StatefulWidget {
+  const _TrackingMenuScreen();
+
+  @override
+  State<_TrackingMenuScreen> createState() => _TrackingMenuScreenState();
+}
+
+class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
+  final PageController _controller = PageController(viewportFraction: 0.42);
+  int _selectedIndex = 0;
+
+  late final List<_ArcHubFeature> _trackingFeatures = [
+    _ArcHubFeature(
+      title: 'Blueprint Grid',
+      subtitle: 'Owned, missing, dupes and blueprint hunt progress.',
+      icon: Icons.grid_on_rounded,
+      accent: AppTheme.neonCyan,
+      art: _ArcHubArtKind.blueprints,
+      assetName: 'arc_hub_blueprint_grid.webp',
+      builder: (_) => const BlueprintGridScreen(),
+    ),
+    _ArcHubFeature(
+      title: 'Scrappy Tracker',
+      subtitle: 'Track upgrade materials and useful resource quantities.',
+      icon: Icons.egg_alt_rounded,
+      accent: AppTheme.neonPink,
+      art: _ArcHubArtKind.scrappy,
+      assetName: 'arc_hub_scrappy_tracker.webp',
+      builder: (_) => const ScrappyGridScreen(),
+    ),
+    _ArcHubFeature(
+      title: 'Bench Tracker',
+      subtitle:
+          'Track bench materials, upgrade tiers and missing requirements.',
+      icon: Icons.build_rounded,
+      accent: AppTheme.neonCyan,
+      art: _ArcHubArtKind.targets,
+      assetName: 'arc_hub_bench_tracker.webp',
+      builder: (_) => const ScrappyGridScreen.bench(),
+    ),
+    _ArcHubFeature(
+      title: 'Quest Tracker',
+      subtitle: 'Track trader quest items, hand-ins and collection progress.',
+      icon: Icons.assignment_rounded,
+      accent: AppTheme.neonPink,
+      art: _ArcHubArtKind.intel,
+      assetName: 'arc_hub_quest_tracker.webp',
+      builder: (_) => const ScrappyGridScreen.quest(),
+    ),
+  ];
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _openFeature(_ArcHubFeature feature) async {
+    final navigator = Navigator.of(context);
+    final isAdminOrDev = await FeatureAccess.isAdminOrDev();
+    if (!mounted) return;
+
+    if (isAdminOrDev) {
+      navigator.push(MaterialPageRoute(builder: feature.builder));
+      return;
+    }
+
+    const betaOpenTitles = {'Nomadic Trader', 'My Hub'};
+
+    if (betaOpenTitles.contains(feature.title)) {
+      navigator.push(MaterialPageRoute(builder: feature.builder));
+      return;
+    }
+
+    final flag = _featureAccessFlagForTitle(feature.title);
+    final availability = flag == null
+        ? FeatureAvailability.hidden
+        : await FeatureAccess.getAvailability(flag);
+
+    if (!mounted) return;
+
+    if (availability.isLive) {
+      navigator.push(MaterialPageRoute(builder: feature.builder));
+      return;
+    }
+
+    navigator.push(
+      MaterialPageRoute(
+        builder: (_) => availability.isComingSoon
+            ? FeatureComingSoonScreen(title: feature.title)
+            : FeatureLockedScreen(
+                title: feature.title,
+                availability: FeatureAvailability.hidden,
+              ),
+      ),
+    );
+  }
+
+  String? _featureAccessFlagForTitle(String title) {
+    switch (title) {
+      case 'Collections Tracker':
+      case 'Collections Tracker Beta':
+      case 'Blueprint Grid':
+        return FeatureAccessFlag.blueprintTracker;
+      case 'Scrappy Tracker':
+        return FeatureAccessFlag.scrappyTracker;
+      case 'Bench Tracker':
+        return FeatureAccessFlag.benchTracker;
+      case 'Quest Tracker':
+        return FeatureAccessFlag.questTracker;
+      case 'Trading':
+      case 'Trading Overview':
+      case 'Trader Hub':
+        return FeatureAccessFlag.traderHub;
+      case 'Match a Raider':
+      case 'Match Raider':
+        return FeatureAccessFlag.matchRaider;
+      case 'Raid Planner':
+      case 'Hunt Targets':
+        return FeatureAccessFlag.raidPlanner;
+      case 'Community Intel':
+      case 'My Intel':
+      case 'Intel Explorer':
+        return FeatureAccessFlag.intelExplorer;
+      case 'Smart Trade':
+      case 'Smart Trade Assist':
+        return FeatureAccessFlag.smartTradeAssist;
+      case 'Subscriptions':
+      case 'Plans & Referrals':
+      case 'Community Rewards':
+      case 'Referral Tools':
+      case 'Refer a Raider':
+      case 'Operations':
+      case 'Operation Rewards':
+        return FeatureAccessFlag.monetisation;
+      case 'Voice Assistant':
+        return FeatureAccessFlag.voiceAssistant;
+      case 'Play Like A Pro':
+      case 'Play Locker Pro':
+        return FeatureAccessFlag.playLockerPro;
+      default:
+        return null;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final selected = _trackingFeatures[_selectedIndex];
+
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.white,
+        title: Text(
+          'Tracking',
+          style: AppTheme.neonTextStyle(
+            fontSize: 22,
+            color: selected.accent,
+            isBold: true,
+          ),
+        ),
+      ),
+      body: ArcRaidersScreenShell(
+        showAdBanner: false,
+        child: SafeArea(
+          child: Column(
+            children: [
+              const _MyHubDividerSpacer(
+                label: 'Personal Systems',
+                color: AppTheme.neonCyan,
+              ),
+              Expanded(
+                child: _PremiumFeatureCarousel(
+                  controller: _controller,
+                  selectedIndex: _selectedIndex,
+                  features: _trackingFeatures,
+                  onPageChanged: (index) {
+                    setState(() => _selectedIndex = index);
+                  },
+                  onOpen: _openFeature,
+                ),
+              ),
+              const SizedBox(height: AppTheme.spaceS),
+              const _HubAdSlot(),
+              const SizedBox(height: AppTheme.spaceXS),
+              _ArcBottomDock(
+                onMatch: () => Navigator.of(context).pop(),
+                onRaid: () => Navigator.of(context).pop(),
+                onMic: () => UagVoiceArcAssistantSheet.show(context),
+                onTrading: () => Navigator.of(context).pop(),
+                onIntel: () => Navigator.of(context).pop(),
+              ),
+              const SizedBox(height: AppTheme.spaceL),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HubAdSlot extends StatelessWidget {
+  const _HubAdSlot();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: SizedBox(
+        width: ArcResponsiveChrome.adMaxWidth(context),
+        height: ArcResponsiveChrome.adHeight(context),
+        child: const ArcAdBannerCard(),
+      ),
+    );
+  }
+}
+
+class _ArcBottomDock extends StatelessWidget {
+  const _ArcBottomDock({
+    required this.onMatch,
+    required this.onRaid,
+    required this.onMic,
+    required this.onTrading,
+    required this.onIntel,
+  });
+
+  final VoidCallback onMatch;
+  final VoidCallback onRaid;
+  final VoidCallback onMic;
+  final VoidCallback onTrading;
+  final VoidCallback onIntel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: EdgeInsets.fromLTRB(
+        AppTheme.spaceM,
+        0,
+        AppTheme.spaceM,
+        ArcResponsiveChrome.width(context) >= 1100
+            ? AppTheme.spaceXS
+            : AppTheme.spaceM,
+      ),
+      padding: EdgeInsets.symmetric(
+        horizontal: AppTheme.spaceS,
+        vertical: ArcResponsiveChrome.width(context) >= 1100
+            ? AppTheme.spaceXS
+            : AppTheme.spaceS,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.035),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.10)),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.neonCyan.withValues(alpha: 0.13),
+            blurRadius: 4,
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _DockButton(
+              icon: Icons.groups_rounded,
+              label: 'Match',
+              onTap: onMatch,
+            ),
+          ),
+          Expanded(
+            child: _DockButton(
+              icon: Icons.route_rounded,
+              label: 'Raid',
+              onTap: onRaid,
+            ),
+          ),
+          _ArcMicButton(onTap: onMic),
+          Expanded(
+            child: _DockButton(
+              icon: Icons.swap_horiz_rounded,
+              label: 'Trade',
+              onTap: onTrading,
+            ),
+          ),
+          Expanded(
+            child: _DockButton(
+              icon: Icons.radar_rounded,
+              label: 'Intel',
+              onTap: onIntel,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ArcMicButton extends StatelessWidget {
+  const _ArcMicButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceS),
+      child: ElectricChargeBorder(
+        active: true,
+        radius: 999,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(999),
+          onTap: onTap,
+          child: Container(
+            width: ArcResponsiveChrome.width(context) >= 1100 ? 54 : 64,
+            height: ArcResponsiveChrome.width(context) >= 1100 ? 54 : 64,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppTheme.neonPink.withValues(alpha: 0.22),
+              border: Border.all(
+                color: AppTheme.neonPink.withValues(alpha: 0.78),
+              ),
+            ),
+            child: const Icon(
+              Icons.mic_rounded,
+              color: AppTheme.neonPink,
+              size: 32,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DockButton extends StatelessWidget {
+  const _DockButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(24),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 7),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: AppTheme.neonCyan, size: 22),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              overflow: TextOverflow.ellipsis,
+              style: AppTheme.bodyTextStyle(
+                fontSize: 10,
+                color: Colors.white70,
+                isBold: true,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ChevronButton extends StatelessWidget {
+  const _ChevronButton({required this.icon, required this.onPressed});
+
+  final IconData icon;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedOpacity(
+      opacity: onPressed == null ? 0.25 : 1,
+      duration: const Duration(milliseconds: 160),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.72),
+          border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.34)),
+        ),
+        child: IconButton(
+          onPressed: onPressed,
+          icon: Icon(icon),
+          color: AppTheme.neonCyan,
+          iconSize: 34,
+        ),
+      ),
+    );
+  }
+}
+
+class _HubPageIndicator extends StatelessWidget {
+  const _HubPageIndicator({
+    required this.count,
+    required this.selectedIndex,
+    required this.accent,
+  });
+
+  final int count;
+  final int selectedIndex;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(count, (index) {
+        final active = index == selectedIndex;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          width: active ? 22 : 6,
+          height: 6,
+          margin: const EdgeInsets.symmetric(horizontal: 3),
+          decoration: BoxDecoration(
+            color: active ? accent : Colors.white.withValues(alpha: 0.18),
+            borderRadius: BorderRadius.circular(999),
+            boxShadow: active
+                ? [
+                    BoxShadow(
+                      color: accent.withValues(alpha: 0.42),
+                      blurRadius: 10,
+                    ),
+                  ]
+                : null,
+          ),
+        );
+      }),
+    );
+  }
+}
+
+class _TinySystemChip extends StatelessWidget {
+  const _TinySystemChip({required this.label, required this.accent});
+
+  final String label;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.32),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: accent.withValues(alpha: 0.44)),
+      ),
+      child: Text(
+        label,
+        style: AppTheme.bodyTextStyle(
+          fontSize: 11,
+          color: accent,
+          isBold: true,
+        ),
+      ),
+    );
+  }
+}
+
+class _ArcHubStatusPill extends StatelessWidget {
+  const _ArcHubStatusPill({required this.accent});
+
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.34),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: accent.withValues(alpha: 0.42)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.bolt_rounded, color: accent, size: 14),
+          const SizedBox(width: 4),
+          Text(
+            'LIVE',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.84),
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.8,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ArcHubArtBackdrop extends StatelessWidget {
+  const _ArcHubArtBackdrop({required this.accent, required this.kind});
+
+  final Color accent;
+  final _ArcHubArtKind kind;
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      painter: _ArcHubArtPainter(accent: accent, kind: kind),
+    );
+  }
+}
+
+class _ArcHubArtPainter extends CustomPainter {
+  const _ArcHubArtPainter({required this.accent, required this.kind});
+
+  final Color accent;
+  final _ArcHubArtKind kind;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final background = Paint()
+      ..shader = LinearGradient(
+        colors: [
+          const Color(0xFF090B18),
+          Color.lerp(accent, const Color(0xFF080812), 0.78)!,
+          const Color(0xFF02030A),
+        ],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ).createShader(Offset.zero & size);
+
+    canvas.drawRect(Offset.zero & size, background);
+    _drawGrid(canvas, size);
+    _drawGlowOrbs(canvas, size);
+    _drawKindArt(canvas, size);
+    _drawScannerLines(canvas, size);
+  }
+
+  void _drawGrid(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.055)
+      ..strokeWidth = 1;
+
+    const gap = 28.0;
+    for (var x = -size.width; x < size.width * 2; x += gap) {
+      canvas.drawLine(
+        Offset(x, size.height),
+        Offset(x + size.width * 0.55, 0),
+        paint,
+      );
+    }
+
+    for (var y = 0.0; y < size.height; y += gap) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y + 24), paint);
+    }
+  }
+
+  void _drawGlowOrbs(Canvas canvas, Size size) {
+    final diagonalWash = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topRight,
+        end: Alignment.bottomLeft,
+        colors: [
+          accent.withValues(alpha: 0.18),
+          Colors.transparent,
+          AppTheme.neonPink.withValues(alpha: 0.10),
+        ],
+        stops: const [0, 0.52, 1],
+      ).createShader(Offset.zero & size);
+
+    canvas.drawRect(Offset.zero & size, diagonalWash);
+
+    final horizonWash = Paint()
+      ..shader =
+          LinearGradient(
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+            colors: [
+              accent.withValues(alpha: 0.0),
+              accent.withValues(alpha: 0.12),
+              accent.withValues(alpha: 0.0),
+            ],
+            stops: const [0, 0.52, 1],
+          ).createShader(
+            Rect.fromLTWH(
+              0,
+              size.height * 0.24,
+              size.width,
+              size.height * 0.40,
+            ),
+          );
+
+    canvas.drawRect(
+      Rect.fromLTWH(0, size.height * 0.24, size.width, size.height * 0.40),
+      horizonWash,
+    );
+  }
+
+  void _drawKindArt(Canvas canvas, Size size) {
+    switch (kind) {
+      case _ArcHubArtKind.match:
+        _drawSquadArt(canvas, size);
+      case _ArcHubArtKind.blueprints:
+        _drawBlueprintArt(canvas, size);
+      case _ArcHubArtKind.raid:
+        _drawRaidArt(canvas, size);
+      case _ArcHubArtKind.targets:
+        _drawTargetsArt(canvas, size);
+      case _ArcHubArtKind.trading:
+        _drawTradingArt(canvas, size);
+      case _ArcHubArtKind.smart:
+        _drawSmartArt(canvas, size);
+      case _ArcHubArtKind.intel:
+        _drawRaidArt(canvas, size);
+      case _ArcHubArtKind.scrappy:
+        _drawScrappyArt(canvas, size);
+    }
+  }
+
+  void _drawSquadArt(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4
+      ..strokeCap = StrokeCap.round
+      ..color = accent.withValues(alpha: 0.84);
+
+    final centre = Offset(size.width * 0.58, size.height * 0.42);
+    final left = Offset(size.width * 0.38, size.height * 0.50);
+    final right = Offset(size.width * 0.78, size.height * 0.52);
+
+    canvas.drawCircle(centre, 36, paint);
+    canvas.drawCircle(left, 25, paint);
+    canvas.drawCircle(right, 25, paint);
+
+    canvas.drawArc(
+      Rect.fromCenter(center: centre.translate(0, 62), width: 150, height: 82),
+      3.35,
+      2.1,
+      false,
+      paint,
+    );
+  }
+
+  void _drawBlueprintArt(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..color = accent.withValues(alpha: 0.82);
+
+    final rect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(
+        size.width * 0.34,
+        size.height * 0.20,
+        size.width * 0.44,
+        size.height * 0.44,
+      ),
+      const Radius.circular(18),
+    );
+
+    canvas.drawRRect(rect, paint);
+
+    for (var i = 0; i < 4; i++) {
+      final y = size.height * (0.28 + i * 0.08);
+      canvas.drawLine(
+        Offset(size.width * 0.40, y),
+        Offset(size.width * 0.72, y),
+        paint,
+      );
+    }
+
+    canvas.drawCircle(
+      Offset(size.width * 0.57, size.height * 0.42),
+      38,
+      paint..color = AppTheme.neonPink.withValues(alpha: 0.70),
+    );
+  }
+
+  void _drawRaidArt(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..color = accent.withValues(alpha: 0.82);
+
+    final centre = Offset(size.width * 0.58, size.height * 0.42);
+    for (final radius in [32.0, 62.0, 92.0]) {
+      canvas.drawCircle(centre, radius, paint);
+    }
+
+    canvas.drawLine(centre.translate(-118, 0), centre.translate(118, 0), paint);
+    canvas.drawLine(centre.translate(0, -102), centre.translate(0, 102), paint);
+    canvas.drawCircle(
+      centre.translate(42, -34),
+      8,
+      Paint()..color = AppTheme.neonPink.withValues(alpha: 0.88),
+    );
+  }
+
+  void _drawTargetsArt(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4
+      ..strokeCap = StrokeCap.round
+      ..color = accent.withValues(alpha: 0.86);
+
+    final centre = Offset(size.width * 0.58, size.height * 0.42);
+    canvas.drawCircle(centre, 86, paint);
+    canvas.drawCircle(centre, 48, paint);
+    canvas.drawCircle(centre, 12, Paint()..color = AppTheme.neonPink);
+    canvas.drawLine(centre.translate(-104, 0), centre.translate(104, 0), paint);
+    canvas.drawLine(centre.translate(0, -104), centre.translate(0, 104), paint);
+  }
+
+  void _drawScrappyArt(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4
+      ..strokeCap = StrokeCap.round
+      ..color = accent.withValues(alpha: 0.84);
+
+    final body = RRect.fromRectAndRadius(
+      Rect.fromCenter(
+        center: Offset(size.width * 0.58, size.height * 0.45),
+        width: 116,
+        height: 86,
+      ),
+      const Radius.circular(42),
+    );
+    canvas.drawRRect(body, paint);
+
+    final head = Offset(size.width * 0.62, size.height * 0.30);
+    canvas.drawCircle(head, 28, paint);
+    canvas.drawPath(
+      Path()
+        ..moveTo(head.dx + 22, head.dy + 2)
+        ..lineTo(head.dx + 52, head.dy + 12)
+        ..lineTo(head.dx + 22, head.dy + 22),
+      paint,
+    );
+
+    final comb = Paint()
+      ..color = AppTheme.neonPink.withValues(alpha: 0.86)
+      ..style = PaintingStyle.fill;
+
+    for (var i = 0; i < 3; i++) {
+      canvas.drawCircle(
+        Offset(head.dx - 18 + i * 14, head.dy - 28 - (i == 1 ? 6 : 0)),
+        9,
+        comb,
+      );
+    }
+  }
+
+  void _drawTradingArt(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 5
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..color = accent.withValues(alpha: 0.82);
+
+    final left = Rect.fromLTWH(size.width * 0.28, size.height * 0.32, 94, 70);
+    final right = Rect.fromLTWH(size.width * 0.58, size.height * 0.24, 94, 70);
+
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(left, const Radius.circular(16)),
+      paint,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(right, const Radius.circular(16)),
+      paint..color = AppTheme.neonPink.withValues(alpha: 0.76),
+    );
+
+    final arrowPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 5
+      ..strokeCap = StrokeCap.round
+      ..color = Colors.white.withValues(alpha: 0.70);
+
+    canvas.drawLine(
+      Offset(size.width * 0.44, size.height * 0.54),
+      Offset(size.width * 0.64, size.height * 0.54),
+      arrowPaint,
+    );
+    canvas.drawLine(
+      Offset(size.width * 0.62, size.height * 0.54),
+      Offset(size.width * 0.58, size.height * 0.50),
+      arrowPaint,
+    );
+    canvas.drawLine(
+      Offset(size.width * 0.62, size.height * 0.54),
+      Offset(size.width * 0.58, size.height * 0.58),
+      arrowPaint,
+    );
+  }
+
+  void _drawSmartArt(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4
+      ..strokeCap = StrokeCap.round
+      ..color = accent.withValues(alpha: 0.84);
+
+    final path = Path()
+      ..moveTo(size.width * 0.32, size.height * 0.58)
+      ..quadraticBezierTo(
+        size.width * 0.48,
+        size.height * 0.22,
+        size.width * 0.62,
+        size.height * 0.44,
+      )
+      ..quadraticBezierTo(
+        size.width * 0.74,
+        size.height * 0.62,
+        size.width * 0.84,
+        size.height * 0.30,
+      );
+    canvas.drawPath(path, paint);
+
+    for (final offset in [
+      Offset(size.width * 0.32, size.height * 0.58),
+      Offset(size.width * 0.62, size.height * 0.44),
+      Offset(size.width * 0.84, size.height * 0.30),
+    ]) {
+      canvas.drawCircle(offset, 12, Paint()..color = AppTheme.neonPink);
+    }
+  }
+
+  void _drawScannerLines(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.045)
+      ..strokeWidth = 1;
+
+    for (var y = 0.0; y < size.height; y += 7) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _ArcHubArtPainter oldDelegate) {
+    return oldDelegate.accent != accent || oldDelegate.kind != kind;
+  }
+}
+
+// ARC HUB WEBP ASSET MANIFEST
+// Drop generated/converted files here:
+// assets/arc_raiders/hub/arc_hub_match_a_raider.webp
+// assets/arc_raiders/hub/arc_hub_raid_planner.webp
+// assets/arc_raiders/hub/arc_hub_tracking.webp
+// assets/arc_raiders/hub/arc_hub_hunt_targets.webp
+// assets/arc_raiders/hub/arc_hub_trading.webp
+// assets/arc_raiders/hub/arc_hub_smart_trade.webp
+// assets/arc_raiders/hub/arc_hub_community_intel.webp
+// assets/arc_raiders/hub/arc_hub_blueprint_grid.webp
+// assets/arc_raiders/hub/arc_hub_scrappy_tracker.webp
+// assets/arc_raiders/hub/arc_hub_bench_tracker.webp
+// assets/arc_raiders/hub/arc_hub_quest_tracker.webp
+enum _ArcHubArtKind {
+  match,
+  blueprints,
+  raid,
+  targets,
+  trading,
+  smart,
+  intel,
+  scrappy,
+}
+
+class _ArcHubFeature {
+  const _ArcHubFeature({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.accent,
+    required this.art,
+    required this.assetName,
+    required this.builder,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color accent;
+  final _ArcHubArtKind art;
+  final String assetName;
+  final WidgetBuilder builder;
+}

@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "anvil_blueprint",
   "name": {
     "da": "Anvil-tegning",
@@ -15,7 +15,7 @@
     "pl": "Projekt Anvil",
     "pt": "Projeto de Anvil",
     "pt-BR": "Esquema de Anvil",
-    "ru": "Чертеж — Наковальня",
+    "ru": "Чертеж - Наковальня",
     "sr": "Anvil Nacrt",
     "tr": "Anvil Taslağı",
     "uk": "Креслення Anvil",
@@ -53,3 +53,4 @@
   "updatedAt": "11/03/2025",
   "addedIn": "base"
 }
+

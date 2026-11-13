@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class CollapsibleSectionCard extends StatefulWidget {
   const CollapsibleSectionCard({
@@ -59,8 +59,9 @@ class _CollapsibleSectionCardState extends State<CollapsibleSectionCard> {
           ),
           AnimatedCrossFade(
             duration: AppTheme.fastAnimation,
-            crossFadeState:
-                _expanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+            crossFadeState: _expanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
             firstChild: const SizedBox.shrink(),
             secondChild: Padding(
               padding: const EdgeInsets.fromLTRB(

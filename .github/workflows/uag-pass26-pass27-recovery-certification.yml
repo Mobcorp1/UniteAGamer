@@ -1,0 +1,78 @@
+name: UAG PASS26 PASS27 Recovery Certification
+
+on:
+  push:
+    branches:
+      - recovery/pass26-pass27-integrated-20261030
+    paths:
+      - .github/workflows/uag-pass26-pass27-recovery-certification.yml
+
+permissions:
+  contents: read
+  checks: write
+
+jobs:
+  validate-recovered-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - name: Check out isolated recovery branch
+        uses: actions/checkout@v4
+
+      - name: Configure Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Configure Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.41.0'
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Analyze source
+        run: flutter analyze --no-fatal-infos
+
+      - name: Validate recovered Designs + Favourite Loadout
+        run: |
+          flutter test --reporter expanded \
+            test/pass26_furniture_design_grid_order_test.dart \
+            test/pass27_favourite_snapshot_relevance_regression_test.dart \
+            test/pass23_command_centre_favourite_loadout_sync_test.dart \
+            test/arc_furniture_design_artwork_wiring_test.dart \
+            test/arc_collections_polish_pass08_test.dart \
+            test/arc_collections_unified_ux_test.dart \
+            test/arc_collections_persistent_grid_test.dart \
+            test/arc_command_centre_engine_test.dart \
+            test/arc_command_centre_loadout_restore_regression_test.dart \
+            test/arc_research_resource_assets_test.dart
+
+      - name: Build Flutter web
+        run: flutter build web --release --no-wasm-dry-run
+
+      - name: Verify furniture artwork in website bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          for item in printed_lab_sofa multicolored_geometric_sofa polished_wardrobe diner_sofa winter_table draped_debris_f; do
+            test -s "build/web/assets/assets/arc_raiders/blueprints/$item.webp"
+          done
+
+      - name: Build Xperia debug APK
+        run: flutter build apk --debug
+
+      - name: Retain Xperia test APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: recovered-pass26-pass27-xperia-debug-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 14
+          if-no-files-found: error
+
+      # Verified PASS26 collection repository and bounded modal test assertions restored.
+      # No Firebase deploy, production merge, or Firestore writes in this job.

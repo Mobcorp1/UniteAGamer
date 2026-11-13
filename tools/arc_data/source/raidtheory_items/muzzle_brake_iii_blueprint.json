@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "muzzle_brake_iii_blueprint",
   "name": {
     "da": "Mundingsbremse III-tegning",
@@ -15,7 +15,7 @@
     "pl": "Projekt Hamulec wylotowy III",
     "pt": "Projeto de Freio de boca III",
     "pt-BR": "Esquema de Freio de Boca III",
-    "ru": "Чертеж — Дульный тормоз III",
+    "ru": "Чертеж - Дульный тормоз III",
     "sr": "Kocnica Cevi III Nacrt",
     "tr": "Namlu Ağzı Freni III Taslağı",
     "uk": "Креслення Дульний гальмо III",
@@ -53,3 +53,4 @@
   "updatedAt": "01/13/2026",
   "addedIn": "base"
 }
+

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class BlueprintProgressHeader extends StatelessWidget {
   const BlueprintProgressHeader({
@@ -33,9 +33,15 @@ class BlueprintProgressHeader extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Text(label, style: TextStyle(color: color, fontWeight: FontWeight.w700)),
+            Text(
+              label,
+              style: TextStyle(color: color, fontWeight: FontWeight.w700),
+            ),
             const SizedBox(height: 6),
-            Text('$value', style: AppTheme.tradingHeading(fontSize: 20, color: Colors.white)),
+            Text(
+              '$value',
+              style: AppTheme.tradingHeading(fontSize: 20, color: Colors.white),
+            ),
           ],
         ),
       ),
@@ -56,7 +62,7 @@ class BlueprintProgressHeader extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  'ARC Raiders Blueprint Tracker',
+                  'ARC Raiders Collections Tracker',
                   style: AppTheme.tradingHeading(
                     fontSize: 24,
                     color: AppTheme.neonCyan,
@@ -75,9 +81,9 @@ class BlueprintProgressHeader extends StatelessWidget {
             landscape
                 ? 'Tap a missing blueprint to mark it owned. You can then choose to add a drop report and duplicates.'
                 : 'Tap a missing blueprint to mark it owned, then choose whether to add a report or duplicates.',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.white70,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
           ),
           const SizedBox(height: 12),
           Row(
@@ -100,9 +106,9 @@ class BlueprintProgressHeader extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             '$ownedCount / $totalCount blueprints logged',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.white70,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Colors.white70),
           ),
         ],
       ),

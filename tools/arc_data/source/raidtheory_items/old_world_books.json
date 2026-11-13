@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "old_world_books",
   "name": {
     "da": "Bøger fra Den Gamle Verden",
@@ -37,7 +37,7 @@
     "pl": "Przeszłość przetrwała we fragmentach, często nudnych lub zwyczajnych, lecz bezcennych dla odpowiedniej osoby.",
     "pt": "O passado sobrevive em fragmentos, muitas vezes banais ou comuns, mas inestimáveis para a pessoa certa.",
     "pt-BR": "O passado sobrevive em fragmentos, muitas vezes enfadonhos ou comuns, mas inestimáveis para a pessoa certa.",
-    "ru": "Прошлое сохраняется в фрагментах — часто скучных или обыденных, но бесценных для нужных людей.",
+    "ru": "Прошлое сохраняется в фрагментах - часто скучных или обыденных, но бесценных для нужных людей.",
     "sr": "Prošlost opstaje u fragmentima, često dosadnim ili običnim, ali neprocenjivim za pravu osobu.",
     "tr": "Geçmiş, genellikle sıkıcı veya sıradan parçalar halinde hayatta kalır, ancak doğru kişi için paha biçilemezdir.",
     "uk": "Минуле збереглося у фрагментах, часто нудних або звичайних, проте безцінних для правильної людини.",
@@ -53,3 +53,4 @@
   "updatedAt": "04/14/2026",
   "addedIn": "1.1"
 }
+

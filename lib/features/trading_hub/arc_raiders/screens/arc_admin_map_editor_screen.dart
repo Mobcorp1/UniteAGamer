@@ -1,0 +1,3255 @@
+import '../data/arc_raid_endpoint_resolver.dart';
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:uuid/uuid.dart';
+
+import 'package:uag_arc_raiders_hub/build/app_bar.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_admin_marker_subtype_catalog.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_admin_marker_visual_registry.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_asset_registry.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_coordinate_projection.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_filter_icon_registry.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_marker_alignment_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_marker_import_adapters.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_marker_import_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_quest_catalogue.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_quest_map_binding.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_world_intel_population_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_map_marker.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_map_marker_import_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_world_intel_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_admin_map_editor_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_map_filter_icon.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_precision_map_pin.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_admin_workspace_bar.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_layout_system.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/widgets/uag_precision_scroll_view.dart';
+
+class ArcAdminMapEditorScreen extends StatefulWidget {
+  const ArcAdminMapEditorScreen({super.key, this.repository, this.appBar});
+
+  static const routeName = '/admin-map-intel-editor';
+
+  final ArcAdminMapEditorRepository? repository;
+  final PreferredSizeWidget? appBar;
+
+  @override
+  State<ArcAdminMapEditorScreen> createState() =>
+      _ArcAdminMapEditorScreenState();
+}
+
+const List<_MarkerPaletteItem> _uagMarkerPaletteItems = [
+  _MarkerPaletteItem(
+    label: 'Location',
+    kind: ArcAdminMapMarkerKind.poi,
+    icon: Icons.location_city_rounded,
+    sourceLabel: 'UAG Manual Location',
+  ),
+  _MarkerPaletteItem(
+    label: 'Quest',
+    kind: ArcAdminMapMarkerKind.questLocation,
+    icon: Icons.assignment_turned_in_rounded,
+  ),
+  _MarkerPaletteItem(
+    label: 'Event',
+    kind: ArcAdminMapMarkerKind.mapEvent,
+    icon: Icons.bolt_rounded,
+  ),
+  _MarkerPaletteItem(
+    label: 'Resource',
+    kind: ArcAdminMapMarkerKind.naturalResource,
+    icon: Icons.eco_rounded,
+  ),
+  _MarkerPaletteItem(
+    label: 'ARC Spawn',
+    kind: ArcAdminMapMarkerKind.arcSpawn,
+    icon: Icons.my_location_rounded,
+  ),
+  _MarkerPaletteItem(
+    label: 'ARC Threat',
+    kind: ArcAdminMapMarkerKind.arcThreat,
+    icon: Icons.warning_amber_rounded,
+  ),
+  _MarkerPaletteItem(
+    label: 'Weapon Case',
+    kind: ArcAdminMapMarkerKind.weaponCase,
+    icon: Icons.inventory_rounded,
+  ),
+  _MarkerPaletteItem(
+    label: 'First Wave',
+    kind: ArcAdminMapMarkerKind.firstWaveCache,
+    icon: Icons.inventory_2_rounded,
+  ),
+  _MarkerPaletteItem(
+    label: 'Raider Cache',
+    kind: ArcAdminMapMarkerKind.raiderCache,
+    icon: Icons.gps_fixed_rounded,
+  ),
+  _MarkerPaletteItem(
+    label: 'Field Crate',
+    kind: ArcAdminMapMarkerKind.fieldCrate,
+    icon: Icons.inventory_2_rounded,
+  ),
+  _MarkerPaletteItem(
+    label: 'Containers',
+    kind: ArcAdminMapMarkerKind.containerCluster,
+    icon: Icons.all_inbox_rounded,
+  ),
+  _MarkerPaletteItem(
+    label: 'Locked Room',
+    kind: ArcAdminMapMarkerKind.lockedRoom,
+    icon: Icons.lock_rounded,
+  ),
+  _MarkerPaletteItem(
+    label: 'Key Room',
+    kind: ArcAdminMapMarkerKind.keyRequiredLocation,
+    icon: Icons.vpn_key_rounded,
+  ),
+  _MarkerPaletteItem(
+    label: 'Blueprint',
+    kind: ArcAdminMapMarkerKind.blueprint,
+    icon: Icons.extension_rounded,
+    requireBlueprint: true,
+    dialogTitle: 'Create Historical Blueprint',
+    statusLabel: 'historical Blueprint find',
+    sourceLabel: 'Historical Blueprint Intel',
+  ),
+  _MarkerPaletteItem(
+    label: 'Hazard',
+    kind: ArcAdminMapMarkerKind.hazard,
+    icon: Icons.crisis_alert_rounded,
+  ),
+  _MarkerPaletteItem(
+    label: 'Surface',
+    kind: ArcAdminMapMarkerKind.surfaceTransition,
+    icon: Icons.stairs_rounded,
+  ),
+  _MarkerPaletteItem(
+    label: 'Underground',
+    kind: ArcAdminMapMarkerKind.undergroundTransition,
+    icon: Icons.stairs_rounded,
+  ),
+];
+
+class _MarkerPaletteItem {
+  const _MarkerPaletteItem({
+    required this.label,
+    required this.kind,
+    required this.icon,
+    this.requireBlueprint = false,
+    this.dialogTitle,
+    this.statusLabel,
+    this.sourceLabel = 'UAG Manual Marker',
+  });
+
+  final String label;
+  final ArcAdminMapMarkerKind kind;
+  final IconData icon;
+  final bool requireBlueprint;
+  final String? dialogTitle;
+  final String? statusLabel;
+  final String sourceLabel;
+}
+
+class _SubtypeFilterOption {
+  const _SubtypeFilterOption({
+    required this.id,
+    required this.label,
+    this.iconKey,
+  });
+
+  final String? id;
+  final String label;
+  final String? iconKey;
+}
+
+class _SubtypeIconLabel extends StatelessWidget {
+  const _SubtypeIconLabel({required this.label, this.iconKey, this.subtypeId});
+
+  final String label;
+  final String? iconKey;
+  final String? subtypeId;
+
+  @override
+  Widget build(BuildContext context) {
+    final assetPath = ArcAdminMarkerVisualRegistry.assetPathForSubtype(
+      subtypeId,
+    );
+    final fallback = iconKey == null || iconKey!.trim().isEmpty
+        ? const Icon(Icons.place_outlined, color: AppTheme.neonCyan, size: 18)
+        : ArcMapFilterIcon(
+            iconKey: iconKey!,
+            color: AppTheme.neonCyan,
+            size: 18,
+          );
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox.square(
+          dimension: 26,
+          child: assetPath == null
+              ? Center(child: fallback)
+              : ClipRRect(
+                  borderRadius: BorderRadius.circular(5),
+                  child: Image.asset(
+                    assetPath,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => Center(child: fallback),
+                  ),
+                ),
+        ),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+        ),
+      ],
+    );
+  }
+}
+
+class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
+  late final ArcAdminMapEditorRepository _repository;
+  final _importAdapter = const ArcPermittedJsonMapMarkerImportAdapter();
+  final _importEngine = const ArcMapMarkerImportEngine();
+  final _alignmentEngine = const ArcMapMarkerAlignmentEngine();
+  final _worldIntelEngine = const ArcWorldIntelPopulationEngine();
+  final _transformationController = TransformationController();
+  final _mapCanvasKey = GlobalKey();
+  final _mapViewportKey = GlobalKey();
+  final _searchController = TextEditingController();
+  final _undoStack = <List<ArcAdminMapMarker>>[];
+
+  late String _mapId;
+  late ArcRaidMapLayer _layer;
+  List<ArcAdminMapMarker> _markers = const <ArcAdminMapMarker>[];
+  ArcAdminMapMarker? _selected;
+  bool _loading = true;
+  bool _saving = false;
+  bool _dirty = false;
+  bool _placingNewPoi = false;
+  _NewMarkerResult? _pendingPoi;
+  ArcAdminMapMarkerKind _placementKind = ArcAdminMapMarkerKind.poi;
+  bool _placementRequiresBlueprint = false;
+  String _placementDialogTitle = 'Create POI';
+  String _placementSourceLabel = 'UAG Manual Location';
+  bool _showSeedDefinitions = true;
+  bool _showCustomIntel = true;
+  bool _showReferenceGrid = true;
+  bool _showPlacedItems = true;
+  String _searchQuery = '';
+  String _saveStatus = 'Saved';
+  String _saveError = '';
+  DateTime? _lastSavedAt;
+  ArcAdminMapMarkerKind? _kindFilter;
+  String? _subtypeFilterId;
+  ArcRaidIntelConfidence? _confidenceFilter;
+  ArcAdminMapMarkerSourcePermission? _permissionFilter;
+  ArcWorldIntelEvidenceType? _evidenceTypeFilter;
+  bool _showProvisionalOnly = false;
+  bool _showExceptionsOnly = false;
+  ArcMapMarkerImportSummary? _lastImportSummary;
+  ArcWorldIntelPopulationResult? _lastWorldPopulation;
+  int _zoomPercent = 100;
+  Size? _lastMapViewportSize;
+
+  ArcRaidMap get _map => ArcRaidIntelligenceSeedData.mapById(_mapId);
+
+  @override
+  void initState() {
+    super.initState();
+    _repository = widget.repository ?? ArcAdminMapEditorRepository();
+    final maps = ArcRaidIntelligenceSeedData.maps
+        .where((item) => item.availableLayers.isNotEmpty)
+        .toList(growable: false);
+    _mapId =
+        ArcMapAssetRegistry.canonicalMapIdFor(maps.first.id) ?? maps.first.id;
+    _layer = ArcMapAssetRegistry.resolveLayer(
+      maps.first.availableLayers.first.name,
+    );
+    _transformationController.addListener(_handleTransformChanged);
+    unawaited(_load());
+  }
+
+  @override
+  void dispose() {
+    _transformationController.removeListener(_handleTransformChanged);
+    _transformationController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    setState(() => _loading = true);
+
+    try {
+      final drafts = await _repository.loadDrafts(_mapId, _layer);
+      final seedMarkers = _seedMarkers(_map, _layer);
+      final cachedImports = await _repository.loadImportCache(_mapId, _layer);
+      final merged = <String, ArcAdminMapMarker>{
+        for (final marker in seedMarkers) marker.id: marker,
+        for (final marker in cachedImports) marker.id: marker,
+        for (final marker in drafts) marker.id: marker,
+      };
+
+      if (!mounted) return;
+      final mergedMarkers =
+          merged.values
+              .where(
+                (marker) => marker.state != ArcAdminMapMarkerState.archived,
+              )
+              .toList(growable: false)
+            ..sort((a, b) => a.name.compareTo(b.name));
+      setState(() {
+        _markers = mergedMarkers;
+        _selected = null;
+        _lastImportSummary = null;
+        _lastWorldPopulation = null;
+        _undoStack.clear();
+        _dirty = false;
+        _resetPlacementFields();
+        _subtypeFilterId = null;
+        _saveStatus = 'Saved';
+        _saveError = '';
+        _loading = false;
+        _lastMapViewportSize = null;
+        _transformationController.value = Matrix4.identity();
+      });
+    } catch (error, stackTrace) {
+      debugPrint('Admin Map Editor load failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _saveStatus = 'Load failed';
+        _saveError = error.toString();
+      });
+      _message('Could not load map editor records: $error');
+    }
+  }
+
+  List<ArcAdminMapMarker> _seedMarkers(ArcRaidMap map, ArcRaidMapLayer layer) {
+    if (layer != ArcRaidMapLayer.surface) {
+      return const <ArcAdminMapMarker>[];
+    }
+
+    return <ArcAdminMapMarker>[
+      for (final poi in map.pois)
+        ArcAdminMapMarker(
+          id: 'seed_${map.id}_poi_${poi.id}',
+          mapId: map.id,
+          layer: layer,
+          kind: ArcAdminMapMarkerKind.poi,
+          name: poi.name,
+          point: poi.point,
+          description: poi.lootTags.join(', '),
+          seedReferenceId: poi.id,
+        ),
+      for (final extraction in map.extractions)
+        ArcAdminMapMarker(
+          id: 'seed_${map.id}_extraction_${extraction.id}',
+          mapId: map.id,
+          layer: layer,
+          kind: ArcAdminMapMarkerKind.extraction,
+          name: extraction.name,
+          point: extraction.point,
+          description: extraction.notes,
+          seedReferenceId: extraction.id,
+        ),
+      for (final hatch in map.hatches)
+        ArcAdminMapMarker(
+          id: 'seed_${map.id}_hatch_${hatch.id}',
+          mapId: map.id,
+          layer: layer,
+          kind: ArcAdminMapMarkerKind.raiderHatch,
+          name: hatch.name,
+          point: hatch.point,
+          seedReferenceId: hatch.id,
+        ),
+    ];
+  }
+
+  List<ArcAdminMapMarker> get _visibleMarkers {
+    final query = _searchQuery.trim().toLowerCase();
+    return _markers
+        .where((marker) {
+          if (marker.state == ArcAdminMapMarkerState.archived) return false;
+          if (marker.kind.isSeedDefinition && !_showSeedDefinitions) {
+            return false;
+          }
+          if (!marker.kind.isSeedDefinition && !_showCustomIntel) {
+            return false;
+          }
+          if (_kindFilter != null && marker.effectiveKind != _kindFilter) {
+            return false;
+          }
+          if (_subtypeFilterId != null &&
+              marker.subtypeId != _subtypeFilterId) {
+            return false;
+          }
+          if (_confidenceFilter != null &&
+              marker.confidence != _confidenceFilter) {
+            return false;
+          }
+          if (_permissionFilter != null &&
+              marker.sourcePermission != _permissionFilter) {
+            return false;
+          }
+          if (_evidenceTypeFilter != null &&
+              !marker.evidence.any(
+                (evidence) => evidence.type == _evidenceTypeFilter,
+              )) {
+            return false;
+          }
+          if (_showProvisionalOnly && !marker.provisionalVisible) {
+            return false;
+          }
+          if (_showExceptionsOnly && !marker.hasImportException) {
+            return false;
+          }
+          if (query.isNotEmpty &&
+              !marker.name.toLowerCase().contains(query) &&
+              !marker.description.toLowerCase().contains(query) &&
+              !(marker.subtypeLabel?.toLowerCase().contains(query) ?? false) &&
+              !marker.sourceLabel.toLowerCase().contains(query) &&
+              !(marker.sourceName?.toLowerCase().contains(query) ?? false) &&
+              !(marker.sourceRecordId?.toLowerCase().contains(query) ??
+                  false) &&
+              !(marker.blueprintId?.toLowerCase().contains(query) ?? false) &&
+              !marker.evidence.any(
+                (evidence) =>
+                    (evidence.landmarkText?.toLowerCase().contains(query) ??
+                        false) ||
+                    (evidence.sourceRecordId?.toLowerCase().contains(query) ??
+                        false) ||
+                    (evidence.blueprintId?.toLowerCase().contains(query) ??
+                        false),
+              )) {
+            return false;
+          }
+          return marker.mapId == _mapId && marker.layer == _layer;
+        })
+        .toList(growable: false);
+  }
+
+  List<ArcAdminMapMarker> get _mapCanvasMarkers {
+    final markers = List<ArcAdminMapMarker>.from(_visibleMarkers);
+    markers.sort((a, b) {
+      final aSelected = _selected?.id == a.id;
+      final bSelected = _selected?.id == b.id;
+      if (aSelected != bSelected) return aSelected ? 1 : -1;
+
+      // Canonical seed POIs/exits/hatches form the background reference layer.
+      // User/admin-created markers must render above them so compressed
+      // landscape layouts cannot make a newly-created marker untappable simply
+      // because an alphabetically-later seed marker overlaps its hit target.
+      final aSeed = a.seedReferenceId?.trim().isNotEmpty == true;
+      final bSeed = b.seedReferenceId?.trim().isNotEmpty == true;
+      if (aSeed != bSeed) return aSeed ? -1 : 1;
+
+      return a.name.compareTo(b.name);
+    });
+    return markers;
+  }
+
+  List<ArcAdminMapMarker> get _importedMarkers {
+    return _markers
+        .where(
+          (marker) =>
+              marker.mapId == _mapId &&
+              marker.layer == _layer &&
+              marker.sourceRecordId?.trim().isNotEmpty == true,
+        )
+        .toList(growable: false);
+  }
+
+  void _snapshotUndo() {
+    _undoStack.add(List<ArcAdminMapMarker>.from(_markers));
+    if (_undoStack.length > 40) {
+      _undoStack.removeAt(0);
+    }
+  }
+
+  void _markDirty() {
+    _dirty = true;
+    _saveStatus = 'Unsaved changes';
+    _saveError = '';
+  }
+
+  void _undo() {
+    if (_undoStack.isEmpty) return;
+    final previous = _undoStack.removeLast();
+    setState(() {
+      _markers = previous;
+      if (_selected != null) {
+        final matches = _markers.where((item) => item.id == _selected!.id);
+        _selected = matches.isEmpty ? null : matches.first;
+      }
+    });
+  }
+
+  void _updatePoint(ArcAdminMapMarker marker, ArcNormalizedPoint point) {
+    _snapshotUndo();
+    final updated = marker.copyWith(point: point.clamp());
+    setState(() {
+      _markers = [
+        for (final item in _markers)
+          if (item.id == marker.id) updated else item,
+      ];
+      _selected = updated;
+      _markDirty();
+    });
+  }
+
+  ArcNormalizedPoint _pointFromLocalPosition(Offset localPosition, Size size) {
+    return ArcMapCoordinateProjection.canvasToCanonical(
+      localPosition: localPosition,
+      mapSize: size,
+      calibration: _map.calibrationForLayer(_layer),
+    );
+  }
+
+  void _handleMapTap(Offset localPosition, Size size) {
+    final point = _pointFromLocalPosition(localPosition, size);
+    if (_placingNewPoi) {
+      unawaited(_createMarkerAt(point));
+      return;
+    }
+    _placeSelected(point);
+  }
+
+  void _placeSelected(ArcNormalizedPoint point) {
+    final selected = _selected;
+    if (selected == null) return;
+    _updatePoint(selected, point);
+  }
+
+  Size _fittedMapSize(ArcRaidMapAsset asset, Size viewportSize) {
+    return ArcMapCoordinateProjection.containSize(
+      viewport: viewportSize,
+      sourceWidth: asset.width?.toDouble(),
+      sourceHeight: asset.height?.toDouble(),
+    );
+  }
+
+  void _handleTransformChanged() {
+    final next = (_transformationController.value.getMaxScaleOnAxis() * 100)
+        .round();
+    if (!mounted || next == _zoomPercent) return;
+    setState(() => _zoomPercent = next);
+  }
+
+  void _fitMap() {
+    _transformationController.value = Matrix4.identity();
+  }
+
+  void _zoomMap(double factor) {
+    final currentScale = _transformationController.value.getMaxScaleOnAxis();
+    final targetScale = (currentScale * factor).clamp(0.5, 8.0);
+    if ((targetScale - currentScale).abs() < 0.001) return;
+    final renderObject = _mapViewportKey.currentContext?.findRenderObject();
+    final focalPoint = renderObject is RenderBox
+        ? renderObject.size.center(Offset.zero)
+        : Offset.zero;
+    final scenePoint = _transformationController.toScene(focalPoint);
+    _transformationController.value = Matrix4.identity()
+      ..translateByDouble(focalPoint.dx, focalPoint.dy, 0, 1)
+      ..scaleByDouble(targetScale, targetScale, targetScale, 1)
+      ..translateByDouble(-scenePoint.dx, -scenePoint.dy, 0, 1);
+  }
+
+  void _refitAfterMeaningfulViewportChange(Size viewportSize) {
+    final previous = _lastMapViewportSize;
+    _lastMapViewportSize = viewportSize;
+    if (previous == null) return;
+    final widthDelta = (previous.width - viewportSize.width).abs();
+    final heightDelta = (previous.height - viewportSize.height).abs();
+    final previousRatio = previous.width / previous.height;
+    final nextRatio = viewportSize.width / viewportSize.height;
+    if (widthDelta < 120 &&
+        heightDelta < 120 &&
+        (previousRatio - nextRatio).abs() < 0.15) {
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _fitMap();
+    });
+  }
+
+  Future<void> _saveDrafts() async {
+    setState(() => _saving = true);
+    try {
+      final result = await _repository.saveDraftMarkers(
+        _mapId,
+        _layer,
+        _markers,
+      );
+      if (!mounted) return;
+      setState(() {
+        _dirty = false;
+        _lastSavedAt = result.savedAt;
+        _saveStatus = 'Saved';
+        _saveError = '';
+      });
+      _message(
+        'Draft saved successfully. ${result.savedCount} records written to ${result.collectionPath}.',
+      );
+    } catch (error, stackTrace) {
+      debugPrint('Admin Map Editor Save Draft failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      if (!mounted) return;
+      setState(() {
+        _saveStatus = 'Save failed';
+        _saveError = error.toString();
+      });
+      _message('Save Draft failed: $error');
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _publishSelected() async {
+    final selected = _selected;
+    if (selected == null) return;
+    setState(() => _saving = true);
+    try {
+      await _repository.publish(selected);
+      if (!mounted) return;
+      final published = selected.copyWith(
+        state: ArcAdminMapMarkerState.published,
+      );
+      setState(() {
+        _markers = [
+          for (final item in _markers)
+            if (item.id == selected.id) published else item,
+        ];
+        _selected = published;
+        _dirty = false;
+        _saveStatus = 'Published';
+      });
+      _message('Marker published to live Admin Intel.');
+    } catch (error) {
+      if (mounted) _message('Could not publish marker: $error');
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _publishAll() async {
+    setState(() => _saving = true);
+    try {
+      await _repository.publishAll(_visibleMarkers);
+      if (!mounted) return;
+      setState(() {
+        _markers = [
+          for (final marker in _markers)
+            if (marker.mapId == _mapId && marker.layer == _layer)
+              marker.copyWith(state: ArcAdminMapMarkerState.published)
+            else
+              marker,
+        ];
+        _dirty = false;
+        _saveStatus = 'Published';
+      });
+      _message('${_visibleMarkers.length} markers published.');
+    } catch (error) {
+      if (mounted) _message('Could not publish markers: $error');
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _exportJson() async {
+    final json = _repository.exportJson(_visibleMarkers);
+    await Clipboard.setData(ClipboardData(text: json));
+    if (mounted) _message('Production marker JSON copied to clipboard.');
+  }
+
+  Future<void> _importJsonFromClipboard() async {
+    setState(() => _saving = true);
+    try {
+      final clipboard = await Clipboard.getData(Clipboard.kTextPlain);
+      final raw = clipboard?.text;
+      if (raw == null || raw.trim().isEmpty) {
+        _message('Clipboard does not contain marker JSON.');
+        return;
+      }
+      final payload = _importAdapter.parse(
+        raw,
+        defaultMapId: _mapId,
+        defaultLayer: _layer,
+      );
+      final mapAsset = _map.assetForLayer(_layer);
+      final alignment = _alignmentEngine.identity(
+        mapId: _mapId,
+        layer: _layer,
+        sourceId: payload.source.id,
+      );
+      final summary = _importEngine.importRecords(
+        payload: payload,
+        mapId: _mapId,
+        layer: _layer,
+        existingMarkers: _markers,
+        alignment: alignment,
+        mapAsset: mapAsset,
+        importedAt: DateTime.now().toUtc(),
+      );
+      final accepted = summary.acceptedMarkers;
+      _snapshotUndo();
+      setState(() {
+        _lastImportSummary = summary;
+        _markers = _mergeMarkers(_markers, accepted);
+        _showCustomIntel = true;
+        if (accepted.isNotEmpty) _selected = accepted.first;
+      });
+      await _repository.saveImportCache(_mapId, _layer, _importedMarkers);
+
+      if (summary.autoPublishedMarkers.isNotEmpty) {
+        try {
+          await _repository.publishAll(summary.autoPublishedMarkers);
+        } catch (error) {
+          if (mounted) {
+            _message('Import cached; auto-publish needs admin sign-in: $error');
+          }
+          return;
+        }
+      }
+      if (mounted) {
+        _message(
+          'Import processed: ${summary.autoPublishedCount} published, '
+          '${summary.provisionalCount} provisional, '
+          '${summary.exceptionCount} exceptions, '
+          '${summary.duplicateCount} duplicates.',
+        );
+      }
+    } catch (error) {
+      if (mounted) _message('Could not import marker JSON: $error');
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _publishEligibleImports() async {
+    final eligible = _visibleMarkers
+        .where(
+          (marker) =>
+              marker.sourceRecordId?.trim().isNotEmpty == true &&
+              !marker.isPublished &&
+              !marker.hasImportException &&
+              marker.sourcePermission.canPublish,
+        )
+        .toList(growable: false);
+    if (eligible.isEmpty) {
+      _message('No eligible imported markers are ready to publish.');
+      return;
+    }
+    setState(() => _saving = true);
+    try {
+      await _repository.publishAll(eligible);
+      if (!mounted) return;
+      setState(() {
+        _markers = [
+          for (final marker in _markers)
+            if (eligible.any((item) => item.id == marker.id))
+              marker.copyWith(state: ArcAdminMapMarkerState.published)
+            else
+              marker,
+        ];
+      });
+      await _repository.saveImportCache(_mapId, _layer, _importedMarkers);
+      _message('${eligible.length} imported markers published.');
+    } catch (error) {
+      if (mounted) _message('Could not publish imported markers: $error');
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _reprocessImportCache() async {
+    final cached = await _repository.loadImportCache(_mapId, _layer);
+    if (!mounted) return;
+    setState(() {
+      _markers = _mergeMarkers(
+        _markers.where((marker) => marker.sourceRecordId == null),
+        cached,
+      );
+      _selected = cached.isEmpty ? null : cached.first;
+    });
+    _message('${cached.length} cached imported markers reloaded.');
+  }
+
+  Future<void> _populateWorldIntel() async {
+    setState(() => _saving = true);
+    try {
+      final dropReports = await _repository.loadRecentDropReports();
+      final communityReports = await _repository.loadCommunityReports();
+      final result = _worldIntelEngine.build(
+        maps: ArcRaidIntelligenceSeedData.maps,
+        dropReports: dropReports,
+        communityReports: communityReports,
+        adminMarkers: _markers,
+        now: DateTime.now().toUtc(),
+      );
+      final autoPublish = result.autoPublishedMarkers
+          .where((marker) => marker.sourcePermission.canPublish)
+          .toList(growable: false);
+      _snapshotUndo();
+      setState(() {
+        _lastWorldPopulation = result;
+        _markers = _mergeMarkers(_markers, result.markers);
+        _showCustomIntel = true;
+        _selected = result.markers.firstWhere(
+          (marker) => marker.mapId == _mapId && marker.layer == _layer,
+          orElse: () => result.markers.first,
+        );
+      });
+      await _repository.saveImportCache(_mapId, _layer, _importedMarkers);
+      try {
+        await _repository.saveCoverageReport(result.coverageReport);
+        if (autoPublish.isNotEmpty) {
+          await _repository.publishAll(autoPublish);
+        }
+      } catch (error) {
+        if (mounted) {
+          _message(
+            'World Intel generated locally; Firestore publish needs admin sign-in: $error',
+          );
+        }
+        return;
+      }
+      if (mounted) {
+        _message(
+          'World Intel populated: ${result.coverageReport.autoPublishedCount} published, '
+          '${result.coverageReport.provisionalCount} provisional, '
+          '${result.coverageReport.exceptionCount} review.',
+        );
+      }
+    } catch (error) {
+      if (mounted) _message('Could not populate UAG World Intel: $error');
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _publishHighConfidence() async {
+    final eligible = _visibleMarkers
+        .where(
+          (marker) =>
+              marker.confidence.score >= ArcRaidIntelConfidence.strong.score &&
+              marker.sourcePermission.canPublish &&
+              !marker.hasImportException,
+        )
+        .toList(growable: false);
+    if (eligible.isEmpty) {
+      _message('No high-confidence visible markers are ready to publish.');
+      return;
+    }
+    setState(() => _saving = true);
+    try {
+      await _repository.publishAll(eligible);
+      if (!mounted) return;
+      setState(() {
+        _markers = [
+          for (final marker in _markers)
+            if (eligible.any((item) => item.id == marker.id))
+              marker.copyWith(
+                state: ArcAdminMapMarkerState.published,
+                provisionalVisible: false,
+                clearExceptionReason: true,
+              )
+            else
+              marker,
+        ];
+      });
+      _message('${eligible.length} high-confidence markers published.');
+    } catch (error) {
+      if (mounted) {
+        _message('Could not publish high-confidence markers: $error');
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _archiveVisibleExceptions() async {
+    final exceptions = _visibleMarkers
+        .where((marker) => marker.hasImportException)
+        .toList(growable: false);
+    if (exceptions.isEmpty) {
+      _message('No visible exception markers to archive.');
+      return;
+    }
+    setState(() => _saving = true);
+    try {
+      await _repository.archiveAll(exceptions.map((marker) => marker.id));
+      if (!mounted) return;
+      setState(() {
+        _markers = [
+          for (final marker in _markers)
+            if (exceptions.any((item) => item.id == marker.id))
+              marker.copyWith(state: ArcAdminMapMarkerState.archived)
+            else
+              marker,
+        ];
+      });
+      _message('${exceptions.length} exception markers archived.');
+    } catch (error) {
+      if (mounted) _message('Could not archive exceptions: $error');
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  static List<ArcAdminMapMarker> _mergeMarkers(
+    Iterable<ArcAdminMapMarker> base,
+    Iterable<ArcAdminMapMarker> incoming,
+  ) {
+    final merged = <String, ArcAdminMapMarker>{
+      for (final marker in base) marker.id: marker,
+      for (final marker in incoming) marker.id: marker,
+    };
+    return merged.values.toList(growable: false)
+      ..sort((a, b) => a.name.compareTo(b.name));
+  }
+
+  void _beginPoiPlacement() {
+    _beginMarkerPlacement(
+      kind: ArcAdminMapMarkerKind.poi,
+      label: 'POI',
+      sourceLabel: 'UAG Manual Location',
+      dialogTitle: 'Create POI',
+    );
+  }
+
+  void _beginExtractionPlacement() {
+    _beginMarkerPlacement(
+      kind: ArcAdminMapMarkerKind.extraction,
+      label: 'extraction',
+      sourceLabel: 'UAG Verified Extraction',
+      dialogTitle: 'Create / Place Extraction',
+    );
+  }
+
+  Future<void> _preparePoiPlacement() async {
+    final result = await showDialog<_NewMarkerResult>(
+      context: context,
+      builder: (context) => _NewMarkerDialog(
+        title: 'Create POI',
+        actionLabel: 'Place on Map',
+        mapName: _map.displayName,
+        initialKind: ArcAdminMapMarkerKind.poi,
+        existingNames: _markers
+            .where((m) => m.mapId == _mapId && m.layer == _layer)
+            .map((m) => m.name)
+            .toList(),
+        includeSeedKinds: true,
+        initialSourceLabel: 'UAG Manual Location',
+      ),
+    );
+    if (!mounted || result == null) return;
+    _beginMarkerPlacement(
+      kind: result.kind,
+      label: result.name,
+      sourceLabel: result.sourceLabel,
+      dialogTitle: 'Create POI',
+      pendingPoi: result,
+    );
+  }
+
+  void _beginHistoricalBlueprintPlacement() {
+    _beginMarkerPlacement(
+      kind: ArcAdminMapMarkerKind.blueprint,
+      label: 'historical Blueprint find',
+      requireBlueprint: true,
+      sourceLabel: 'Historical Blueprint Intel',
+      dialogTitle: 'Create Historical Blueprint',
+    );
+  }
+
+  void _beginPaletteMarkerPlacement(_MarkerPaletteItem item) {
+    _beginMarkerPlacement(
+      kind: item.kind,
+      label: item.statusLabel ?? item.label,
+      requireBlueprint: item.requireBlueprint,
+      sourceLabel: item.sourceLabel,
+      dialogTitle: item.dialogTitle ?? 'Create ${item.label}',
+    );
+  }
+
+  void _beginMarkerPlacement({
+    required ArcAdminMapMarkerKind kind,
+    required String label,
+    required String sourceLabel,
+    required String dialogTitle,
+    bool requireBlueprint = false,
+    _NewMarkerResult? pendingPoi,
+  }) {
+    setState(() {
+      _pendingPoi = pendingPoi;
+      _placingNewPoi = true;
+      _placementKind = kind;
+      _placementRequiresBlueprint = requireBlueprint;
+      _placementDialogTitle = dialogTitle;
+      _placementSourceLabel = sourceLabel;
+      _saveStatus = 'Click the map to place $label';
+    });
+    _message('Click the map to place $label.');
+  }
+
+  void _resetPlacementFields() {
+    _pendingPoi = null;
+    _placingNewPoi = false;
+    _placementKind = ArcAdminMapMarkerKind.poi;
+    _placementRequiresBlueprint = false;
+    _placementDialogTitle = 'Create POI';
+    _placementSourceLabel = 'UAG Manual Location';
+  }
+
+  Future<void> _createMarkerAt(ArcNormalizedPoint point) async {
+    final dialogTitle = _placementDialogTitle;
+    final initialKind = _placementKind;
+    final requireBlueprint = _placementRequiresBlueprint;
+    final sourceLabel = _placementSourceLabel;
+    final result =
+        _pendingPoi ??
+        await showDialog<_NewMarkerResult>(
+          context: context,
+          builder: (context) => _NewMarkerDialog(
+            title: dialogTitle,
+            actionLabel: 'Create Draft',
+            mapName: _map.displayName,
+            initialKind: initialKind,
+            existingNames: _markers
+                .where((m) => m.mapId == _mapId && m.layer == _layer)
+                .map((m) => m.name)
+                .toList(),
+            includeSeedKinds: true,
+            requireBlueprint: requireBlueprint,
+            initialSourceLabel: sourceLabel,
+          ),
+        );
+    if (!mounted) return;
+    if (result == null) {
+      setState(() {
+        _resetPlacementFields();
+        _saveStatus = _dirty ? 'Unsaved changes' : 'Saved';
+      });
+      return;
+    }
+
+    final duplicateName = _markers.any(
+      (marker) =>
+          marker.mapId == _mapId &&
+          marker.layer == _layer &&
+          marker.name.trim().toLowerCase() == result.name.toLowerCase(),
+    );
+    if (duplicateName && result.kind != ArcAdminMapMarkerKind.questLocation) {
+      _message('A marker with this name already exists on this layer.');
+    }
+
+    _snapshotUndo();
+    const uuid = Uuid();
+    final marker = ArcAdminMapMarker(
+      id: 'admin_${_mapId}_${_layer.name}_${uuid.v4()}',
+      mapId: _mapId,
+      layer: _layer,
+      kind: result.kind,
+      name: result.name,
+      aliases: result.aliases,
+      description: result.description,
+      subtypeId: result.subtypeId,
+      subtypeLabel: result.subtypeLabel,
+      itemId: result.itemId,
+      questId: result.questId,
+      blueprintId: result.blueprintId,
+      sourceLabel: result.sourceLabel,
+      confidence: result.confidence,
+      point: point,
+      state: ArcAdminMapMarkerState.draft,
+    );
+    setState(() {
+      _markers = [..._markers, marker]
+        ..sort((a, b) => a.name.compareTo(b.name));
+      _selected = marker;
+      _resetPlacementFields();
+      _showCustomIntel = true;
+      _markDirty();
+    });
+  }
+
+  Future<void> _editSelected() async {
+    final selected = _selected;
+    if (selected == null) return;
+
+    final result = await showDialog<_NewMarkerResult>(
+      context: context,
+      builder: (context) => _NewMarkerDialog(
+        title: 'Edit POI',
+        supportedLayers: _map.availableLayers,
+        actionLabel: 'Apply Edit',
+        mapName: _map.displayName,
+        initialMarker: selected,
+        includeSeedKinds: true,
+      ),
+    );
+    if (result == null) return;
+
+    final edited = selected.copyWith(
+      layer: result.layer ?? selected.layer,
+      kind: result.kind,
+      name: result.name,
+      aliases: result.aliases,
+      description: result.description,
+      subtypeId: result.subtypeId,
+      clearSubtypeId: result.subtypeId == null,
+      subtypeLabel: result.subtypeLabel,
+      clearSubtypeLabel: result.subtypeLabel == null,
+      itemId: result.itemId,
+      clearItemId: result.itemId == null,
+      questId: result.questId,
+      clearQuestId: result.questId == null,
+      blueprintId: result.blueprintId,
+      clearBlueprintId: result.blueprintId == null,
+      sourceLabel: result.sourceLabel,
+      confidence: result.confidence,
+    );
+    if (edited.layer != selected.layer) {
+      if (!mounted) return;
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Move marker'),
+          content: Text(
+            'Move ${selected.name} from ${selected.layer.label} to ${edited.layer.label}?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Move marker'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true || !mounted) return;
+      setState(() => _saving = true);
+      try {
+        final saved = await _repository.updateMarker(
+          original: selected,
+          edited: edited,
+        );
+        if (!mounted) return;
+        setState(() {
+          _markers = [
+            for (final marker in _markers)
+              if (marker.id == selected.id) saved else marker,
+          ];
+          _selected = null;
+          // Undo snapshots must not reintroduce a persisted old layer.
+          _undoStack.clear();
+        });
+        _message('${saved.name} moved to ${saved.layer.label}.');
+      } catch (error) {
+        if (mounted) {
+          _message(
+            'Could not move ${selected.name}. Original marker retained. $error',
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _saving = false);
+      }
+      return;
+    }
+    _snapshotUndo();
+    setState(() {
+      _markers = [
+        for (final marker in _markers)
+          if (marker.id == selected.id) edited else marker,
+      ]..sort((a, b) => a.name.compareTo(b.name));
+      _selected = edited;
+      _showCustomIntel = true;
+      _markDirty();
+    });
+  }
+
+  Future<void> _duplicateSelected() async {
+    final selected = _selected;
+    if (selected == null) return;
+
+    const uuid = Uuid();
+    final duplicate = ArcAdminMapMarker(
+      id: 'admin_${_mapId}_${_layer.name}_${uuid.v4()}',
+      mapId: selected.mapId,
+      layer: selected.layer,
+      kind: selected.kind,
+      name: '${selected.name} Copy',
+      aliases: selected.aliases,
+      description: selected.description,
+      subtypeId: selected.subtypeId,
+      subtypeLabel: selected.subtypeLabel,
+      itemId: selected.itemId,
+      blueprintId: selected.blueprintId,
+      sourceLabel: selected.sourceLabel,
+      confidence: selected.confidence,
+      point: ArcNormalizedPoint(
+        x: (selected.point.x + 0.018).clamp(0.0, 1.0),
+        y: (selected.point.y + 0.018).clamp(0.0, 1.0),
+      ),
+      state: ArcAdminMapMarkerState.draft,
+    );
+
+    _snapshotUndo();
+    setState(() {
+      _markers = [..._markers, duplicate]
+        ..sort((a, b) => a.name.compareTo(b.name));
+      _selected = duplicate;
+      _markDirty();
+    });
+    await _saveDrafts();
+  }
+
+  Future<void> _deleteSelected() async {
+    final selected = _selected;
+    if (selected == null) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.cardBackgroundDeep,
+        shape: AppTheme.tradingDialogShape(),
+        title: Text(
+          'Delete ${selected.name}?',
+          style: AppTheme.tradingHeading(
+            fontSize: 22,
+            color: AppTheme.tradingDanger,
+          ),
+        ),
+        content: Text(
+          'This archives the POI on ${_map.displayName} / ${_layer.label}. '
+          'Linked reports are not deleted.',
+          style: AppTheme.bodyTextStyle(
+            fontSize: 14,
+            color: AppTheme.tradingMutedText,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.tradingDanger,
+              foregroundColor: Colors.black,
+            ),
+            onPressed: () => Navigator.of(context).pop(true),
+            icon: const Icon(Icons.delete_outline_rounded),
+            label: const Text('Archive POI'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    setState(() => _saving = true);
+    try {
+      await _repository.archive(selected.id);
+      if (!mounted) return;
+      _snapshotUndo();
+      setState(() {
+        _markers = _markers.where((item) => item.id != selected.id).toList();
+        _selected = null;
+        _lastSavedAt = DateTime.now();
+        _saveStatus = 'Archived';
+        _saveError = '';
+      });
+      _message('POI archived. It will remain hidden after refresh.');
+    } catch (error, stackTrace) {
+      debugPrint('Admin Map Editor delete/archive failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      if (mounted) {
+        setState(() {
+          _saveStatus = 'Delete failed';
+          _saveError = error.toString();
+        });
+        _message('Delete failed: $error');
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  void _resetSelected() {
+    final selected = _selected;
+    if (selected == null) return;
+    final matches = _seedMarkers(
+      _map,
+      _layer,
+    ).where((item) => item.id == selected.id);
+    final seed = matches.isEmpty ? null : matches.first;
+    if (seed == null) return;
+    _updatePoint(selected, seed.point);
+  }
+
+  void _message(String value) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(value)));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      appBar:
+          widget.appBar ??
+          const UagAppBar(
+            title: 'Admin Map & Intel Editor',
+            subtitle: 'Calibrate existing markers and publish custom Intel.',
+          ),
+      body: ArcRaidersScreenShell(
+        showAdBanner: false,
+        child: SafeArea(
+          child: Column(
+            children: [
+              Padding(
+                padding: ArcLayoutTokens.pagePadding(
+                  context,
+                ).copyWith(bottom: 0),
+                child: const ArcAdminWorkspaceBar(
+                  current: ArcAdminWorkspace.mapIntel,
+                  padding: EdgeInsets.zero,
+                ),
+              ),
+              const SizedBox(height: ArcUiTokens.gapM),
+              Expanded(
+                child: _loading
+                    ? const Center(
+                        child: CircularProgressIndicator(
+                          color: ArcUiTokens.primaryAccent,
+                        ),
+                      )
+                    : LayoutBuilder(
+                        builder: (context, constraints) {
+                          final wide =
+                              constraints.maxWidth >= 1000 &&
+                              constraints.maxHeight >= 500;
+                          final mapPanel = _buildMapPanel(compact: !wide);
+                          final sidePanel = _buildSidePanel();
+                          return Padding(
+                            padding: ArcLayoutTokens.pagePadding(context),
+                            child: wide
+                                ? Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      Expanded(flex: 7, child: mapPanel),
+                                      const SizedBox(width: ArcUiTokens.gapM),
+                                      SizedBox(width: 360, child: sidePanel),
+                                    ],
+                                  )
+                                : SingleChildScrollView(
+                                    child: Column(
+                                      children: [
+                                        SizedBox(
+                                          height: (constraints.maxHeight * .6)
+                                              .clamp(300.0, 600.0),
+                                          child: mapPanel,
+                                        ),
+                                        const SizedBox(
+                                          height: ArcUiTokens.gapM,
+                                        ),
+                                        SizedBox(height: 520, child: sidePanel),
+                                      ],
+                                    ),
+                                  ),
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMapPanel({required bool compact}) {
+    final asset = _map.assetForLayer(_layer);
+    final assetPath = asset?.localAssetPath;
+
+    return Container(
+      decoration: AppTheme.tradingCardDecoration(),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          _toolbar(compact: compact),
+          Expanded(
+            child: asset == null || assetPath == null
+                ? const Center(
+                    child: Text(
+                      'No image registered for this map layer.',
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                  )
+                : SizedBox(
+                    key: _mapViewportKey,
+                    child: InteractiveViewer(
+                      transformationController: _transformationController,
+                      minScale: 0.5,
+                      maxScale: 8,
+                      boundaryMargin: const EdgeInsets.all(240),
+                      trackpadScrollCausesScale: true,
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final viewportSize = Size(
+                            constraints.maxWidth,
+                            constraints.maxHeight,
+                          );
+                          _refitAfterMeaningfulViewportChange(viewportSize);
+                          final mapSize = _fittedMapSize(asset, viewportSize);
+                          return Center(
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTapUp: (details) =>
+                                  _handleMapTap(details.localPosition, mapSize),
+                              child: SizedBox(
+                                key: _mapCanvasKey,
+                                width: mapSize.width,
+                                height: mapSize.height,
+                                child: Stack(
+                                  clipBehavior: Clip.none,
+                                  children: [
+                                    Positioned.fill(
+                                      child: Image.asset(
+                                        assetPath,
+                                        fit: BoxFit.fill,
+                                        filterQuality: FilterQuality.high,
+                                        errorBuilder: (_, _, _) => Center(
+                                          child: Container(
+                                            width: 180,
+                                            height: 120,
+                                            alignment: Alignment.center,
+                                            decoration:
+                                                ArcUiTokens.surfaceDecoration(
+                                                  role: ArcSurfaceRole.raised,
+                                                  accent:
+                                                      ArcUiTokens.primaryAccent,
+                                                  borderOpacity: 0.28,
+                                                ),
+                                            child: const Icon(
+                                              Icons.map_outlined,
+                                              color: ArcUiTokens.primaryAccent,
+                                              size: 42,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    if (_showReferenceGrid)
+                                      const Positioned.fill(
+                                        child: IgnorePointer(
+                                          child: CustomPaint(
+                                            painter:
+                                                _ArcAdminMapReferenceGridPainter(),
+                                          ),
+                                        ),
+                                      ),
+                                    if (_showPlacedItems)
+                                      for (final marker in _mapCanvasMarkers)
+                                        _markerWidget(marker, mapSize),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _toolbar({required bool compact}) {
+    final maps = ArcRaidIntelligenceSeedData.maps
+        .where((item) => item.availableLayers.isNotEmpty)
+        .toList(growable: false);
+
+    final controls = <Widget>[
+      SizedBox(
+        width: 190,
+        child: DropdownButtonFormField<String>(
+          isExpanded: true,
+          initialValue: _mapId,
+          decoration: const InputDecoration(labelText: 'Map'),
+          items: [
+            for (final map in maps)
+              DropdownMenuItem(
+                value: ArcMapAssetRegistry.canonicalMapIdFor(map.id) ?? map.id,
+                child: Text(
+                  map.displayName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+          ],
+          onChanged: _saving
+              ? null
+              : (value) {
+                  if (value == null || value == _mapId) return;
+                  final next = ArcRaidIntelligenceSeedData.mapById(value);
+                  final nextLayer = next.availableLayers.isEmpty
+                      ? ArcRaidMapLayer.surface
+                      : ArcMapAssetRegistry.resolveLayer(
+                          next.availableLayers.first.name,
+                        );
+                  setState(() {
+                    _mapId =
+                        ArcMapAssetRegistry.canonicalMapIdFor(value) ?? value;
+                    _layer = nextLayer;
+                  });
+                  unawaited(_load());
+                },
+        ),
+      ),
+      SizedBox(
+        width: 170,
+        child: DropdownButtonFormField<ArcRaidMapLayer>(
+          isExpanded: true,
+          initialValue: _layer,
+          decoration: const InputDecoration(labelText: 'Layer'),
+          items: [
+            for (final layer in _map.availableLayers)
+              DropdownMenuItem(
+                value: ArcMapAssetRegistry.resolveLayer(layer.name),
+                child: Text(layer.label),
+              ),
+          ],
+          onChanged: _saving
+              ? null
+              : (value) {
+                  if (value == null || value == _layer) return;
+                  setState(() => _layer = value);
+                  unawaited(_load());
+                },
+        ),
+      ),
+      FilterChip(
+        selected: _showSeedDefinitions,
+        label: const Text('POIs / exits'),
+        onSelected: (value) => setState(() => _showSeedDefinitions = value),
+      ),
+      FilterChip(
+        selected: _showCustomIntel,
+        label: const Text('Custom Intel'),
+        onSelected: (value) => setState(() => _showCustomIntel = value),
+      ),
+      FilterChip(
+        selected: _showReferenceGrid,
+        label: const Text('Grid'),
+        onSelected: (value) => setState(() => _showReferenceGrid = value),
+      ),
+      IconButton(
+        tooltip: 'Undo',
+        onPressed: _undoStack.isEmpty ? null : _undo,
+        icon: const Icon(Icons.undo_rounded),
+      ),
+      IconButton(
+        key: const Key('admin-map-zoom-out'),
+        tooltip: 'Zoom out',
+        onPressed: () => _zoomMap(0.82),
+        icon: const Icon(Icons.remove_rounded),
+      ),
+      Container(
+        key: const Key('admin-map-zoom-percent'),
+        constraints: const BoxConstraints(minWidth: 48),
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.36),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.white12),
+        ),
+        child: Text(
+          '$_zoomPercent%',
+          style: const TextStyle(color: Colors.white70, fontSize: 11),
+        ),
+      ),
+      IconButton(
+        key: const Key('admin-map-zoom-in'),
+        tooltip: 'Zoom in',
+        onPressed: () => _zoomMap(1.22),
+        icon: const Icon(Icons.add_rounded),
+      ),
+      IconButton(
+        key: const Key('admin-map-fit'),
+        tooltip: 'Fit map',
+        onPressed: _fitMap,
+        icon: const Icon(Icons.center_focus_strong_rounded),
+      ),
+    ];
+    return Container(
+      padding: const EdgeInsets.all(10),
+      color: Colors.black.withValues(alpha: 0.35),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  key: const Key('admin-map-toggle-items'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                  onPressed: () =>
+                      setState(() => _showPlacedItems = !_showPlacedItems),
+                  icon: Icon(
+                    _showPlacedItems
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
+                    size: 18,
+                  ),
+                  label: Text(_showPlacedItems ? 'Hide Icons' : 'Show Icons'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: ElevatedButton.icon(
+                  key: const Key('admin-map-create-poi'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                  onPressed: _saving ? null : _preparePoiPlacement,
+                  icon: const Icon(Icons.add_location_alt_rounded, size: 18),
+                  label: const Text('Create POI'),
+                ),
+              ),
+            ],
+          ),
+          if (_placingNewPoi)
+            TextButton.icon(
+              onPressed: () => setState(() {
+                _resetPlacementFields();
+                _saveStatus = _dirty ? 'Unsaved changes' : 'Saved';
+              }),
+              icon: const Icon(Icons.close_rounded, size: 16),
+              label: const Text('Cancel placement'),
+            ),
+          const SizedBox(height: 8),
+          compact
+              ? SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      for (final control in controls) ...[
+                        control,
+                        const SizedBox(width: 8),
+                      ],
+                    ],
+                  ),
+                )
+              : Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: controls,
+                ),
+        ],
+      ),
+    );
+  }
+
+  Widget _markerWidget(ArcAdminMapMarker marker, Size size) {
+    final selected = _selected?.id == marker.id;
+    final calibration = _map.calibrationForLayer(_layer);
+    final anchor = ArcMapCoordinateProjection.canonicalToCanvas(
+      point: marker.point,
+      mapSize: size,
+      calibration: calibration,
+    );
+    final pinWidth = ArcPrecisionMapPin.widthFor(selected);
+    final pinHeight = ArcPrecisionMapPin.heightFor(selected);
+    final assetPath = _assetPathForMarker(marker);
+    final accent = _kindColor(marker.kind);
+
+    Widget head = ArcMapFilterIcon(
+      iconKey: ArcMapFilterIconRegistry.iconKeyForAdminMarker(marker),
+      size: selected ? 20 : 16,
+      color: accent,
+      semanticLabel: marker.subtypeLabel ?? marker.name,
+    );
+    if (assetPath != null) {
+      head = Image.asset(
+        assetPath,
+        width: selected ? 20 : 16,
+        height: selected ? 20 : 16,
+        fit: BoxFit.cover,
+        filterQuality: FilterQuality.high,
+        errorBuilder: (_, _, _) => ArcMapFilterIcon(
+          iconKey: ArcMapFilterIconRegistry.iconKeyForAdminMarker(marker),
+          size: selected ? 20 : 16,
+          color: accent,
+        ),
+      );
+    }
+
+    return Positioned(
+      left: anchor.dx - (pinWidth / 2),
+      top: anchor.dy - pinHeight,
+      child: GestureDetector(
+        key: ValueKey<String>('admin-map-marker-${marker.id}'),
+        behavior: HitTestBehavior.translucent,
+        onPanStart: (_) {
+          if (_selected?.id != marker.id) {
+            setState(() => _selected = marker);
+          }
+          _snapshotUndo();
+        },
+        onPanUpdate: (details) {
+          final mapBox = _mapCanvasKey.currentContext?.findRenderObject();
+          if (mapBox is! RenderBox || size.width <= 0 || size.height <= 0) {
+            return;
+          }
+          final localPosition = mapBox.globalToLocal(details.globalPosition);
+          final next = ArcMapCoordinateProjection.canvasToCanonical(
+            localPosition: localPosition,
+            mapSize: size,
+            calibration: calibration,
+          );
+          final current = _markers.firstWhere((item) => item.id == marker.id);
+          final updated = current.copyWith(point: next);
+          setState(() {
+            _markers = [
+              for (final item in _markers)
+                if (item.id == marker.id) updated else item,
+            ];
+            _selected = updated;
+            _markDirty();
+          });
+        },
+        child: Tooltip(
+          message:
+              '${marker.name}\nX ${marker.point.x.toStringAsFixed(4)} • Y ${marker.point.y.toStringAsFixed(4)}',
+          child: ArcPrecisionMapPin(
+            selected: selected,
+            accent: accent,
+            head: head,
+            label: marker.name,
+            detail: marker.subtypeLabel ?? marker.kind.label,
+            coordinateText:
+                'X ${marker.point.x.toStringAsFixed(4)} • Y ${marker.point.y.toStringAsFixed(4)}',
+            onTap: () => setState(() => _selected = marker),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String? _assetPathForMarker(ArcAdminMapMarker marker) {
+    if (marker.blueprintId?.trim().isNotEmpty == true) {
+      for (final blueprint in ArcBlueprintSeedData.blueprints) {
+        if (blueprint.id == marker.blueprintId) {
+          final path = blueprint.imageAssetPath?.trim();
+          if (path != null && path.isNotEmpty) return path;
+          break;
+        }
+      }
+    }
+    final direct = ArcAdminMarkerVisualRegistry.assetPathForSubtype(
+      marker.subtypeId,
+    );
+    if (direct != null) return direct;
+    return switch (marker.kind) {
+      ArcAdminMapMarkerKind.extraction =>
+        ArcAdminMarkerVisualRegistry.assetPathForSubtype('extraction'),
+      ArcAdminMapMarkerKind.raiderHatch =>
+        ArcAdminMarkerVisualRegistry.assetPathForSubtype('raider_hatch'),
+      _ => null,
+    };
+  }
+
+  Widget _buildSidePanel() {
+    return Container(
+      decoration: AppTheme.tradingCardDecoration(),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Wrap(
+              spacing: 7,
+              runSpacing: 7,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: _saving ? null : _beginPoiPlacement,
+                  icon: const Icon(Icons.add_location_alt_rounded),
+                  label: const Text('Add Map Point'),
+                ),
+                OutlinedButton.icon(
+                  key: const Key('admin-map-add-extraction'),
+                  onPressed: _saving ? null : _beginExtractionPlacement,
+                  icon: const Icon(Icons.exit_to_app_rounded),
+                  label: const Text('Add Extraction'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: _saving
+                      ? null
+                      : _beginHistoricalBlueprintPlacement,
+                  icon: const Icon(Icons.extension_rounded),
+                  label: const Text('Add Blueprint Location'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: _selected == null || _saving
+                      ? null
+                      : _editSelected,
+                  icon: const Icon(Icons.edit_location_alt_rounded),
+                  label: const Text('Edit Marker'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: _selected == null || _saving
+                      ? null
+                      : _deleteSelected,
+                  icon: const Icon(Icons.delete_outline_rounded),
+                  label: const Text('Delete Marker'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: _saving ? null : _saveDrafts,
+                  icon: const Icon(Icons.save_outlined),
+                  label: const Text('Save Changes'),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          Expanded(
+            child: UagPrecisionScrollView(
+              key: const Key('map-editor-precision-scroll'),
+              scrollScale: 0.25,
+              showScrollbar: true,
+              scrollbarThickness: 11,
+              padding: const EdgeInsets.fromLTRB(10, 10, 16, 10),
+              children: [
+                _MapEditorExpandableSection(
+                  title: 'SAVE & STATUS',
+                  child: _saveStatusCard(),
+                ),
+                const SizedBox(height: 10),
+                _MapEditorExpandableSection(
+                  title: 'ADD MARKERS',
+                  initiallyExpanded: true,
+                  child: _markerPaletteCard(),
+                ),
+                const SizedBox(height: 10),
+                _MapEditorExpandableSection(
+                  title: 'FILTER MARKERS',
+                  child: _markerFiltersCard(),
+                ),
+                const SizedBox(height: 10),
+                if (_selected != null)
+                  _MapEditorExpandableSection(
+                    title: 'SELECTED MARKER',
+                    initiallyExpanded: true,
+                    child: _selectedCard(_selected!),
+                  ),
+                if (_selected != null) const SizedBox(height: 10),
+                _MapEditorExpandableSection(
+                  title: 'ADVANCED MAP TOOLS',
+                  child: _advancedMapToolsCard(),
+                ),
+                const SizedBox(height: 10),
+                _MapEditorExpandableSection(
+                  title: 'MARKERS ON THIS VIEW (${_visibleMarkers.length})',
+                  child: Column(
+                    children: [
+                      for (final marker in _visibleMarkers)
+                        ListTile(
+                          dense: true,
+                          selected: _selected?.id == marker.id,
+                          leading: Icon(
+                            _kindIcon(marker.kind),
+                            color: _kindColor(marker.kind),
+                          ),
+                          title: Text(
+                            marker.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          subtitle: Text(
+                            '${marker.subtypeLabel?.trim().isNotEmpty == true ? '${marker.effectiveKind.label} / ${marker.subtypeLabel!.trim()}' : marker.effectiveKind.label} • ${marker.point.x.toStringAsFixed(4)}, ${marker.point.y.toStringAsFixed(4)}',
+                          ),
+                          trailing: _markerStateIcon(marker),
+                          onTap: () => setState(() => _selected = marker),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          Padding(
+            padding: const EdgeInsets.all(10),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _selected == null || _saving
+                    ? null
+                    : _publishSelected,
+                icon: const Icon(Icons.cloud_upload_rounded),
+                label: const Text('Publish Marker'),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _advancedMapToolsCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: AppTheme.tradingCardDecoration(
+        borderColor: AppTheme.neonCyan.withValues(alpha: 0.22),
+        backgroundColor: Colors.black.withValues(alpha: 0.20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'These tools are for bulk data maintenance and recovery. '
+            'Normal map editing does not require them.',
+            style: const TextStyle(color: Colors.white60, fontSize: 12),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 7,
+            runSpacing: 7,
+            children: [
+              OutlinedButton.icon(
+                onPressed: _exportJson,
+                icon: const Icon(Icons.data_object_rounded),
+                label: const Text('Export Marker Data'),
+              ),
+              OutlinedButton.icon(
+                onPressed: _saving ? null : _importJsonFromClipboard,
+                icon: const Icon(Icons.input_rounded),
+                label: const Text('Import Marker Data'),
+              ),
+              OutlinedButton.icon(
+                onPressed: _saving ? null : _populateWorldIntel,
+                icon: const Icon(Icons.auto_awesome_rounded),
+                label: const Text('Process Imported Map Data'),
+              ),
+              OutlinedButton.icon(
+                onPressed: _selected == null || _saving
+                    ? null
+                    : _duplicateSelected,
+                icon: const Icon(Icons.copy_all_rounded),
+                label: const Text('Duplicate Marker'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Text('BULK PUBLISHING', style: _sectionLabelStyle()),
+          const SizedBox(height: 7),
+          Wrap(
+            spacing: 7,
+            runSpacing: 7,
+            children: [
+              OutlinedButton.icon(
+                onPressed: _visibleMarkers.isEmpty || _saving
+                    ? null
+                    : _publishAll,
+                icon: const Icon(Icons.cloud_sync_rounded),
+                label: const Text('Publish Visible Markers'),
+              ),
+              OutlinedButton.icon(
+                onPressed: _saving ? null : _publishEligibleImports,
+                icon: const Icon(Icons.verified_rounded),
+                label: const Text('Publish Approved Imports'),
+              ),
+              OutlinedButton.icon(
+                onPressed: _saving ? null : _publishHighConfidence,
+                icon: const Icon(Icons.published_with_changes_rounded),
+                label: const Text('Publish High-Confidence Markers'),
+              ),
+              OutlinedButton.icon(
+                onPressed: _saving ? null : _archiveVisibleExceptions,
+                icon: const Icon(Icons.archive_outlined),
+                label: const Text('Archive Problem Markers'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _importDashboardCard(),
+        ],
+      ),
+    );
+  }
+
+  Widget _importDashboardCard() {
+    final imported = _importedMarkers;
+    final exceptions = imported.where((marker) => marker.hasImportException);
+    final provisional = imported.where((marker) => marker.provisionalVisible);
+    final duplicateGroups = imported
+        .map((marker) => marker.duplicateGroupId)
+        .whereType<String>()
+        .toSet();
+    final confidenceValues = imported
+        .map((marker) => marker.alignmentConfidence)
+        .whereType<double>()
+        .toList(growable: false);
+    final averageConfidence = confidenceValues.isEmpty
+        ? null
+        : confidenceValues.reduce((a, b) => a + b) / confidenceValues.length;
+    final last = _lastImportSummary;
+    final world = _lastWorldPopulation;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: AppTheme.tradingCardDecoration(
+        borderColor: AppTheme.neonCyan.withValues(alpha: 0.28),
+        backgroundColor: Colors.black.withValues(alpha: 0.26),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('IMPORT PIPELINE', style: _sectionLabelStyle()),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _metricPill('Cached', imported.length.toString()),
+              _metricPill('Exceptions', exceptions.length.toString()),
+              _metricPill('Provisional', provisional.length.toString()),
+              _metricPill('Groups', duplicateGroups.length.toString()),
+              _metricPill(
+                'Alignment',
+                averageConfidence == null
+                    ? 'None'
+                    : '${(averageConfidence * 100).round()}%',
+              ),
+            ],
+          ),
+          if (last != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              '${last.source.name}: ${last.totalRecords} records • '
+              '${last.alignment.confidenceLabel} alignment • '
+              '${last.duplicateCount} duplicates',
+              style: const TextStyle(color: Colors.white60, fontSize: 12),
+            ),
+          ],
+          if (world != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              'UAG World: ${world.coverageReport.autoPublishedCount} published • '
+              '${world.coverageReport.provisionalCount} provisional • '
+              '${world.coverageReport.exceptionCount} review • '
+              '${world.coverageReport.estimatedReviewPercentage.toStringAsFixed(1)}% manual',
+              style: const TextStyle(color: Colors.white60, fontSize: 12),
+            ),
+            if (world.townHallBridgeCandidates.isNotEmpty)
+              Text(
+                'Town Hall bridge: ${world.townHallBridgeCandidates.first.label} '
+                '(${world.townHallBridgeCandidates.first.confidence.label})',
+                style: const TextStyle(color: AppTheme.neonCyan, fontSize: 12),
+              ),
+          ],
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 7,
+            runSpacing: 7,
+            children: [
+              OutlinedButton.icon(
+                onPressed: _saving ? null : _importJsonFromClipboard,
+                icon: const Icon(Icons.content_paste_go_rounded),
+                label: const Text('Import Clipboard'),
+              ),
+              TextButton.icon(
+                onPressed: _reprocessImportCache,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Reprocess Cache'),
+              ),
+              TextButton.icon(
+                onPressed: _saving ? null : _populateWorldIntel,
+                icon: const Icon(Icons.auto_awesome_rounded),
+                label: const Text('Reprocess World'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _saveStatusCard() {
+    final statusColor =
+        _saveStatus == 'Save failed' || _saveStatus == 'Delete failed'
+        ? AppTheme.tradingDanger
+        : _dirty || _placingNewPoi
+        ? AppTheme.warningAmber
+        : AppTheme.neonCyan;
+    final lastSaved = _lastSavedAt;
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: AppTheme.tradingCardDecoration(
+        borderColor: statusColor.withValues(alpha: 0.32),
+        backgroundColor: Colors.black.withValues(alpha: 0.20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                _saving
+                    ? Icons.sync_rounded
+                    : _dirty || _placingNewPoi
+                    ? Icons.edit_note_rounded
+                    : Icons.cloud_done_rounded,
+                color: statusColor,
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  _saving ? 'Saving...' : _saveStatus,
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 13,
+                    color: statusColor,
+                    isBold: true,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (lastSaved != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Last saved ${lastSaved.toLocal()}',
+              style: const TextStyle(color: Colors.white54, fontSize: 11),
+            ),
+          ],
+          if (_saveError.trim().isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              _saveError,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: AppTheme.tradingDanger, fontSize: 11),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _markerPaletteCard() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: AppTheme.tradingCardDecoration(
+        borderColor: AppTheme.neonCyan.withValues(alpha: 0.35),
+        backgroundColor: Colors.black.withValues(alpha: 0.24),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('UAG MARKER PALETTE', style: _sectionLabelStyle()),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 7,
+            runSpacing: 7,
+            children: [
+              for (final item in _uagMarkerPaletteItems)
+                OutlinedButton.icon(
+                  onPressed: _saving
+                      ? null
+                      : () => _beginPaletteMarkerPlacement(item),
+                  icon: Icon(item.icon, size: 16, color: _kindColor(item.kind)),
+                  label: Text(item.label),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _markerFiltersCard() {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: AppTheme.tradingCardDecoration(
+        backgroundColor: Colors.black.withValues(alpha: 0.18),
+      ),
+      child: Column(
+        children: [
+          TextField(
+            controller: _searchController,
+            decoration: const InputDecoration(
+              labelText: 'Search markers',
+              prefixIcon: Icon(Icons.search_rounded),
+            ),
+            onChanged: (value) => setState(() => _searchQuery = value),
+          ),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<ArcAdminMapMarkerKind?>(
+            isExpanded: true,
+            initialValue: _kindFilter,
+            decoration: const InputDecoration(labelText: 'Category filter'),
+            items: <DropdownMenuItem<ArcAdminMapMarkerKind?>>[
+              const DropdownMenuItem<ArcAdminMapMarkerKind?>(
+                value: null,
+                child: Text('All marker categories'),
+              ),
+              for (final kind in ArcAdminMapMarkerKind.values)
+                DropdownMenuItem<ArcAdminMapMarkerKind?>(
+                  value: kind,
+                  child: Text(kind.label),
+                ),
+            ],
+            onChanged: (value) => setState(() {
+              _kindFilter = value;
+              _subtypeFilterId = null;
+            }),
+          ),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String?>(
+            key: ValueKey<ArcAdminMapMarkerKind?>(_kindFilter),
+            isExpanded: true,
+            initialValue: _currentSubtypeFilterValue(),
+            decoration: const InputDecoration(labelText: 'Subsection filter'),
+            items: _subtypeFilterOptions()
+                .map(
+                  (option) => DropdownMenuItem<String?>(
+                    value: option.id,
+                    child: _SubtypeIconLabel(
+                      label: option.label,
+                      iconKey: option.iconKey,
+                      subtypeId: option.id,
+                    ),
+                  ),
+                )
+                .toList(growable: false),
+            onChanged: (value) => setState(() => _subtypeFilterId = value),
+          ),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<ArcRaidIntelConfidence?>(
+            isExpanded: true,
+            initialValue: _confidenceFilter,
+            decoration: const InputDecoration(labelText: 'Confidence filter'),
+            items: <DropdownMenuItem<ArcRaidIntelConfidence?>>[
+              const DropdownMenuItem<ArcRaidIntelConfidence?>(
+                value: null,
+                child: Text('All confidence levels'),
+              ),
+              for (final confidence in ArcRaidIntelConfidence.values)
+                DropdownMenuItem<ArcRaidIntelConfidence?>(
+                  value: confidence,
+                  child: Text(confidence.label),
+                ),
+            ],
+            onChanged: (value) => setState(() => _confidenceFilter = value),
+          ),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<ArcAdminMapMarkerSourcePermission?>(
+            isExpanded: true,
+            initialValue: _permissionFilter,
+            decoration: const InputDecoration(labelText: 'Source permission'),
+            items: <DropdownMenuItem<ArcAdminMapMarkerSourcePermission?>>[
+              const DropdownMenuItem<ArcAdminMapMarkerSourcePermission?>(
+                value: null,
+                child: Text('All source permissions'),
+              ),
+              for (final permission in ArcAdminMapMarkerSourcePermission.values)
+                DropdownMenuItem<ArcAdminMapMarkerSourcePermission?>(
+                  value: permission,
+                  child: Text(permission.label),
+                ),
+            ],
+            onChanged: (value) => setState(() => _permissionFilter = value),
+          ),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<ArcWorldIntelEvidenceType?>(
+            isExpanded: true,
+            initialValue: _evidenceTypeFilter,
+            decoration: const InputDecoration(labelText: 'Evidence type'),
+            items: <DropdownMenuItem<ArcWorldIntelEvidenceType?>>[
+              const DropdownMenuItem<ArcWorldIntelEvidenceType?>(
+                value: null,
+                child: Text('All evidence types'),
+              ),
+              for (final evidenceType in ArcWorldIntelEvidenceType.values)
+                DropdownMenuItem<ArcWorldIntelEvidenceType?>(
+                  value: evidenceType,
+                  child: Text(evidenceType.label),
+                ),
+            ],
+            onChanged: (value) => setState(() => _evidenceTypeFilter = value),
+          ),
+          const SizedBox(height: 8),
+          SwitchListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Provisional only'),
+            value: _showProvisionalOnly,
+            onChanged: (value) => setState(() => _showProvisionalOnly = value),
+          ),
+          SwitchListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Exception queue only'),
+            value: _showExceptionsOnly,
+            onChanged: (value) => setState(() => _showExceptionsOnly = value),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<_SubtypeFilterOption> _subtypeFilterOptions() {
+    final options = <_SubtypeFilterOption>[
+      const _SubtypeFilterOption(id: null, label: 'All subsections'),
+    ];
+    final seen = <String>{};
+    void add(String? id, String? label, {String? iconKey}) {
+      final cleanId = id?.trim();
+      final cleanLabel = label?.trim();
+      if (cleanId == null || cleanId.isEmpty) return;
+      if (cleanLabel == null || cleanLabel.isEmpty) return;
+      if (!seen.add(cleanId)) return;
+      options.add(
+        _SubtypeFilterOption(
+          id: cleanId,
+          label: cleanLabel,
+          iconKey:
+              iconKey ?? ArcMapFilterIconRegistry.iconKeyForSubtype(cleanId),
+        ),
+      );
+    }
+
+    if (_kindFilter != null) {
+      for (final subtype in ArcAdminMapMarkerSubtypeCatalog.forKind(
+        _kindFilter!,
+        mapName: _map.displayName,
+      )) {
+        add(subtype.id, subtype.label, iconKey: subtype.iconKey);
+      }
+    }
+    for (final marker in _markers) {
+      if (_kindFilter != null && marker.effectiveKind != _kindFilter) continue;
+      add(marker.subtypeId, marker.subtypeLabel);
+    }
+    return options;
+  }
+
+  String? _currentSubtypeFilterValue() {
+    for (final option in _subtypeFilterOptions()) {
+      if (option.id == _subtypeFilterId) return _subtypeFilterId;
+    }
+    return null;
+  }
+
+  Widget _metricPill(String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+      ),
+      child: Text(
+        '$label $value',
+        style: const TextStyle(color: Colors.white70, fontSize: 11),
+      ),
+    );
+  }
+
+  Widget _markerStateIcon(ArcAdminMapMarker marker) {
+    if (marker.hasImportException) {
+      return const Icon(
+        Icons.report_problem_rounded,
+        color: Colors.redAccent,
+        size: 18,
+      );
+    }
+    if (marker.isPublished) {
+      return const Icon(
+        Icons.cloud_done_rounded,
+        color: Colors.lightGreenAccent,
+        size: 18,
+      );
+    }
+    if (marker.provisionalVisible) {
+      return const Icon(
+        Icons.visibility_rounded,
+        color: AppTheme.neonCyan,
+        size: 18,
+      );
+    }
+    return const Icon(
+      Icons.edit_note_rounded,
+      color: Colors.amberAccent,
+      size: 18,
+    );
+  }
+
+  TextStyle _sectionLabelStyle() {
+    return AppTheme.bodyTextStyle(
+      fontSize: 10,
+      color: AppTheme.neonCyan,
+      isBold: true,
+    );
+  }
+
+  String _blueprintNameFor(String? blueprintId) {
+    if (blueprintId == null || blueprintId.trim().isEmpty) return '';
+    for (final blueprint in ArcBlueprintSeedData.blueprints) {
+      if (blueprint.id == blueprintId) return blueprint.name;
+    }
+    return blueprintId;
+  }
+
+  Widget _selectedCard(ArcAdminMapMarker marker) {
+    final blueprintName = _blueprintNameFor(marker.blueprintId);
+    final resource = marker.upgradeResource;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: AppTheme.tradingCardDecoration(
+        borderColor: _kindColor(marker.kind).withValues(alpha: 0.45),
+        backgroundColor: Colors.black.withValues(alpha: 0.3),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(marker.name, style: AppTheme.tradingHeading(fontSize: 20)),
+          if (resource != null)
+            Text(
+              '${resource.usageLabel}: ${resource.usageDetails}',
+              style: const TextStyle(color: Colors.white70, fontSize: 12),
+            ),
+          const SizedBox(height: 3),
+          Text(
+            marker.effectiveKind.label,
+            style: TextStyle(color: _kindColor(marker.kind)),
+          ),
+          if (marker.subtypeLabel?.trim().isNotEmpty == true) ...[
+            const SizedBox(height: 4),
+            Text(
+              marker.subtypeLabel!.trim(),
+              style: const TextStyle(color: Colors.white60, fontSize: 12),
+            ),
+          ],
+          const SizedBox(height: 8),
+          SelectableText(
+            'Transformed X ${marker.point.x.toStringAsFixed(6)}\n'
+            'Transformed Y ${marker.point.y.toStringAsFixed(6)}'
+            '${marker.originalPoint == null ? '' : '\nOriginal X ${marker.originalPoint!.x.toStringAsFixed(6)}\nOriginal Y ${marker.originalPoint!.y.toStringAsFixed(6)}'}',
+            style: const TextStyle(
+              color: Colors.white70,
+              fontFamily: 'monospace',
+            ),
+          ),
+          if (marker.description.trim().isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              marker.description,
+              style: const TextStyle(color: Colors.white60),
+            ),
+          ],
+          if (marker.aliases.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              'Aliases: ${marker.aliases.join(', ')}',
+              style: const TextStyle(color: Colors.white60, fontSize: 12),
+            ),
+          ],
+          if (marker.blueprintId != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              'Blueprint: $blueprintName',
+              style: const TextStyle(color: AppTheme.neonCyan),
+            ),
+          ],
+          if (marker.sourceRecordId != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Source: ${marker.sourceName ?? marker.sourceLabel} • '
+              '${marker.sourcePermission.label}',
+              style: const TextStyle(color: Colors.white60, fontSize: 12),
+            ),
+            if (marker.alignmentConfidence != null)
+              Text(
+                'Alignment ${(marker.alignmentConfidence! * 100).round()}% '
+                '• ${marker.coordinateSpace ?? 'normalized'}',
+                style: const TextStyle(color: Colors.white60, fontSize: 12),
+              ),
+            if (marker.exceptionReason?.trim().isNotEmpty == true)
+              Text(
+                'Review: ${marker.exceptionReason}',
+                style: const TextStyle(color: Colors.redAccent, fontSize: 12),
+              ),
+          ],
+          if (marker.evidence.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text('Evidence set', style: _sectionLabelStyle()),
+            const SizedBox(height: 4),
+            for (final evidence in marker.evidence.take(4))
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  '${evidence.type.label}: ${evidence.sourceName}'
+                  '${evidence.sourceRecordId == null ? '' : ' / ${evidence.sourceRecordId}'}'
+                  '${evidence.landmarkText == null ? '' : ' / ${evidence.landmarkText}'}',
+                  style: const TextStyle(color: Colors.white60, fontSize: 12),
+                ),
+              ),
+            if (marker.evidence.length > 4)
+              Text(
+                '+${marker.evidence.length - 4} more evidence records',
+                style: const TextStyle(color: Colors.white38, fontSize: 12),
+              ),
+          ],
+          const SizedBox(height: 9),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              TextButton.icon(
+                onPressed: _saving ? null : _editSelected,
+                icon: const Icon(Icons.edit_location_alt_rounded),
+                label: const Text('Edit'),
+              ),
+              TextButton.icon(
+                onPressed: _saving ? null : _duplicateSelected,
+                icon: const Icon(Icons.copy_all_rounded),
+                label: const Text('Duplicate'),
+              ),
+              if (marker.kind.isSeedDefinition)
+                TextButton.icon(
+                  onPressed: _resetSelected,
+                  icon: const Icon(Icons.restart_alt_rounded),
+                  label: const Text('Reset'),
+                ),
+              TextButton.icon(
+                onPressed: _saving ? null : _deleteSelected,
+                icon: const Icon(Icons.delete_outline_rounded),
+                label: const Text('Delete'),
+              ),
+              TextButton.icon(
+                onPressed: () => Clipboard.setData(
+                  ClipboardData(text: jsonEncode(marker.toJsonMap())),
+                ),
+                icon: const Icon(Icons.copy_rounded),
+                label: const Text('Copy JSON'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _kindColor(ArcAdminMapMarkerKind kind) {
+    switch (kind) {
+      case ArcAdminMapMarkerKind.poi:
+        return AppTheme.neonCyan;
+      case ArcAdminMapMarkerKind.extraction:
+        return Colors.lightGreenAccent;
+      case ArcAdminMapMarkerKind.raiderHatch:
+        return Colors.amberAccent;
+      case ArcAdminMapMarkerKind.blueprint:
+        return AppTheme.neonPink;
+      case ArcAdminMapMarkerKind.questLocation:
+        return Colors.cyanAccent;
+      case ArcAdminMapMarkerKind.mapEvent:
+        return Colors.lightBlueAccent;
+      case ArcAdminMapMarkerKind.upgrade:
+      case ArcAdminMapMarkerKind.resourceNode:
+      case ArcAdminMapMarkerKind.naturalResource:
+        return Colors.tealAccent;
+      case ArcAdminMapMarkerKind.arcSpawn:
+        return Colors.redAccent;
+      case ArcAdminMapMarkerKind.weaponCase:
+      case ArcAdminMapMarkerKind.weaponCache:
+      case ArcAdminMapMarkerKind.firstWaveCache:
+      case ArcAdminMapMarkerKind.raiderCache:
+        return Colors.orangeAccent;
+      case ArcAdminMapMarkerKind.lootContainer:
+      case ArcAdminMapMarkerKind.fieldCrate:
+      case ArcAdminMapMarkerKind.containerCluster:
+      case ArcAdminMapMarkerKind.highValueLoot:
+        return Colors.yellowAccent;
+      case ArcAdminMapMarkerKind.lockedRoom:
+      case ArcAdminMapMarkerKind.securityRoom:
+      case ArcAdminMapMarkerKind.key:
+      case ArcAdminMapMarkerKind.keyRequiredLocation:
+        return Colors.deepPurpleAccent;
+      case ArcAdminMapMarkerKind.arcThreat:
+      case ArcAdminMapMarkerKind.extractionDanger:
+      case ArcAdminMapMarkerKind.hazard:
+        return Colors.redAccent;
+      case ArcAdminMapMarkerKind.surfaceTransition:
+      case ArcAdminMapMarkerKind.undergroundTransition:
+        return Colors.lightGreenAccent;
+      case ArcAdminMapMarkerKind.customIntel:
+        return Colors.white70;
+    }
+  }
+
+  IconData _kindIcon(ArcAdminMapMarkerKind kind) {
+    switch (kind) {
+      case ArcAdminMapMarkerKind.poi:
+        return Icons.location_city_rounded;
+      case ArcAdminMapMarkerKind.extraction:
+        return Icons.exit_to_app_rounded;
+      case ArcAdminMapMarkerKind.raiderHatch:
+        return Icons.key_rounded;
+      case ArcAdminMapMarkerKind.blueprint:
+        return Icons.extension_rounded;
+      case ArcAdminMapMarkerKind.questLocation:
+        return Icons.assignment_turned_in_rounded;
+      case ArcAdminMapMarkerKind.mapEvent:
+        return Icons.bolt_rounded;
+      case ArcAdminMapMarkerKind.upgrade:
+      case ArcAdminMapMarkerKind.resourceNode:
+        return Icons.construction_rounded;
+      case ArcAdminMapMarkerKind.naturalResource:
+        return Icons.eco_rounded;
+      case ArcAdminMapMarkerKind.arcSpawn:
+        return Icons.my_location_rounded;
+      case ArcAdminMapMarkerKind.weaponCase:
+        return Icons.inventory_rounded;
+      case ArcAdminMapMarkerKind.weaponCache:
+        return Icons.gps_fixed_rounded;
+      case ArcAdminMapMarkerKind.firstWaveCache:
+        return Icons.inventory_2_rounded;
+      case ArcAdminMapMarkerKind.raiderCache:
+        return Icons.gps_fixed_rounded;
+      case ArcAdminMapMarkerKind.fieldCrate:
+        return Icons.inventory_2_rounded;
+      case ArcAdminMapMarkerKind.lootContainer:
+        return Icons.inventory_2_rounded;
+      case ArcAdminMapMarkerKind.containerCluster:
+        return Icons.all_inbox_rounded;
+      case ArcAdminMapMarkerKind.lockedRoom:
+      case ArcAdminMapMarkerKind.securityRoom:
+        return Icons.lock_rounded;
+      case ArcAdminMapMarkerKind.key:
+      case ArcAdminMapMarkerKind.keyRequiredLocation:
+        return Icons.vpn_key_rounded;
+      case ArcAdminMapMarkerKind.highValueLoot:
+        return Icons.diamond_rounded;
+      case ArcAdminMapMarkerKind.arcThreat:
+        return Icons.warning_amber_rounded;
+      case ArcAdminMapMarkerKind.extractionDanger:
+      case ArcAdminMapMarkerKind.hazard:
+        return Icons.crisis_alert_rounded;
+      case ArcAdminMapMarkerKind.surfaceTransition:
+      case ArcAdminMapMarkerKind.undergroundTransition:
+        return Icons.stairs_rounded;
+      case ArcAdminMapMarkerKind.customIntel:
+        return Icons.push_pin_rounded;
+    }
+  }
+}
+
+class _MapEditorExpandableSection extends StatelessWidget {
+  const _MapEditorExpandableSection({
+    required this.title,
+    required this.child,
+    this.initiallyExpanded = false,
+  });
+
+  final String title;
+  final Widget child;
+  final bool initiallyExpanded;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: AppTheme.tradingCardDecoration(
+        borderColor: AppTheme.neonCyan.withValues(alpha: 0.20),
+        backgroundColor: Colors.black.withValues(alpha: 0.16),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          initiallyExpanded: initiallyExpanded,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 12),
+          childrenPadding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+          title: Text(
+            title,
+            style: AppTheme.bodyTextStyle(
+              fontSize: 12,
+              color: AppTheme.neonCyan,
+              isBold: true,
+            ),
+          ),
+          iconColor: AppTheme.neonCyan,
+          collapsedIconColor: AppTheme.neonCyan,
+          children: [child],
+        ),
+      ),
+    );
+  }
+}
+
+class _ArcAdminMapReferenceGridPainter extends CustomPainter {
+  const _ArcAdminMapReferenceGridPainter();
+
+  static const int divisions = 10;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final linePaint = Paint()
+      ..color = AppTheme.neonCyan.withValues(alpha: 0.22)
+      ..strokeWidth = 0.8;
+    final majorLinePaint = Paint()
+      ..color = AppTheme.neonPink.withValues(alpha: 0.28)
+      ..strokeWidth = 1.1;
+    final labelStyle = AppTheme.bodyTextStyle(
+      fontSize: 10,
+      color: Colors.white.withValues(alpha: 0.72),
+      isBold: true,
+    );
+
+    for (var index = 0; index <= divisions; index++) {
+      final x = size.width * (index / divisions);
+      final y = size.height * (index / divisions);
+      final paint = index == 0 || index == divisions || index == divisions ~/ 2
+          ? majorLinePaint
+          : linePaint;
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+
+      if (index < divisions) {
+        _drawLabel(
+          canvas,
+          String.fromCharCode(65 + index),
+          Offset(x + 6, 6),
+          labelStyle,
+        );
+        _drawLabel(canvas, '${index + 1}', Offset(6, y + 20), labelStyle);
+      }
+    }
+  }
+
+  void _drawLabel(Canvas canvas, String value, Offset offset, TextStyle style) {
+    final painter = TextPainter(
+      text: TextSpan(text: value, style: style),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    painter.paint(canvas, offset);
+  }
+
+  @override
+  bool shouldRepaint(covariant _ArcAdminMapReferenceGridPainter oldDelegate) {
+    return false;
+  }
+}
+
+class _NewMarkerResult {
+  const _NewMarkerResult({
+    required this.kind,
+    required this.name,
+    required this.aliases,
+    required this.description,
+    required this.sourceLabel,
+    required this.confidence,
+    this.subtypeId,
+    this.subtypeLabel,
+    this.itemId,
+    this.questId,
+    this.blueprintId,
+    this.layer,
+  });
+
+  final ArcRaidMapLayer? layer;
+  final ArcAdminMapMarkerKind kind;
+  final String name;
+  final List<String> aliases;
+  final String description;
+  final String sourceLabel;
+  final ArcRaidIntelConfidence confidence;
+  final String? subtypeId;
+  final String? subtypeLabel;
+  final String? itemId;
+  final String? questId;
+  final String? blueprintId;
+}
+
+class _NewMarkerDialog extends StatefulWidget {
+  const _NewMarkerDialog({
+    required this.title,
+    required this.actionLabel,
+    this.initialMarker,
+    this.mapName,
+    this.initialKind = ArcAdminMapMarkerKind.customIntel,
+    this.includeSeedKinds = false,
+    this.requireBlueprint = false,
+    this.initialSourceLabel = 'Mike / Admin Intel',
+    this.supportedLayers = const [],
+    this.existingNames = const [],
+  });
+
+  final String title;
+  final String actionLabel;
+  final ArcAdminMapMarker? initialMarker;
+  final String? mapName;
+  final ArcAdminMapMarkerKind initialKind;
+  final bool includeSeedKinds;
+  final bool requireBlueprint;
+  final String initialSourceLabel;
+  final List<ArcRaidMapLayer> supportedLayers;
+  final List<String> existingNames;
+
+  @override
+  State<_NewMarkerDialog> createState() => _NewMarkerDialogState();
+}
+
+class _NewMarkerDialogState extends State<_NewMarkerDialog> {
+  final _name = TextEditingController();
+  final _aliases = TextEditingController();
+  final _description = TextEditingController();
+  final _customSubtype = TextEditingController();
+  late final TextEditingController _source;
+  ArcAdminMapMarkerKind _kind = ArcAdminMapMarkerKind.customIntel;
+  String? _subtypeId;
+  bool _customSubtypeEnabled = false;
+  ArcRaidIntelConfidence _confidence = ArcRaidIntelConfidence.confirmed;
+  String? _questId;
+  String? _blueprintId;
+  ArcRaidMapLayer? _markerLayer;
+
+  @override
+  void initState() {
+    super.initState();
+    _source = TextEditingController(text: widget.initialSourceLabel);
+    final initial = widget.initialMarker;
+    _markerLayer = initial?.layer;
+    _kind = initial?.effectiveKind ?? widget.initialKind;
+    if (initial != null) {
+      _name.text = initial.name;
+      _aliases.text = initial.aliases.join(', ');
+      _description.text = initial.description;
+      _source.text = initial.sourceLabel;
+      _subtypeId = initial.upgradeResource?.subtypeId ?? initial.subtypeId;
+      _customSubtype.text = initial.subtypeLabel ?? '';
+      _confidence = initial.confidence;
+      _questId = initial.questId;
+      _blueprintId = initial.blueprintId;
+    }
+  }
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _aliases.dispose();
+    _description.dispose();
+    _customSubtype.dispose();
+    _source.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final blueprints = ArcBlueprintSeedData.blueprints;
+    final questOptions = _kind == ArcAdminMapMarkerKind.questLocation
+        ? ArcQuestMapBinding.questsForMap(widget.mapName).toList(growable: true)
+        : <ArcQuestCatalogueNode>[];
+    final selectedQuest = _questId == null
+        ? null
+        : ArcQuestCatalogue.byId[_questId!];
+    if (selectedQuest != null &&
+        !questOptions.any((quest) => quest.id == selectedQuest.id)) {
+      questOptions.add(selectedQuest);
+      questOptions.sort(
+        (left, right) => left.canonicalOrder.compareTo(right.canonicalOrder),
+      );
+    }
+    final hasUnknownQuest =
+        _questId != null && !ArcQuestCatalogue.byId.containsKey(_questId);
+    final selectedQuestMapped =
+        selectedQuest == null ||
+        ArcQuestMapBinding.questSupportsMap(selectedQuest.id, widget.mapName);
+    final questSelectionValid =
+        _kind != ArcAdminMapMarkerKind.questLocation ||
+        (_questId != null &&
+            ArcQuestCatalogue.byId.containsKey(_questId) &&
+            ArcQuestMapBinding.questSupportsMap(_questId!, widget.mapName));
+
+    final subtypeOptions = ArcAdminMapMarkerSubtypeCatalog.forKind(
+      _kind,
+      mapName: widget.mapName,
+    );
+    final selectedSubtype = _subtypeForId(subtypeOptions, _subtypeId);
+    final hasUnknownExistingSubtype =
+        _subtypeId != null && selectedSubtype == null;
+    final subtypeDropdownValue =
+        _customSubtypeEnabled || hasUnknownExistingSubtype
+        ? '__custom__'
+        : selectedSubtype?.id;
+
+    return AlertDialog(
+      title: Text(widget.title),
+      content: SizedBox(
+        width: 520,
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              if (widget.supportedLayers.length > 1)
+                DropdownButtonFormField<ArcRaidMapLayer>(
+                  key: const Key('edit-marker-layer'),
+                  initialValue: _markerLayer,
+                  decoration: const InputDecoration(labelText: 'Layer'),
+                  items: [
+                    for (final layer in widget.supportedLayers)
+                      DropdownMenuItem(value: layer, child: Text(layer.label)),
+                  ],
+                  onChanged: (value) => setState(() => _markerLayer = value),
+                ),
+              DropdownButtonFormField<ArcAdminMapMarkerKind>(
+                isExpanded: true,
+                initialValue: _kind,
+                decoration: const InputDecoration(labelText: 'Category'),
+                items: [
+                  for (final kind in ArcAdminMapMarkerKind.values)
+                    if (widget.includeSeedKinds || !kind.isSeedDefinition)
+                      DropdownMenuItem(value: kind, child: Text(kind.label)),
+                ],
+                onChanged: (value) => setState(() {
+                  _kind = value ?? _kind;
+                  if (_kind != ArcAdminMapMarkerKind.questLocation) {
+                    _questId = null;
+                  }
+                  _subtypeId = null;
+                  _customSubtypeEnabled = false;
+                  _customSubtype.clear();
+                }),
+              ),
+              if (_kind == ArcAdminMapMarkerKind.questLocation) ...[
+                const SizedBox(height: 10),
+                DropdownButtonFormField<String?>(
+                  key: ValueKey<String?>('quest:${widget.mapName}:$_questId'),
+                  isExpanded: true,
+                  initialValue: _questId,
+                  decoration: InputDecoration(
+                    labelText: 'Linked Quest (required)',
+                    helperText: hasUnknownQuest
+                        ? 'This legacy Quest ID is not in the canonical catalogue. Choose a verified Quest before publishing.'
+                        : !selectedQuestMapped
+                        ? 'This Quest is not mapped to the current map in the canonical catalogue. Choose the correct Quest before publishing.'
+                        : questOptions.isEmpty
+                        ? 'No canonical Quests are currently mapped to this map.'
+                        : 'Only canonical Quests relevant to ${widget.mapName ?? 'this map'} are shown.',
+                    helperMaxLines: 4,
+                  ),
+                  items: <DropdownMenuItem<String?>>[
+                    const DropdownMenuItem<String?>(
+                      value: null,
+                      child: Text('Select Quest'),
+                    ),
+                    if (hasUnknownQuest)
+                      DropdownMenuItem<String?>(
+                        value: _questId,
+                        child: Text('Legacy Quest link — $_questId'),
+                      ),
+                    for (final quest in questOptions)
+                      DropdownMenuItem<String?>(
+                        value: quest.id,
+                        child: Text(ArcQuestMapBinding.labelFor(quest)),
+                      ),
+                  ],
+                  onChanged: (value) => setState(() {
+                    _questId = value;
+                    final quest = value == null
+                        ? null
+                        : ArcQuestCatalogue.byId[value];
+                    if (quest != null &&
+                        widget.initialMarker == null &&
+                        (_name.text.trim().isEmpty ||
+                            _name.text.trim().toLowerCase() ==
+                                'quest location')) {
+                      _name.text = quest.displayName;
+                    }
+                  }),
+                ),
+              ],
+              if (subtypeOptions.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                DropdownButtonFormField<String?>(
+                  key: ValueKey<ArcAdminMapMarkerKind>(_kind),
+                  isExpanded: true,
+                  initialValue: subtypeDropdownValue,
+                  decoration: InputDecoration(
+                    labelText: _kind == ArcAdminMapMarkerKind.upgrade
+                        ? 'Upgrade resource'
+                        : '${selectedSubtype?.groupLabel ?? 'Filter'} / subtype',
+                    helperText:
+                        selectedSubtype?.upgradeResource?.usageDetails ??
+                        'Choose the resource or location shown on the map.',
+                    helperMaxLines: 6,
+                  ),
+                  items: <DropdownMenuItem<String?>>[
+                    if (_kind != ArcAdminMapMarkerKind.upgrade)
+                      const DropdownMenuItem<String?>(
+                        value: null,
+                        child: Text('No subtype'),
+                      ),
+                    for (final subtype in subtypeOptions)
+                      DropdownMenuItem<String?>(
+                        value: subtype.id,
+                        child: _SubtypeIconLabel(
+                          label: '${subtype.groupLabel} • ${subtype.label}',
+                          iconKey: subtype.iconKey,
+                          subtypeId: subtype.id,
+                        ),
+                      ),
+                    if (_kind != ArcAdminMapMarkerKind.upgrade ||
+                        hasUnknownExistingSubtype)
+                      const DropdownMenuItem<String?>(
+                        value: '__custom__',
+                        child: Text('Custom subtype...'),
+                      ),
+                  ],
+                  onChanged: (value) => setState(() {
+                    if (value == '__custom__') {
+                      _customSubtypeEnabled = true;
+                      _subtypeId = null;
+                      return;
+                    }
+                    _customSubtypeEnabled = false;
+                    _customSubtype.clear();
+                    _subtypeId = value;
+                    final subtype = _subtypeForId(subtypeOptions, value);
+                    if (subtype != null &&
+                        (_name.text.trim().isEmpty ||
+                            _name.text == selectedSubtype?.label)) {
+                      _name.text =
+                          widget.initialMarker == null &&
+                              value == 'player_spawn'
+                          ? ArcRaidEndpointResolver.nextPlayerSpawnName(
+                              widget.existingNames,
+                            )
+                          : subtype.label;
+                    }
+                  }),
+                ),
+                if (_customSubtypeEnabled || hasUnknownExistingSubtype) ...[
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: _customSubtype,
+                    decoration: const InputDecoration(
+                      labelText: 'Custom filter / subtype name',
+                      helperText:
+                          'Editable admin label; a stable slug is stored for filtering.',
+                    ),
+                  ),
+                ],
+              ],
+              const SizedBox(height: 10),
+              TextField(
+                controller: _name,
+                decoration: const InputDecoration(labelText: 'Name'),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: _aliases,
+                decoration: const InputDecoration(
+                  labelText: 'Aliases (comma separated)',
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: _description,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'Description / directions',
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: _source,
+                decoration: const InputDecoration(labelText: 'Intel source'),
+              ),
+              const SizedBox(height: 10),
+              DropdownButtonFormField<String?>(
+                isExpanded: true,
+                initialValue: _blueprintId,
+                decoration: InputDecoration(
+                  labelText: widget.requireBlueprint
+                      ? 'Linked Blueprint (required)'
+                      : 'Linked Blueprint (optional)',
+                  helperText: widget.requireBlueprint
+                      ? 'Choose the historical blueprint found here.'
+                      : null,
+                ),
+                items: <DropdownMenuItem<String?>>[
+                  const DropdownMenuItem<String?>(
+                    value: null,
+                    child: Text('No Blueprint'),
+                  ),
+                  for (final ArcBlueprint blueprint in blueprints)
+                    DropdownMenuItem<String?>(
+                      value: blueprint.id,
+                      child: Text(blueprint.name),
+                    ),
+                ],
+                onChanged: (value) => setState(() {
+                  _blueprintId = value;
+                  if (_kind == ArcAdminMapMarkerKind.blueprint &&
+                      value != null &&
+                      _name.text.trim().isEmpty) {
+                    final blueprint = blueprints.firstWhere(
+                      (item) => item.id == value,
+                    );
+                    _name.text = '${blueprint.name} historical find';
+                  }
+                }),
+              ),
+              const SizedBox(height: 10),
+              DropdownButtonFormField<ArcRaidIntelConfidence>(
+                isExpanded: true,
+                initialValue: _confidence,
+                decoration: const InputDecoration(labelText: 'Confidence'),
+                items: [
+                  for (final confidence in ArcRaidIntelConfidence.values)
+                    DropdownMenuItem(
+                      value: confidence,
+                      child: Text(confidence.label),
+                    ),
+                ],
+                onChanged: (value) =>
+                    setState(() => _confidence = value ?? _confidence),
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed:
+              (_kind == ArcAdminMapMarkerKind.upgrade &&
+                      selectedSubtype?.upgradeResource == null &&
+                      !hasUnknownExistingSubtype) ||
+                  !questSelectionValid
+              ? null
+              : () {
+                  final name = _name.text.trim();
+                  if (name.isEmpty) return;
+                  if (widget.requireBlueprint && _blueprintId == null) return;
+                  final aliases = _aliases.text
+                      .split(',')
+                      .map((item) => item.trim())
+                      .where((item) => item.isNotEmpty)
+                      .toSet()
+                      .toList(growable: false);
+                  final customSubtypeLabel = _customSubtype.text.trim();
+                  final customSubtypeActive =
+                      _customSubtypeEnabled || hasUnknownExistingSubtype;
+                  final subtype =
+                      customSubtypeActive && customSubtypeLabel.isNotEmpty
+                      ? ArcAdminMapMarkerSubtype(
+                          id: ArcAdminMapMarkerSubtypeCatalog.slug(
+                            customSubtypeLabel,
+                          ),
+                          label: customSubtypeLabel,
+                          kind: _kind,
+                          groupLabel: 'Custom',
+                        )
+                      : ArcAdminMapMarkerSubtypeCatalog.resolve(
+                          _kind,
+                          _subtypeId,
+                          mapName: widget.mapName,
+                        );
+                  Navigator.pop(
+                    context,
+                    _NewMarkerResult(
+                      kind: _kind,
+                      layer: _markerLayer,
+                      name: _name.text == widget.initialMarker?.name
+                          ? widget.initialMarker!.name
+                          : name,
+                      aliases:
+                          _aliases.text ==
+                              widget.initialMarker?.aliases.join(', ')
+                          ? widget.initialMarker!.aliases
+                          : aliases,
+                      description:
+                          _description.text == widget.initialMarker?.description
+                          ? widget.initialMarker!.description
+                          : _description.text.trim(),
+                      subtypeId:
+                          widget.initialMarker?.kind == _kind &&
+                              _subtypeId == widget.initialMarker?.subtypeId &&
+                              _customSubtype.text ==
+                                  (widget.initialMarker?.subtypeLabel ?? '')
+                          ? widget.initialMarker?.subtypeId
+                          : subtype?.id,
+                      subtypeLabel:
+                          widget.initialMarker?.kind == _kind &&
+                              _subtypeId == widget.initialMarker?.subtypeId &&
+                              _customSubtype.text ==
+                                  (widget.initialMarker?.subtypeLabel ?? '')
+                          ? widget.initialMarker?.subtypeLabel
+                          : subtype?.label,
+                      sourceLabel:
+                          _source.text == widget.initialMarker?.sourceLabel
+                          ? widget.initialMarker!.sourceLabel
+                          : _source.text.trim().isEmpty
+                          ? 'Admin Intel'
+                          : _source.text.trim(),
+                      confidence: _confidence,
+                      questId: _kind == ArcAdminMapMarkerKind.questLocation
+                          ? _questId
+                          : null,
+                      blueprintId: _blueprintId,
+                      itemId:
+                          subtype?.upgradeResource?.itemId ??
+                          (widget.initialMarker?.kind == _kind &&
+                                  _subtypeId ==
+                                      widget.initialMarker?.subtypeId &&
+                                  _customSubtype.text ==
+                                      (widget.initialMarker?.subtypeLabel ?? '')
+                              ? widget.initialMarker?.itemId
+                              : null),
+                    ),
+                  );
+                },
+          child: Text(widget.actionLabel),
+        ),
+      ],
+    );
+  }
+
+  ArcAdminMapMarkerSubtype? _subtypeForId(
+    List<ArcAdminMapMarkerSubtype> options,
+    String? id,
+  ) {
+    if (id == null) return null;
+    for (final option in options) {
+      if (option.id == id) return option;
+    }
+    return null;
+  }
+}

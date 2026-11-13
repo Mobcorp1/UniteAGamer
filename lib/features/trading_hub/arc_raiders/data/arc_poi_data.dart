@@ -683,6 +683,14 @@ class ArcPoiDataStore {
       buildingTypes: [ArcBuildingType.medical],
     ),
     ArcPoiData(
+      id: 'stella_montis_security_bridge',
+      mapName: stellaMontis,
+      name: 'Security Bridge',
+      sourceType: ArcDropSourceType.poi,
+      lootLevel: ArcLootLevel.none,
+      buildingTypes: [ArcBuildingType.security, ArcBuildingType.technological],
+    ),
+    ArcPoiData(
       id: 'stella_communications',
       mapName: stellaMontis,
       name: 'Communications',
@@ -768,20 +776,12 @@ class ArcPoiDataStore {
       buildingTypes: [ArcBuildingType.residential, ArcBuildingType.nature],
     ),
     ArcPoiData(
-      id: 'blue_gate_pilgrims_peak',
+      id: 'blue_gate_barracks_parking',
       mapName: blueGate,
-      name: "Pilgrim's Peak",
-      sourceType: ArcDropSourceType.poi,
-      lootLevel: ArcLootLevel.high,
-      buildingTypes: [ArcBuildingType.oldWorld, ArcBuildingType.nature],
-    ),
-    ArcPoiData(
-      id: 'blue_gate_reinforced_reception',
-      mapName: blueGate,
-      name: 'Reinforced Reception',
+      name: 'Barracks Parking',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
-      buildingTypes: [ArcBuildingType.security, ArcBuildingType.arc],
+      buildingTypes: [ArcBuildingType.security, ArcBuildingType.mechanical],
     ),
     ArcPoiData(
       id: 'blue_gate_raiders_refuge',
@@ -792,6 +792,14 @@ class ArcPoiDataStore {
       buildingTypes: [ArcBuildingType.nature, ArcBuildingType.security],
     ),
     ArcPoiData(
+      id: 'blue_gate_trappers_glade',
+      mapName: blueGate,
+      name: "Trapper's Glade",
+      sourceType: ArcDropSourceType.poi,
+      lootLevel: ArcLootLevel.none,
+      buildingTypes: [ArcBuildingType.nature],
+    ),
+    ArcPoiData(
       id: 'blue_gate_adorned_wreckage',
       mapName: blueGate,
       name: 'Adorned Wreckage',
@@ -800,20 +808,28 @@ class ArcPoiDataStore {
       buildingTypes: [ArcBuildingType.oldWorld, ArcBuildingType.mechanical],
     ),
     ArcPoiData(
-      id: 'blue_gate_warehouse_complex',
+      id: 'blue_gate_highway_collapse',
       mapName: blueGate,
-      name: 'Warehouse Complex',
+      name: 'Highway Collapse',
       sourceType: ArcDropSourceType.poi,
-      lootLevel: ArcLootLevel.medium,
-      buildingTypes: [ArcBuildingType.industrial, ArcBuildingType.mechanical],
+      lootLevel: ArcLootLevel.none,
+      buildingTypes: [ArcBuildingType.oldWorld, ArcBuildingType.mechanical],
     ),
     ArcPoiData(
-      id: 'blue_gate_checkpoint',
+      id: 'blue_gate_olive_grove',
       mapName: blueGate,
-      name: 'Checkpoint',
+      name: 'Olive Grove',
       sourceType: ArcDropSourceType.poi,
-      lootLevel: ArcLootLevel.high,
-      buildingTypes: [ArcBuildingType.security, ArcBuildingType.technological],
+      lootLevel: ArcLootLevel.medium,
+      buildingTypes: [ArcBuildingType.nature],
+    ),
+    ArcPoiData(
+      id: 'blue_gate_ruined_homestead',
+      mapName: blueGate,
+      name: 'Ruined Homestead',
+      sourceType: ArcDropSourceType.poi,
+      lootLevel: ArcLootLevel.none,
+      buildingTypes: [ArcBuildingType.residential, ArcBuildingType.oldWorld],
     ),
     ArcPoiData(
       id: 'blue_gate_ancient_fort',
@@ -824,49 +840,92 @@ class ArcPoiDataStore {
       buildingTypes: [ArcBuildingType.oldWorld, ArcBuildingType.security],
     ),
     ArcPoiData(
-      id: 'blue_gate_security_wing',
+      id: 'blue_gate_checkpoint',
       mapName: blueGate,
-      name: 'Security Wing',
+      name: 'Checkpoint',
+      sourceType: ArcDropSourceType.poi,
+      lootLevel: ArcLootLevel.high,
+      buildingTypes: [ArcBuildingType.security, ArcBuildingType.technological],
+    ),
+    ArcPoiData(
+      id: 'blue_gate_outer_gates',
+      mapName: blueGate,
+      name: 'Outer Gates',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.security],
-      notes: 'Detailed in-match sub-location around Checkpoint.',
     ),
     ArcPoiData(
-      id: 'blue_gate_traffic_tunnel',
+      id: 'blue_gate_gate_control_room',
       mapName: blueGate,
-      name: 'Traffic Tunnel',
+      name: 'Gate Control Room',
+      sourceType: ArcDropSourceType.poi,
+      lootLevel: ArcLootLevel.medium,
+      buildingTypes: [ArcBuildingType.security, ArcBuildingType.arc],
+    ),
+    ArcPoiData(
+      id: 'blue_gate_warehouse_complex',
+      mapName: blueGate,
+      name: 'Warehouse Complex',
+      sourceType: ArcDropSourceType.poi,
+      lootLevel: ArcLootLevel.medium,
+      buildingTypes: [ArcBuildingType.industrial, ArcBuildingType.mechanical],
+    ),
+    ArcPoiData(
+      id: 'blue_gate_reinforced_reception',
+      mapName: blueGate,
+      name: 'Reinforced Reception',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
-      buildingTypes: [ArcBuildingType.oldWorld, ArcBuildingType.security],
-      notes: 'Detailed in-match sub-location around Checkpoint.',
+      buildingTypes: [ArcBuildingType.security, ArcBuildingType.arc],
     ),
     ArcPoiData(
-      id: 'blue_gate_maintenance_wing',
+      id: 'blue_gate_headhouse',
       mapName: blueGate,
-      name: 'Maintenance Wing',
+      name: 'Headhouse',
+      sourceType: ArcDropSourceType.poi,
+      lootLevel: ArcLootLevel.medium,
+      buildingTypes: [ArcBuildingType.arc, ArcBuildingType.security],
+    ),
+    ArcPoiData(
+      id: 'blue_gate_data_vault',
+      mapName: blueGate,
+      name: 'Data Vault',
+      sourceType: ArcDropSourceType.poi,
+      lootLevel: ArcLootLevel.high,
+      buildingTypes: [ArcBuildingType.arc, ArcBuildingType.technological],
+    ),
+    ArcPoiData(
+      id: 'blue_gate_maintenance_bunker',
+      mapName: blueGate,
+      name: 'Maintenance Bunker',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.mechanical, ArcBuildingType.security],
-      notes: 'Detailed in-match sub-location around Checkpoint.',
     ),
     ArcPoiData(
-      id: 'blue_gate_airshaft',
+      id: 'blue_gate_broken_earth',
       mapName: blueGate,
-      name: 'Airshaft',
-      sourceType: ArcDropSourceType.other,
+      name: 'Broken Earth',
+      sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
-      buildingTypes: [ArcBuildingType.mechanical],
-      notes: 'Access area / map marker.',
+      buildingTypes: [ArcBuildingType.nature, ArcBuildingType.oldWorld],
     ),
     ArcPoiData(
-      id: 'blue_gate_raider_hatch',
+      id: 'blue_gate_ridgeline',
       mapName: blueGate,
-      name: 'Raider Hatch',
-      sourceType: ArcDropSourceType.other,
+      name: 'Ridgeline',
+      sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
-      buildingTypes: [ArcBuildingType.security],
-      notes: 'Access area / map marker.',
+      buildingTypes: [ArcBuildingType.nature],
+    ),
+    ArcPoiData(
+      id: 'blue_gate_abandoned_housing_project',
+      mapName: blueGate,
+      name: 'Abandoned Housing Project',
+      sourceType: ArcDropSourceType.poi,
+      lootLevel: ArcLootLevel.none,
+      buildingTypes: [ArcBuildingType.residential],
     ),
   ];
 
@@ -1192,27 +1251,29 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'buried_city_weapon_cache_town_hall_broken_bridge',
       mapName: buriedCity,
-      name: 'Weapon Cache – Town Hall Broken Bridge',
+      name: 'Weapon Cache - Town Hall Broken Bridge',
       areaName: 'Town Hall',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.oldWorld, ArcBuildingType.security],
-      notes: 'Player-reported weapon cache spawn on the broken bridge near Town Hall.',
+      notes:
+          'Player-reported weapon cache spawn on the broken bridge near Town Hall.',
     ),
     ArcPoiData(
       id: 'buried_city_weapon_cache_library_rooftop',
       mapName: buriedCity,
-      name: 'Weapon Cache – Library Rooftop',
+      name: 'Weapon Cache - Library Rooftop',
       areaName: 'Library',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.oldWorld, ArcBuildingType.commercial],
-      notes: 'Community guide: rooftop cache spawns on the east and north sides.',
+      notes:
+          'Community guide: rooftop cache spawns on the east and north sides.',
     ),
     ArcPoiData(
       id: 'buried_city_weapon_cache_galleria_sign',
       mapName: buriedCity,
-      name: 'Weapon Cache – Galleria Sign',
+      name: 'Weapon Cache - Galleria Sign',
       areaName: 'Galleria',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
@@ -1222,7 +1283,7 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'buried_city_weapon_cache_marano_station_bus',
       mapName: buriedCity,
-      name: 'Weapon Cache – Marano Station Bus',
+      name: 'Weapon Cache - Marano Station Bus',
       areaName: 'Marano Station',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
@@ -1232,12 +1293,13 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'buried_city_weapon_cache_parking_garage_raider_camp',
       mapName: buriedCity,
-      name: 'Weapon Cache – Parking Garage Raider Camp',
+      name: 'Weapon Cache - Parking Garage Raider Camp',
       areaName: 'Parking Garage',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.security, ArcBuildingType.oldWorld],
-      notes: 'Community guide: raider camp reached via the barricaded door and elevator shaft.',
+      notes:
+          'Community guide: raider camp reached via the barricaded door and elevator shaft.',
     ),
   ];
 
@@ -1245,17 +1307,18 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'dam_weapon_cache_control_tower_key_room',
       mapName: damBattlegrounds,
-      name: 'Weapon Cache – Control Tower Key Room',
+      name: 'Weapon Cache - Control Tower Key Room',
       areaName: 'Research & Administration',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.security, ArcBuildingType.technological],
-      notes: 'Community guide: near the consoles and left of the stairs by the lockers.',
+      notes:
+          'Community guide: near the consoles and left of the stairs by the lockers.',
     ),
     ArcPoiData(
       id: 'dam_weapon_cache_control_tower_lower_floor',
       mapName: damBattlegrounds,
-      name: 'Weapon Cache – Control Tower Lower Floor',
+      name: 'Weapon Cache - Control Tower Lower Floor',
       areaName: 'Research & Administration',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
@@ -1265,32 +1328,41 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'dam_weapon_cache_red_lakes_balcony_sewer_entrance',
       mapName: damBattlegrounds,
-      name: 'Weapon Cache – Red Lakes Balcony Sewer Entrance',
+      name: 'Weapon Cache - Red Lakes Balcony Sewer Entrance',
       areaName: 'Red Lakes',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.nature, ArcBuildingType.industrial],
-      notes: 'Community guide: sewer route under the Control Tower back entrance.',
+      notes:
+          'Community guide: sewer route under the Control Tower back entrance.',
     ),
     ArcPoiData(
       id: 'dam_weapon_cache_hydroponic_southwest',
       mapName: damBattlegrounds,
-      name: 'Weapon Cache – Hydroponic Southwest Building',
+      name: 'Weapon Cache - Hydroponic Southwest Building',
       areaName: 'Hydroponic Dome Complex',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
-      buildingTypes: [ArcBuildingType.industrial, ArcBuildingType.technological],
-      notes: 'Community guide: westmost part of the building and near the dirty pools.',
+      buildingTypes: [
+        ArcBuildingType.industrial,
+        ArcBuildingType.technological,
+      ],
+      notes:
+          'Community guide: westmost part of the building and near the dirty pools.',
     ),
     ArcPoiData(
       id: 'dam_weapon_cache_hydroponic_eastern_building',
       mapName: damBattlegrounds,
-      name: 'Weapon Cache – Hydroponic Eastern Building',
+      name: 'Weapon Cache - Hydroponic Eastern Building',
       areaName: 'Hydroponic Dome Complex',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
-      buildingTypes: [ArcBuildingType.industrial, ArcBuildingType.technological],
-      notes: 'Community guide: on the scaffolding shelf just inside the south entrance.',
+      buildingTypes: [
+        ArcBuildingType.industrial,
+        ArcBuildingType.technological,
+      ],
+      notes:
+          'Community guide: on the scaffolding shelf just inside the south entrance.',
     ),
   ];
 
@@ -1298,27 +1370,29 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'blue_gate_weapon_cache_checkpoint_between_rails',
       mapName: blueGate,
-      name: 'Weapon Cache – Checkpoint Between Rails',
+      name: 'Weapon Cache - Checkpoint Between Rails',
       areaName: 'Checkpoint',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.security, ArcBuildingType.oldWorld],
-      notes: 'Community guide: rail between the two broken roads with abandoned cars.',
+      notes:
+          'Community guide: rail between the two broken roads with abandoned cars.',
     ),
     ArcPoiData(
       id: 'blue_gate_weapon_cache_concrete_beams',
       mapName: blueGate,
-      name: 'Weapon Cache – Concrete Beams',
+      name: 'Weapon Cache - Concrete Beams',
       areaName: 'Underground Entrance',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.security, ArcBuildingType.arc],
-      notes: 'Community guide: zipline-access concrete beams above the underground entrance.',
+      notes:
+          'Community guide: zipline-access concrete beams above the underground entrance.',
     ),
     ArcPoiData(
       id: 'blue_gate_weapon_cache_pilgrims_peak_top',
       mapName: blueGate,
-      name: 'Weapon Cache – Pilgrim\'s Peak Top',
+      name: 'Weapon Cache - Pilgrim\'s Peak Top',
       areaName: 'Pilgrim\'s Peak',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
@@ -1328,17 +1402,18 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'blue_gate_weapon_cache_data_vault',
       mapName: blueGate,
-      name: 'Weapon Cache – Data Vault',
+      name: 'Weapon Cache - Data Vault',
       areaName: 'Data Vault',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.arc, ArcBuildingType.security],
-      notes: 'Community guide: below the turret after heading down the stairs and turning right.',
+      notes:
+          'Community guide: below the turret after heading down the stairs and turning right.',
     ),
     ArcPoiData(
       id: 'blue_gate_weapon_cache_traffic_tunnel_right_end',
       mapName: blueGate,
-      name: 'Weapon Cache – Traffic Tunnel Right End',
+      name: 'Weapon Cache - Traffic Tunnel Right End',
       areaName: 'Traffic Tunnel',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
@@ -1348,22 +1423,24 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'blue_gate_weapon_cache_headhouse_rims',
       mapName: blueGate,
-      name: 'Weapon Cache – Headhouse Rims',
+      name: 'Weapon Cache - Headhouse Rims',
       areaName: 'Headhouse',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.arc, ArcBuildingType.security],
-      notes: 'Community guide: outer rims above the traffic tunnel, sometimes guarded by turrets.',
+      notes:
+          'Community guide: outer rims above the traffic tunnel, sometimes guarded by turrets.',
     ),
     ArcPoiData(
       id: 'blue_gate_weapon_cache_mantikor_room',
       mapName: blueGate,
-      name: 'Weapon Cache – Mantikor Room',
+      name: 'Weapon Cache - Mantikor Room',
       areaName: 'Mantikor Room',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.arc, ArcBuildingType.security],
-      notes: 'Community guide: fuel-cell room accessed from Reinforced Reception.',
+      notes:
+          'Community guide: fuel-cell room accessed from Reinforced Reception.',
     ),
   ];
 
@@ -1371,62 +1448,73 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'spaceport_weapon_cache_departure_building_showers',
       mapName: spaceport,
-      name: 'Weapon Cache – Departure Building Showers',
+      name: 'Weapon Cache - Departure Building Showers',
       areaName: 'Departure Building',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
-      buildingTypes: [ArcBuildingType.commercial, ArcBuildingType.technological],
+      buildingTypes: [
+        ArcBuildingType.commercial,
+        ArcBuildingType.technological,
+      ],
       notes: 'Community guide: shower area near reception.',
     ),
     ArcPoiData(
       id: 'spaceport_weapon_cache_arrival_building_roof',
       mapName: spaceport,
-      name: 'Weapon Cache – Arrival Building Roof',
+      name: 'Weapon Cache - Arrival Building Roof',
       areaName: 'Arrival Building',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
-      buildingTypes: [ArcBuildingType.commercial, ArcBuildingType.technological],
-      notes: 'Community guide: ladder access outside near the Shipping Warehouse side.',
+      buildingTypes: [
+        ArcBuildingType.commercial,
+        ArcBuildingType.technological,
+      ],
+      notes:
+          'Community guide: ladder access outside near the Shipping Warehouse side.',
     ),
     ArcPoiData(
       id: 'spaceport_weapon_cache_launch_towers_top',
       mapName: spaceport,
-      name: 'Weapon Cache – Launch Towers Top',
+      name: 'Weapon Cache - Launch Towers Top',
       areaName: 'Launch Towers',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.technological, ArcBuildingType.security],
-      notes: 'Community guide: top level spawns under the stairs or near the railings facing the rocket shaft.',
+      notes:
+          'Community guide: top level spawns under the stairs or near the railings facing the rocket shaft.',
     ),
     ArcPoiData(
       id: 'spaceport_weapon_cache_fuel_lines_pipe',
       mapName: spaceport,
-      name: 'Weapon Cache – Fuel Lines Pipe',
+      name: 'Weapon Cache - Fuel Lines Pipe',
       areaName: 'Fuel Lines',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.industrial, ArcBuildingType.electrical],
-      notes: 'Community guide: climb inside the vertical cylindrical pipe east of the nearby Field Depot.',
+      notes:
+          'Community guide: climb inside the vertical cylindrical pipe east of the nearby Field Depot.',
     ),
     ArcPoiData(
       id: 'spaceport_weapon_cache_east_container_yard',
       mapName: spaceport,
-      name: 'Weapon Cache – East Container Yard',
+      name: 'Weapon Cache - East Container Yard',
       areaName: 'East Container Yard',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.industrial, ArcBuildingType.commercial],
-      notes: 'Community guide: lower container yard between the two catwalks east of the raider hatch.',
+      notes:
+          'Community guide: lower container yard between the two catwalks east of the raider hatch.',
     ),
     ArcPoiData(
       id: 'spaceport_weapon_cache_tunnels_console_room',
       mapName: spaceport,
-      name: 'Weapon Cache – Spaceport Tunnels Console Room',
+      name: 'Weapon Cache - Spaceport Tunnels Console Room',
       areaName: 'Spaceport Tunnels',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.security, ArcBuildingType.technological],
-      notes: 'Community guide: usually in the console rooms or the southeast tunnel camp.',
+      notes:
+          'Community guide: usually in the console rooms or the southeast tunnel camp.',
     ),
   ];
 
@@ -1434,27 +1522,29 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'stella_weapon_cache_medical_research_servers',
       mapName: stellaMontis,
-      name: 'Weapon Cache – Medical Research Servers',
+      name: 'Weapon Cache - Medical Research Servers',
       areaName: 'Medical Research',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.medical, ArcBuildingType.technological],
-      notes: 'Community guide: on top of the server banks in the northern part of the area.',
+      notes:
+          'Community guide: on top of the server banks in the northern part of the area.',
     ),
     ArcPoiData(
       id: 'stella_weapon_cache_seed_vault_left_hallway',
       mapName: stellaMontis,
-      name: 'Weapon Cache – Seed Vault Left Hallway',
+      name: 'Weapon Cache - Seed Vault Left Hallway',
       areaName: 'Seed Vault',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.technological, ArcBuildingType.security],
-      notes: 'Community guide: inside after opening the fuel-cell door and hugging the left wall.',
+      notes:
+          'Community guide: inside after opening the fuel-cell door and hugging the left wall.',
     ),
     ArcPoiData(
       id: 'stella_weapon_cache_assembly_hanging_thruster',
       mapName: stellaMontis,
-      name: 'Weapon Cache – Assembly Hanging Thruster',
+      name: 'Weapon Cache - Assembly Hanging Thruster',
       areaName: 'Assembly Workshops',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
@@ -1464,7 +1554,7 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'stella_weapon_cache_lobby_security_bridge',
       mapName: stellaMontis,
-      name: 'Weapon Cache – Lobby Security Bridge',
+      name: 'Weapon Cache - Lobby Security Bridge',
       areaName: 'Lobby',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
@@ -1474,7 +1564,7 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'stella_weapon_cache_auditorium_teacher_desk',
       mapName: stellaMontis,
-      name: 'Weapon Cache – Auditorium Teacher Desk',
+      name: 'Weapon Cache - Auditorium Teacher Desk',
       areaName: 'Auditorium',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
@@ -1484,12 +1574,13 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'stella_weapon_cache_cargo_docks_railcar',
       mapName: stellaMontis,
-      name: 'Weapon Cache – Cargo Docks Railcar',
+      name: 'Weapon Cache - Cargo Docks Railcar',
       areaName: 'Cargo Docks',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.industrial, ArcBuildingType.exodus],
-      notes: 'Community guide: lying on the railcar between Cargo Dock A and B.',
+      notes:
+          'Community guide: lying on the railcar between Cargo Dock A and B.',
     ),
   ];
 
@@ -1595,7 +1686,6 @@ class ArcPoiDataStore {
     ),
   ];
 
-
   static const List<ArcEnemySource> commonEnemySources = [
     ArcEnemySource(id: 'enemy_surveyor', name: 'Surveyor'),
     ArcEnemySource(id: 'enemy_raider', name: 'Raider'),
@@ -1617,18 +1707,63 @@ class ArcPoiDataStore {
   static List<String> get availableMaps =>
       poisByMap.keys.toList(growable: false);
 
+  static bool _isBlueGateMap(String mapName) {
+    final normalized = mapName.trim().toLowerCase();
+    return normalized == 'blue gate' || normalized == blueGate.toLowerCase();
+  }
+
+  static List<ArcPoiData> _poisForMap(String mapName) {
+    if (_isBlueGateMap(mapName)) {
+      return poisByMap[blueGate] ?? const <ArcPoiData>[];
+    }
+    return poisByMap[mapName] ?? const <ArcPoiData>[];
+  }
+
+  static const Map<String, String> _blueGatePoiAliases = {
+    'abandoned': 'Abandoned Housing Project',
+    'abanndened housing project': 'Abandoned Housing Project',
+    'abandoned housing': 'Abandoned Housing Project',
+    'abandoned housing projects': 'Abandoned Housing Project',
+    'olive garden': 'Olive Grove',
+    'maintenance wing': 'Maintenance Bunker',
+    'security wing': 'Checkpoint',
+    'traffic tunnel': 'Checkpoint',
+    'airshaft': 'Maintenance Bunker',
+    'raider hatch': 'Outer Gates',
+    'pilgrim\'s peak': 'Ridgeline',
+    'underground entrance': 'Gate Control Room',
+    'mantikor room': 'Reinforced Reception',
+  };
+
+  static String? canonicalPoiNameForMap(String mapName, String? rawName) {
+    final name = rawName?.trim();
+    if (name == null || name.isEmpty) return null;
+    final canonical = blueprintReportPoisForMap(mapName)
+        .cast<ArcPoiData?>()
+        .firstWhere(
+          (poi) => poi?.name.toLowerCase() == name.toLowerCase(),
+          orElse: () => null,
+        );
+    if (canonical != null) return canonical.name;
+
+    if (_isBlueGateMap(mapName)) {
+      return _blueGatePoiAliases[name.toLowerCase()];
+    }
+    return null;
+  }
+
   static List<ArcPoiData> blueprintReportPoisForMap(String mapName) {
-    return (poisByMap[mapName] ?? const <ArcPoiData>[])
-        .where((poi) => poi.includeInBlueprintReports)
-        .toList(growable: false);
+    return _poisForMap(
+      mapName,
+    ).where((poi) => poi.includeInBlueprintReports).toList(growable: false);
   }
 
   static List<String> blueprintReportAreasForMap(String mapName) {
-    final areas = blueprintReportPoisForMap(mapName)
-        .map((poi) => poi.resolvedAreaName)
-        .toSet()
-        .toList(growable: false)
-      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    final areas =
+        blueprintReportPoisForMap(
+            mapName,
+          ).map((poi) => poi.resolvedAreaName).toSet().toList(growable: false)
+          ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
     return areas;
   }
 
@@ -1643,7 +1778,7 @@ class ArcPoiDataStore {
   }
 
   static ArcPoiData? findPoiById(String mapName, String poiId) {
-    for (final poi in poisByMap[mapName] ?? const <ArcPoiData>[]) {
+    for (final poi in _poisForMap(mapName)) {
       if (poi.id == poiId) return poi;
     }
     return null;

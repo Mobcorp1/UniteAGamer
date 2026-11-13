@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "stable_stock_iii_blueprint",
   "name": {
     "da": "Stabil kolbe III-tegning",
@@ -15,7 +15,7 @@
     "pl": "Projekt Stabilna kolba III",
     "pt": "Projeto de Coronha estavel III",
     "pt-BR": "Esquema de Coronha Estável III",
-    "ru": "Чертеж — Надежный приклад III",
+    "ru": "Чертеж - Надежный приклад III",
     "sr": "Stabilna Kundak III Nacrt",
     "tr": "Dengeli Dipçik III Taslağı",
     "uk": "Креслення Стабільний приклад III",
@@ -36,7 +36,7 @@
     "no": "Forbedrer betydelig spredning og rekylgjenopprettingstid.",
     "pl": "Znaczaco poprawia rozrzut i czas regeneracji odrzutu.",
     "pt": "Melhora significativamente a dispersao e o tempo de recuperacao do recuo.",
-    "pt-BR": "Melhora significativamente a dispersão e o tempo de recuperação de recuo.",
+    "pt-BR": "Melhora significativamente a disperso e o tempo de recuperaço de recuo.",
     "ru": "Значительно улучшает разброс и время восстановления отдачи.",
     "sr": "Znacajno poboljsava rasprsenje i vreme oporavka trzaja.",
     "tr": "Dagilma ve geri tepme toparlanma suresini onemli olcude iyilestirir.",
@@ -53,3 +53,4 @@
   "updatedAt": "12/07/2025",
   "addedIn": "base"
 }
+

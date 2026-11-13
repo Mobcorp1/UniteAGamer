@@ -11,11 +11,11 @@ class LogoParticleExplosion extends StatelessWidget {
       animation: controller,
       builder: (context, child) {
         return Opacity(
-          opacity: 1 - controller.value, // ✅ Fade out effect
+          opacity: 1 - controller.value, // âœ… Fade out effect
           child: Transform.scale(
-            scale: 1 + (controller.value * 2), // ✅ Expand outward
+            scale: 1 + (controller.value * 2), // âœ… Expand outward
             child: Image.asset(
-              'assets/icon/uag_traders_icon_transparent.webp',
+              'assets/icon/uag_traders_header_mark.png',
               height: 150,
               width: 150,
             ),

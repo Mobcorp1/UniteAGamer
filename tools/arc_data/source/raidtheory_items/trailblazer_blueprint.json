@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "trailblazer_blueprint",
   "name": {
     "da": "Trailblazer-tegning",
@@ -15,7 +15,7 @@
     "pl": "Projekt Trailblazera",
     "pt": "Projeto de Trailblazer",
     "pt-BR": "Esquema de Desbravador",
-    "ru": "Чертёж — Trailblazer",
+    "ru": "Чертёж - Trailblazer",
     "sr": "Nacrt Trailblazera",
     "tr": "Yol Açan Taslağı",
     "uk": "Креслення Trailblazer",
@@ -35,8 +35,8 @@
     "ko-KR": "트레일블레이저 제작 설계도를 해금합니다.",
     "no": "Låser opp oppskriften for Trailblazer.",
     "pl": "Odblokowuje projekt wytwarzania Trailblazera.",
-    "pt": "Desbloqueia o projeto de fabricação de Trailblazer.",
-    "pt-BR": "Desbloqueia o esquema de fabricação de Desbravador.",
+    "pt": "Desbloqueia o projeto de fabricaço de Trailblazer.",
+    "pt-BR": "Desbloqueia o esquema de fabricaço de Desbravador.",
     "ru": "Открывает чертеж для создания Trailblazer.",
     "sr": "Otključava nacrt izrade za Trailblazer.",
     "tr": "Yol Açan için üretim planını açar.",
@@ -53,3 +53,4 @@
   "updatedAt": "01/13/2026",
   "addedIn": "1.2"
 }
+

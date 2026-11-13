@@ -1,0 +1,464 @@
+import 'dart:async';
+import 'dart:math' as math;
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_progression_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_quest_catalogue.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_quest_position_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_progression_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_season_reset_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_operations_repository.dart';
+
+class ArcProgressionRepository {
+  ArcProgressionRepository({
+    FirebaseFirestore? firestore,
+    FirebaseAuth? auth,
+    ArcProgressionEngine engine = const ArcProgressionEngine(),
+    ArcOperationsRepository? operationsRepository,
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _auth = auth ?? FirebaseAuth.instance,
+       _engine = engine,
+       _operationsRepository = operationsRepository;
+
+  final FirebaseFirestore _firestore;
+  final FirebaseAuth _auth;
+  final ArcProgressionEngine _engine;
+  final ArcOperationsRepository? _operationsRepository;
+
+  String? get _uid => _auth.currentUser?.uid;
+
+  DocumentReference<Map<String, dynamic>> _userRef(String uid) =>
+      _firestore.collection('users').doc(uid);
+
+  DocumentReference<Map<String, dynamic>> _seasonRef(String uid) =>
+      _userRef(uid).collection('arc_season_state').doc('current');
+
+  CollectionReference<Map<String, dynamic>> _questProgressRef(String uid) =>
+      _userRef(uid).collection('arc_quest_progress');
+
+  DocumentReference<Map<String, dynamic>> _questStateRef(String uid) =>
+      _userRef(uid).collection('arc_quest_state').doc('current');
+
+  DocumentReference<Map<String, dynamic>> _scrappyProgressRef(String uid) =>
+      _userRef(uid).collection('arc_scrappy_progress').doc('current');
+
+  CollectionReference<Map<String, dynamic>> _benchProgressRef(String uid) =>
+      _userRef(uid).collection('arc_bench_progress');
+
+  Stream<ArcProgressionRecords> watchProgressionRecords() {
+    final uid = _uid;
+    if (uid == null) return Stream.value(ArcProgressionRecords.empty);
+
+    final controller = StreamController<ArcProgressionRecords>();
+    StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? questSubscription;
+    StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
+    questStateSubscription;
+    StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
+    scrappySubscription;
+    StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? benchSubscription;
+    StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
+    seasonSubscription;
+    var disposed = false;
+    var seasonId = ArcSeasonResetPolicy.defaultCurrentSeasonId;
+    var questRecords = <String, ArcQuestProgressionRecord>{};
+    var trackedQuestIds = <String>{};
+    var scrappyState = ArcScrappyProgressionState.empty;
+    var benchRecords = <String, ArcBenchProgressionRecord>{};
+
+    void emit() {
+      if (disposed || controller.isClosed) return;
+      controller.add(
+        ArcProgressionRecords(
+          questRecords: questRecords,
+          scrappyState: scrappyState.copyWith(seasonId: seasonId),
+          benchRecords: benchRecords,
+          seasonId: seasonId,
+          trackedQuestIds: trackedQuestIds,
+        ),
+      );
+    }
+
+    void addError(Object error, StackTrace stackTrace) {
+      if (!disposed && !controller.isClosed) {
+        controller.addError(error, stackTrace);
+      }
+    }
+
+    controller.onListen = () {
+      seasonSubscription = _seasonRef(uid).snapshots().listen((snapshot) {
+        seasonId = _seasonIdFrom(snapshot.data());
+        emit();
+      }, onError: addError);
+
+      questSubscription = _questProgressRef(uid).snapshots().listen((snapshot) {
+        questRecords = {
+          for (final doc in snapshot.docs)
+            doc.id: ArcQuestProgressionRecord.fromMap(
+              doc.id,
+              _normalizeMap(doc.data()),
+            ),
+        };
+        emit();
+      }, onError: addError);
+
+      questStateSubscription = _questStateRef(uid).snapshots().listen((
+        snapshot,
+      ) {
+        final questStateData = snapshot.data();
+        trackedQuestIds = _stringSet(
+          questStateData == null ? null : questStateData['trackedQuestIds'],
+        );
+        emit();
+      }, onError: addError);
+
+      scrappySubscription = _scrappyProgressRef(uid).snapshots().listen((
+        snapshot,
+      ) {
+        scrappyState = ArcScrappyProgressionState.fromMap(
+          snapshot.exists ? _normalizeMap(snapshot.data()) : null,
+        );
+        emit();
+      }, onError: addError);
+
+      benchSubscription = _benchProgressRef(uid).snapshots().listen((snapshot) {
+        benchRecords = {
+          for (final doc in snapshot.docs)
+            doc.id: ArcBenchProgressionRecord.fromMap(
+              doc.id,
+              _normalizeMap(doc.data()),
+            ),
+        };
+        emit();
+      }, onError: addError);
+    };
+
+    controller.onCancel = () async {
+      disposed = true;
+      await questSubscription?.cancel();
+      await questStateSubscription?.cancel();
+      await scrappySubscription?.cancel();
+      await benchSubscription?.cancel();
+      await seasonSubscription?.cancel();
+    };
+
+    return controller.stream;
+  }
+
+  Future<ArcProgressionRecords> loadProgressionRecords() async {
+    final uid = _uid;
+    if (uid == null) return ArcProgressionRecords.empty;
+    final season = await _seasonRef(uid).get();
+    final seasonId = _seasonIdFrom(season.data());
+    final questSnapshot = await _questProgressRef(uid).get();
+    final questStateSnapshot = await _questStateRef(uid).get();
+    final questStateData = questStateSnapshot.data();
+    final scrappySnapshot = await _scrappyProgressRef(uid).get();
+    final benchSnapshot = await _benchProgressRef(uid).get();
+
+    return ArcProgressionRecords(
+      seasonId: seasonId,
+      questRecords: {
+        for (final doc in questSnapshot.docs)
+          doc.id: ArcQuestProgressionRecord.fromMap(
+            doc.id,
+            _normalizeMap(doc.data()),
+          ),
+      },
+      scrappyState: ArcScrappyProgressionState.fromMap(
+        scrappySnapshot.exists ? _normalizeMap(scrappySnapshot.data()) : null,
+      ).copyWith(seasonId: seasonId),
+      trackedQuestIds: _stringSet(
+        questStateData == null ? null : questStateData['trackedQuestIds'],
+      ),
+      benchRecords: {
+        for (final doc in benchSnapshot.docs)
+          doc.id: ArcBenchProgressionRecord.fromMap(
+            doc.id,
+            _normalizeMap(doc.data()),
+          ),
+      },
+    );
+  }
+
+  Future<bool> confirmQuestCompleted({
+    required String questId,
+    required Map<String, ArcScrappyState> scrappyStates,
+  }) async {
+    final uid = _uid;
+    if (uid == null || questId.trim().isEmpty) return false;
+    final records = await loadProgressionRecords();
+    final snapshot = _engine.buildQuestSnapshot(
+      scrappyStates: scrappyStates,
+      records: records.questRecords,
+      seasonId: records.seasonId,
+      trackedQuestIds: records.trackedQuestIds,
+    );
+    final entry = snapshot.entries.firstWhere(
+      (entry) => entry.questId == questId,
+      orElse: () => throw StateError('Unknown quest progression id: $questId'),
+    );
+    if (entry.completed) return false;
+
+    final record = _engine.completeQuestRecord(
+      snapshot: snapshot,
+      questId: questId,
+    );
+    await _questProgressRef(uid).doc(questId).set({
+      ...record.toMap(),
+      'updatedAt': DateTime.now().toUtc().toIso8601String(),
+    }, SetOptions(merge: true));
+    await _questStateRef(uid).set({
+      'trackedQuestIds': FieldValue.arrayRemove(<String>[questId]),
+      'updatedAt': DateTime.now().toUtc().toIso8601String(),
+    }, SetOptions(merge: true));
+    await _operations.recordQuestCompleted(questId: questId);
+    return true;
+  }
+
+  Future<void> startQuestTracking() async {
+    await setCurrentQuestIds(<String>{ArcQuestCatalogue.rootQuestId});
+  }
+
+  Future<void> setCurrentQuestIds(Set<String> questIds) async {
+    final uid = _uid;
+    if (uid == null) return;
+
+    final validSelected = questIds
+        .where(ArcQuestCatalogue.byId.containsKey)
+        .toSet();
+    final records = await loadProgressionRecords();
+    validSelected.removeAll(
+      records.questRecords.entries
+          .where((entry) => entry.value.completed)
+          .map((entry) => entry.key),
+    );
+
+    final inferred = const ArcQuestPositionEngine().inferCompletedAncestors(
+      validSelected,
+    );
+    inferred.removeAll(
+      records.questRecords.entries
+          .where((entry) => entry.value.completed)
+          .map((entry) => entry.key),
+    );
+
+    final now = DateTime.now().toUtc();
+    final batch = _firestore.batch();
+    for (final questId in inferred) {
+      final record = ArcQuestProgressionRecord(
+        questId: questId,
+        seasonId: records.seasonId,
+        status: ArcProgressionStatus.completed,
+        updatedAt: now,
+      );
+      batch.set(
+        _questProgressRef(uid).doc(questId),
+        record.toMap(),
+        SetOptions(merge: true),
+      );
+    }
+
+    final orderedSelected = validSelected.toList(growable: false)
+      ..sort((left, right) {
+        final leftOrder = ArcQuestCatalogue.byId[left]?.canonicalOrder ?? 9999;
+        final rightOrder =
+            ArcQuestCatalogue.byId[right]?.canonicalOrder ?? 9999;
+        return leftOrder.compareTo(rightOrder);
+      });
+    batch.set(_questStateRef(uid), <String, dynamic>{
+      'catalogueVersion': ArcQuestCatalogue.version,
+      'trackedQuestIds': orderedSelected,
+      'updatedAt': now.toIso8601String(),
+    }, SetOptions(merge: true));
+    await batch.commit();
+  }
+
+  /// Imports existing game progress without material checks or completion credit.
+  /// Returns false when signed out or the stored level is already at least this
+  /// high. Level 1 is the model's starting baseline, not an earned upgrade.
+  Future<bool> setScrappyBaseline({required int level}) async {
+    final uid = _uid;
+    if (uid == null) return false;
+    if (level != ArcScrappyProgressionState.empty.currentLevel &&
+        !_engine.scrappyDefinitions.any(
+          (definition) => definition.level == level,
+        )) {
+      throw ArgumentError.value(level, 'level', 'Unknown Scrappy level');
+    }
+
+    final ref = _scrappyProgressRef(uid);
+    return _firestore.runTransaction<bool>((transaction) async {
+      final snapshot = await transaction.get(ref);
+      var current = ArcScrappyProgressionState.fromMap(
+        snapshot.exists ? _normalizeMap(snapshot.data()) : null,
+      );
+      if (snapshot.exists && current.currentLevel >= level) return false;
+      if (!snapshot.exists) {
+        final season = await transaction.get(_seasonRef(uid));
+        current = current.copyWith(seasonId: _seasonIdFrom(season.data()));
+      }
+      final baseline = current.copyWith(
+        currentLevel: level,
+        maximumLevelReachedThisSeason: math.max(
+          current.maximumLevelReachedThisSeason,
+          level,
+        ),
+        historicalMaximumLevel: math.max(current.historicalMaximumLevel, level),
+        updatedAt: DateTime.now().toUtc(),
+      );
+      transaction.set(ref, baseline.toMap(), SetOptions(merge: true));
+      return true;
+    });
+  }
+
+  /// Imports a canonical bench level without recording an upgrade completion.
+  /// Unknown stations/levels are rejected; equal or lower imports are no-ops.
+  Future<bool> setBenchBaseline({
+    required String station,
+    required int level,
+  }) async {
+    final uid = _uid;
+    if (uid == null) return false;
+    final definitions = _engine.benchDefinitions
+        .where((definition) => definition.station == station.trim())
+        .toList(growable: false);
+    if (definitions.isEmpty) {
+      throw ArgumentError.value(
+        station,
+        'station',
+        'Unknown progression station',
+      );
+    }
+    if (!definitions.any((definition) => definition.level == level)) {
+      throw ArgumentError.value(level, 'level', 'Unknown level for $station');
+    }
+    final canonicalStation = definitions.first.station;
+    final benchId = ArcProgressionEngine.benchIdFor(canonicalStation);
+    final ref = _benchProgressRef(uid).doc(benchId);
+    return _firestore.runTransaction<bool>((transaction) async {
+      final snapshot = await transaction.get(ref);
+      final ArcBenchProgressionRecord current;
+      if (snapshot.exists) {
+        current = ArcBenchProgressionRecord.fromMap(
+          benchId,
+          _normalizeMap(snapshot.data()),
+        );
+        if (current.currentLevel >= level) return false;
+      } else {
+        final season = await transaction.get(_seasonRef(uid));
+        current = ArcBenchProgressionRecord(
+          benchId: benchId,
+          station: canonicalStation,
+          seasonId: _seasonIdFrom(season.data()),
+        );
+      }
+      final baseline = current.copyWith(
+        currentLevel: level,
+        maximumLevelReachedThisSeason: math.max(
+          current.maximumLevelReachedThisSeason,
+          level,
+        ),
+        historicalMaximumLevel: math.max(current.historicalMaximumLevel, level),
+        updatedAt: DateTime.now().toUtc(),
+      );
+      transaction.set(ref, baseline.toMap(), SetOptions(merge: true));
+      return true;
+    });
+  }
+
+  Future<bool> confirmScrappyUpgrade({
+    required int level,
+    required Map<String, ArcScrappyState> scrappyStates,
+  }) async {
+    final uid = _uid;
+    if (uid == null || level <= 0) return false;
+    final records = await loadProgressionRecords();
+    final snapshot = _engine.buildScrappySnapshot(
+      scrappyStates: scrappyStates,
+      state: records.scrappyState,
+      seasonId: records.seasonId,
+    );
+    if (level <= snapshot.state.currentLevel) return false;
+
+    final state = _engine.confirmScrappyLevel(snapshot: snapshot, level: level);
+    await _scrappyProgressRef(uid).set({
+      ...state.toMap(),
+      'updatedAt': DateTime.now().toUtc().toIso8601String(),
+    }, SetOptions(merge: true));
+    await _operations.recordScrappyUpgradeCompleted(level: level);
+    return true;
+  }
+
+  Future<bool> confirmBenchUpgrade({
+    required String station,
+    required int level,
+    required Map<String, ArcScrappyState> scrappyStates,
+  }) async {
+    final uid = _uid;
+    if (uid == null || station.trim().isEmpty || level <= 0) return false;
+    final records = await loadProgressionRecords();
+    final benchId = ArcProgressionEngine.benchIdFor(station);
+    final current = records.benchRecords[benchId];
+    if (current != null && level <= current.currentLevel) return false;
+    final snapshot = _engine.buildBenchSnapshot(
+      scrappyStates: scrappyStates,
+      records: records.benchRecords,
+      seasonId: records.seasonId,
+    );
+    final record = _engine
+        .confirmBenchLevel(
+          snapshot: snapshot,
+          scrappyStates: scrappyStates,
+          station: station,
+          level: level,
+        )
+        .copyWith(seasonId: records.seasonId);
+    await _benchProgressRef(uid).doc(benchId).set({
+      ...record.toMap(),
+      'updatedAt': DateTime.now().toUtc().toIso8601String(),
+    }, SetOptions(merge: true));
+    await _operations.recordBenchUpgradeCompleted(
+      benchId: benchId,
+      level: level,
+    );
+    return true;
+  }
+
+  ArcOperationsRepository get _operations =>
+      _operationsRepository ??
+      ArcOperationsRepository(firestore: _firestore, auth: _auth);
+
+  String _seasonIdFrom(Map<String, dynamic>? data) {
+    final value = data?['currentSeasonId'];
+    if (value is String && value.trim().isNotEmpty) return value.trim();
+    return ArcSeasonResetPolicy.defaultCurrentSeasonId;
+  }
+
+  Set<String> _stringSet(Object? value) {
+    if (value is! Iterable) return <String>{};
+    return value
+        .map((item) => item.toString().trim())
+        .where((item) => item.isNotEmpty)
+        .toSet();
+  }
+
+  Map<String, dynamic> _normalizeMap(Map<String, dynamic>? source) {
+    if (source == null) return const <String, dynamic>{};
+    return source.map((key, value) => MapEntry(key, _normalizeValue(value)));
+  }
+
+  Object? _normalizeValue(Object? value) {
+    if (value is Timestamp) return value.toDate();
+    if (value is Map) {
+      return value.map(
+        (key, value) => MapEntry(key.toString(), _normalizeValue(value)),
+      );
+    }
+    if (value is Iterable) {
+      return value.map(_normalizeValue).toList(growable: false);
+    }
+    return value;
+  }
+}

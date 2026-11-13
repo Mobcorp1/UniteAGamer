@@ -1,7 +1,7 @@
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_drop_report.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_intel_explorer_snapshot.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_intel_hotspot.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_report_filters.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_drop_report.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_intel_explorer_snapshot.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_intel_hotspot.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_report_filters.dart';
 
 class ArcIntelExplorerService {
   const ArcIntelExplorerService();

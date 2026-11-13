@@ -1,22 +1,39 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_research_workstation_screen.dart';
 
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_trader_profile.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/repositories/arc_trader_profile_repository.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trading_listing_detail_screen.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trading_profile_screen.dart';
-import 'package:uag_traders_hub/widgets/collapsible_section_card.dart';
-import 'package:uag_traders_hub/widgets/static_watermark.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/trade_items_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_trade_watch_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_beta_first_run.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_trade_intelligence_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trader_profile.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_scrappy_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_trader_profile_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_listing_detail_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_profile_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_trade_network_panel.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_trading_workspace_bar.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_card.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_cosmetic_identity_strip.dart';
+import 'package:uag_arc_raiders_hub/widgets/collapsible_section_card.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class TradingListingsScreen extends StatefulWidget {
   static const routeName = '/trading-hub/arc-raiders/listings';
 
-  const TradingListingsScreen({super.key, this.showAppBar = true, this.embedProfileSummary = false});
+  const TradingListingsScreen({
+    super.key,
+    this.showAppBar = true,
+    this.embedProfileSummary = false,
+  });
 
   final bool showAppBar;
   final bool embedProfileSummary;
@@ -27,8 +44,14 @@ class TradingListingsScreen extends StatefulWidget {
 
 class _TradingListingsScreenState extends State<TradingListingsScreen> {
   final TradingRepository _repository = TradingRepository();
+  final ArcTradeWatchRepository _watchRepository = ArcTradeWatchRepository();
+  bool _showAllListings = false;
   final ArcBlueprintRepository _blueprintRepository = ArcBlueprintRepository();
-  final ArcTraderProfileRepository _profileRepository = ArcTraderProfileRepository();
+  final ArcScrappyRepository _scrappyRepository = ArcScrappyRepository();
+  final ArcTraderProfileRepository _profileRepository =
+      ArcTraderProfileRepository();
+  final ArcTradeIntelligenceEngine _tradeIntelligenceEngine =
+      const ArcTradeIntelligenceEngine();
   final TextEditingController _searchController = TextEditingController();
 
   bool _showOpenToOffersOnly = false;
@@ -37,75 +60,120 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
   bool _showBundleOnly = false;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ArcBetaFirstRun.showOnce(
+        context: context,
+        key: ArcBetaFirstRunKeys.hasSeenTradingTutorial,
+        title: 'WELCOME TO TRADING',
+        accent: AppTheme.neonPink,
+        steps: const [
+          'Create or find a listing that matches your missing blueprints.',
+          'Request a trade and agree the item swap before the session.',
+          'Schedule the run, attend on time and complete safely.',
+          'Confirm the result afterwards to build trader reputation.',
+        ],
+      );
+    });
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
   }
 
-  Set<String> _buildMissingBlueprintNames(Map<String, ArcBlueprintState> states) {
-    final missingIds = states.values
-        .where((state) => !state.owned)
+  Set<String> _buildMissingBlueprintNames(
+    Map<String, ArcBlueprintState> states,
+  ) {
+    final ownedBlueprintIds = states.values
+        .where((state) => state.owned)
         .map((state) => state.blueprintId)
         .toSet();
 
-    final missingNames = ArcBlueprintSeedData.blueprints
-        .where((blueprint) => missingIds.contains(blueprint.id))
+    return ArcBlueprintSeedData.blueprints
+        .where((blueprint) => !ownedBlueprintIds.contains(blueprint.id))
         .map((blueprint) => blueprint.name.toLowerCase())
         .toSet();
+  }
 
-    return missingNames;
+  Stream<Map<String, ArcScrappyState>> _watchScrappyStates() {
+    try {
+      return _scrappyRepository.watchMyScrappyStateMap();
+    } catch (_) {
+      return Stream.value(const <String, ArcScrappyState>{});
+    }
+  }
+
+  Map<String, int> _trackedQuantitiesFromScrappy(
+    Map<String, ArcScrappyState> states,
+  ) {
+    return <String, int>{
+      for (final entry in states.entries)
+        if (entry.key.trim().isNotEmpty && entry.value.collectedCount > 0)
+          entry.key.trim(): entry.value.collectedCount,
+    };
   }
 
   List<TradingListing> _applyFilters(
     List<TradingListing> listings,
     Set<String> missingBlueprintNames,
+    Set<String> wantedTradeItemIds,
   ) {
     final query = _searchController.text.trim().toLowerCase();
 
-    return listings.where((listing) {
-      final hasOfferedMatch = missingBlueprintNames.isEmpty
-          ? true
-          : listing.offeredBlueprintNames
-              .map((name) => name.toLowerCase())
-              .any(missingBlueprintNames.contains);
+    return listings
+        .where((listing) {
+          final hasOfferedMatch = _showAllListings ||
+              listing.offeredBlueprintNames
+                  .map((name) => name.trim().toLowerCase())
+                  .any(missingBlueprintNames.contains) ||
+              listing.offeredTradeItemIds.any(wantedTradeItemIds.contains);
 
-      if (!hasOfferedMatch) {
-        return false;
-      }
-      if (_showOpenToOffersOnly &&
-          listing.listingType != TradingListingType.openToOffers) {
-        return false;
-      }
-      if (_showLowRiskOnly && listing.riskLevel != TradingRiskLevel.low) {
-        return false;
-      }
-      if (_showSeedsOnly &&
-          listing.seedTotalOffered <= 0 &&
-          !listing.acceptsSeeds) {
-        return false;
-      }
-      if (_showBundleOnly && !listing.tradeAsBundle) {
-        return false;
-      }
-      if (query.isEmpty) {
-        return true;
-      }
+          if (listing.ownerUid == _repository.currentUid || !hasOfferedMatch) {
+            return false;
+          }
 
-      final searchableText = <String>[
-        listing.title,
-        listing.offeredSummary,
-        listing.wantedSummary,
-        listing.traderName,
-        listing.region,
-        listing.playWindow,
-        ...listing.offeredBlueprintNames,
-        ...listing.wantedBlueprintNames,
-        ...listing.offeredAssetNames,
-        ...listing.wantedAssetNames,
-      ].join(' ').toLowerCase();
+          if (_showOpenToOffersOnly &&
+              listing.listingType != TradingListingType.openToOffers) {
+            return false;
+          }
 
-      return searchableText.contains(query);
-    }).toList(growable: false);
+          if (_showLowRiskOnly && listing.riskLevel != TradingRiskLevel.low) {
+            return false;
+          }
+
+          if (_showSeedsOnly &&
+              listing.seedTotalOffered <= 0 &&
+              !listing.acceptsSeeds) {
+            return false;
+          }
+
+          if (_showBundleOnly && !listing.tradeAsBundle) {
+            return false;
+          }
+
+          if (query.isEmpty) {
+            return true;
+          }
+
+          final searchableText = [
+            listing.title,
+            listing.offeredSummary,
+            listing.wantedSummary,
+            listing.traderName,
+            listing.region,
+            listing.playWindow,
+            ...listing.offeredBlueprintNames,
+            ...listing.wantedBlueprintNames,
+            ...listing.offeredAssetNames,
+            ...listing.wantedAssetNames,
+          ].join(' ').toLowerCase();
+
+          return searchableText.contains(query);
+        })
+        .toList(growable: false);
   }
 
   String _expiryText(DateTime expiresAt) {
@@ -148,7 +216,11 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
       decoration: AppTheme.tradingPillDecoration(color: color),
       child: Text(
         label,
-        style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 12),
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.w700,
+          fontSize: 12,
+        ),
       ),
     );
   }
@@ -172,15 +244,30 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
     );
   }
 
-  Widget _listingCard(BuildContext context, TradingListing listing) {
-    final subtitleBits = <String>[
+  Widget _listingCard(
+    BuildContext context,
+    TradingListing listing,
+    Map<String, ArcBlueprintState> states,
+  ) {
+    final intelligence = _tradeIntelligenceEngine.scoreListing(
+      listing: listing,
+      blueprintStates: states,
+      currentUid: _repository.currentUid,
+    );
+    final subtitleBits = [
       if (listing.tradeAsBundle) 'Bundle only' else 'Mix and match',
       if (listing.allowPartialOffers) 'Partial offers on',
       if (listing.seriousOffersOnly) 'Serious only',
     ];
+    final traderSubtitle = [
+      if (listing.gamerTag.isNotEmpty) listing.gamerTag,
+      if (listing.preferredPlatform.isNotEmpty) listing.preferredPlatform,
+      listing.reputationSummary,
+    ].join(' - ');
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(18),
+    return TradingCard(
+      margin: const EdgeInsets.only(bottom: AppTheme.spaceM),
+      accent: intelligence.isActionable ? AppTheme.neonCyan : null,
       onTap: () {
         Navigator.of(context).push(
           MaterialPageRoute(
@@ -188,88 +275,150 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
           ),
         );
       },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: AppTheme.spaceM),
-        decoration: AppTheme.tradingCardDecoration(),
-        child: Padding(
-          padding: AppTheme.sectionCardPadding,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            listing.title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTheme.tradingHeading(
+              fontSize: 18,
+              color: AppTheme.neonCyan,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spaceS),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
             children: [
-              Text(
-                listing.title,
-                style: AppTheme.tradingHeading(
-                  fontSize: 22,
-                  color: AppTheme.neonCyan,
-                ),
-              ),
-              const SizedBox(height: AppTheme.spaceS),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _pill(listing.riskLabel, listing.riskColor()),
-                  _metaChip(listing.region),
-                  _metaChip(listing.playWindow),
-                  _metaChip(_expiryText(listing.expiresAt)),
-                ],
-              ),
-              const SizedBox(height: AppTheme.spaceM),
-              Text(
-                'Offering',
-                style: AppTheme.tradingHeading(
-                  fontSize: 17,
-                  color: AppTheme.neonPink,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(listing.offeredSummary, style: const TextStyle(color: Colors.white)),
-              const SizedBox(height: AppTheme.spaceM),
-              Text(
-                'Looking for',
-                style: AppTheme.tradingHeading(
-                  fontSize: 17,
-                  color: AppTheme.neonPink,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(listing.wantedSummary, style: const TextStyle(color: Colors.white)),
-              if (subtitleBits.isNotEmpty) ...[
-                const SizedBox(height: AppTheme.spaceM),
-                Text(
-                  subtitleBits.join(' • '),
-                  style: TextStyle(color: AppTheme.tradingMutedText),
-                ),
-              ],
-              const SizedBox(height: AppTheme.spaceM),
-              Divider(color: AppTheme.tradingDivider),
-              const SizedBox(height: AppTheme.spaceS),
-              Text(
-                '${listing.traderName}'
-                '${listing.gamerTag.isNotEmpty ? ' • ${listing.gamerTag}' : ''}'
-                '${listing.preferredPlatform.isNotEmpty ? ' • ${listing.preferredPlatform}' : ''}',
-                style: TextStyle(
-                  color: AppTheme.tradingMutedText,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              _pill(listing.riskLabel, listing.riskColor()),
+              _metaChip(listing.region),
+              _metaChip(listing.playWindow),
+              _metaChip(listing.listingModeLabel),
+              _metaChip(_expiryText(listing.expiresAt)),
+              _pill(intelligence.label, AppTheme.neonPink),
+              _metaChip('Intel ${intelligence.score}%'),
             ],
           ),
-        ),
+          if (intelligence.reason.isNotEmpty) ...[
+            const SizedBox(height: AppTheme.spaceS),
+            Text(
+              intelligence.reason,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AppTheme.bodyTextStyle(
+                fontSize: 12,
+                color: intelligence.isActionable
+                    ? AppTheme.neonCyan
+                    : AppTheme.tradingMutedText,
+                isBold: intelligence.isActionable,
+              ),
+            ),
+          ],
+          const SizedBox(height: 10),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final offered = _listingExchangePanel(
+                label: 'OFFERING',
+                value: listing.offeredSummary,
+                color: AppTheme.neonPink,
+                icon: Icons.upload_rounded,
+              );
+              final wanted = _listingExchangePanel(
+                label: 'WANTED',
+                value: listing.wantedSummary,
+                color: AppTheme.neonCyan,
+                icon: Icons.download_rounded,
+              );
+              if (constraints.maxWidth < 560) {
+                return Column(
+                  children: [offered, const SizedBox(height: 8), wanted],
+                );
+              }
+              return Row(
+                children: [
+                  Expanded(child: offered),
+                  const SizedBox(width: 8),
+                  Expanded(child: wanted),
+                ],
+              );
+            },
+          ),
+          if (subtitleBits.isNotEmpty) ...[
+            const SizedBox(height: AppTheme.spaceM),
+            Text(
+              subtitleBits.join(' - '),
+              style: TextStyle(color: AppTheme.tradingMutedText),
+            ),
+          ],
+          const SizedBox(height: AppTheme.spaceM),
+          Divider(color: AppTheme.tradingDivider),
+          const SizedBox(height: AppTheme.spaceS),
+          TradingCosmeticIdentityStrip(
+            repository: _repository,
+            uid: listing.ownerUid,
+            displayName: listing.traderName,
+            subtitle: traderSubtitle,
+            compact: true,
+          ),
+        ],
       ),
     );
   }
 
-
-  Widget _profileSummaryCard(BuildContext context, ArcTraderProfile profile) {
-    final statusColor = profile.isProfileComplete ? AppTheme.neonCyan : AppTheme.warningAmber;
+  Widget _listingExchangePanel({
+    required String label,
+    required String value,
+    required Color color,
+    required IconData icon,
+  }) {
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: AppTheme.spaceL),
-      padding: AppTheme.sectionCardPadding,
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: statusColor.withValues(alpha: 0.24),
+      constraints: const BoxConstraints(minHeight: 62),
+      padding: const EdgeInsets.all(10),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        accent: color,
+        radius: ArcUiTokens.radiusM,
+        borderOpacity: 0.20,
       ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  label,
+                  style: ArcUiTokens.label(color: color).copyWith(fontSize: 10),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  value,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTheme.tradingHeading(fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _profileSummaryCard(BuildContext context, ArcTraderProfile profile) {
+    final statusColor = profile.isProfileComplete
+        ? AppTheme.neonCyan
+        : AppTheme.warningAmber;
+
+    return TradingCard(
+      margin: const EdgeInsets.only(bottom: AppTheme.spaceL),
+      accent: statusColor,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -280,12 +429,19 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      profile.uagName.trim().isEmpty ? 'Trader Profile' : profile.uagName,
-                      style: AppTheme.tradingHeading(fontSize: 20, color: Colors.white),
+                      profile.uagName.trim().isEmpty
+                          ? 'Your Hub Profile'
+                          : profile.uagName,
+                      style: AppTheme.tradingHeading(
+                        fontSize: 20,
+                        color: Colors.white,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      profile.uagId.trim().isEmpty ? 'Set up your trading identity and visibility.' : profile.uagId,
+                      profile.uagId.trim().isEmpty
+                          ? 'Set up your trading identity and visibility.'
+                          : profile.uagId,
                       style: TextStyle(color: AppTheme.tradingMutedText),
                     ),
                   ],
@@ -296,19 +452,45 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
                 decoration: AppTheme.tradingPillDecoration(color: statusColor),
                 child: Text(
                   profile.isProfileComplete ? 'Ready' : 'Needs setup',
-                  style: TextStyle(color: statusColor, fontWeight: FontWeight.w700, fontSize: 12),
+                  style: TextStyle(
+                    color: statusColor,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                  ),
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: AppTheme.spaceM),
+          TradingCosmeticIdentityStrip(
+            repository: _repository,
+            uid: profile.uid,
+            displayName: profile.uagName,
+            subtitle: [
+              if (profile.uagId.isNotEmpty) profile.uagId,
+              if (profile.platform.isNotEmpty) profile.platform,
+              if (profile.region.isNotEmpty) profile.region,
+            ].join(' - '),
+            compact: true,
           ),
           const SizedBox(height: AppTheme.spaceM),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
-              _metaChip(profile.region.isEmpty ? 'Region not set' : profile.region),
-              _metaChip(profile.platform.isEmpty ? 'Platform not set' : profile.platform),
-              _metaChip(profile.visibleInSearch ? 'Visible in search' : 'Hidden in search'),
+              _metaChip(
+                profile.region.isEmpty ? 'Region not set' : profile.region,
+              ),
+              _metaChip(
+                profile.platform.isEmpty
+                    ? 'Platform not set'
+                    : profile.platform,
+              ),
+              _metaChip(
+                profile.visibleInSearch
+                    ? 'Visible in search'
+                    : 'Hidden in search',
+              ),
             ],
           ),
           const SizedBox(height: AppTheme.spaceM),
@@ -319,21 +501,34 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
                 Navigator.of(context).pushNamed(TradingProfileScreen.routeName);
               },
               icon: const Icon(Icons.person_outline_rounded),
-              label: const Text('Open Trader Profile'),
+              label: const Text('Open Your Hub Profile'),
             ),
           ),
         ],
       ),
     );
   }
+
   Widget _buildEmptyState(bool hasMissingBlueprints) {
-    return Center(
-      child: Text(
-        hasMissingBlueprints
-            ? 'No active listings are currently offering the blueprints you are missing.'
-            : 'No listings match your current filters.',
-        textAlign: TextAlign.center,
-        style: TextStyle(color: AppTheme.tradingMutedText, fontSize: 16),
+    return TradingCard(
+      compact: true,
+      accent: AppTheme.tradingFaintText,
+      child: Row(
+        children: [
+          Icon(Icons.search_off_rounded, color: AppTheme.tradingFaintText),
+          const SizedBox(width: AppTheme.spaceM),
+          Expanded(
+            child: Text(
+              hasMissingBlueprints
+                  ? 'No active listings are currently offering the blueprints you are missing.'
+                  : 'No listings match your current filters.',
+              style: AppTheme.bodyTextStyle(
+                color: AppTheme.tradingMutedText,
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -349,7 +544,7 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
           Text(
             wantedCount > 0
                 ? 'Showing listings offering blueprints you are still missing.'
-                : 'No missing blueprints detected yet, so all active listings are visible.',
+                : 'Automatic watches follow your missing blueprints. Add quest/build/material interests below, or show all listings.',
             style: TextStyle(color: AppTheme.tradingMutedText, height: 1.35),
           ),
           const SizedBox(height: AppTheme.spaceM),
@@ -367,7 +562,8 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
               _buildFilterChip(
                 label: 'Low Risk',
                 selected: _showLowRiskOnly,
-                onTap: () => setState(() => _showLowRiskOnly = !_showLowRiskOnly),
+                onTap: () =>
+                    setState(() => _showLowRiskOnly = !_showLowRiskOnly),
               ),
               _buildFilterChip(
                 label: 'Seed Trades',
@@ -386,96 +582,249 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
     );
   }
 
+  Future<void> _editTradeInterests(Set<String> current) async {
+    final options = ArcTradeItemsData.items
+        .where((item) => item.category != ArcTradeItemCategory.containerIntel)
+        .toList()
+      ..sort((a, b) => a.name.compareTo(b.name));
+    final selected = Set<String>.from(current);
+    final query = ValueNotifier<String>('');
+    try {
+      final result = await showDialog<Set<String>>(
+        context: context,
+        builder: (dialogContext) => StatefulBuilder(
+          builder: (context, refresh) => AlertDialog(
+            backgroundColor: AppTheme.cardBackground,
+            title: const Text('Trade Interests', style: TextStyle(color: Colors.white)),
+            content: SizedBox(
+              width: 440,
+              height: 440,
+              child: Column(children: [
+                TextField(
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(labelText: 'Search items, materials, weapons or keys'),
+                  onChanged: (value) { query.value = value.toLowerCase(); refresh(() {}); },
+                ),
+                Expanded(child: ListView.builder(
+                  itemCount: options.where((item) => item.name.toLowerCase().contains(query.value)).length,
+                  itemBuilder: (context, index) {
+                    final filtered = options.where((item) => item.name.toLowerCase().contains(query.value)).toList();
+                    final item = filtered[index];
+                    return CheckboxListTile(
+                      title: Text(item.name, style: const TextStyle(color: Colors.white)),
+                      subtitle: Text(item.categoryLabel, style: const TextStyle(color: Colors.white70)),
+                      value: selected.contains(item.id),
+                      onChanged: (checked) => refresh(() {
+                        if (checked == true) { selected.add(item.id); } else { selected.remove(item.id); }
+                      }),
+                    );
+                  },
+                )),
+              ]),
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+              TextButton(onPressed: () => Navigator.pop(context, selected), child: const Text('Save interests')),
+            ],
+          ),
+        ),
+      );
+      if (result != null) {
+        await _watchRepository.saveInterests(result);
+      }
+    } finally {
+      query.dispose();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
-      appBar: widget.showAppBar ? AppBar(
-        title: Text(
-          'Market',
-          style: AppTheme.tradingHeading(fontSize: 25),
-        ),
-      ) : null,
-      body: Stack(
-        children: [
-          const Positioned.fill(child: StaticWatermark()),
-          SafeArea(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: AppTheme.pageMaxWidth),
-                child: Padding(
-                  padding: AppTheme.pagePadding,
-                  child: StreamBuilder<Map<String, ArcBlueprintState>>(
-                    stream: _blueprintRepository.watchMyBlueprintStates(),
-                    builder: (context, statesSnapshot) {
-                      final states =
-                          statesSnapshot.data ?? const <String, ArcBlueprintState>{};
-                      final missingBlueprintNames =
-                          _buildMissingBlueprintNames(states);
+      extendBody: true,
+      bottomNavigationBar: const ArcCompanionBottomDock(activeLabel: 'Trading'),
+      backgroundColor: Colors.transparent,
+      appBar: widget.showAppBar
+          ? AppBar(
+              backgroundColor: Colors.transparent,
+              title: Text(
+                'Market',
+                style: AppTheme.tradingHeading(fontSize: 25),
+              ),
+            )
+          : null,
+      body: ArcRaidersScreenShell(
+        showAdBanner: false,
+        child: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 920),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
+                child: StreamBuilder<Map<String, ArcBlueprintState>>(
+                  stream: _blueprintRepository.watchMyBlueprintStates(),
+                  builder: (context, statesSnapshot) {
+                    final states = statesSnapshot.data ?? const {};
+                    final missingBlueprintNames = _buildMissingBlueprintNames(
+                      states,
+                    );
 
-                      return Column(
-                        children: [
-                          if (widget.embedProfileSummary)
-                            StreamBuilder<ArcTraderProfile>(
-                              stream: _profileRepository.watchProfile(),
-                              builder: (context, profileSnapshot) {
-                                final profile = profileSnapshot.data ?? ArcTraderProfile.empty(_profileRepository.currentUid ?? '');
-                                return _profileSummaryCard(context, profile);
-                              },
-                            ),
-                          TextField(
-                            controller: _searchController,
-                            onChanged: (_) => setState(() {}),
-                            style: const TextStyle(color: Colors.white),
-                            decoration: AppTheme.tradingInputDecoration(
-                              label:
-                                  'Search blueprints, keys, weapons, mods, traders',
-                            ),
-                          ),
-                          const SizedBox(height: AppTheme.spaceM),
-                          _buildFilterPanel(missingBlueprintNames.length),
-                          const SizedBox(height: AppTheme.spaceL),
-                          Expanded(
-                            child: StreamBuilder<List<TradingListing>>(
-                              stream: _repository.watchActiveListings(),
-                              builder: (context, snapshot) {
-                                if (snapshot.connectionState ==
-                                    ConnectionState.waiting) {
-                                  return const Center(
-                                    child: CircularProgressIndicator(
-                                      color: AppTheme.neonCyan,
-                                    ),
-                                  );
-                                }
+                    return StreamBuilder<Map<String, ArcScrappyState>>(
+                      stream: _watchScrappyStates(),
+                      builder: (context, scrappySnapshot) {
+                        final trackedQuantities = _trackedQuantitiesFromScrappy(
+                          scrappySnapshot.data ??
+                              const <String, ArcScrappyState>{},
+                        );
 
+                        return StreamBuilder<List<TradingListing>>(
+                          stream: _repository.watchActiveListings(),
+                          builder: (context, listingsSnapshot) {
+                            if (listingsSnapshot.connectionState ==
+                                    ConnectionState.waiting &&
+                                listingsSnapshot.data == null) {
+                              return const Center(
+                                child: CircularProgressIndicator(
+                                  color: AppTheme.neonCyan,
+                                ),
+                              );
+                            }
+
+                            final activeListings =
+                                listingsSnapshot.data ??
+                                const <TradingListing>[];
+
+                            return StreamBuilder<Set<String>>(
+                              stream: _watchRepository.watchInterests(),
+                              builder: (context, interestsSnapshot) {
+                                final watchedItems = interestsSnapshot.data ?? const <String>{};
                                 final listings = _applyFilters(
-                                  snapshot.data ?? const <TradingListing>[],
-                                  missingBlueprintNames,
-                                );
+                                  activeListings, missingBlueprintNames, watchedItems,
+                                )..sort((a, b) {
+                                  final aScore = _tradeIntelligenceEngine.scoreListing(
+                                    listing: a, blueprintStates: states,
+                                    currentUid: _repository.currentUid,
+                                  ).score;
+                                  final bScore = _tradeIntelligenceEngine.scoreListing(
+                                    listing: b, blueprintStates: states,
+                                    currentUid: _repository.currentUid,
+                                  ).score;
+                                  final ranked = bScore.compareTo(aScore);
+                                  return ranked != 0 ? ranked : a.expiresAt.compareTo(b.expiresAt);
+                                });
+                                return Column(
+                              children: [
+                                const ArcTradingWorkspaceBar(
+                                  current: ArcTradingWorkspace.market,
+                                  padding: EdgeInsets.zero,
+                                ),
+                                const SizedBox(height: AppTheme.spaceM),
+                                if (widget.embedProfileSummary)
+                                  StreamBuilder<ArcTraderProfile>(
+                                    stream: _profileRepository.watchProfile(),
+                                    builder: (context, profileSnapshot) {
+                                      final profile =
+                                          profileSnapshot.data ??
+                                          ArcTraderProfile.empty(
+                                            _profileRepository.currentUid ?? '',
+                                          );
 
-                                if (listings.isEmpty) {
-                                  return _buildEmptyState(
-                                    missingBlueprintNames.isNotEmpty,
-                                  );
-                                }
+                                      return _profileSummaryCard(
+                                        context,
+                                        profile,
+                                      );
+                                    },
+                                  ),
+                                TextField(
+                                  controller: _searchController,
+                                  onChanged: (_) => setState(() {}),
+                                  style: ArcUiTokens.body(
+                                    color: ArcUiTokens.textPrimary,
+                                  ),
+                                  decoration: ArcUiTokens.inputDecoration(
+                                    labelText:
+                                        'Search blueprints, keys, weapons, mods, traders',
+                                  ),
+                                ),
+                                const SizedBox(height: AppTheme.spaceM),
+                                _buildFilterPanel(missingBlueprintNames.length),
+                                Wrap(spacing: 8, runSpacing: 4, children: [
+                                  OutlinedButton.icon(
+                                    onPressed: () => _editTradeInterests(watchedItems),
+                                    icon: const Icon(Icons.tune),
+                                    label: Text('Trade interests (${watchedItems.length})'),
+                                  ),
+                                  OutlinedButton.icon(
+                                    onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const ArcResearchWorkstationScreen())),
+                                    icon: const Icon(Icons.science_outlined),
+                                    label: const Text('Research Station'),
+                                  ),
+                                  FilterChip(
+                                    label: const Text('Show all listings'),
+                                    selected: _showAllListings,
+                                    onSelected: (value) => setState(() => _showAllListings = value),
+                                  ),
+                                ]),
+                                const SizedBox(height: AppTheme.spaceM),
+                                Expanded(
+                                  child: listings.isEmpty
+                                      ? ListView(
+                                          children: [
+                                            ArcTradeNetworkPanel(
+                                              repository: _repository,
+                                              blueprintStates: states,
+                                              activeListings: activeListings,
+                                              trackedItemQuantities:
+                                                  trackedQuantities,
+                                            ),
+                                            const SizedBox(
+                                              height: AppTheme.spaceM,
+                                            ),
+                                            _buildEmptyState(
+                                              missingBlueprintNames.isNotEmpty,
+                                            ),
+                                          ],
+                                        )
+                                      : ListView.builder(
+                                          itemCount: listings.length + 1,
+                                          itemBuilder: (context, index) {
+                                            if (index == 0) {
+                                              return Padding(
+                                                padding: const EdgeInsets.only(
+                                                  bottom: AppTheme.spaceM,
+                                                ),
+                                                child: ArcTradeNetworkPanel(
+                                                  repository: _repository,
+                                                  blueprintStates: states,
+                                                  activeListings:
+                                                      activeListings,
+                                                  trackedItemQuantities:
+                                                      trackedQuantities,
+                                                ),
+                                              );
+                                            }
 
-                                return ListView.builder(
-                                  itemCount: listings.length,
-                                  itemBuilder: (context, index) =>
-                                      _listingCard(context, listings[index]),
+                                            return _listingCard(
+                                              context,
+                                              listings[index - 1],
+                                              states,
+                                            );
+                                          },
+                                        ),
+                                ),
+                              ],
                                 );
                               },
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
+                            );
+                          },
+                        );
+                      },
+                    );
+                  },
                 ),
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }

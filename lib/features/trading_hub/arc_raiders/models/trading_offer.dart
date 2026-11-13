@@ -1,12 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_bundle_models.dart';
 
-enum TradingOfferStatus {
-  pending,
-  accepted,
-  declined,
-  cancelled,
-  expired,
-}
+enum TradingOfferStatus { pending, accepted, declined, cancelled, expired }
 
 class TradingOffer {
   final String id;
@@ -26,10 +21,12 @@ class TradingOffer {
   final List<String> offeredTradeItemIds;
   final List<String> offeredTradeItemNames;
   final bool isGiveawayClaim;
+  final ArcExactTradeBundleOffer? exactBundleOffer;
   final String note;
   final TradingOfferStatus status;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final DateTime? expiresAt;
 
   const TradingOffer({
     required this.id,
@@ -49,10 +46,12 @@ class TradingOffer {
     this.offeredTradeItemIds = const <String>[],
     this.offeredTradeItemNames = const <String>[],
     this.isGiveawayClaim = false,
+    this.exactBundleOffer,
     required this.note,
     required this.status,
     required this.createdAt,
     required this.updatedAt,
+    this.expiresAt,
   });
 
   static String _readString(dynamic value, [String fallback = '']) {
@@ -99,8 +98,24 @@ class TradingOffer {
 
   String get offerSummary {
     if (isGiveawayClaim) return 'Free giveaway claim';
+    final structured = exactBundleOffer;
+    if (structured != null) {
+      final parts = structured.components
+          .map((component) => '${component.quantity}x ${component.itemName}')
+          .toList(growable: false);
+      if (parts.isNotEmpty) {
+        final status = structured.completionConfirmed
+            ? 'confirmed'
+            : structured.preparing
+            ? 'preparing'
+            : 'unconfirmed';
+        return '${parts.join(', ')} ($status bundle)';
+      }
+    }
     final parts = <String>[];
-    if (offeredBlueprintText.trim().isNotEmpty) parts.add(offeredBlueprintText.trim());
+    if (offeredBlueprintText.trim().isNotEmpty) {
+      parts.add(offeredBlueprintText.trim());
+    }
     parts.addAll(offeredTradeItemNames);
     if (seedTotal > 0) parts.add('$seedTotal seeds');
     if (includesResources && resourcesText.trim().isNotEmpty) {
@@ -110,7 +125,7 @@ class TradingOffer {
   }
 
   String get statusLabel {
-    switch (status) {
+    switch (effectiveStatus) {
       case TradingOfferStatus.pending:
         return 'Pending';
       case TradingOfferStatus.accepted:
@@ -122,6 +137,16 @@ class TradingOffer {
       case TradingOfferStatus.expired:
         return 'Expired';
     }
+  }
+
+  TradingOfferStatus get effectiveStatus =>
+      isExpiredAt(DateTime.now()) ? TradingOfferStatus.expired : status;
+
+  bool isExpiredAt(DateTime now) {
+    final expiry = expiresAt;
+    return status == TradingOfferStatus.pending &&
+        expiry != null &&
+        expiry.isBefore(now);
   }
 
   Map<String, dynamic> toMap() {
@@ -143,10 +168,13 @@ class TradingOffer {
       'offeredTradeItemIds': offeredTradeItemIds,
       'offeredTradeItemNames': offeredTradeItemNames,
       'isGiveawayClaim': isGiveawayClaim,
+      if (exactBundleOffer != null)
+        'exactBundleOffer': exactBundleOffer!.toMap(),
       'note': note,
       'status': status.name,
       'createdAt': createdAt == null ? null : Timestamp.fromDate(createdAt!),
       'updatedAt': updatedAt == null ? null : Timestamp.fromDate(updatedAt!),
+      'expiresAt': expiresAt == null ? null : Timestamp.fromDate(expiresAt!),
     };
   }
 
@@ -169,6 +197,13 @@ class TradingOffer {
       offeredTradeItemIds: _readStringList(map['offeredTradeItemIds']),
       offeredTradeItemNames: _readStringList(map['offeredTradeItemNames']),
       isGiveawayClaim: _readBool(map['isGiveawayClaim']),
+      exactBundleOffer: map['exactBundleOffer'] is Map
+          ? ArcExactTradeBundleOffer.fromMap(
+              (map['exactBundleOffer'] as Map).map(
+                (key, value) => MapEntry(key.toString(), value),
+              ),
+            )
+          : null,
       note: _readString(map['note']),
       status: TradingOfferStatus.values.firstWhere(
         (value) => value.name == (map['status'] ?? 'pending'),
@@ -176,6 +211,7 @@ class TradingOffer {
       ),
       createdAt: _readDate(map['createdAt']),
       updatedAt: _readDate(map['updatedAt']),
+      expiresAt: _readDate(map['expiresAt']),
     );
   }
 }

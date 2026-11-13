@@ -1,0 +1,1009 @@
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_smart_build_trade_draft_screen.dart';
+import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
+import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_command_centre_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_expedition_state_manager.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_feature_registry.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_integration_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_profile_completion_evaluator.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_smart_build_mission_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_trade_intelligence_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_watch.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_command_centre_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_expedition_state_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_intelligence_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_smart_build_mission_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_nomadic_trader_intelligence_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_progression_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_season_reset_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_listing_queue.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_intelligence_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_user_personalisation_profile.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_notification.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_offer.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_session.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_nomadic_trader_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_operations_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_progression_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_saved_loadout_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_scrappy_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_scrappy_repository_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_trader_profile_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_user_personalisation_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_beta_feedback_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/my_hub_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/nomadic_trader_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/operations_command_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/smart_trade_assist_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/command_centre/arc_command_centre_content.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/screens/build/app_bar.dart';
+
+class ArcCommandCentreScreen extends StatefulWidget {
+  const ArcCommandCentreScreen({super.key});
+
+  static const routeName = '/trading-hub/arc-raiders/command-centre';
+
+  @override
+  State<ArcCommandCentreScreen> createState() => _ArcCommandCentreScreenState();
+}
+
+class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
+    with AutomaticKeepAliveClientMixin<ArcCommandCentreScreen> {
+  final ArcBlueprintRepository _blueprintRepository = ArcBlueprintRepository();
+  final ArcSavedLoadoutRepository _loadoutRepository =
+      ArcSavedLoadoutRepository();
+  final ArcTraderProfileRepository _profileRepository =
+      ArcTraderProfileRepository();
+  final ArcUserPersonalisationRepository _personalisationRepository =
+      ArcUserPersonalisationRepository();
+  final ArcOperationsRepository _operationsRepository =
+      ArcOperationsRepository();
+  final ArcProgressionRepository _progressionRepository =
+      ArcProgressionRepository();
+  final ArcScrappyRepository _scrappyRepository = ArcScrappyRepository();
+  final ArcNomadicTraderRepository _nomadicTraderRepository =
+      const ArcNomadicTraderRepository();
+  final TradingRepository _tradingRepository = TradingRepository();
+  final ArcExpeditionStateManager _expeditionStateManager =
+      ArcExpeditionStateManager.instance;
+  final ArcTradeIntelligenceEngine _tradeIntelligenceEngine =
+      const ArcTradeIntelligenceEngine();
+  late final Stream<ArcExpeditionStateSnapshot> _expeditionStateStream =
+      _expeditionStateManager.watchState();
+  late final Stream<Map<String, ArcBlueprintState>> _blueprintStatesStream =
+      _blueprintRepository.watchMyBlueprintStates();
+  // The editor saves exactly this document. Querying the entire collection
+  // with orderBy('updatedAt') can omit older documents or fail independently.
+  // Follow the authenticated session rather than capturing the account at
+  // the first Command Centre build. A pre-auth subscription otherwise becomes
+  // a permanent Stream.value(null) even after the user signs in.
+  late final Stream<User?> _favouriteLoadoutAuthStream = FirebaseAuth.instance
+      .authStateChanges();
+  String? _favouriteLoadoutUid;
+  Stream<ArcSavedLoadout?>? _favouriteLoadoutStream;
+  late final Stream<ArcOperationsUserState> _operationsStateStream =
+      _operationsRepository.watchUserState();
+  late final Stream<ArcScrappyRepositoryState<Map<String, ArcScrappyState>>>
+  _scrappyStatesStream = _scrappyRepository.watchMyScrappyStates();
+  late final Stream<ArcProgressionRecords> _progressionRecordsStream =
+      _progressionRepository.watchProgressionRecords();
+  late final Stream<List<TradingListing>> _activeListingsStream =
+      _tradingRepository.watchActiveListings();
+  late final Stream<List<TradingListing>> _myListingsStream = _tradingRepository
+      .watchMyListings();
+  late final Stream<List<TradingOffer>> _myOffersStream = _tradingRepository
+      .watchMyOffers();
+  late final Stream<List<TradingSession>> _mySessionsStream = _tradingRepository
+      .watchMySessions();
+  late final Stream<List<TradingNotification>> _notificationsStream =
+      _tradingRepository.watchNotifications();
+  late final Stream<List<ArcBlueprintWatch>> _blueprintWatchesStream =
+      _tradingRepository.watchBlueprintWatches();
+  late final Stream<List<ArcTradeListingQueueItem>> _listingQueuesStream =
+      _tradingRepository.watchListingQueues();
+  late final Stream<ArcProfileCompletionResult> _profileCompletionStream =
+      _profileRepository.watchProfileCompletion();
+  late final Stream<ArcUserPersonalisationProfile> _personalisationStream =
+      _personalisationRepository.watchProfile();
+  late Future<ArcNomadicTraderTrackerSnapshot> _nomadicTraderSnapshotFuture =
+      _nomadicTraderRepository.loadTrackerSnapshot();
+  final Map<String, bool> _checklistState = <String, bool>{};
+  Map<String, ArcBlueprintState> _cachedBlueprintStates =
+      <String, ArcBlueprintState>{};
+  List<ArcSavedLoadout> _cachedLoadouts = const <ArcSavedLoadout>[];
+  bool _favouriteLoadoutResolved = false;
+  bool _favouriteLoadoutReadFailed = false;
+  ArcOperationsUserState _cachedOperationsState = ArcOperationsUserState.empty;
+  ArcScrappyRepositoryState<Map<String, ArcScrappyState>> _cachedScrappyState =
+      const ArcScrappyRepositoryState<Map<String, ArcScrappyState>>(
+        status: ArcScrappyRepositoryStateStatus.restoring,
+      );
+  ArcProgressionRecords _cachedProgressionRecords = ArcProgressionRecords.empty;
+  ArcNomadicTraderTrackerSnapshot _cachedNomadicTraderTracker =
+      ArcNomadicTraderTrackerSnapshot.empty;
+  List<TradingListing> _cachedActiveListings = const <TradingListing>[];
+  List<TradingListing> _cachedMyListings = const <TradingListing>[];
+  List<TradingOffer> _cachedOffers = const <TradingOffer>[];
+  List<TradingSession> _cachedSessions = const <TradingSession>[];
+  List<TradingNotification> _cachedNotifications =
+      const <TradingNotification>[];
+  List<ArcBlueprintWatch> _cachedBlueprintWatches = const <ArcBlueprintWatch>[];
+  List<ArcTradeListingQueueItem> _cachedListingQueues =
+      const <ArcTradeListingQueueItem>[];
+  ArcProfileCompletionResult _cachedProfileCompletion =
+      ArcProfileCompletionResult.completeResult;
+  ArcUserPersonalisationProfile _cachedPersonalisation =
+      const ArcUserPersonalisationProfile(
+        completed: true,
+        goals: <ArcPersonalisationGoal>{},
+        reduceNoise: true,
+      );
+  ArcExpeditionStateSnapshot _cachedExpeditionState =
+      ArcExpeditionStateSnapshot.fromSeasonState(ArcSeasonState.initial());
+  static ArcCommandCentreState? _lastCommandState;
+
+  @override
+  bool get wantKeepAlive => true;
+
+  // Never reuse a previous account's saved-loadout state or subscription.
+  // Binding happens when authStateChanges provides a concrete user ID.
+  void _bindFavouriteLoadoutSession(String? uid) {
+    if (_favouriteLoadoutUid == uid) {
+      return;
+    }
+    _favouriteLoadoutUid = uid;
+    _cachedLoadouts = const <ArcSavedLoadout>[];
+    _favouriteLoadoutResolved = false;
+    _favouriteLoadoutReadFailed = false;
+    _favouriteLoadoutStream = uid == null
+        ? null
+        : _loadoutRepository.watchFavouriteLoadout();
+  }
+
+  // A real document read after returning from the editor provides a second
+  // route to freshness if the original stream missed the write. Read errors
+  // are never interpreted as evidence that the user's saved kit is absent.
+  Future<void> _refreshFavouriteAfterEditor() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null || uid != _favouriteLoadoutUid) {
+      return;
+    }
+    try {
+      final saved = await _loadoutRepository.loadFavouriteLoadout();
+      if (!mounted || uid != _favouriteLoadoutUid) {
+        return;
+      }
+      setState(() {
+        _cachedLoadouts = saved == null
+            ? const <ArcSavedLoadout>[]
+            : <ArcSavedLoadout>[saved];
+        _favouriteLoadoutResolved = true;
+        _favouriteLoadoutReadFailed = false;
+        // Force a fresh listener. Otherwise StreamBuilder can replay its old
+        // active-null snapshot and immediately overwrite this successful read.
+        _favouriteLoadoutStream = _loadoutRepository.watchFavouriteLoadout();
+      });
+    } catch (_) {
+      if (!mounted || uid != _favouriteLoadoutUid) {
+        return;
+      }
+      setState(() {
+        _favouriteLoadoutReadFailed = true;
+        _favouriteLoadoutStream = _loadoutRepository.watchFavouriteLoadout();
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_personalisationRepository.migrateLegacyIfNeeded());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      appBar: UagAppBar(
+        title: 'Command Centre',
+        subtitle: 'Your ranked Raider briefing',
+        showLogout: true,
+        actions: [
+          IconButton(
+            tooltip: 'Send closed-beta feedback',
+            onPressed: () {
+              Navigator.of(context).pushNamed(
+                ArcBetaFeedbackScreen.routeName,
+                arguments: const ArcBetaFeedbackScreenArgs(
+                  sourceRoute: ArcCommandCentreScreen.routeName,
+                ),
+              );
+            },
+            icon: const Icon(Icons.bug_report_outlined),
+          ),
+        ],
+      ),
+      drawer: const AppDrawer(),
+      bottomNavigationBar: const ArcCompanionBottomDock(activeLabel: 'run'),
+      body: ArcRaidersScreenShell(
+        showAdBanner: true,
+        child: StreamBuilder<User?>(
+          stream: _favouriteLoadoutAuthStream,
+          builder: (context, authSnapshot) {
+            final user = authSnapshot.connectionState == ConnectionState.waiting
+                ? FirebaseAuth.instance.currentUser
+                : authSnapshot.data;
+            _bindFavouriteLoadoutSession(user?.uid);
+            return KeyedSubtree(
+              key: const PageStorageKey('arc-command-centre-shell'),
+              child: _buildLiveCommandCentre(),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  void _handleAction(ArcCommandAction action) {
+    switch (action.intent) {
+      case ArcCommandActionIntent.route:
+        final routeName = action.routeName;
+        if (routeName == null || routeName.isEmpty) {
+          _showPlaceholder(action);
+          return;
+        }
+        final currentRoute = ModalRoute.of(context)?.settings.name;
+        if (routeName == currentRoute ||
+            routeName == ArcCommandCentreScreen.routeName) {
+          return;
+        }
+        final benchCategory = action.routeArguments;
+        if (routeName == ScrappyGridScreen.benchRouteName &&
+            benchCategory is String) {
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) =>
+                  ScrappyGridScreen.bench(initialBenchCategory: benchCategory),
+            ),
+          );
+          return;
+        }
+        Navigator.of(
+          context,
+        ).pushNamed(routeName, arguments: action.routeArguments);
+      case ArcCommandActionIntent.favouriteLoadout:
+        Navigator.of(context)
+            .push<void>(
+              MaterialPageRoute<void>(
+                builder: (_) => const FavouriteLoadoutScreen(),
+              ),
+            )
+            .then((_) {
+              if (mounted) {
+                unawaited(_refreshFavouriteAfterEditor());
+              }
+            });
+      case ArcCommandActionIntent.toolDeck:
+        Navigator.of(context).pushNamed(MyHubScreen.toolDeckRouteName);
+      case ArcCommandActionIntent.smartTrade:
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const SmartTradeAssistScreen()),
+        );
+      case ArcCommandActionIntent.nomadicTrader:
+        _openNomadicTrader();
+      case ArcCommandActionIntent.operations:
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const OperationsCommandScreen()),
+        );
+      case ArcCommandActionIntent.comingSoon:
+        Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => FeatureComingSoonScreen(
+              title: action.featureTitle ?? action.label,
+              description: action.placeholderMessage,
+            ),
+          ),
+        );
+      case ArcCommandActionIntent.placeholder:
+        _showPlaceholder(action);
+    }
+  }
+
+  Future<void> _openNomadicTrader() async {
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const NomadicTraderScreen()));
+    if (!mounted) return;
+    setState(() {
+      _nomadicTraderSnapshotFuture = _nomadicTraderRepository
+          .loadTrackerSnapshot();
+    });
+  }
+
+  void _showPlaceholder(ArcCommandAction action) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          action.placeholderMessage ??
+              '${action.label} is not available in this beta build.',
+          style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLiveCommandCentre() {
+    return StreamBuilder<ArcUserPersonalisationProfile>(
+      stream: _personalisationStream,
+      builder: (context, personalisationSnapshot) {
+        if (personalisationSnapshot.hasData) {
+          _cachedPersonalisation = personalisationSnapshot.data!;
+        }
+        final personalisation = _cachedPersonalisation;
+        final accessFlags = <String>{
+          for (final entry in ArcFeatureRegistry.entries)
+            if (entry.accessFlag != null) entry.accessFlag!,
+        };
+        return StreamBuilder<Map<String, FeatureAvailability>>(
+          stream: FeatureAccess.watchAvailabilityMap(accessFlags),
+          builder: (context, availabilitySnapshot) {
+            final featureAvailability =
+                availabilitySnapshot.data ??
+                const <String, FeatureAvailability>{};
+            return StreamBuilder<ArcExpeditionStateSnapshot>(
+              stream: _expeditionStateStream,
+              builder: (context, expeditionSnapshot) {
+                if (expeditionSnapshot.hasData) {
+                  _cachedExpeditionState = expeditionSnapshot.data!;
+                }
+                final expeditionState = _cachedExpeditionState;
+                return StreamBuilder<ArcProfileCompletionResult>(
+                  stream: _profileCompletionStream,
+                  builder: (context, profileSnapshot) {
+                    if (profileSnapshot.hasData) {
+                      _cachedProfileCompletion = profileSnapshot.data!;
+                    }
+                    final profileCompletion = _cachedProfileCompletion;
+                    return StreamBuilder<Map<String, ArcBlueprintState>>(
+                      stream: _blueprintStatesStream,
+                      builder: (context, blueprintSnapshot) {
+                        if (blueprintSnapshot.hasData) {
+                          _cachedBlueprintStates = blueprintSnapshot.data!;
+                        }
+                        final blueprintStates = _cachedBlueprintStates;
+                        return StreamBuilder<ArcSavedLoadout?>(
+                          stream: _favouriteLoadoutStream,
+                          builder: (context, loadoutSnapshot) {
+                            if (loadoutSnapshot.hasError) {
+                              _favouriteLoadoutReadFailed = true;
+                            } else if (loadoutSnapshot.connectionState ==
+                                ConnectionState.active) {
+                              // A resolved null is genuinely not saved; a
+                              // pending/failed read is not proof of absence.
+                              final favourite = loadoutSnapshot.data;
+                              _cachedLoadouts = favourite == null
+                                  ? const <ArcSavedLoadout>[]
+                                  : <ArcSavedLoadout>[favourite];
+                              _favouriteLoadoutResolved = true;
+                              _favouriteLoadoutReadFailed = false;
+                            }
+                            final loadouts = _cachedLoadouts;
+                            return StreamBuilder<ArcOperationsUserState>(
+                              stream: _operationsStateStream,
+                              builder: (context, operationsSnapshot) {
+                                if (operationsSnapshot.hasData) {
+                                  _cachedOperationsState =
+                                      operationsSnapshot.data!;
+                                }
+                                final operationsState = _cachedOperationsState;
+                                return StreamBuilder<
+                                  ArcScrappyRepositoryState<
+                                    Map<String, ArcScrappyState>
+                                  >
+                                >(
+                                  stream: _scrappyStatesStream,
+                                  builder: (context, scrappySnapshot) {
+                                    if (scrappySnapshot.hasData) {
+                                      _cachedScrappyState =
+                                          scrappySnapshot.data!;
+                                    }
+                                    final scrappyState = _cachedScrappyState;
+                                    final scrappyStates =
+                                        scrappyState.data ??
+                                        const <String, ArcScrappyState>{};
+                                    return StreamBuilder<ArcProgressionRecords>(
+                                      stream: _progressionRecordsStream,
+                                      builder: (context, progressionSnapshot) {
+                                        if (progressionSnapshot.hasData) {
+                                          _cachedProgressionRecords =
+                                              progressionSnapshot.data!;
+                                        }
+                                        final progressionRecords =
+                                            _cachedProgressionRecords;
+                                        return FutureBuilder<
+                                          ArcNomadicTraderTrackerSnapshot
+                                        >(
+                                          future: _nomadicTraderSnapshotFuture,
+                                          builder: (context, traderSnapshot) {
+                                            if (traderSnapshot.hasData) {
+                                              _cachedNomadicTraderTracker =
+                                                  traderSnapshot.data!;
+                                            }
+                                            final nomadicTraderTracker =
+                                                _cachedNomadicTraderTracker;
+                                            return _buildWithTradeActivity(
+                                              expeditionState: expeditionState,
+                                              blueprintStates: blueprintStates,
+                                              loadouts: loadouts,
+                                              operationsState: operationsState,
+                                              scrappyStates: scrappyStates,
+                                              progressionRecords:
+                                                  progressionRecords,
+                                              nomadicTraderTracker:
+                                                  nomadicTraderTracker,
+                                              profileCompletion:
+                                                  profileCompletion,
+                                              personalisation: personalisation,
+                                              featureAvailability:
+                                                  featureAvailability,
+                                            );
+                                          },
+                                        );
+                                      },
+                                    );
+                                  },
+                                );
+                              },
+                            );
+                          },
+                        );
+                      },
+                    );
+                  },
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildWithTradeActivity({
+    required ArcExpeditionStateSnapshot expeditionState,
+    required Map<String, ArcBlueprintState> blueprintStates,
+    required List<ArcSavedLoadout> loadouts,
+    required ArcOperationsUserState operationsState,
+    required Map<String, ArcScrappyState> scrappyStates,
+    required ArcProgressionRecords progressionRecords,
+    required ArcNomadicTraderTrackerSnapshot nomadicTraderTracker,
+    required ArcProfileCompletionResult profileCompletion,
+    required ArcUserPersonalisationProfile personalisation,
+    required Map<String, FeatureAvailability> featureAvailability,
+  }) {
+    return StreamBuilder<List<TradingListing>>(
+      stream: _activeListingsStream,
+      builder: (context, activeListingsSnapshot) {
+        if (activeListingsSnapshot.hasData) {
+          _cachedActiveListings = activeListingsSnapshot.data!;
+        }
+        final activeListings = _cachedActiveListings;
+        return StreamBuilder<List<TradingListing>>(
+          stream: _myListingsStream,
+          builder: (context, myListingsSnapshot) {
+            if (myListingsSnapshot.hasData) {
+              _cachedMyListings = myListingsSnapshot.data!;
+            }
+            final myListings = _cachedMyListings;
+            return StreamBuilder<List<TradingOffer>>(
+              stream: _myOffersStream,
+              builder: (context, offersSnapshot) {
+                if (offersSnapshot.hasData) {
+                  _cachedOffers = offersSnapshot.data!;
+                }
+                final offers = _cachedOffers;
+                return StreamBuilder<List<TradingSession>>(
+                  stream: _mySessionsStream,
+                  builder: (context, sessionsSnapshot) {
+                    if (sessionsSnapshot.hasData) {
+                      _cachedSessions = sessionsSnapshot.data!;
+                    }
+                    final sessions = _cachedSessions;
+                    return StreamBuilder<List<TradingNotification>>(
+                      stream: _notificationsStream,
+                      builder: (context, notificationsSnapshot) {
+                        if (notificationsSnapshot.hasData) {
+                          _cachedNotifications = notificationsSnapshot.data!;
+                        }
+                        final notifications = _cachedNotifications;
+                        return StreamBuilder<List<ArcBlueprintWatch>>(
+                          stream: _blueprintWatchesStream,
+                          builder: (context, watchesSnapshot) {
+                            if (watchesSnapshot.hasData) {
+                              _cachedBlueprintWatches = watchesSnapshot.data!;
+                            }
+                            final watches = _cachedBlueprintWatches;
+                            return StreamBuilder<
+                              List<ArcTradeListingQueueItem>
+                            >(
+                              stream: _listingQueuesStream,
+                              builder: (context, queuesSnapshot) {
+                                if (queuesSnapshot.hasData) {
+                                  _cachedListingQueues = queuesSnapshot.data!;
+                                }
+                                final queues = _cachedListingQueues;
+                                final tradeActivity = _tradeActivityFrom(
+                                  blueprintStates: blueprintStates,
+                                  activeListings: activeListings,
+                                  myListings: myListings,
+                                  offers: offers,
+                                  sessions: sessions,
+                                  notifications: notifications,
+                                  watches: watches,
+                                  queues: queues,
+                                );
+                                final commandState =
+                                    ArcCommandCentreEngine.build(
+                                      blueprintStates: blueprintStates,
+                                      savedLoadouts: loadouts,
+                                      scrappyStates: scrappyStates,
+                                      nomadicTraderTracker:
+                                          nomadicTraderTracker,
+                                      operationsState: operationsState,
+                                      tradeActivity: tradeActivity,
+                                      profileCompletion: profileCompletion,
+                                      progressionRecords: progressionRecords,
+                                      personalisation: personalisation,
+                                      featureAvailability: featureAvailability,
+                                    );
+                                _lastCommandState = commandState;
+                                return _buildResilientContent(
+                                  expeditionState: expeditionState,
+                                  commandState:
+                                      _lastCommandState ?? commandState,
+                                  scrappyState: _cachedScrappyState,
+                                  profileCompletion: profileCompletion,
+                                  operationsState: operationsState,
+                                  blueprintStates: blueprintStates,
+                                  loadouts: loadouts,
+                                  progressionRecords: progressionRecords,
+                                  nomadicTraderTracker: nomadicTraderTracker,
+                                  tradeActivity: tradeActivity,
+                                  personalisation: personalisation,
+                                );
+                              },
+                            );
+                          },
+                        );
+                      },
+                    );
+                  },
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildResilientContent({
+    required ArcExpeditionStateSnapshot expeditionState,
+    required ArcCommandCentreState commandState,
+    required ArcScrappyRepositoryState<Map<String, ArcScrappyState>>
+    scrappyState,
+    required ArcProfileCompletionResult profileCompletion,
+    required ArcOperationsUserState operationsState,
+    required Map<String, ArcBlueprintState> blueprintStates,
+    required List<ArcSavedLoadout> loadouts,
+    required ArcProgressionRecords progressionRecords,
+    required ArcNomadicTraderTrackerSnapshot nomadicTraderTracker,
+    required ArcCommandTradeActivity tradeActivity,
+    required ArcUserPersonalisationProfile personalisation,
+  }) {
+    if (scrappyState.status == ArcScrappyRepositoryStateStatus.error) {
+      return _withSmartBuildStatus(
+        blueprintStates: blueprintStates,
+        loadouts: loadouts,
+        child: ArcCommandCentreContent(
+          expeditionState: expeditionState,
+          commandState: commandState,
+          loadoutPending:
+              _favouriteLoadoutUid != null &&
+              !_favouriteLoadoutResolved &&
+              !_favouriteLoadoutReadFailed,
+          loadoutUnavailable:
+              (_favouriteLoadoutUid == null || _favouriteLoadoutReadFailed) &&
+              _cachedLoadouts.isEmpty,
+          tradeActivity: tradeActivity,
+          checklistState: _checklistState,
+          onAction: _handleAction,
+          onChecklistChanged: _handleChecklistChanged,
+          personalisation: personalisation,
+          fallbackNotice:
+              'Scrappy tracking is temporarily unavailable. Your Command Centre remains usable and will retry automatically.',
+        ),
+      );
+    }
+
+    if (scrappyState.status ==
+            ArcScrappyRepositoryStateStatus.unauthenticated ||
+        scrappyState.status == ArcScrappyRepositoryStateStatus.restoring) {
+      return _withSmartBuildStatus(
+        blueprintStates: blueprintStates,
+        loadouts: loadouts,
+        child: ArcCommandCentreContent(
+          expeditionState: expeditionState,
+          commandState: commandState,
+          loadoutPending:
+              _favouriteLoadoutUid != null &&
+              !_favouriteLoadoutResolved &&
+              !_favouriteLoadoutReadFailed,
+          loadoutUnavailable:
+              (_favouriteLoadoutUid == null || _favouriteLoadoutReadFailed) &&
+              _cachedLoadouts.isEmpty,
+          tradeActivity: tradeActivity,
+          checklistState: _checklistState,
+          onAction: _handleAction,
+          onChecklistChanged: _handleChecklistChanged,
+          personalisation: personalisation,
+          fallbackNotice:
+              'Restoring your account state... the Command Centre will appear as soon as your tracker data is ready.',
+        ),
+      );
+    }
+
+    return _withSmartBuildStatus(
+      blueprintStates: blueprintStates,
+      loadouts: loadouts,
+      child: ArcCommandCentreContent(
+        expeditionState: expeditionState,
+        commandState: commandState,
+        loadoutPending:
+            _favouriteLoadoutUid != null &&
+            !_favouriteLoadoutResolved &&
+            !_favouriteLoadoutReadFailed,
+        loadoutUnavailable:
+            (_favouriteLoadoutUid == null || _favouriteLoadoutReadFailed) &&
+            _cachedLoadouts.isEmpty,
+        tradeActivity: tradeActivity,
+        checklistState: _checklistState,
+        onAction: _handleAction,
+        onChecklistChanged: _handleChecklistChanged,
+        personalisation: personalisation,
+      ),
+    );
+  }
+
+  Widget _withSmartBuildStatus({
+    required Map<String, ArcBlueprintState> blueprintStates,
+    required List<ArcSavedLoadout> loadouts,
+    required Widget child,
+  }) {
+    ArcSavedLoadout? favourite;
+    for (final loadout in loadouts) {
+      if (loadout.id == 'favourite-loadout') {
+        favourite = loadout;
+        break;
+      }
+    }
+    final plan = ArcGeneratedLoadoutPlan.fromMap(favourite?.smartBuildData);
+    if (plan == null) return child;
+
+    final integration = ArcLoadoutIntegrationEngine.evaluate(
+      plan: plan,
+      blueprintStates: blueprintStates,
+    );
+    final missionSnapshot = ArcSmartBuildMissionEngine.build(
+      plan: plan,
+      blueprintStates: blueprintStates,
+    )!;
+    final nextMission = missionSnapshot.nextMission;
+    final accent = integration.complete
+        ? ArcUiTokens.success
+        : ArcUiTokens.warning;
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+          child: Material(
+            color: ArcUiTokens.surfaceRaised.withValues(alpha: 0.96),
+            borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const FavouriteLoadoutScreen(),
+                ),
+              ),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: ArcUiTokens.surfaceDecoration(
+                  role: ArcSurfaceRole.raised,
+                  accent: accent,
+                  radius: ArcUiTokens.radiusXL,
+                  borderOpacity: 0.45,
+                ),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 44,
+                      height: 44,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          CircularProgressIndicator(
+                            value: missionSnapshot.completionPercent / 100,
+                            color: accent,
+                            backgroundColor: ArcUiTokens.surfaceInteractive,
+                            strokeWidth: 5,
+                          ),
+                          Text(
+                            '${missionSnapshot.completionPercent}%',
+                            style: TextStyle(
+                              color: accent,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            plan.displayName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: ArcUiTokens.body(
+                              fontSize: 13,
+                              color: ArcUiTokens.textPrimary,
+                              weight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            nextMission?.detail ?? integration.nextMove,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: ArcUiTokens.metadata(
+                              color: ArcUiTokens.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    if (nextMission != null)
+                      IconButton(
+                        tooltip: nextMission.title,
+                        onPressed: () {
+                          switch (nextMission.type) {
+                            case ArcSmartBuildMissionType.blueprintHunt:
+                              Navigator.of(
+                                context,
+                              ).pushNamed(BlueprintGridScreen.routeName);
+                              break;
+                            case ArcSmartBuildMissionType.resourceGather:
+                            case ArcSmartBuildMissionType.tradeBundle:
+                              Navigator.of(context).pushNamed(
+                                ArcSmartBuildTradeDraftScreen.routeName,
+                              );
+                              break;
+                            case ArcSmartBuildMissionType.craftAndEquip:
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      const FavouriteLoadoutScreen(),
+                                ),
+                              );
+                              break;
+                          }
+                        },
+                        icon: Icon(switch (nextMission.type) {
+                          ArcSmartBuildMissionType.blueprintHunt =>
+                            Icons.my_location_rounded,
+                          ArcSmartBuildMissionType.resourceGather =>
+                            Icons.inventory_2_rounded,
+                          ArcSmartBuildMissionType.tradeBundle =>
+                            Icons.swap_horiz_rounded,
+                          ArcSmartBuildMissionType.craftAndEquip =>
+                            Icons.construction_rounded,
+                        }, color: accent),
+                      )
+                    else
+                      Icon(Icons.check_circle_rounded, color: accent),
+                    IconButton(
+                      tooltip: 'Open Favourite Loadout',
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const FavouriteLoadoutScreen(),
+                        ),
+                      ),
+                      icon: const Icon(
+                        Icons.tune_rounded,
+                        color: ArcUiTokens.primaryAccent,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        Expanded(child: child),
+      ],
+    );
+  }
+
+  ArcCommandTradeActivity _tradeActivityFrom({
+    required Map<String, ArcBlueprintState> blueprintStates,
+    required List<TradingListing> activeListings,
+    required List<TradingListing> myListings,
+    required List<TradingOffer> offers,
+    required List<TradingSession> sessions,
+    required List<TradingNotification> notifications,
+    required List<ArcBlueprintWatch> watches,
+    required List<ArcTradeListingQueueItem> queues,
+  }) {
+    final intelligence = _tradeIntelligenceEngine.buildSummary(
+      blueprintStates: blueprintStates,
+      activeListings: activeListings,
+      currentUid: _tradingRepository.currentUid,
+    );
+    final activeMyListings = myListings.where((listing) => listing.isLive);
+    final pendingOffers = offers.where(
+      (offer) => offer.status == TradingOfferStatus.pending,
+    );
+    final acceptedOffers = offers.where(
+      (offer) => offer.status == TradingOfferStatus.accepted,
+    );
+    final activeSessions = sessions.where(_sessionIsActive);
+    final readySessions = sessions.where(
+      (session) => session.status == TradingSessionStatus.ready,
+    );
+    final unreadNotifications = notifications.where(
+      (notification) => !notification.read,
+    );
+    final activeWatches = watches.where((watch) => watch.active);
+    final matchedWatches = activeWatches.where(
+      (watch) => _watchHasLiveMatch(watch, activeListings),
+    );
+    final activeQueues = queues.where((queue) => !queue.isTerminal);
+    final releasableQueues = activeQueues.where(
+      (queue) => _queueCanRelease(queue, myListings, blueprintStates),
+    );
+    final blockedQueues = activeQueues.where(
+      (queue) =>
+          queue.isBlocked || _queueIsOwnershipBlocked(queue, blueprintStates),
+    );
+
+    return ArcCommandTradeActivity(
+      communityListings: activeListings.length,
+      myListings: myListings.length,
+      activeMyListings: activeMyListings.length,
+      pendingOffers: pendingOffers.length,
+      acceptedOffers: acceptedOffers.length,
+      activeSessions: activeSessions.length,
+      readySessions: readySessions.length,
+      unreadNotifications: unreadNotifications.length,
+      intelligenceMatches: intelligence.suggestions.length,
+      bestIntelligenceConfidence: intelligence.bestConfidence,
+      bestIntelligenceLabel: _bestIntelligenceLabel(intelligence),
+      activeBlueprintWatches: activeWatches.length,
+      matchedBlueprintWatches: matchedWatches.length,
+      activeListingQueues: activeQueues.length,
+      releasableListingQueues: releasableQueues.length,
+      blockedListingQueues: blockedQueues.length,
+    );
+  }
+
+  void _handleChecklistChanged(String id, bool value) {
+    setState(() => _checklistState[id] = value);
+  }
+
+  String _bestIntelligenceLabel(ArcTradeIntelligenceSummary intelligence) {
+    if (intelligence.suggestions.isEmpty) return '';
+    return intelligence.suggestions.first.title;
+  }
+
+  bool _sessionIsActive(TradingSession session) {
+    switch (session.status) {
+      case TradingSessionStatus.pending:
+      case TradingSessionStatus.scheduled:
+      case TradingSessionStatus.ready:
+        return true;
+      case TradingSessionStatus.completed:
+      case TradingSessionStatus.noShow:
+      case TradingSessionStatus.betrayal:
+      case TradingSessionStatus.cancelled:
+        return false;
+    }
+  }
+
+  bool _watchHasLiveMatch(
+    ArcBlueprintWatch watch,
+    List<TradingListing> activeListings,
+  ) {
+    final watchId = _normalizeBlueprintText(watch.blueprintId);
+    final watchName = _normalizeBlueprintText(watch.displayName);
+    return activeListings.any(
+      (listing) =>
+          listing.isLive &&
+          listing.offeredBlueprintNames.any((name) {
+            final normalized = _normalizeBlueprintText(name);
+            return normalized == watchId || normalized == watchName;
+          }),
+    );
+  }
+
+  bool _queueCanRelease(
+    ArcTradeListingQueueItem queue,
+    List<TradingListing> myListings,
+    Map<String, ArcBlueprintState> blueprintStates,
+  ) {
+    if (!queue.canManuallyRelease) return false;
+    final activeListing = _activeListingForQueue(queue, myListings);
+    if (activeListing != null &&
+        activeListing.active &&
+        activeListing.expiresAt.isAfter(DateTime.now())) {
+      return false;
+    }
+    return !_queueIsOwnershipBlocked(queue, blueprintStates);
+  }
+
+  bool _queueIsOwnershipBlocked(
+    ArcTradeListingQueueItem queue,
+    Map<String, ArcBlueprintState> blueprintStates,
+  ) {
+    final state =
+        blueprintStates[queue.blueprintId] ??
+        ArcBlueprintState.empty(queue.blueprintId);
+    return queue.hasRemaining && state.dupesOwned < queue.releasedQuantity + 1;
+  }
+
+  TradingListing? _activeListingForQueue(
+    ArcTradeListingQueueItem queue,
+    List<TradingListing> myListings,
+  ) {
+    final activeId = queue.activeListingId.trim().isEmpty
+        ? queue.sourceListingId
+        : queue.activeListingId.trim();
+    for (final listing in myListings) {
+      if (listing.id == activeId) return listing;
+    }
+    return null;
+  }
+
+  String _normalizeBlueprintText(String value) {
+    return value
+        .trim()
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+        .replaceAll(RegExp(r'-+'), '-')
+        .replaceAll(RegExp(r'^-|-$'), '');
+  }
+}

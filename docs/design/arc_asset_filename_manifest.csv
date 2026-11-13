@@ -1,0 +1,60 @@
+category,id,display_name,recommended_filename,current_asset_path,artwork_status,source_file
+archetype,balanced-raider,Balanced Raider,archetype_balanced_raider.webp,,missing,lib/features/trading_hub/arc_raiders/data/arc_player_archetype_catalog.dart
+archetype,quest-driven-raider,Quest-driven Raider,archetype_quest_driven_raider.webp,,missing,lib/features/trading_hub/arc_raiders/data/arc_player_archetype_catalog.dart
+archetype,blueprint-grinder,Blueprint Grinder,archetype_blueprint_grinder.webp,,missing,lib/features/trading_hub/arc_raiders/data/arc_player_archetype_catalog.dart
+archetype,helper-support-player,Helper / Support Player,archetype_helper_support_player.webp,,missing,lib/features/trading_hub/arc_raiders/data/arc_player_archetype_catalog.dart
+archetype,trader-resource-runner,Trader / Resource Runner,archetype_trader_resource_runner.webp,,missing,lib/features/trading_hub/arc_raiders/data/arc_player_archetype_catalog.dart
+archetype,pvp-hunter,PvP Hunter,archetype_pvp_hunter.webp,,missing,lib/features/trading_hub/arc_raiders/data/arc_player_archetype_catalog.dart
+archetype,rat-hunter,Rat Hunter,archetype_rat_hunter.webp,,missing,lib/features/trading_hub/arc_raiders/data/arc_player_archetype_catalog.dart
+archetype,casual-squad-player,Casual Squad Player,archetype_casual_squad_player.webp,,missing,lib/features/trading_hub/arc_raiders/data/arc_player_archetype_catalog.dart
+squad_intent,flexible,Flexible,squad_intent_flexible.webp,,missing,lib/reg/onboarding_basic_profile_screen.dart
+squad_intent,squad-up,Squad up,squad_intent_squad_up.webp,,missing,lib/reg/onboarding_basic_profile_screen.dart
+squad_intent,quest-team,Quest team,squad_intent_quest_team.webp,,missing,lib/reg/onboarding_basic_profile_screen.dart
+squad_intent,blueprint-runs,Blueprint runs,squad_intent_blueprint_runs.webp,,missing,lib/reg/onboarding_basic_profile_screen.dart
+squad_intent,trade-focused,Trade focused,squad_intent_trade_focused.webp,,missing,lib/reg/onboarding_basic_profile_screen.dart
+squad_intent,trials,Trials,squad_intent_trials.webp,,missing,lib/reg/onboarding_basic_profile_screen.dart
+squad_intent,solo-for-now,Solo for now,squad_intent_solo_for_now.webp,,missing,lib/reg/onboarding_basic_profile_screen.dart
+social_energy,depends-on-the-day,Depends on the day,social_energy_depends_on_the_day.webp,,missing,lib/reg/onboarding_basic_profile_screen.dart
+social_energy,chatty-and-outgoing,Chatty and outgoing,social_energy_chatty_and_outgoing.webp,,missing,lib/reg/onboarding_basic_profile_screen.dart
+social_energy,quiet-but-cooperative,Quiet but cooperative,social_energy_quiet_but_cooperative.webp,,missing,lib/reg/onboarding_basic_profile_screen.dart
+social_energy,high-energy,High energy,social_energy_high_energy.webp,,missing,lib/reg/onboarding_basic_profile_screen.dart
+social_energy,low-energy-today,Low energy today,social_energy_low_energy_today.webp,,missing,lib/reg/onboarding_basic_profile_screen.dart
+social_energy,prefer-pings-over-voice,Prefer pings over voice,social_energy_prefer_pings_over_voice.webp,,missing,lib/reg/onboarding_basic_profile_screen.dart
+operation,beta_complete_profile,First Contact,operation_beta_complete_profile.webp,assets/arc_raiders/operations/badges/beta_access_plus.png,shared,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart
+operation,beta_first_listing,Open The Market,operation_beta_first_listing.webp,,missing,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart
+operation,beta_first_trade,Trade Pioneer,operation_beta_first_trade.webp,assets/arc_raiders/operations/badges/pathfinder.png,shared,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart
+operation,beta_verified_intel,Verified Intel,operation_beta_verified_intel.webp,assets/arc_raiders/operations/badges/golden_pathfinder.png,shared,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart
+operation,beta_match_raider,Squad Signal,operation_beta_match_raider.webp,,missing,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart
+operation,beta_loadout_saved,Personal Build Online,operation_beta_loadout_saved.webp,assets/arc_raiders/operations/badges/founding_raider.png,shared,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart
+operation,beta_feedback,Field Tester,operation_beta_feedback.webp,,missing,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart
+operation,beta_guardian,Guardian Run,operation_beta_guardian.webp,assets/arc_raiders/operations/badges/community_heart.png,shared,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart
+operation,beta_return_days,Closed Beta Veteran,operation_beta_return_days.webp,assets/arc_raiders/operations/badges/og_legend.png,shared,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart
+operation,daily_refresh_listing,Keep The Market Alive,operation_daily_refresh_listing.webp,,missing,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart
+operation,daily_update_availability,Update Availability,operation_daily_update_availability.webp,,missing,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart
+operation,daily_verify_intel,Confirm Intel,operation_daily_verify_intel.webp,,missing,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart
+operation,weekly_trade_run,Market Operator,operation_weekly_trade_run.webp,,missing,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart
+operation,weekly_verified_intel,Intel Network,operation_weekly_verified_intel.webp,,missing,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart
+operation,weekly_loadout_progress,Build Progress,operation_weekly_loadout_progress.webp,,missing,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart
+operation,monthly_trader_bronze,Trader Bronze,operation_monthly_trader_bronze.webp,,missing,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart
+operation,monthly_guardian,Guardian Detail,operation_monthly_guardian.webp,assets/arc_raiders/operations/badges/community_heart.png,shared,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart
+operation,life_first_trade,First Trade,operation_life_first_trade.webp,assets/arc_raiders/operations/badges/pathfinder.png,shared,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart
+operation,life_trader_50,Trader I,operation_life_trader_50.webp,,missing,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart
+operation,life_guardian_10,Guardian,operation_life_guardian_10.webp,assets/arc_raiders/operations/badges/community_heart.png,shared,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart
+operation,life_recruit_3,Recruitment Cell,operation_life_recruit_3.webp,assets/arc_raiders/operations/badges/inner_circle.png,shared,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart
+badge,beta_access,Beta Access Badge,badge_beta_access.webp,assets/arc_raiders/operations/badges/beta_access_plus.png,unique,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart
+badge,founding_raider,Founding Raider Badge,badge_founding_raider.webp,assets/arc_raiders/operations/badges/founding_raider.png,unique,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart
+title,field_tester,Field Tester Title,title_field_tester.webp,,missing,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart
+frame,beta_signal_frame,Beta Signal Frame,frame_beta_signal.webp,,placeholder,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart
+frame,guardian_signal_frame,Guardian Signal Frame,frame_guardian_signal.webp,,placeholder,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart
+banner,beta_command_banner,Beta Command Banner,banner_beta_command.webp,,placeholder,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart
+banner,guardian_banner,Guardian Banner,banner_guardian.webp,,placeholder,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart
+badge,trade_pioneer,Trade Pioneer Badge,badge_trade_pioneer.webp,assets/arc_raiders/operations/badges/pathfinder.png,unique,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart
+badge,intel_officer,Intel Officer Badge,badge_intel_officer.webp,assets/arc_raiders/operations/badges/golden_pathfinder.png,unique,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart
+badge,community_raider,Community Raider Badge,badge_community_raider.webp,assets/arc_raiders/operations/badges/community_heart.png,unique,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart
+badge,og_legend,OG Legend Badge,badge_og_legend.webp,assets/arc_raiders/operations/badges/og_legend.png,unique,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart
+badge,inner_circle,UAG Inner Circle Badge,badge_inner_circle.webp,assets/arc_raiders/operations/badges/inner_circle.png,unique,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart
+reward,extra_trade,+1 Extra Trade Slot,reward_extra_trade.webp,,missing,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart
+reward,extra_match,+1 Extra Match Request,reward_extra_match.webp,,missing,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart
+reward,xp_5,+5 Intel XP,reward_xp_5.webp,,missing,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart
+reward,xp_10,+10 Intel XP,reward_xp_10.webp,,missing,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart
+reward,xp_25,+25 Intel XP,reward_xp_25.webp,,missing,lib/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart

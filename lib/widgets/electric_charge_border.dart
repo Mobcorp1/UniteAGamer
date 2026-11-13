@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class ElectricChargeBorder extends StatefulWidget {
   const ElectricChargeBorder({
@@ -55,13 +55,27 @@ class _ElectricChargeBorderState extends State<ElectricChargeBorder>
 
   @override
   Widget build(BuildContext context) {
-    final child = Padding(
-      padding: widget.padding,
-      child: widget.child,
-    );
+    final child = Padding(padding: widget.padding, child: widget.child);
 
     if (!widget.active) {
       return child;
+    }
+
+    final mediaQuery = MediaQuery.maybeOf(context);
+    final reduceMotion =
+        mediaQuery?.disableAnimations == true ||
+        mediaQuery?.accessibleNavigation == true;
+
+    if (reduceMotion) {
+      return RepaintBoundary(
+        child: CustomPaint(
+          foregroundPainter: _ElectricChargeBorderPainter(
+            progress: 0.84,
+            radius: widget.radius,
+          ),
+          child: child,
+        ),
+      );
     }
 
     return RepaintBoundary(
@@ -196,7 +210,8 @@ class _ElectricChargeBorderPainter extends CustomPainter {
     drawSegment(
       start: headStart,
       end: headEnd,
-      color: Color.lerp(
+      color:
+          Color.lerp(
             AppTheme.neonCyan,
             AppTheme.neonPink,
             0.65 + (0.1 * math.sin(progress * math.pi * 2)),

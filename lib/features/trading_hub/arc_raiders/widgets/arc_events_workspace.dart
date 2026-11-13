@@ -1,0 +1,412 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+import '../data/arc_event_relevance.dart';
+import '../data/arc_drop_report_region_store.dart';
+import '../raid_planner/data/arc_regional_map_conditions.dart';
+import '../raid_planner/data/raid_planner_event_schedule.dart';
+import '../raid_planner/screens/raid_planner_screen.dart';
+import '../raid_planner/models/raid_planner_models.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+
+const arcEventsRoute = '/trading-hub/arc-raiders/events';
+
+/// Shared scan-first view. Compact mode is deliberately capped at two events.
+class ArcEventsWorkspace extends StatefulWidget {
+  const ArcEventsWorkspace({
+    super.key,
+    required this.relevance,
+    this.compact = false,
+    this.nowUtc,
+    this.conditionsSource,
+    this.slots = RaidPlannerEventSchedule.slots,
+    this.contextNotice,
+  });
+  final ArcEventRelevance relevance;
+  final bool compact;
+  final DateTime? nowUtc;
+  final Future<ArcRegionalMapConditionsSnapshot> Function()? conditionsSource;
+  final List<RaidPlannerEventSlot> slots;
+  final String? contextNotice;
+
+  @override
+  State<ArcEventsWorkspace> createState() => _ArcEventsWorkspaceState();
+}
+
+class _ArcEventsWorkspaceState extends State<ArcEventsWorkspace> {
+  Timer? _timer;
+  bool _showAll = false;
+  String _query = '';
+  ArcServerRegion _region = ArcServerRegion.europe;
+  ArcRegionalMapConditionsSnapshot? _conditions;
+  bool _loading = false;
+  bool _failed = false;
+  int _request = 0;
+  DateTime get _now => widget.nowUtc ?? DateTime.now().toUtc();
+
+  @override
+  void initState() {
+    super.initState();
+    _restoreRegion();
+    _refresh();
+    if (widget.nowUtc == null) {
+      _timer = Timer.periodic(const Duration(seconds: 30), (_) {
+        if (mounted) setState(() {});
+      });
+    }
+  }
+
+  Future<void> _restoreRegion() async {
+    try {
+      final region = await ArcDropReportRegionStore.load();
+      if (mounted) setState(() => _region = region);
+    } catch (_) {
+      // Guest or unavailable preference store: keep the explicit Europe default.
+    }
+  }
+
+  Future<void> _selectRegion(ArcServerRegion region) async {
+    setState(() => _region = region);
+    try {
+      await ArcDropReportRegionStore.saveAndSyncProfile(region);
+    } catch (_) {
+      // The current selection still applies while offline.
+      try { await ArcDropReportRegionStore.save(region); } catch (_) {}
+    }
+  }
+
+  Future<void> _refresh() async {
+    final request = ++_request;
+    setState(() {
+      _loading = true;
+      _failed = false;
+    });
+    try {
+      final result =
+          await (widget.conditionsSource?.call() ??
+              ArcRegionalMapConditionsService.load());
+      if (!mounted || request != _request) return;
+      setState(() {
+        // Keep the last live result if a refresh returns the captured fallback.
+        if (_conditions?.isOfficialLive != true || result.isOfficialLive) {
+          _conditions = result;
+        }
+        _failed = !result.isOfficialLive;
+        _loading = false;
+      });
+    } catch (_) {
+      if (!mounted || request != _request) return;
+      setState(() {
+        _failed = true;
+        _loading = false;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  String _time(DateTime value) {
+    final local = value.toLocal();
+    return '${local.day}/${local.month} ${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')} local';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final snapshot = _conditions;
+    final stale = snapshot == null || !snapshot.isOfficialLive || _failed ||
+        _now.difference(snapshot.loadedAtUtc) > const Duration(minutes: 10);
+    final filtered = (snapshot?.entries ?? const <ArcRegionalMapConditionEntry>[])
+        .where((entry) {
+          final window = entry.windowFor(_region);
+          return window != null && window.endUtc.isAfter(_now) &&
+              '${entry.conditionName} ${entry.mapDisplayName}'
+                  .toLowerCase().contains(_query.toLowerCase());
+        }).toList();
+    filtered.sort((a, b) {
+      final aw = a.windowFor(_region)!;
+      final bw = b.windowFor(_region)!;
+      if (aw.isActiveAt(_now) != bw.isActiveAt(_now)) {
+        return aw.isActiveAt(_now) ? -1 : 1;
+      }
+      if (!_showAll && !widget.relevance.showEverything) {
+        int score(ArcRegionalMapConditionEntry e) => widget.relevance
+            .reasonsFor(e.conditionName, e.mapDisplayName).values
+            .fold<int>(0, (best, n) => n > best ? n : best);
+        final comparison = score(b).compareTo(score(a));
+        if (comparison != 0) return comparison;
+      }
+      return aw.startUtc.compareTo(bw.startUtc);
+    });
+    final events = widget.compact ? filtered.take(2).toList() : filtered;
+    return DefaultTextStyle.merge(
+      style: const TextStyle(fontSize: 13, height: 1.25),
+      child: Padding(
+        padding: const EdgeInsets.all(10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 8,
+              children: [
+                Text(
+                  widget.compact ? 'EVENTS' : 'OPERATIONS SCHEDULE',
+                  style: AppTheme.tradingHeading(
+                    fontSize: 18,
+                    color: AppTheme.neonCyan,
+                  ),
+                ),
+                if (widget.compact)
+                  TextButton(
+                    onPressed: () => Navigator.of(
+                      context,
+                    ).pushNamed(RaidPlannerScreen.routeName),
+                    child: const Text(
+                      'OPEN RAID PLANNER',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ),
+              ],
+            ),
+            if (widget.contextNotice != null)
+              Text(
+                widget.contextNotice!,
+                style: const TextStyle(color: Colors.amber, fontSize: 12),
+              ),
+            if (!widget.compact) ...[
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: [
+                  ChoiceChip(
+                    label: const Text('Relevant to me'),
+                    selected: !_showAll,
+                    onSelected: (_) => setState(() => _showAll = false),
+                  ),
+                  ChoiceChip(
+                    label: const Text('Show all'),
+                    selected: _showAll,
+                    onSelected: (_) => setState(() => _showAll = true),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(
+                      context,
+                    ).pushNamed(RaidPlannerScreen.routeName),
+                    child: const Text('RAID PLANNER'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(
+                      context,
+                    ).pushNamed('/trading-hub/arc-raiders/market'),
+                    child: const Text('COMMUNITY INTEL'),
+                  ),
+                ],
+              ),
+              Text(
+                _showAll || widget.relevance.showEverything
+                    ? 'All events in time order. Times are local.'
+                    : 'Active first, then goal relevance. Unmatched events remain available.',
+                style: const TextStyle(fontSize: 12, color: Colors.white70),
+              ),
+              const Text(
+                'Compare player reports with scheduled map conditions.',
+                style: TextStyle(fontSize: 12, color: Colors.white70),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                onChanged: (value) => setState(() => _query = value),
+                decoration: const InputDecoration(
+                  labelText: 'Find event or map',
+                  prefixIcon: Icon(Icons.search),
+                ),
+              ),
+              const SizedBox(height: 12),
+              _regionalSection(),
+              const SizedBox(height: 12),
+            ],
+            if (widget.compact) ...[
+              Text('ARC server: ${_region.label} · ${stale ? 'UNVERIFIED' : 'Official live schedule'}',
+                style: TextStyle(fontSize: 11,
+                  color: stale ? Colors.amber : AppTheme.neonCyan)),
+              Row(children: [
+                const Text('Region', style: TextStyle(fontSize: 11)),
+                const SizedBox(width: 8),
+                Expanded(child: DropdownButton<ArcServerRegion>(
+                  value: _region, isExpanded: true,
+                  items: [for (final region in ArcServerRegion.values)
+                    DropdownMenuItem(value: region, child: Text(region.label))],
+                  onChanged: (value) { if (value != null) _selectRegion(value); },
+                )),
+                IconButton(onPressed: _loading ? null : _refresh,
+                  icon: const Icon(Icons.refresh), tooltip: 'Refresh conditions'),
+              ]),
+              if (_loading && events.isEmpty) const LinearProgressIndicator(),
+              if (events.isEmpty && !_loading)
+                const Text('No verified current or upcoming regional conditions.'),
+              for (final entry in events) _regionalEvent(entry, stale),
+            ] else ...[
+              if (events.isEmpty && !_loading)
+                const Text('No current or upcoming conditions for this region.'),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _regionalEvent(ArcRegionalMapConditionEntry entry, bool stale) {
+    final window = entry.windowFor(_region)!;
+    return Container(
+      key: ValueKey('event-${entry.mapDisplayName}-${entry.conditionName}-${window.startUtc}'),
+      padding: EdgeInsets.symmetric(vertical: widget.compact ? 1 : 8),
+      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Colors.white12))),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text('${window.isActiveAt(_now) ? 'CURRENT' : 'UPCOMING'}${stale ? ' · UNVERIFIED' : ''} · ${entry.conditionName} · ${entry.mapDisplayName}',
+          maxLines: 2, overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+        Text('${_time(window.startUtc)} – ${_time(window.endUtc)}',
+          style: const TextStyle(fontSize: 12, color: Colors.white70)),
+        Text(_regionalReason(entry), maxLines: 2, overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 12, color: Colors.white70)),
+      ]),
+    );
+  }
+
+  Widget _heading(String text) => Padding(
+    padding: const EdgeInsets.only(top: 12, bottom: 6),
+    child: Text(
+      text,
+      style: const TextStyle(
+        fontWeight: FontWeight.bold,
+        color: Colors.white70,
+      ),
+    ),
+  );
+
+  Widget _regionalSection() {
+    final snapshot = _conditions;
+    final stale =
+        snapshot != null &&
+        (_failed ||
+            !snapshot.isOfficialLive ||
+            _now.difference(snapshot.loadedAtUtc) >
+                const Duration(minutes: 10));
+    final entries =
+        snapshot?.entries.where((entry) {
+          final window = entry.windowFor(_region);
+          return window != null &&
+              window.endUtc.isAfter(_now) &&
+              '${entry.conditionName} ${entry.mapDisplayName}'
+                  .toLowerCase()
+                  .contains(_query.toLowerCase());
+        }).toList() ??
+        [];
+    entries.sort((a, b) {
+      final aw = a.windowFor(_region)!;
+      final bw = b.windowFor(_region)!;
+      if (aw.isActiveAt(_now) != bw.isActiveAt(_now)) {
+        return aw.isActiveAt(_now) ? -1 : 1;
+      }
+      if (!_showAll && !widget.relevance.showEverything) {
+        int score(ArcRegionalMapConditionEntry item) => widget.relevance
+            .reasonsFor(item.conditionName, item.mapDisplayName)
+            .values
+            .fold(0, (a, b) => a > b ? a : b);
+        final relevance = score(b).compareTo(score(a));
+        if (relevance != 0) return relevance;
+      }
+      return aw.startUtc.compareTo(bw.startUtc);
+    });
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _heading('REGIONAL CONDITIONS'),
+        Wrap(
+          spacing: 8,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            SizedBox(
+              width: 220,
+              child: DropdownButton<ArcServerRegion>(
+                isExpanded: true,
+                style: const TextStyle(fontSize: 14, color: Colors.white),
+                value: _region,
+                items: [
+                  for (final region in ArcServerRegion.values)
+                    DropdownMenuItem(value: region, child: Text(region.label)),
+                ],
+                onChanged: (value) {
+                  if (value != null) _selectRegion(value);
+                },
+              ),
+            ),
+            TextButton(
+              onPressed: _loading ? null : _refresh,
+              child: const Text('REFRESH CONDITIONS'),
+            ),
+          ],
+        ),
+        if (_loading) const LinearProgressIndicator(),
+        if (_failed)
+          Text(
+            snapshot == null
+                ? 'Map conditions unavailable. Retry conditions.'
+                : 'Schedule update failed. Saved times may be out of date.',
+            style: const TextStyle(color: Colors.amber),
+          ),
+        if (snapshot != null)
+          Text(
+            '${snapshot.sourceLabel} · ${stale ? 'STALE' : 'Loaded'} · ${_time(snapshot.loadedAtUtc)}',
+            style: const TextStyle(fontSize: 11, color: Colors.white70),
+          ),
+        if (!_loading && snapshot != null && entries.isEmpty)
+          Text(
+            stale
+                ? 'No unexpired conditions in retained data.'
+                : 'No current or upcoming conditions for this region / search.',
+          ),
+        for (final entry in entries)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${entry.windowFor(_region)!.isActiveAt(_now) ? 'CURRENT' : 'UPCOMING'}${stale ? ' · UNVERIFIED' : ''} · ${entry.conditionName} · ${entry.mapDisplayName}',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    height: 1.25,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  '${_time(entry.windowFor(_region)!.startUtc)} – ${_time(entry.windowFor(_region)!.endUtc)}',
+                  style: const TextStyle(fontSize: 12, color: Colors.white70),
+                ),
+                Text(
+                  _regionalReason(entry),
+                  style: const TextStyle(fontSize: 12, color: Colors.white70),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  String _regionalReason(ArcRegionalMapConditionEntry entry) {
+    final reasons =
+        widget.relevance
+            .reasonsFor(entry.conditionName, entry.mapDisplayName)
+            .entries
+            .toList()
+          ..sort((a, b) => b.value.compareTo(a.value));
+    return reasons.isEmpty
+        ? 'No confirmed link to your goals'
+        : reasons.first.key;
+  }
+}

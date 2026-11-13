@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_item.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_state.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/repositories/arc_scrappy_repository.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_item.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_scrappy_repository.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class ArcScrappyItemSheet extends StatefulWidget {
   const ArcScrappyItemSheet({
@@ -47,13 +48,31 @@ class _ArcScrappyItemSheetState extends State<ArcScrappyItemSheet> {
   int get _collectedCount =>
       int.tryParse(_collectedController.text.trim())?.clamp(0, 999999) ?? 0;
 
-  int get _remainingNeeded => (_itemNeeded - _collectedCount).clamp(0, _itemNeeded);
-  int get _surplus => (_collectedCount - _itemNeeded).clamp(0, 999999);
   int get _itemNeeded => widget.item.neededCount;
+
+  int get _remainingNeeded =>
+      (_itemNeeded - _collectedCount).clamp(0, _itemNeeded);
+
+  int get _surplus => (_collectedCount - _itemNeeded).clamp(0, 999999);
+
   bool get _completed => _collectedCount >= _itemNeeded;
+
+  void _setCollectedCount(int value) {
+    final normalized = value.clamp(0, 999999);
+    _collectedController.text = normalized.toString();
+    _collectedController.selection = TextSelection.fromPosition(
+      TextPosition(offset: _collectedController.text.length),
+    );
+    setState(() {});
+  }
+
+  void _adjustCollectedCount(int delta) {
+    _setCollectedCount(_collectedCount + delta);
+  }
 
   Future<void> _save() async {
     if (_isSaving) return;
+
     setState(() => _isSaving = true);
 
     try {
@@ -72,13 +91,41 @@ class _ArcScrappyItemSheetState extends State<ArcScrappyItemSheet> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not save ${widget.item.name}: $e')),
+        SnackBar(
+          content: Text(
+            'Could not save ${widget.item.name}. Please try again.',
+          ),
+        ),
       );
     } finally {
-      if (mounted) {
-        setState(() => _isSaving = false);
-      }
+      if (mounted) setState(() => _isSaving = false);
     }
+  }
+
+  Widget _quantityButton({
+    required IconData icon,
+    required VoidCallback? onPressed,
+    required String tooltip,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: SizedBox(
+        width: 46,
+        height: 46,
+        child: OutlinedButton(
+          onPressed: onPressed,
+          style: OutlinedButton.styleFrom(
+            padding: EdgeInsets.zero,
+            side: BorderSide(color: widget.tierColor.withValues(alpha: 0.35)),
+            foregroundColor: widget.tierColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+          child: Icon(icon, size: 22),
+        ),
+      ),
+    );
   }
 
   Widget _statCard({
@@ -88,26 +135,110 @@ class _ArcScrappyItemSheetState extends State<ArcScrappyItemSheet> {
   }) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.all(AppTheme.spaceM),
+        constraints: const BoxConstraints(minHeight: 74),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: AppTheme.tradingCardDecoration(
-          radius: 14,
-          borderColor: color.withValues(alpha: 0.24),
+          radius: 12,
+          borderColor: color.withValues(alpha: 0.28),
           backgroundColor: AppTheme.cardBackgroundAlt,
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(
-              label,
-              style: const TextStyle(color: Colors.white60, fontSize: 12),
+            SizedBox(
+              width: double.infinity,
+              child: Text(
+                label,
+                maxLines: 1,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.white60,
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.15,
+                ),
+              ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             Text(
               value,
+              textAlign: TextAlign.center,
               style: AppTheme.tradingHeading(fontSize: 20, color: color),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _quantityControls() {
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spaceM),
+      decoration: AppTheme.tradingCardDecoration(
+        radius: 16,
+        borderColor: widget.tierColor.withValues(alpha: 0.22),
+        backgroundColor: AppTheme.cardBackgroundAlt,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Collected',
+            style: AppTheme.tradingHeading(fontSize: 17, color: Colors.white),
+          ),
+          const SizedBox(height: AppTheme.spaceS),
+          Row(
+            children: [
+              _quantityButton(
+                icon: Icons.remove_rounded,
+                tooltip: 'Remove 1',
+                onPressed: _collectedCount <= 0
+                    ? null
+                    : () => _adjustCollectedCount(-1),
+              ),
+              const SizedBox(width: AppTheme.spaceM),
+              Expanded(
+                child: TextField(
+                  controller: _collectedController,
+                  textAlign: TextAlign.center,
+                  style: AppTheme.tradingHeading(
+                    fontSize: 26,
+                    color: widget.tierColor,
+                  ),
+                  keyboardType: TextInputType.number,
+                  onChanged: (_) => setState(() {}),
+                  decoration: AppTheme.tradingInputDecoration(label: 'Owned'),
+                ),
+              ),
+              const SizedBox(width: AppTheme.spaceM),
+              _quantityButton(
+                icon: Icons.add_rounded,
+                tooltip: 'Add 1',
+                onPressed: () => _adjustCollectedCount(1),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spaceS),
+          Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  onPressed: () => _setCollectedCount(0),
+                  child: const Text('CLEAR'),
+                ),
+              ),
+              const SizedBox(width: AppTheme.spaceS),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => _setCollectedCount(_itemNeeded),
+                  child: const Text('SET TO TARGET'),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -124,9 +255,7 @@ class _ArcScrappyItemSheetState extends State<ArcScrappyItemSheet> {
           decoration: BoxDecoration(
             color: AppTheme.cardBackgroundDeep,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            border: Border.all(
-              color: widget.tierColor.withValues(alpha: 0.24),
-            ),
+            border: Border.all(color: widget.tierColor.withValues(alpha: 0.24)),
           ),
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(AppTheme.spaceL),
@@ -153,19 +282,11 @@ class _ArcScrappyItemSheetState extends State<ArcScrappyItemSheet> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${widget.item.group} • Need x${widget.item.neededCount}',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(color: Colors.white70),
+                  '${widget.item.group} - Need x${widget.item.neededCount}',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
                 ),
-                if (widget.item.helperText.isNotEmpty) ...[
-                  const SizedBox(height: AppTheme.spaceM),
-                  Text(
-                    widget.item.helperText,
-                    style: const TextStyle(color: Colors.white60, height: 1.4),
-                  ),
-                ],
                 const SizedBox(height: AppTheme.spaceL),
                 Container(
                   padding: const EdgeInsets.all(AppTheme.spaceM),
@@ -177,8 +298,8 @@ class _ArcScrappyItemSheetState extends State<ArcScrappyItemSheet> {
                   child: Row(
                     children: [
                       Container(
-                        width: 72,
-                        height: 72,
+                        width: 78,
+                        height: 78,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
@@ -193,52 +314,42 @@ class _ArcScrappyItemSheetState extends State<ArcScrappyItemSheet> {
                             ],
                           ),
                         ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(13),
-                          child: Padding(
-                            padding: const EdgeInsets.all(6),
-                            child: SizedBox.expand(
-                              child: Image.asset(
-                                widget.item.imageAsset,
-                                width: double.infinity,
-                                height: double.infinity,
-                                fit: BoxFit.contain,
-                                alignment: Alignment.center,
-                                filterQuality: FilterQuality.high,
-                                isAntiAlias: true,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Center(
-                                    child: Icon(
-                                      Icons.inventory_2_rounded,
-                                      color: widget.tierColor,
-                                      size: 28,
-                                    ),
-                                  );
-                                },
-                              ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(7),
+                          child: Image.asset(
+                            widget.item.imageAsset,
+                            fit: BoxFit.contain,
+                            filterQuality: FilterQuality.high,
+                            errorBuilder: (_, _, _) => Icon(
+                              Icons.inventory_2_rounded,
+                              color: widget.tierColor,
+                              size: 28,
                             ),
                           ),
                         ),
                       ),
                       const SizedBox(width: AppTheme.spaceM),
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        child: Row(
                           children: [
-                            Text(
-                              'Track total collected',
-                              style: AppTheme.tradingHeading(
-                                fontSize: 18,
-                                color: Colors.white,
-                              ),
+                            _statCard(
+                              label: 'NEEDED',
+                              value: _itemNeeded.toString(),
+                              color: widget.tierColor,
                             ),
-                            const SizedBox(height: 6),
-                            Text(
-                              'Enter the full amount you currently own. Anything above the target becomes tradeable surplus automatically.',
-                              style: const TextStyle(
-                                color: Colors.white60,
-                                height: 1.35,
-                              ),
+                            const SizedBox(width: AppTheme.spaceS),
+                            _statCard(
+                              label: 'OWNED',
+                              value: _collectedCount.toString(),
+                              color: AppTheme.neonCyan,
+                            ),
+                            const SizedBox(width: AppTheme.spaceS),
+                            _statCard(
+                              label: 'SURPLUS',
+                              value: _surplus.toString(),
+                              color: _surplus > 0
+                                  ? Colors.amberAccent
+                                  : Colors.white54,
                             ),
                           ],
                         ),
@@ -246,72 +357,26 @@ class _ArcScrappyItemSheetState extends State<ArcScrappyItemSheet> {
                     ],
                   ),
                 ),
-                const SizedBox(height: AppTheme.spaceL),
-                TextField(
-                  controller: _collectedController,
-                  style: const TextStyle(color: Colors.white),
-                  keyboardType: TextInputType.number,
-                  onChanged: (_) => setState(() {}),
-                  decoration: AppTheme.tradingInputDecoration(
-                    label: 'Amount Collected',
-                  ).copyWith(
-                    helperText: 'Need ${widget.item.neededCount}. Example: 8 collected from a target of 12 means 4 still needed.',
-                    helperStyle: const TextStyle(color: Colors.white54),
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spaceL),
-                Row(
-                  children: [
-                    _statCard(
-                      label: 'Needed Total',
-                      value: _itemNeeded.toString(),
-                      color: widget.tierColor,
-                    ),
-                    const SizedBox(width: AppTheme.spaceM),
-                    _statCard(
-                      label: 'Collected',
-                      value: _collectedCount.toString(),
-                      color: AppTheme.neonCyan,
-                    ),
-                  ],
-                ),
                 const SizedBox(height: AppTheme.spaceM),
-                Row(
-                  children: [
-                    _statCard(
-                      label: 'Still Needed',
-                      value: _remainingNeeded.toString(),
-                      color: _remainingNeeded > 0
-                          ? AppTheme.neonPink
-                          : Colors.lightGreenAccent,
-                    ),
-                    const SizedBox(width: AppTheme.spaceM),
-                    _statCard(
-                      label: 'Surplus',
-                      value: _surplus.toString(),
-                      color: _surplus > 0
-                          ? Colors.amberAccent
-                          : Colors.white54,
-                    ),
-                  ],
-                ),
+                _quantityControls(),
                 const SizedBox(height: AppTheme.spaceL),
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(AppTheme.spaceM),
                   decoration: AppTheme.tradingCardDecoration(
                     radius: 14,
-                    borderColor: (_completed
-                            ? Colors.lightGreenAccent
-                            : AppTheme.neonPink)
-                        .withValues(alpha: 0.22),
+                    borderColor:
+                        (_completed
+                                ? Colors.lightGreenAccent
+                                : AppTheme.neonPink)
+                            .withValues(alpha: 0.22),
                     backgroundColor: AppTheme.cardBackgroundAlt,
                   ),
                   child: Text(
                     _completed
                         ? _surplus > 0
-                            ? 'Target complete. You have $_surplus spare that can be traded.'
-                            : 'Target complete. No spare surplus yet.'
+                              ? 'Target complete. You have $_surplus spare that can be traded.'
+                              : 'Target complete. No spare surplus yet.'
                         : 'You still need $_remainingNeeded more to complete this item.',
                     style: TextStyle(
                       color: _completed
@@ -354,7 +419,9 @@ class _ArcScrappyItemSheetState extends State<ArcScrappyItemSheet> {
                             ? const SizedBox(
                                 width: 18,
                                 height: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
                             : const Text(
                                 'Save Progress',

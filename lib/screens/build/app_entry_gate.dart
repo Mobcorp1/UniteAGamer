@@ -1,18 +1,110 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/services/uag_trade_invite_service.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/uag_trade_invite_landing.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:uag_traders_hub/features/legal/services/legal_gate.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/repositories/arc_user_initializer.dart';
-import 'package:uag_traders_hub/reg/onboarding_basic_profile_screen.dart';
-import 'package:uag_traders_hub/screens/build/auth/auth_landing_screen.dart';
-import 'package:uag_traders_hub/build/home_screen.dart';
-import 'package:uag_traders_hub/widgets/static_watermark.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uag_arc_raiders_hub/features/auth/session/uag_session_gate_controller.dart';
+import 'package:uag_arc_raiders_hub/features/legal/services/legal_gate.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_mandatory_onboarding_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raider_setup_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_command_centre_screen.dart';
+import 'package:uag_arc_raiders_hub/screens/build/auth/auth_landing_screen.dart';
+import 'package:uag_arc_raiders_hub/widgets/uag_cinematic_loading_screen.dart';
+
+bool arcHasExplicitIncompleteOnboarding(Map<String, dynamic> data) {
+  return data['arcMandatoryOnboardingComplete'] == false ||
+      data['onboardingComplete'] == false;
+}
+
+bool arcLooksLikeEstablishedLegacyAccount(Map<String, dynamic> data) {
+  // Explicit incomplete state always wins. Current account creation writes
+  // these false flags, so profile-shaped new accounts cannot bypass onboarding.
+  if (arcHasExplicitIncompleteOnboarding(data)) return false;
+
+  if (data['hasCompletedOnboarding'] == true ||
+      data['hasCompletedProfileSetup'] == true ||
+      data['profileSetupComplete'] == true) {
+    return true;
+  }
+
+  final arcOnboarding = data['arcOnboarding'];
+  if (arcOnboarding is Map && arcOnboarding['completedAt'] != null) {
+    return true;
+  }
+
+  final displayName = data['displayName']?.toString().trim() ?? '';
+  final basicProfile = data['basicProfile'];
+  final traderProfile = data['traderProfile'];
+
+  final hasBasicProfile =
+      basicProfile is Map &&
+      basicProfile.isNotEmpty &&
+      ((basicProfile['displayName']?.toString().trim() ?? '').isNotEmpty ||
+          (basicProfile['email']?.toString().trim() ?? '').isNotEmpty);
+
+  final hasTraderProfile =
+      traderProfile is Map &&
+      traderProfile.isNotEmpty &&
+      ((traderProfile['uagName']?.toString().trim() ?? '').isNotEmpty ||
+          (traderProfile['uagId']?.toString().trim() ?? '').isNotEmpty ||
+          (traderProfile['embarkId']?.toString().trim() ?? '').isNotEmpty);
+
+  // Pre-mandatory-onboarding accounts already had populated UAG/trader profile
+  // documents but no onboarding flags at all. Requiring both a usable identity
+  // and a structured historical profile avoids treating an identity-only
+  // Firebase user document as completed.
+  return displayName.isNotEmpty && (hasBasicProfile || hasTraderProfile);
+}
+
+String? arcLegacyOnboardingMigrationReason(Map<String, dynamic> data) {
+  if (data['arcMandatoryOnboardingComplete'] == true) return null;
+  if (arcHasExplicitIncompleteOnboarding(data)) return null;
+
+  if (data['onboardingComplete'] == true) return 'onboardingComplete';
+  if (data['hasCompletedOnboarding'] == true) return 'hasCompletedOnboarding';
+  if (data['hasCompletedProfileSetup'] == true) {
+    return 'hasCompletedProfileSetup';
+  }
+  if (data['profileSetupComplete'] == true) return 'profileSetupComplete';
+
+  final arcOnboarding = data['arcOnboarding'];
+  if (arcOnboarding is Map && arcOnboarding['completedAt'] != null) {
+    return 'arcOnboarding.completedAt';
+  }
+
+  if (arcLooksLikeEstablishedLegacyAccount(data)) {
+    return 'establishedLegacyProfile';
+  }
+
+  return null;
+}
+
+bool arcHasCompletedMandatoryOnboarding(Map<String, dynamic> data) {
+  if (data['isAdmin'] == true || data['isDev'] == true) return true;
+  if (data['arcMandatoryOnboardingComplete'] == true) return true;
+  if (data['onboardingComplete'] == true) return true;
+
+  if (arcHasExplicitIncompleteOnboarding(data)) return false;
+
+  return arcLooksLikeEstablishedLegacyAccount(data);
+}
+
+bool arcNeedsLegacyOnboardingMigration(Map<String, dynamic> data) =>
+    arcLegacyOnboardingMigrationReason(data) != null;
+
+bool arcNeedsMandatoryOnboarding(Map<String, dynamic> data) =>
+    !arcHasCompletedMandatoryOnboarding(data);
+
+bool arcNeedsProgressiveOnboarding(Map<String, dynamic> data) =>
+    arcNeedsMandatoryOnboarding(data);
 
 class AppEntryGate extends StatefulWidget {
   static const routeName = '/app-entry-gate';
 
-  const AppEntryGate({super.key});
+  const AppEntryGate({super.key, this.destinationBuilder});
+
+  final WidgetBuilder? destinationBuilder;
 
   @override
   State<AppEntryGate> createState() => _AppEntryGateState();
@@ -20,14 +112,58 @@ class AppEntryGate extends StatefulWidget {
 
 class _AppEntryGateState extends State<AppEntryGate> {
   bool _fanDisclaimerChecked = false;
-  final ArcUserInitializer _initializer = ArcUserInitializer();
 
-  Future<bool> _prepareUser(String uid) async {
-    await _initializer.initialize();
-    final doc =
-        await FirebaseFirestore.instance.collection('users').doc(uid).get();
-    final data = doc.data() ?? <String, dynamic>{};
-    return !(data['onboardingComplete'] == true);
+  Future<void> _migrateLegacyOnboardingCompletion(
+    String uid,
+    Map<String, dynamic> data,
+  ) async {
+    if (!arcNeedsLegacyOnboardingMigration(data)) return;
+
+    try {
+      final migrationReason =
+          arcLegacyOnboardingMigrationReason(data) ?? 'legacyCompatibility';
+
+      await FirebaseFirestore.instance.collection('users').doc(uid).set({
+        'arcMandatoryOnboardingComplete': true,
+        'onboardingComplete': true,
+        'arcMandatoryOnboardingMigratedFromLegacy': true,
+        'arcMandatoryOnboardingMigrationReason': migrationReason,
+        'arcMandatoryOnboardingMigratedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('hasCompletedOnboarding', true);
+    } catch (error, stackTrace) {
+      // Migration failure must never throw an already-completed account back
+      // into onboarding. The legacy completion flag remains authoritative for
+      // this read and migration will be retried on a later entry.
+      debugPrint('AppEntryGate legacy onboarding migration failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
+  }
+
+  Future<bool> _needsOnboarding(String uid) async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .get();
+      final data = doc.data() ?? <String, dynamic>{};
+
+      if (arcNeedsLegacyOnboardingMigration(data)) {
+        await _migrateLegacyOnboardingCompletion(uid, data);
+      }
+
+      return arcNeedsMandatoryOnboarding(data);
+    } catch (error, stackTrace) {
+      debugPrint('AppEntryGate onboarding lookup failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+
+      // A transient Firestore failure must not throw an already-completed
+      // account back into setup on the same device.
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getBool('hasCompletedOnboarding') != true;
+    }
   }
 
   Future<void> _runLegalGateOnce() async {
@@ -58,31 +194,60 @@ class _AppEntryGateState extends State<AppEntryGate> {
         }
 
         return FutureBuilder<bool>(
-          future: _prepareUser(user.uid),
-          builder: (context, onboardingSnapshot) {
-            if (onboardingSnapshot.connectionState == ConnectionState.waiting) {
+          future: UagSessionGateController.isSessionAllowed(user.uid),
+          builder: (context, sessionSnapshot) {
+            if (sessionSnapshot.connectionState == ConnectionState.waiting) {
               return const _GateLoadingScaffold();
             }
 
-            if (onboardingSnapshot.hasError) {
-              return _GateErrorScaffold(
-                message: 'Could not prepare your trader profile.',
-                details: onboardingSnapshot.error,
-              );
-            }
-
-            final needsOnboarding = onboardingSnapshot.data ?? true;
-            if (needsOnboarding) {
+            // Firebase may restore a user automatically on Android or web.
+            // The UAG session policy remains authoritative: a restored Firebase
+            // user cannot silently enter unless this runtime was explicitly
+            // authenticated or Keep Signed In authorises the device.
+            if (sessionSnapshot.data != true) {
               _fanDisclaimerChecked = false;
-              return const OnboardingBasicProfileScreen();
+              return const AuthLandingScreen();
             }
 
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (!mounted) return;
-              _runLegalGateOnce();
-            });
+            return FutureBuilder<bool>(
+              future: _needsOnboarding(user.uid),
+              builder: (context, onboardingSnapshot) {
+                if (onboardingSnapshot.connectionState ==
+                    ConnectionState.waiting) {
+                  return const _GateLoadingScaffold();
+                }
 
-            return const HomeScreen();
+                final needsOnboarding = onboardingSnapshot.data ?? true;
+                if (needsOnboarding) {
+                  _fanDisclaimerChecked = false;
+                  return const ArcMandatoryOnboardingScreen();
+                }
+
+                return ArcRaiderSetupGate(
+                  key: ValueKey(user.uid),
+                  child: Builder(
+                    builder: (context) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (mounted) _runLegalGateOnce();
+                      });
+                      if (widget.destinationBuilder == null) {
+                        return ValueListenableBuilder<String?>(
+                          valueListenable: UagTradeInviteService.instance.pendingToken,
+                          builder: (context, token, _) => token == null
+                              ? const ArcCommandCentreScreen()
+                              : UagTradeInviteLanding(
+                                  key: ValueKey(token),
+                                  token: token,
+                                  onExit: () {},
+                                ),
+                        );
+                      }
+                      return widget.destinationBuilder!.call(context);
+                    },
+                  ),
+                );
+              },
+            );
           },
         );
       },
@@ -95,66 +260,6 @@ class _GateLoadingScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
-      body: Stack(
-        children: const [
-          Positioned.fill(child: StaticWatermark()),
-          Center(child: CircularProgressIndicator(color: AppTheme.neonCyan)),
-        ],
-      ),
-    );
-  }
-}
-
-class _GateErrorScaffold extends StatelessWidget {
-  const _GateErrorScaffold({required this.message, this.details});
-
-  final String message;
-  final Object? details;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
-      body: Stack(
-        children: [
-          const Positioned.fill(child: StaticWatermark()),
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.all(AppTheme.spaceL),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.warning_amber_rounded,
-                    color: AppTheme.warningAmber,
-                    size: 44,
-                  ),
-                  const SizedBox(height: AppTheme.spaceM),
-                  Text(
-                    message,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Colors.white,
-                    ),
-                  ),
-                  if (details != null) ...[
-                    const SizedBox(height: AppTheme.spaceS),
-                    Text(
-                      details.toString(),
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.white70,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+    return const UagCinematicLoadingScreen();
   }
 }

@@ -1,12 +1,12 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class AnimatedLogo extends StatefulWidget {
   const AnimatedLogo({
     super.key,
     this.size = 150,
-    this.assetPath = 'assets/icon/uag_traders_icon_transparent.webp',
+    this.assetPath = 'assets/icon/uag_traders_header_mark.png',
   });
 
   final double size;

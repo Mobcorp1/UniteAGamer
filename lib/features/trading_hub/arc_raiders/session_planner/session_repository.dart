@@ -2,13 +2,13 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/session_planner/session_model.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/session_planner/session_model.dart';
 import 'package:uuid/uuid.dart';
 
 class UagSessionRepository {
   UagSessionRepository({FirebaseFirestore? firestore, FirebaseAuth? auth})
-      : _firestore = firestore ?? FirebaseFirestore.instance,
-        _auth = auth ?? FirebaseAuth.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance,
+      _auth = auth ?? FirebaseAuth.instance;
 
   static const String collectionPath = 'uag_sessions';
 
@@ -103,22 +103,22 @@ class UagSessionRepository {
         .orderBy('scheduledAt')
         .snapshots()
         .listen((snapshot) {
-      participantOneSessions = snapshot.docs
-          .map(UagSession.fromDoc)
-          .toList(growable: false);
-      emit();
-    }, onError: controller.addError);
+          participantOneSessions = snapshot.docs
+              .map(UagSession.fromDoc)
+              .toList(growable: false);
+          emit();
+        }, onError: controller.addError);
 
     final subTwo = _sessions
         .where('participantTwoUid', isEqualTo: uid)
         .orderBy('scheduledAt')
         .snapshots()
         .listen((snapshot) {
-      participantTwoSessions = snapshot.docs
-          .map(UagSession.fromDoc)
-          .toList(growable: false);
-      emit();
-    }, onError: controller.addError);
+          participantTwoSessions = snapshot.docs
+              .map(UagSession.fromDoc)
+              .toList(growable: false);
+          emit();
+        }, onError: controller.addError);
 
     controller.onCancel = () async {
       await subOne.cancel();

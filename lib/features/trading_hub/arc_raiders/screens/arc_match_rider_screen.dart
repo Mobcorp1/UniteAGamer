@@ -1,10 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_match_rider_invite.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_match_rider_profile.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/repositories/arc_match_rider_repository.dart';
-import 'package:uag_traders_hub/widgets/electric_charge_border.dart';
-import 'package:uag_traders_hub/widgets/static_watermark.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/build/app_bar.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_match_intelligence_copy.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_subscription_tier.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_user_entitlement.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/screens/monetisation_screen.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/services/uag_entitlement_service.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_usage_gate.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_player_archetype_catalog.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_player_session_catalog.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raider_network_workspace_bar.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_match_rider_invite.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_match_rider_profile.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_match_rider_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raid_intelligence_screen.dart';
+import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class ArcMatchRiderScreen extends StatefulWidget {
   const ArcMatchRiderScreen({super.key});
@@ -16,11 +29,17 @@ class ArcMatchRiderScreen extends StatefulWidget {
 }
 
 class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
+  static final List<String> _archetypeOptions =
+      ArcPlayerArchetypeCatalog.labels;
+
   static const List<String> _playstyleOptions = [
-    'PvE',
-    'PvP',
-    'PvE + PvP Aggressive',
-    'PvE + PvP Defensive',
+    'PvE defensive',
+    'PvE aggressive',
+    'PvP focused',
+    'Quest-focused',
+    'Blueprint farming',
+    'Resource running',
+    'Squad support',
   ];
 
   static const List<String> _mapOptions = [
@@ -40,22 +59,15 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
     'Objective-focused raids',
   ];
 
-  static const List<String> _goalOptions = [
-    'PvP',
-    'PvE',
-    'Blueprint farming',
-    'Trading',
-    'Event hunting',
-    'Resource farming',
-    'General looting',
-    'Trials',
-    'Quests',
-  ];
+  static const List<String> _goalOptions =
+      ArcPlayerSessionCatalog.sessionIntents;
 
   static const List<String> _commsOptions = [
-    'Mic',
-    'Ping',
-    'Chat while gaming',
+    'Voice',
+    'Text/chat',
+    'Pings',
+    'Quiet',
+    'Flexible',
   ];
 
   static const List<String> _squadOptions = [
@@ -66,6 +78,7 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
   ];
 
   final ArcMatchRiderRepository _repository = ArcMatchRiderRepository();
+  final UagEntitlementService _entitlementService = UagEntitlementService();
   final TextEditingController _notesController = TextEditingController();
   final TextEditingController _inviteNoteController = TextEditingController();
 
@@ -89,10 +102,10 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
         _notesController.text = profile.notes;
         _loading = false;
       });
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       setState(() {
-        _error = e.toString();
+        _error = 'Could not load Match Raider.';
         _loading = false;
       });
     }
@@ -120,41 +133,73 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Match-a-Raider profile saved.')),
       );
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       setState(() => _saving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not save profile: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Could not save profile.')));
     }
   }
 
   Future<void> _showInviteDialog(ArcMatchCandidate candidate) async {
-    _inviteNoteController.text = 'Looking for a ${candidate.profile.squadPreferences.isNotEmpty ? candidate.profile.squadPreferences.first.toLowerCase() : 'solid run'} with ${candidate.profile.goals.isNotEmpty ? candidate.profile.goals.first.toLowerCase() : 'good comms'}.';
+    _inviteNoteController.text =
+        'Looking for a ${candidate.profile.squadPreferences.isNotEmpty ? candidate.profile.squadPreferences.first.toLowerCase() : 'solid run'} with ${candidate.profile.goals.isNotEmpty ? candidate.profile.goals.first.toLowerCase() : 'good comms'}.';
     final shouldSend = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.cardBackgroundAlt,
+        backgroundColor: ArcUiTokens.surfaceOverlay,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
+          side: BorderSide(
+            color: ArcUiTokens.primaryAccent.withValues(alpha: 0.30),
+          ),
+        ),
         title: Text(
           'Invite ${candidate.profile.title}',
-          style: AppTheme.titleTextStyle(fontSize: 22, color: AppTheme.neonCyan, isBold: true),
+          style: ArcUiTokens.sectionTitle(
+            fontSize: 18,
+            color: ArcUiTokens.primaryAccent,
+          ),
         ),
         content: TextField(
           controller: _inviteNoteController,
           maxLines: 3,
-          decoration: const InputDecoration(
+          style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+          decoration: ArcUiTokens.inputDecoration(
             labelText: 'Quick note',
             hintText: 'Say what run you want to do.',
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('Send invite')),
+          TextButton(
+            style: ArcUiTokens.textButtonStyle(
+              accent: ArcUiTokens.primaryAccent,
+            ),
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            style: ArcUiTokens.textButtonStyle(
+              accent: ArcUiTokens.primaryAccent,
+              primary: true,
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Send invite'),
+          ),
         ],
       ),
     );
 
     if (shouldSend != true || !mounted || _profile == null) return;
+
+    final allowed = await UagUsageGate.consumeOrShowUpgrade(
+      context,
+      action: UagBillableAction.matchmakingSearch,
+      service: _entitlementService,
+    );
+    if (!allowed || !mounted) return;
 
     try {
       await _repository.sendInvite(
@@ -166,26 +211,40 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Invite sent to ${candidate.profile.title}.')),
       );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not send invite: $e')),
+    } catch (_) {
+      await _entitlementService.refundAction(
+        UagBillableAction.matchmakingSearch,
       );
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Could not send invite.')));
     }
   }
 
-  Future<void> _respondToInvite(ArcMatchRiderInvite invite, String status) async {
+  Future<void> _respondToInvite(
+    ArcMatchRiderInvite invite,
+    String status,
+  ) async {
     try {
       await _repository.respondToInvite(invite, status);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Invite ${status == 'accepted' ? 'accepted' : status == 'declined' ? 'declined' : 'updated'}.')),
+        SnackBar(
+          content: Text(
+            'Invite ${status == 'accepted'
+                ? 'accepted'
+                : status == 'declined'
+                ? 'declined'
+                : 'updated'}.',
+          ),
+        ),
       );
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not update invite: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Could not update invite.')));
     }
   }
 
@@ -193,98 +252,152 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
   Widget build(BuildContext context) {
     final profile = _profile;
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
-      appBar: AppBar(
-        title: Text(
-          'Match-a-Raider',
-          style: AppTheme.neonTextStyle(fontSize: 25, color: AppTheme.neonCyan, isBold: true),
-        ),
+      extendBody: true,
+      backgroundColor: Colors.transparent,
+      bottomNavigationBar: const ArcCompanionBottomDock(
+        activeLabel: 'Match Raider',
       ),
-      body: Stack(
-        children: [
-          const Positioned.fill(child: StaticWatermark()),
-          if (_loading)
-            const Center(child: CircularProgressIndicator())
-          else if (_error != null || profile == null)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(AppTheme.spaceL),
-                child: Text(
-                  _error ?? 'Could not load Match-a-Raider.',
-                  style: AppTheme.bodyTextStyle(fontSize: 16, color: Colors.white70),
-                  textAlign: TextAlign.center,
+      appBar: const UagAppBar(
+        title: 'Match Raider',
+        subtitle: 'Squad compatibility + live Raider discovery',
+        showLogout: false,
+      ),
+      body: ArcRaidersScreenShell(
+        useSafeArea: false,
+        showAdBanner: false,
+        child: Stack(
+          children: [
+            if (_loading)
+              const Center(child: CircularProgressIndicator())
+            else if (_error != null || profile == null)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppTheme.spaceL),
+                  child: Text(
+                    _error ?? 'Could not load Match-a-Raider.',
+                    style: AppTheme.bodyTextStyle(
+                      fontSize: 16,
+                      color: Colors.white70,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
-              ),
-            )
-          else
-            SafeArea(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1080),
-                  child: ListView(
-                    padding: const EdgeInsets.all(AppTheme.spaceL),
-                    children: [
-                      _buildHeroCard(profile),
-                      const SizedBox(height: AppTheme.spaceL),
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          final wide = constraints.maxWidth >= 900;
-                          if (wide) {
-                            return Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+              )
+            else
+              SafeArea(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1080),
+                    child: ListView(
+                      padding: const EdgeInsets.fromLTRB(12, 10, 12, 96),
+                      children: [
+                        const ArcRaiderNetworkWorkspaceBar(
+                          current: ArcRaiderNetworkWorkspace.matchRaider,
+                          padding: EdgeInsets.zero,
+                        ),
+                        const SizedBox(height: AppTheme.spaceM),
+                        _buildHeroCard(profile),
+                        const SizedBox(height: AppTheme.spaceM),
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final wide = constraints.maxWidth >= 900;
+                            if (wide) {
+                              return Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    flex: 11,
+                                    child: _buildProfileEditor(profile),
+                                  ),
+                                  const SizedBox(width: AppTheme.spaceL),
+                                  Expanded(
+                                    flex: 12,
+                                    child: _buildFeedAndInvites(profile),
+                                  ),
+                                ],
+                              );
+                            }
+                            return Column(
                               children: [
-                                Expanded(flex: 11, child: _buildProfileEditor(profile)),
-                                const SizedBox(width: AppTheme.spaceL),
-                                Expanded(flex: 12, child: _buildFeedAndInvites(profile)),
+                                _buildProfileEditor(profile),
+                                const SizedBox(height: AppTheme.spaceM),
+                                _buildFeedAndInvites(profile),
                               ],
                             );
-                          }
-                          return Column(
-                            children: [
-                              _buildProfileEditor(profile),
-                              const SizedBox(height: AppTheme.spaceL),
-                              _buildFeedAndInvites(profile),
-                            ],
-                          );
-                        },
-                      ),
-                    ],
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildHeroCard(ArcMatchRiderProfile profile) {
     return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceL),
-      decoration: AppTheme.tradingCardDecoration(radius: 20),
+      padding: const EdgeInsets.all(14),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: AppTheme.neonCyan,
+        radius: ArcUiTokens.radiusL,
+        glow: true,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Find the right raider for the right run.',
-            style: AppTheme.neonTextStyle(fontSize: 28, color: AppTheme.neonCyan, isBold: true),
+            'MATCH RAIDER',
+            style: AppTheme.neonTextStyle(
+              fontSize: 22,
+              color: AppTheme.neonCyan,
+              isBold: true,
+            ),
           ),
-          const SizedBox(height: AppTheme.spaceS),
+          const SizedBox(height: 6),
           Text(
-            'Set your current ARC Raiders vibe, filter by shared goals, and send quick squad-up requests without bolting on a giant social layer.',
-            style: AppTheme.bodyTextStyle(fontSize: 15, color: Colors.white70),
+            'Compatible squads, session intent and quick invites.',
+            style: AppTheme.bodyTextStyle(fontSize: 13, color: Colors.white70),
           ),
-          const SizedBox(height: AppTheme.spaceM),
+          const SizedBox(height: 10),
           Wrap(
             spacing: 10,
             runSpacing: 10,
             children: [
-              _buildStatusPill(profile.lookingNow ? 'Looking now' : 'Available later', profile.lookingNow ? AppTheme.neonCyan : AppTheme.warningAmber),
-              _buildStatusPill(profile.visibleInSearch ? 'Visible in search' : 'Hidden', profile.visibleInSearch ? AppTheme.neonPink : Colors.white54),
-              if (profile.platform.isNotEmpty) _buildStatusPill(profile.platform, Colors.white70),
-              if (profile.region.isNotEmpty) _buildStatusPill(profile.region, Colors.white70),
-              _buildStatusPill('Server: ${profile.serverPreference}', Colors.white70),
-              _buildStatusPill(profile.crossplayEnabled ? 'Crossplay ON' : 'Crossplay OFF', profile.crossplayEnabled ? AppTheme.neonCyan : AppTheme.warningAmber),
+              _buildStatusPill(
+                profile.lookingNow ? 'Looking now' : 'Ready later',
+                profile.lookingNow ? AppTheme.neonCyan : AppTheme.warningAmber,
+              ),
+              _buildStatusPill(
+                profile.visibleInSearch ? 'Visible in search' : 'Hidden',
+                profile.visibleInSearch ? AppTheme.neonPink : Colors.white54,
+              ),
+              if (profile.archetypes.isNotEmpty)
+                _buildStatusPill(profile.archetypes.first, Colors.white70),
+              if (profile.platform.isNotEmpty)
+                _buildStatusPill(profile.platform, Colors.white70),
+              if (profile.region.isNotEmpty)
+                _buildStatusPill(profile.region, Colors.white70),
+              _buildStatusPill(
+                'Server: ${profile.serverPreference}',
+                Colors.white70,
+              ),
+              _buildStatusPill(
+                profile.crossplayEnabled ? 'Crossplay ON' : 'Crossplay OFF',
+                profile.crossplayEnabled
+                    ? AppTheme.neonCyan
+                    : AppTheme.warningAmber,
+              ),
+              OutlinedButton.icon(
+                onPressed: () => Navigator.of(
+                  context,
+                ).pushNamed(ArcRaidIntelligenceScreen.routeName),
+                icon: const Icon(Icons.route_rounded, size: 18),
+                label: const Text('Plan a Raid'),
+              ),
             ],
           ),
         ],
@@ -294,43 +407,127 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
 
   Widget _buildProfileEditor(ArcMatchRiderProfile profile) {
     return Container(
-      decoration: AppTheme.tradingCardDecoration(radius: 20),
-      padding: const EdgeInsets.all(AppTheme.spaceL),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: AppTheme.neonCyan,
+        radius: 20,
+      ),
+      padding: const EdgeInsets.all(14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'My Match Profile',
-            style: AppTheme.neonTextStyle(fontSize: 24, color: AppTheme.neonCyan, isBold: true),
+            style: AppTheme.neonTextStyle(
+              fontSize: 18,
+              color: AppTheme.neonCyan,
+              isBold: true,
+            ),
           ),
-          const SizedBox(height: AppTheme.spaceS),
+          const SizedBox(height: 5),
           Text(
-            'Choose the kind of run you want so the feed can surface raiders that actually fit what you are trying to do.',
-            style: AppTheme.bodyTextStyle(fontSize: 14, color: Colors.white70),
+            'Tune the run you want now.',
+            style: AppTheme.bodyTextStyle(fontSize: 12, color: Colors.white70),
           ),
-          const SizedBox(height: AppTheme.spaceL),
-          _buildSection('Playstyle', _playstyleOptions, profile.playstyles, (values) => _setProfile(profile.copyWith(playstyles: values))),
-          _buildSection('Preferred maps', _mapOptions, profile.preferredMaps, (values) => _setProfile(profile.copyWith(preferredMaps: values))),
-          _buildSection('Preferred modes', _modeOptions, profile.preferredModes, (values) => _setProfile(profile.copyWith(preferredModes: values))),
-          _buildSection('Goals', _goalOptions, profile.goals, (values) => _setProfile(profile.copyWith(goals: values))),
-          _buildSection('Comms', _commsOptions, profile.comms, (values) => _setProfile(profile.copyWith(comms: values))),
-          _buildSection('Squad / run preference', _squadOptions, profile.squadPreferences, (values) => _setProfile(profile.copyWith(squadPreferences: values))),
+          const SizedBox(height: 10),
+          _buildSection(
+            'Archetypes',
+            _archetypeOptions,
+            profile.archetypes,
+            (values) => _setProfile(profile.copyWith(archetypes: values)),
+          ),
+          _buildSection(
+            'Playstyle',
+            _playstyleOptions,
+            profile.playstyles,
+            (values) => _setProfile(profile.copyWith(playstyles: values)),
+          ),
+          _buildSection(
+            'Preferred maps',
+            _mapOptions,
+            profile.preferredMaps,
+            (values) => _setProfile(profile.copyWith(preferredMaps: values)),
+          ),
+          _buildSection(
+            'Preferred modes',
+            _modeOptions,
+            profile.preferredModes,
+            (values) => _setProfile(profile.copyWith(preferredModes: values)),
+          ),
+          _buildSection(
+            'Goals',
+            _goalOptions,
+            profile.goals,
+            (values) => _setProfile(profile.copyWith(goals: values)),
+          ),
+          _buildSingleChoiceSection(
+            'This session',
+            ArcPlayerSessionCatalog.sessionIntents,
+            profile.sessionIntent,
+            (value) => _setProfile(profile.copyWith(sessionIntent: value)),
+          ),
+          _buildSingleChoiceSection(
+            'Current priority',
+            ArcPlayerSessionCatalog.priorities,
+            profile.currentPriority,
+            (value) => _setProfile(profile.copyWith(currentPriority: value)),
+          ),
+          _buildSection(
+            'Comms',
+            _commsOptions,
+            profile.comms,
+            (values) => _setProfile(profile.copyWith(comms: values)),
+          ),
+          _buildSection(
+            'Squad / run preference',
+            _squadOptions,
+            profile.squadPreferences,
+            (values) => _setProfile(profile.copyWith(squadPreferences: values)),
+          ),
           const SizedBox(height: AppTheme.spaceM),
           SwitchListTile.adaptive(
             value: profile.lookingNow,
-            onChanged: (value) => _setProfile(profile.copyWith(lookingNow: value)),
+            onChanged: (value) =>
+                _setProfile(profile.copyWith(lookingNow: value)),
             activeThumbColor: AppTheme.neonPink,
             contentPadding: EdgeInsets.zero,
-            title: Text('Looking now', style: AppTheme.titleTextStyle(fontSize: 18, color: AppTheme.neonCyan, isBold: true)),
-            subtitle: Text('Turn this on when you want to surface near the top of the feed.', style: AppTheme.bodyTextStyle(fontSize: 14, color: Colors.white70)),
+            title: Text(
+              'Looking now',
+              style: AppTheme.titleTextStyle(
+                fontSize: 15,
+                color: AppTheme.neonCyan,
+                isBold: true,
+              ),
+            ),
+            subtitle: Text(
+              'Prioritise me in the feed.',
+              style: AppTheme.bodyTextStyle(
+                fontSize: 12,
+                color: Colors.white70,
+              ),
+            ),
           ),
           SwitchListTile.adaptive(
             value: profile.visibleInSearch,
-            onChanged: (value) => _setProfile(profile.copyWith(visibleInSearch: value)),
+            onChanged: (value) =>
+                _setProfile(profile.copyWith(visibleInSearch: value)),
             activeThumbColor: AppTheme.neonPink,
             contentPadding: EdgeInsets.zero,
-            title: Text('Visible in search', style: AppTheme.titleTextStyle(fontSize: 18, color: AppTheme.neonCyan, isBold: true)),
-            subtitle: Text('Hide yourself when you do not want fresh invites.', style: AppTheme.bodyTextStyle(fontSize: 14, color: Colors.white70)),
+            title: Text(
+              'Visible in search',
+              style: AppTheme.titleTextStyle(
+                fontSize: 15,
+                color: AppTheme.neonCyan,
+                isBold: true,
+              ),
+            ),
+            subtitle: Text(
+              'Allow fresh invites.',
+              style: AppTheme.bodyTextStyle(
+                fontSize: 12,
+                color: Colors.white70,
+              ),
+            ),
           ),
           const SizedBox(height: AppTheme.spaceM),
           TextField(
@@ -338,10 +535,11 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
             maxLines: 3,
             decoration: const InputDecoration(
               labelText: 'Quick note',
-              hintText: 'Example: After blueprint farming, chill comms, not hard sweating.',
+              hintText:
+                  'Example: After blueprint farming, chill comms, not hard sweating.',
             ),
           ),
-          const SizedBox(height: AppTheme.spaceL),
+          const SizedBox(height: AppTheme.spaceM),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
@@ -360,7 +558,7 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildMatchesFeed(profile),
-        const SizedBox(height: AppTheme.spaceL),
+        const SizedBox(height: AppTheme.spaceM),
         _buildInvitesPanels(),
       ],
     );
@@ -368,7 +566,11 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
 
   Widget _buildMatchesFeed(ArcMatchRiderProfile profile) {
     return Container(
-      decoration: AppTheme.tradingCardDecoration(radius: 20),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: AppTheme.neonPink,
+        radius: 20,
+      ),
       padding: const EdgeInsets.all(AppTheme.spaceL),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -378,43 +580,44 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
               Icon(Icons.groups_rounded, color: AppTheme.neonPink),
               const SizedBox(width: 10),
               Expanded(
-                child: Text('Live Match Feed', style: AppTheme.neonTextStyle(fontSize: 24, color: AppTheme.neonCyan, isBold: true)),
+                child: Text(
+                  'Live Match Feed',
+                  style: AppTheme.neonTextStyle(
+                    fontSize: 18,
+                    color: AppTheme.neonCyan,
+                    isBold: true,
+                  ),
+                ),
               ),
             ],
           ),
           const SizedBox(height: AppTheme.spaceS),
           Text(
-            'Sorted by shared intent, squad fit, comms, and whether the other raider is looking right now.',
-            style: AppTheme.bodyTextStyle(fontSize: 14, color: Colors.white70),
+            'Sorted by compatibility and session fit.',
+            style: AppTheme.bodyTextStyle(fontSize: 12, color: Colors.white70),
           ),
           const SizedBox(height: AppTheme.spaceM),
-          StreamBuilder<List<ArcMatchCandidate>>(
-            stream: _repository.watchCandidates(profile),
-            builder: (context, snapshot) {
-              if (snapshot.hasError) {
-                return Text('Could not load feed: ${snapshot.error}', style: AppTheme.bodyTextStyle(fontSize: 14, color: AppTheme.dangerRed));
-              }
-              if (!snapshot.hasData) {
-                return const Padding(
-                  padding: EdgeInsets.all(AppTheme.spaceL),
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
-
-              final matches = snapshot.data!;
-              if (matches.isEmpty) {
-                return Text(
-                  'No raiders match yet. Save your profile and check back after more players opt in.',
-                  style: AppTheme.bodyTextStyle(fontSize: 14, color: Colors.white70),
-                );
-              }
-
+          StreamBuilder<UagUserEntitlement>(
+            stream: _entitlementService.watchMyEntitlement(),
+            builder: (context, entitlementSnapshot) {
+              final entitlement = entitlementSnapshot.data;
+              final tierCopy =
+                  entitlement?.matchIntelligence ??
+                  UagMatchIntelligenceCopy.free;
               return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  for (final candidate in matches.take(10)) ...[
-                    _buildMatchCard(candidate),
-                    const SizedBox(height: 12),
+                  _buildMatchIntelligenceStatus(
+                    profile: profile,
+                    tierCopy: tierCopy,
+                    entitlement: entitlement,
+                  ),
+                  const SizedBox(height: AppTheme.spaceM),
+                  if (_profileCompleteness(profile) < 55) ...[
+                    _buildInsufficientProfileState(profile),
+                    const SizedBox(height: AppTheme.spaceM),
                   ],
+                  _buildCandidateStream(),
                 ],
               );
             },
@@ -424,52 +627,258 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
     );
   }
 
-  Widget _buildMatchCard(ArcMatchCandidate candidate) {
+  Widget _buildCandidateStream() {
+    final profile = _profile;
+    if (profile == null) return const SizedBox.shrink();
+    return StreamBuilder<List<ArcMatchCandidate>>(
+      stream: _repository.watchCandidates(profile),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Text(
+            'Could not load match feed.',
+            style: AppTheme.bodyTextStyle(
+              fontSize: 14,
+              color: AppTheme.dangerRed,
+            ),
+          );
+        }
+        if (!snapshot.hasData) {
+          return const Padding(
+            padding: EdgeInsets.all(AppTheme.spaceL),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final matches = snapshot.data!;
+        if (matches.isEmpty) {
+          return _buildFeedEmptyState();
+        }
+
+        return StreamBuilder<Set<String>>(
+          stream: _repository.watchFavouriteRiderIds(),
+          builder: (context, favouriteSnapshot) {
+            final favouriteIds = favouriteSnapshot.data ?? const <String>{};
+            return Column(
+              children: [
+                for (final candidate in matches.take(10)) ...[
+                  _buildMatchCard(
+                    candidate,
+                    isFavourite: favouriteIds.contains(candidate.profile.uid),
+                  ),
+                  const SizedBox(height: 10),
+                ],
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildMatchIntelligenceStatus({
+    required ArcMatchRiderProfile profile,
+    required UagMatchIntelligenceTierCopy tierCopy,
+    required UagUserEntitlement? entitlement,
+  }) {
+    final completeness = _profileCompleteness(profile);
+    final color = tierCopy.tier.isPaid ? AppTheme.neonPink : AppTheme.neonCyan;
+    final shouldUpgrade =
+        entitlement == null ||
+        entitlement.matchIntelligence.tier != UagSubscriptionTier.premium;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppTheme.spaceM),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.panel,
+        accent: color,
+        radius: 16,
+        borderOpacity: 0.24,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              _buildStatusPill(tierCopy.label, color),
+              _buildStatusPill('Profile $completeness%', Colors.white70),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            tierCopy.description,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: AppTheme.bodyTextStyle(fontSize: 12, color: Colors.white70),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Exact scoring stays private.',
+            style: AppTheme.bodyTextStyle(
+              fontSize: 11,
+              color: AppTheme.tradingMutedText,
+            ),
+          ),
+          if (shouldUpgrade) ...[
+            const SizedBox(height: AppTheme.spaceM),
+            OutlinedButton.icon(
+              onPressed: () =>
+                  Navigator.of(context).pushNamed(MonetisationScreen.routeName),
+              icon: const Icon(Icons.auto_awesome_rounded),
+              label: const Text('Compare Match Intelligence'),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInsufficientProfileState(ArcMatchRiderProfile profile) {
+    final missing = <String>[
+      if (profile.platform.trim().isEmpty) 'platform',
+      if (profile.region.trim().isEmpty) 'region',
+      if (profile.archetypes.isEmpty) 'archetype',
+      if (profile.playstyles.isEmpty) 'playstyle',
+      if (profile.comms.isEmpty) 'comms',
+      if (profile.squadPreferences.isEmpty) 'squad preference',
+    ];
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppTheme.spaceM),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.warning,
+        accent: AppTheme.warningAmber,
+        radius: 16,
+        borderOpacity: 0.28,
+      ),
+      child: Text(
+        missing.isEmpty
+            ? 'Save your Match Profile to improve confidence.'
+            : 'Add ${missing.take(3).join(', ')} to improve match confidence.',
+        style: AppTheme.bodyTextStyle(
+          fontSize: 13,
+          color: AppTheme.warningAmber,
+          isBold: true,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFeedEmptyState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppTheme.spaceL),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.panel,
+        accent: AppTheme.neonCyan,
+        radius: 16,
+        borderOpacity: 0.18,
+      ),
+      child: Text(
+        'No raiders match yet. Save your profile and check back after more players opt in.',
+        style: AppTheme.bodyTextStyle(fontSize: 14, color: Colors.white70),
+      ),
+    );
+  }
+
+  Widget _buildMatchCard(
+    ArcMatchCandidate candidate, {
+    required bool isFavourite,
+  }) {
     final profile = candidate.profile;
     return ElectricChargeBorder(
-      active: profile.lookingNow,
-      radius: 18,
+      active: isFavourite,
+      radius: 16,
       child: Container(
-        decoration: AppTheme.tradingCardDecoration(radius: 18),
-        padding: const EdgeInsets.all(AppTheme.spaceL),
+        decoration: ArcUiTokens.surfaceDecoration(
+          role: ArcSurfaceRole.panel,
+          accent: AppTheme.neonCyan,
+          radius: 16,
+          borderOpacity: 0.18,
+        ),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(profile.title, style: AppTheme.neonTextStyle(fontSize: 22, color: AppTheme.neonCyan, isBold: true)),
+                      Text(
+                        profile.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTheme.neonTextStyle(
+                          fontSize: 18,
+                          color: AppTheme.neonCyan,
+                          isBold: true,
+                        ),
+                      ),
                       const SizedBox(height: 4),
                       Text(
-                        [if (profile.platform.isNotEmpty) profile.platform, if (profile.region.isNotEmpty) profile.region, 'Server: ${profile.serverPreference}', profile.crossplayEnabled ? 'Crossplay' : 'No crossplay', if (profile.lookingNow) 'Looking now'].join(' • '),
-                        style: AppTheme.bodyTextStyle(fontSize: 13, color: Colors.white70),
+                        candidate.publicExplanation,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTheme.bodyTextStyle(
+                          fontSize: 12,
+                          color: Colors.white70,
+                        ),
                       ),
                     ],
                   ),
                 ),
-                _buildStatusPill('${candidate.score} match', AppTheme.neonPink),
+                const SizedBox(width: AppTheme.spaceM),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    _buildScoreBadge(candidate.score),
+                    IconButton(
+                      tooltip: isFavourite
+                          ? 'Remove Favourite Raider'
+                          : 'Add Favourite Raider',
+                      onPressed: () => _toggleFavourite(
+                        candidate.profile,
+                        currentlyFavourite: isFavourite,
+                      ),
+                      icon: Icon(
+                        isFavourite
+                            ? Icons.star_rounded
+                            : Icons.star_border_rounded,
+                        color: isFavourite
+                            ? AppTheme.warningAmber
+                            : Colors.white70,
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
-            const SizedBox(height: AppTheme.spaceM),
+            const SizedBox(height: 10),
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: candidate.reasons.map((reason) => _buildStatusPill(reason, Colors.white70)).toList(growable: false),
+              children: [
+                _buildStatusPill(candidate.publicMatchLabel, AppTheme.neonCyan),
+                _buildStatusPill(candidate.tierLabel, AppTheme.neonPink),
+                _buildStatusPill(candidate.confidenceLabel, Colors.white70),
+                for (final tag in candidate.publicTags)
+                  _buildStatusPill(tag, AppTheme.warningAmber),
+              ],
             ),
-            if (profile.notes.isNotEmpty) ...[
-              const SizedBox(height: AppTheme.spaceM),
-              Text(profile.notes, style: AppTheme.bodyTextStyle(fontSize: 14, color: Colors.white70)),
-            ],
-            const SizedBox(height: AppTheme.spaceM),
+            const SizedBox(height: 10),
             Align(
               alignment: Alignment.centerRight,
               child: ElevatedButton.icon(
                 onPressed: () => _showInviteDialog(candidate),
                 icon: const Icon(Icons.send_rounded),
-                label: const Text('Invite to team up'),
+                label: const Text('Invite'),
               ),
             ),
           ],
@@ -495,28 +904,59 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
         if (wide) {
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [Expanded(child: incoming), const SizedBox(width: AppTheme.spaceL), Expanded(child: outgoing)],
+            children: [
+              Expanded(child: incoming),
+              const SizedBox(width: AppTheme.spaceL),
+              Expanded(child: outgoing),
+            ],
           );
         }
-        return Column(children: [incoming, const SizedBox(height: AppTheme.spaceL), outgoing]);
+        return Column(
+          children: [
+            incoming,
+            const SizedBox(height: AppTheme.spaceM),
+            outgoing,
+          ],
+        );
       },
     );
   }
 
-  Widget _buildInvitePanel({required String title, required Stream<List<ArcMatchRiderInvite>> stream, required bool incoming}) {
+  Widget _buildInvitePanel({
+    required String title,
+    required Stream<List<ArcMatchRiderInvite>> stream,
+    required bool incoming,
+  }) {
     return Container(
-      decoration: AppTheme.tradingCardDecoration(radius: 20),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: AppTheme.neonCyan,
+        radius: 20,
+      ),
       padding: const EdgeInsets.all(AppTheme.spaceL),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: AppTheme.neonTextStyle(fontSize: 22, color: AppTheme.neonCyan, isBold: true)),
+          Text(
+            title,
+            style: AppTheme.neonTextStyle(
+              fontSize: 22,
+              color: AppTheme.neonCyan,
+              isBold: true,
+            ),
+          ),
           const SizedBox(height: AppTheme.spaceS),
           StreamBuilder<List<ArcMatchRiderInvite>>(
             stream: stream,
             builder: (context, snapshot) {
               if (snapshot.hasError) {
-                return Text('Could not load requests: ${snapshot.error}', style: AppTheme.bodyTextStyle(fontSize: 14, color: AppTheme.dangerRed));
+                return Text(
+                  'Could not load requests.',
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 14,
+                    color: AppTheme.dangerRed,
+                  ),
+                );
               }
               if (!snapshot.hasData) {
                 return const Padding(
@@ -526,7 +966,13 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
               }
               final invites = snapshot.data!;
               if (invites.isEmpty) {
-                return Text('No ${incoming ? 'incoming' : 'outgoing'} requests yet.', style: AppTheme.bodyTextStyle(fontSize: 14, color: Colors.white70));
+                return Text(
+                  'No ${incoming ? 'incoming' : 'outgoing'} requests yet.',
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 14,
+                    color: Colors.white70,
+                  ),
+                );
               }
               return Column(
                 children: [
@@ -543,13 +989,21 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
     );
   }
 
-  Widget _buildInviteCard(ArcMatchRiderInvite invite, {required bool incoming}) {
+  Widget _buildInviteCard(
+    ArcMatchRiderInvite invite, {
+    required bool incoming,
+  }) {
     final active = invite.status == 'pending';
     return ElectricChargeBorder(
       active: active,
       radius: 16,
       child: Container(
-        decoration: AppTheme.tradingCardDecoration(radius: 16),
+        decoration: ArcUiTokens.surfaceDecoration(
+          role: ArcSurfaceRole.interactive,
+          accent: active ? AppTheme.warningAmber : AppTheme.neonCyan,
+          radius: 16,
+          borderOpacity: active ? 0.26 : 0.14,
+        ),
         padding: const EdgeInsets.all(AppTheme.spaceM),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -559,15 +1013,34 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
                 Expanded(
                   child: Text(
                     incoming ? invite.senderName : invite.recipientName,
-                    style: AppTheme.titleTextStyle(fontSize: 18, color: AppTheme.neonCyan, isBold: true),
+                    style: AppTheme.titleTextStyle(
+                      fontSize: 18,
+                      color: AppTheme.neonCyan,
+                      isBold: true,
+                    ),
                   ),
                 ),
-                _buildStatusPill(invite.status.toUpperCase(), invite.status == 'accepted' ? AppTheme.neonCyan : invite.status == 'declined' ? AppTheme.dangerRed : invite.status == 'cancelled' ? Colors.white54 : AppTheme.warningAmber),
+                _buildStatusPill(
+                  invite.status.toUpperCase(),
+                  invite.status == 'accepted'
+                      ? AppTheme.neonCyan
+                      : invite.status == 'declined'
+                      ? AppTheme.dangerRed
+                      : invite.status == 'cancelled'
+                      ? Colors.white54
+                      : AppTheme.warningAmber,
+                ),
               ],
             ),
             if (invite.note.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text(invite.note, style: AppTheme.bodyTextStyle(fontSize: 14, color: Colors.white70)),
+              const SizedBox(height: 14),
+              Text(
+                invite.note,
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 14,
+                  color: Colors.white70,
+                ),
+              ),
             ],
             if (invite.status == 'pending') ...[
               const SizedBox(height: 10),
@@ -576,11 +1049,21 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
                 runSpacing: 8,
                 children: incoming
                     ? [
-                        ElevatedButton(onPressed: () => _respondToInvite(invite, 'accepted'), child: const Text('Accept')),
-                        OutlinedButton(onPressed: () => _respondToInvite(invite, 'declined'), child: const Text('Decline')),
+                        ElevatedButton(
+                          onPressed: () => _respondToInvite(invite, 'accepted'),
+                          child: const Text('Accept'),
+                        ),
+                        OutlinedButton(
+                          onPressed: () => _respondToInvite(invite, 'declined'),
+                          child: const Text('Decline'),
+                        ),
                       ]
                     : [
-                        OutlinedButton(onPressed: () => _respondToInvite(invite, 'cancelled'), child: const Text('Cancel request')),
+                        OutlinedButton(
+                          onPressed: () =>
+                              _respondToInvite(invite, 'cancelled'),
+                          child: const Text('Cancel request'),
+                        ),
                       ],
               ),
             ],
@@ -590,17 +1073,66 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
     );
   }
 
-  Widget _buildSection(String title, List<String> options, List<String> selected, ValueChanged<List<String>> onChanged) {
+  Widget _buildSingleChoiceSection(
+    String title,
+    List<String> options,
+    String selected,
+    ValueChanged<String> onChanged,
+  ) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppTheme.spaceL),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: AppTheme.titleTextStyle(fontSize: 18, color: AppTheme.neonPink, isBold: true)),
-          const SizedBox(height: AppTheme.spaceS),
+          Text(
+            title,
+            style: AppTheme.tradingHeading(
+              fontSize: 13,
+              color: AppTheme.neonCyan,
+            ),
+          ),
+          const SizedBox(height: 6),
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: AppTheme.spaceS,
+            runSpacing: AppTheme.spaceS,
+            children: options
+                .map(
+                  (option) => ChoiceChip(
+                    selected: selected == option,
+                    label: Text(option),
+                    onSelected: (_) => onChanged(option),
+                  ),
+                )
+                .toList(growable: false),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSection(
+    String title,
+    List<String> options,
+    List<String> selected,
+    ValueChanged<List<String>> onChanged,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: AppTheme.titleTextStyle(
+              fontSize: 14,
+              color: AppTheme.neonPink,
+              isBold: true,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
             children: [
               for (final option in options)
                 FilterChip(
@@ -609,12 +1141,20 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
                   selectedColor: AppTheme.neonPink.withValues(alpha: 0.18),
                   checkmarkColor: AppTheme.neonCyan,
                   labelStyle: AppTheme.bodyTextStyle(
-                    fontSize: 13,
-                    color: selected.contains(option) ? AppTheme.neonCyan : Colors.white70,
+                    fontSize: 11,
+                    color: selected.contains(option)
+                        ? AppTheme.neonCyan
+                        : Colors.white70,
                   ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(999),
-                    side: BorderSide(color: (selected.contains(option) ? AppTheme.neonPink : AppTheme.neonCyan).withValues(alpha: 0.55)),
+                    side: BorderSide(
+                      color:
+                          (selected.contains(option)
+                                  ? AppTheme.neonPink
+                                  : AppTheme.neonCyan)
+                              .withValues(alpha: 0.55),
+                    ),
                   ),
                   onSelected: (isSelected) {
                     final values = [...selected];
@@ -635,20 +1175,96 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
 
   Widget _buildStatusPill(String text, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withValues(alpha: 0.42)),
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: ArcUiTokens.chipDecoration(color: color, selected: true),
       child: Text(
         text,
-        style: AppTheme.bodyTextStyle(fontSize: 12, color: color, isBold: true),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: AppTheme.bodyTextStyle(fontSize: 11, color: color, isBold: true),
       ),
     );
   }
 
+  Widget _buildScoreBadge(int score) {
+    return Container(
+      width: 68,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        accent: AppTheme.neonPink,
+        radius: 16,
+        selected: true,
+      ),
+      child: Column(
+        children: [
+          Text(
+            '$score%',
+            style: AppTheme.neonTextStyle(
+              fontSize: 20,
+              color: AppTheme.neonPink,
+              isBold: true,
+            ),
+          ),
+          Text(
+            'Match',
+            style: AppTheme.bodyTextStyle(
+              fontSize: 11,
+              color: Colors.white70,
+              isBold: true,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  int _profileCompleteness(ArcMatchRiderProfile profile) {
+    var score = 0;
+    if (profile.platform.trim().isNotEmpty) score += 14;
+    if (profile.region.trim().isNotEmpty) score += 14;
+    if (profile.archetypes.isNotEmpty) score += 14;
+    if (profile.playstyles.isNotEmpty) score += 14;
+    if (profile.goals.isNotEmpty) score += 12;
+    if (profile.comms.isNotEmpty) score += 12;
+    if (profile.squadPreferences.isNotEmpty) score += 12;
+    if (profile.sessionIntent != ArcPlayerSessionCatalog.defaultIntent) {
+      score += 4;
+    }
+    if (profile.currentPriority != ArcPlayerSessionCatalog.defaultPriority) {
+      score += 4;
+    }
+    return score.clamp(0, 100).toInt();
+  }
+
   void _setProfile(ArcMatchRiderProfile value) {
     setState(() => _profile = value);
+  }
+
+  Future<void> _toggleFavourite(
+    ArcMatchRiderProfile profile, {
+    required bool currentlyFavourite,
+  }) async {
+    try {
+      await _repository.setFavouriteRider(
+        riderUid: profile.uid,
+        favourite: !currentlyFavourite,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            currentlyFavourite
+                ? '${profile.title} removed from Favourite Raiders.'
+                : '${profile.title} added to Favourite Raiders.',
+          ),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not update favourite.')),
+      );
+    }
   }
 }

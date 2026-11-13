@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trading_my_listings_screen.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trading_my_offers_screen.dart';
-import 'package:uag_traders_hub/widgets/electric_charge_border.dart';
-import 'package:uag_traders_hub/widgets/static_watermark.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_blueprint_watches_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_listing_queues_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_my_listings_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_my_offers_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_trading_workspace_bar.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class TradingActivityScreen extends StatefulWidget {
   static const routeName = '/trading-hub/arc-raiders/activity';
@@ -28,13 +32,13 @@ class _TradingActivityScreenState extends State<TradingActivityScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedIndex = widget.initialTabIndex.clamp(0, 1);
+    _selectedIndex = widget.initialTabIndex.clamp(0, 3);
   }
 
   @override
   void didUpdateWidget(covariant TradingActivityScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final nextIndex = widget.initialTabIndex.clamp(0, 1);
+    final nextIndex = widget.initialTabIndex.clamp(0, 3);
     if (nextIndex != _selectedIndex) {
       setState(() => _selectedIndex = nextIndex);
     }
@@ -88,64 +92,112 @@ class _TradingActivityScreenState extends State<TradingActivityScreen> {
     final views = <Widget>[
       const TradingMyListingsScreen(showAppBar: false),
       const TradingMyOffersScreen(showAppBar: false),
+      const TradingBlueprintWatchesScreen(showAppBar: false),
+      const TradingListingQueuesScreen(showAppBar: false),
     ];
 
-    final content = Stack(
-      children: [
-        const Positioned.fill(child: StaticWatermark()),
-        SafeArea(
-          child: Column(
-            children: [
-              Padding(
-                padding: AppTheme.pagePadding.copyWith(bottom: AppTheme.spaceM),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Track your live trading flow in one place.',
-                      style: AppTheme.bodyTextStyle(
-                        fontSize: 14,
-                        color: AppTheme.tradingMutedText,
+    final content = ArcRaidersScreenShell(
+      showAdBanner: false,
+      child: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: AppTheme.pagePadding.copyWith(bottom: AppTheme.spaceM),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const ArcRaidersPageHeader(
+                    title: 'TRADING ACTIVITY',
+                    subtitle: 'Listings, offers, watches and queue releases.',
+                    icon: Icons.swap_horiz_rounded,
+                    accent: ArcUiTokens.secondaryAccent,
+                  ),
+                  const SizedBox(height: AppTheme.spaceM),
+                  const ArcTradingWorkspaceBar(
+                    current: ArcTradingWorkspace.activity,
+                    padding: EdgeInsets.zero,
+                  ),
+                  const SizedBox(height: AppTheme.spaceM),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: const [
+                      ArcTacticalStatusPill(
+                        label: 'Live flow',
+                        icon: Icons.bolt_rounded,
+                        accent: ArcUiTokens.secondaryAccent,
                       ),
-                    ),
-                    const SizedBox(height: AppTheme.spaceM),
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
+                      ArcTacticalStatusPill(
+                        label: 'Trade safety',
+                        icon: Icons.verified_user_outlined,
+                        accent: ArcUiTokens.success,
+                      ),
+                      ArcTacticalStatusPill(
+                        label: 'Blueprint demand',
+                        icon: Icons.add_alert_outlined,
+                        accent: ArcUiTokens.primaryAccent,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppTheme.spaceM),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
                       children: [
                         _toggleButton(
-                          label: 'My Listings',
+                          label: 'Listings',
                           icon: Icons.inventory_2_outlined,
                           selected: _selectedIndex == 0,
                           onTap: () => setState(() => _selectedIndex = 0),
                         ),
+                        const SizedBox(width: 10),
                         _toggleButton(
-                          label: 'My Offers',
+                          label: 'Offers',
                           icon: Icons.local_offer_outlined,
                           selected: _selectedIndex == 1,
                           onTap: () => setState(() => _selectedIndex = 1),
                         ),
+                        const SizedBox(width: 10),
+                        _toggleButton(
+                          label: 'Watches',
+                          icon: Icons.add_alert_outlined,
+                          selected: _selectedIndex == 2,
+                          onTap: () => setState(() => _selectedIndex = 2),
+                        ),
+                        const SizedBox(width: 10),
+                        _toggleButton(
+                          label: 'Queues',
+                          icon: Icons.dynamic_feed_outlined,
+                          selected: _selectedIndex == 3,
+                          onTap: () => setState(() => _selectedIndex = 3),
+                        ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              Expanded(
-                child: IndexedStack(index: _selectedIndex, children: views),
-              ),
-            ],
-          ),
+            ),
+            Expanded(
+              child: IndexedStack(index: _selectedIndex, children: views),
+            ),
+          ],
         ),
-      ],
+      ),
     );
 
     if (!widget.showAppBar) {
-      return Scaffold(backgroundColor: AppTheme.darkBackground, body: content);
+      return Scaffold(
+        extendBody: true,
+        backgroundColor: Colors.transparent,
+        body: content,
+      );
     }
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      extendBody: true,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
         title: Text('Activity', style: AppTheme.tradingHeading(fontSize: 25)),
       ),
       body: content,

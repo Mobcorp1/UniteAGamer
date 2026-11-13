@@ -14,7 +14,9 @@ class RaidPlannerBlueprintRule {
   });
 
   bool get isExactEventRule {
-    return blueprintId == 'surge-coil' || blueprintId == 'canto' || blueprintId == 'dolabra';
+    return blueprintId == 'surge-coil' ||
+        blueprintId == 'canto' ||
+        blueprintId == 'dolabra';
   }
 }
 
@@ -39,7 +41,12 @@ class RaidPlannerEventSlot {
 
   DateTime endForStart(DateTime startUtc) {
     final normalizedEndHour = endHourGmt == 24 ? 0 : endHourGmt;
-    var end = DateTime.utc(startUtc.year, startUtc.month, startUtc.day, normalizedEndHour);
+    var end = DateTime.utc(
+      startUtc.year,
+      startUtc.month,
+      startUtc.day,
+      normalizedEndHour,
+    );
     if (endHourGmt == 24 || !end.isAfter(startUtc)) {
       end = end.add(const Duration(days: 1));
     }
@@ -205,15 +212,19 @@ class RaidPlannerEntitlement {
   int get activeHuntSlots {
     if (isAdmin) return 5;
     final now = DateTime.now();
-    final boostActive = referralBoostExpiresAt != null && referralBoostExpiresAt!.isAfter(now);
+    final boostActive =
+        referralBoostExpiresAt != null && referralBoostExpiresAt!.isAfter(now);
     return tier.activeHuntSlots + (boostActive ? extraSlots : 0);
   }
 
   bool get hasReferralBoost =>
-      referralBoostExpiresAt != null && referralBoostExpiresAt!.isAfter(DateTime.now());
+      referralBoostExpiresAt != null &&
+      referralBoostExpiresAt!.isAfter(DateTime.now());
 
   bool get canUseEssentialProTools =>
-      isAdmin || tier == RaidPlannerTier.essential || tier == RaidPlannerTier.premium;
+      isAdmin ||
+      tier == RaidPlannerTier.essential ||
+      tier == RaidPlannerTier.premium;
 
   bool get canUseAdvancedProTools => isAdmin || tier == RaidPlannerTier.premium;
 
@@ -225,21 +236,29 @@ class RaidPlannerEntitlement {
 
   factory RaidPlannerEntitlement.fromUserMap(Map<String, dynamic>? map) {
     final data = map ?? <String, dynamic>{};
-    final rawTier = (data['subscriptionTier'] ?? data['plannerTier'] ?? data['subscriptionStatus'] ?? 'free')
-        .toString()
-        .trim()
-        .toLowerCase();
+    final rawTier =
+        (data['subscriptionTier'] ??
+                data['plannerTier'] ??
+                data['subscriptionStatus'] ??
+                'free')
+            .toString()
+            .trim()
+            .toLowerCase();
 
-    final tier = rawTier == 'premium' || rawTier == 'active_premium' || rawTier == 'pro'
+    final tier =
+        rawTier == 'premium' || rawTier == 'active_premium' || rawTier == 'pro'
         ? RaidPlannerTier.premium
-        : rawTier == 'essential' || rawTier == 'active_essential' || rawTier == 'standard'
-            ? RaidPlannerTier.essential
-            : RaidPlannerTier.free;
+        : rawTier == 'essential' ||
+              rawTier == 'active_essential' ||
+              rawTier == 'standard'
+        ? RaidPlannerTier.essential
+        : RaidPlannerTier.free;
 
     return RaidPlannerEntitlement(
       tier: tier,
       extraSlots: (data['extraTargetSlots'] as num?)?.toInt() ?? 0,
-      referralBoostExpiresAt: (data['referralBoostExpiresAt'] as Timestamp?)?.toDate(),
+      referralBoostExpiresAt: (data['referralBoostExpiresAt'] as Timestamp?)
+          ?.toDate(),
       isAdmin: data['isAdmin'] == true || data['isDev'] == true,
     );
   }

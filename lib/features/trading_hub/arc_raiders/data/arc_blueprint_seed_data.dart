@@ -1,12 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
 
 class ArcBlueprintSeedData {
   static const int columns = 10;
   static const int rows = 9;
-  static const int lastRowCount = 1;
+  static const int lastRowCount = 3;
 
   static const String _base = 'assets/arc_raiders/blueprints/';
+
+  static List<ArcBlueprint> withExpansionSlots(int requestedCount) {
+    final count = requestedCount.clamp(0, 30).toInt();
+    return <ArcBlueprint>[
+      ...blueprints,
+      for (var index = 0; index < count; index++)
+        ArcBlueprint(
+          id: 'admin-expansion-blueprint-${index + 1}',
+          name: 'Future Blueprint ${index + 1}',
+          category: 'Expansion',
+          group: 'Admin Expansion',
+          sortOrder: 10000 + index,
+          rarity: ArcBlueprintRarity.common,
+          icon: Icons.add_box_outlined,
+          intelHint:
+              'Reserved admin expansion slot. Replace with confirmed Blueprint data when published.',
+        ),
+    ];
+  }
 
   static const List<ArcBlueprint> blueprints = [
     ArcBlueprint(
@@ -90,8 +109,7 @@ class ArcBlueprintSeedData {
       rarity: ArcBlueprintRarity.uncommon,
       icon: Icons.blur_linear_rounded,
       imageAssetPath: '${_base}compensator-ii.webp',
-      intelHint:
-          'Watch for medium-value attachment routes.',
+      intelHint: 'Watch for medium-value attachment routes.',
     ),
     ArcBlueprint(
       id: 'muzzle-brake-iii',
@@ -126,8 +144,7 @@ class ArcBlueprintSeedData {
       rarity: ArcBlueprintRarity.rare,
       icon: Icons.healing_rounded,
       imageAssetPath: '${_base}vita-spray.webp',
-      intelHint:
-          'Useful to compare Day vs Night report trends.',
+      intelHint: 'Useful to compare Day vs Night report trends.',
     ),
     ArcBlueprint(
       id: 'medium-gun-parts',
@@ -150,8 +167,7 @@ class ArcBlueprintSeedData {
       rarity: ArcBlueprintRarity.uncommon,
       icon: Icons.gps_fixed_rounded,
       imageAssetPath: '${_base}tagging-grenade.webp',
-      intelHint:
-          'Reports help narrow tactical loot routes.',
+      intelHint: 'Reports help narrow tactical loot routes.',
     ),
     ArcBlueprint(
       id: 'crash-mat',
@@ -198,8 +214,7 @@ class ArcBlueprintSeedData {
       rarity: ArcBlueprintRarity.epic,
       icon: Icons.public_rounded,
       imageAssetPath: '${_base}jupiter.webp',
-      intelHint:
-          'Look for strong raid intel before chasing this one.',
+      intelHint: 'Look for strong raid intel before chasing this one.',
     ),
     ArcBlueprint(
       id: 'extended-medium-mag-ii',
@@ -210,8 +225,7 @@ class ArcBlueprintSeedData {
       rarity: ArcBlueprintRarity.uncommon,
       icon: Icons.tune_rounded,
       imageAssetPath: '${_base}extended-medium-mag-ii.webp',
-      intelHint:
-          'Compare attachment route reports and mode splits.',
+      intelHint: 'Compare attachment route reports and mode splits.',
     ),
     ArcBlueprint(
       id: 'tactical-mk-3-smoke',
@@ -282,8 +296,7 @@ class ArcBlueprintSeedData {
       rarity: ArcBlueprintRarity.uncommon,
       icon: Icons.tune_rounded,
       imageAssetPath: '${_base}extended-light-mag-ii.webp',
-      intelHint:
-          'Use community map/location intel to shorten search time.',
+      intelHint: 'Use community map/location intel to shorten search time.',
     ),
     ArcBlueprint(
       id: 'showstopper',
@@ -306,8 +319,7 @@ class ArcBlueprintSeedData {
       rarity: ArcBlueprintRarity.rare,
       icon: Icons.settings_remote_rounded,
       imageAssetPath: '${_base}remote-raider-flare.webp',
-      intelHint:
-          'Compare full raid and late raid reports.',
+      intelHint: 'Compare full raid and late raid reports.',
     ),
     ArcBlueprint(
       id: 'angled-grip-ii',
@@ -318,8 +330,7 @@ class ArcBlueprintSeedData {
       rarity: ArcBlueprintRarity.uncommon,
       icon: Icons.handyman_rounded,
       imageAssetPath: '${_base}angled-grip-ii.webp',
-      intelHint:
-          'Track attachment crate routes and strong intel clusters.',
+      intelHint: 'Track attachment crate routes and strong intel clusters.',
     ),
     ArcBlueprint(
       id: 'stable-stock-iii',
@@ -330,8 +341,7 @@ class ArcBlueprintSeedData {
       rarity: ArcBlueprintRarity.rare,
       icon: Icons.architecture_rounded,
       imageAssetPath: '${_base}stable-stock-iii.webp',
-      intelHint:
-          'Watch for repeated reports from the same map/area.',
+      intelHint: 'Watch for repeated reports from the same map/area.',
     ),
     ArcBlueprint(
       id: 'aphelion',
@@ -354,8 +364,7 @@ class ArcBlueprintSeedData {
       rarity: ArcBlueprintRarity.epic,
       icon: Icons.flash_on_rounded,
       imageAssetPath: '${_base}tempest.webp',
-      intelHint:
-          'A good candidate for comparing mode and raid-start trends.',
+      intelHint: 'A good candidate for comparing mode and raid-start trends.',
     ),
     ArcBlueprint(
       id: 'tactical-mk-3-healing',
@@ -378,8 +387,7 @@ class ArcBlueprintSeedData {
       rarity: ArcBlueprintRarity.rare,
       icon: Icons.straighten_rounded,
       imageAssetPath: '${_base}vertical-grip-iii.webp',
-      intelHint:
-          'Look at repeated attachment route sightings.',
+      intelHint: 'Look at repeated attachment route sightings.',
     ),
     ArcBlueprint(
       id: 'wolfpack',
@@ -402,8 +410,7 @@ class ArcBlueprintSeedData {
       rarity: ArcBlueprintRarity.epic,
       icon: Icons.compare_arrows_rounded,
       imageAssetPath: '${_base}combat-mk-3-flanking.webp',
-      intelHint:
-          'Useful to compare route density between day and night.',
+      intelHint: 'Useful to compare route density between day and night.',
     ),
     ArcBlueprint(
       id: 'torrente',
@@ -426,8 +433,7 @@ class ArcBlueprintSeedData {
       rarity: ArcBlueprintRarity.rare,
       icon: Icons.electric_bolt_rounded,
       imageAssetPath: '${_base}jolt-mine.webp',
-      intelHint:
-          'Track trap/gadget hotspots and compare raid-start timing.',
+      intelHint: 'Track trap/gadget hotspots and compare raid-start timing.',
     ),
     ArcBlueprint(
       id: 'hullcracker',
@@ -450,8 +456,7 @@ class ArcBlueprintSeedData {
       rarity: ArcBlueprintRarity.uncommon,
       icon: Icons.medication_liquid_rounded,
       imageAssetPath: '${_base}vita-shot.webp',
-      intelHint:
-          'Often worth comparing support-heavy areas between modes.',
+      intelHint: 'Often worth comparing support-heavy areas between modes.',
     ),
     ArcBlueprint(
       id: 'deadline',
@@ -462,8 +467,7 @@ class ArcBlueprintSeedData {
       rarity: ArcBlueprintRarity.rare,
       icon: Icons.schedule_send_rounded,
       imageAssetPath: '${_base}deadline.webp',
-      intelHint:
-          'Use report recency to avoid chasing stale intel.',
+      intelHint: 'Use report recency to avoid chasing stale intel.',
     ),
     ArcBlueprint(
       id: 'shotgun-choke-ii',
@@ -474,8 +478,7 @@ class ArcBlueprintSeedData {
       rarity: ArcBlueprintRarity.uncommon,
       icon: Icons.blur_on_rounded,
       imageAssetPath: '${_base}shotgun-choke-ii.webp',
-      intelHint:
-          'Attachment report clustering will matter here.',
+      intelHint: 'Attachment report clustering will matter here.',
     ),
     ArcBlueprint(
       id: 'anvil',
@@ -486,8 +489,7 @@ class ArcBlueprintSeedData {
       rarity: ArcBlueprintRarity.rare,
       icon: Icons.construction_rounded,
       imageAssetPath: '${_base}anvil.webp',
-      intelHint:
-          'Look for strong map/location consistency in reports.',
+      intelHint: 'Look for strong map/location consistency in reports.',
     ),
     ArcBlueprint(
       id: 'osprey',
@@ -498,8 +500,7 @@ class ArcBlueprintSeedData {
       rarity: ArcBlueprintRarity.rare,
       icon: Icons.flight_rounded,
       imageAssetPath: '${_base}osprey.webp',
-      intelHint:
-          'Use the popup to compare map and mode before grinding.',
+      intelHint: 'Use the popup to compare map and mode before grinding.',
     ),
     ArcBlueprint(
       id: 'looting-mk-3-survivor',
@@ -522,8 +523,7 @@ class ArcBlueprintSeedData {
       rarity: ArcBlueprintRarity.uncommon,
       icon: Icons.tune_rounded,
       imageAssetPath: '${_base}extended-shotgun-mag-ii.webp',
-      intelHint:
-          'Good candidate for basic attachment-route intel.',
+      intelHint: 'Good candidate for basic attachment-route intel.',
     ),
     ArcBlueprint(
       id: 'powered-descender',
@@ -558,8 +558,7 @@ class ArcBlueprintSeedData {
       rarity: ArcBlueprintRarity.legendary,
       icon: Icons.local_fire_department_rounded,
       imageAssetPath: '${_base}vulcano.webp',
-      intelHint:
-          'Strong candidate for full-raid-only trend analysis.',
+      intelHint: 'Strong candidate for full-raid-only trend analysis.',
     ),
     ArcBlueprint(
       id: 'lightweight-stock',
@@ -570,8 +569,7 @@ class ArcBlueprintSeedData {
       rarity: ArcBlueprintRarity.uncommon,
       icon: Icons.architecture_rounded,
       imageAssetPath: '${_base}lightweight-stock.webp',
-      intelHint:
-          'Compare attachment-heavy runs and lighter loot routes.',
+      intelHint: 'Compare attachment-heavy runs and lighter loot routes.',
     ),
     ArcBlueprint(
       id: 'trailblazer',
@@ -594,8 +592,7 @@ class ArcBlueprintSeedData {
       rarity: ArcBlueprintRarity.rare,
       icon: Icons.door_back_door_rounded,
       imageAssetPath: '${_base}barricade-kit.webp',
-      intelHint:
-          'Best narrowed down by repeated utility-route reports.',
+      intelHint: 'Best narrowed down by repeated utility-route reports.',
     ),
     ArcBlueprint(
       id: 'green-light-stick',
@@ -606,8 +603,7 @@ class ArcBlueprintSeedData {
       rarity: ArcBlueprintRarity.common,
       icon: Icons.light_mode_rounded,
       imageAssetPath: '${_base}green-light-stick.webp',
-      intelHint:
-          'Common item. Focus on convenience and route speed.',
+      intelHint: 'Common item. Focus on convenience and route speed.',
     ),
     ArcBlueprint(
       id: 'extended-medium-mag-iii',
@@ -618,8 +614,7 @@ class ArcBlueprintSeedData {
       rarity: ArcBlueprintRarity.rare,
       icon: Icons.tune_rounded,
       imageAssetPath: '${_base}extended-medium-mag-iii.webp',
-      intelHint:
-          'Use report density to identify the best attachment loop.',
+      intelHint: 'Use report density to identify the best attachment loop.',
     ),
     ArcBlueprint(
       id: 'lure-grenade',
@@ -630,8 +625,7 @@ class ArcBlueprintSeedData {
       rarity: ArcBlueprintRarity.uncommon,
       icon: Icons.campaign_rounded,
       imageAssetPath: '${_base}lure-grenade.webp',
-      intelHint:
-          'Track tactical loot reports by map and mode.',
+      intelHint: 'Track tactical loot reports by map and mode.',
     ),
     ArcBlueprint(
       id: 'combat-mk-3-aggressive',
@@ -654,8 +648,7 @@ class ArcBlueprintSeedData {
       rarity: ArcBlueprintRarity.common,
       icon: Icons.precision_manufacturing_rounded,
       imageAssetPath: '${_base}light-gun-parts.webp',
-      intelHint:
-          'Use route data to identify the quickest part farm.',
+      intelHint: 'Use route data to identify the quickest part farm.',
     ),
     ArcBlueprint(
       id: 'extended-light-mag-iii',
@@ -666,8 +659,7 @@ class ArcBlueprintSeedData {
       rarity: ArcBlueprintRarity.rare,
       icon: Icons.tune_rounded,
       imageAssetPath: '${_base}extended-light-mag-iii.webp',
-      intelHint:
-          'Report clustering should reveal attachment hotspots.',
+      intelHint: 'Report clustering should reveal attachment hotspots.',
     ),
     ArcBlueprint(
       id: 'il-toro',
@@ -690,8 +682,7 @@ class ArcBlueprintSeedData {
       rarity: ArcBlueprintRarity.uncommon,
       icon: Icons.architecture_rounded,
       imageAssetPath: '${_base}padded-stock.webp',
-      intelHint:
-          'Use attachment-route reports to decide your best run.',
+      intelHint: 'Use attachment-route reports to decide your best run.',
     ),
     ArcBlueprint(
       id: 'heavy-gun-parts',
@@ -702,15 +693,36 @@ class ArcBlueprintSeedData {
       rarity: ArcBlueprintRarity.uncommon,
       icon: Icons.precision_manufacturing_rounded,
       imageAssetPath: '${_base}heavy-gun-parts.webp',
-      intelHint:
-          'Look for repeated reports from high-value industrial routes.',
+      intelHint: 'Look for repeated reports from high-value industrial routes.',
     ),
+
+    ArcBlueprint(
+      id: 'rascal',
+
+      name: 'Rascal',
+
+      category: 'Weapons',
+
+      group: 'Row 6',
+
+      sortOrder: 59,
+
+      rarity: ArcBlueprintRarity.rare,
+
+      icon: Icons.sports_esports_rounded,
+
+      imageAssetPath: '${_base}rascal.webp',
+
+      intelHint:
+          'New weapon blueprint. Use fresh community reports to narrow active maps, containers, and raid timing.',
+    ),
+
     ArcBlueprint(
       id: 'canto',
       name: 'Canto',
       category: 'Weapons',
       group: 'Row 6',
-      sortOrder: 59,
+      sortOrder: 60,
       rarity: ArcBlueprintRarity.rare,
       icon: Icons.sports_esports_rounded,
       imageAssetPath: '${_base}canto.webp',
@@ -721,20 +733,19 @@ class ArcBlueprintSeedData {
       id: 'bettina',
       name: 'Bettina',
       category: 'Weapons',
-      group: 'Row 6',
-      sortOrder: 60,
+      group: 'Row 7',
+      sortOrder: 61,
       rarity: ArcBlueprintRarity.rare,
       icon: Icons.star_border_rounded,
       imageAssetPath: '${_base}bettina.webp',
-      intelHint:
-          'Use the popup to compare map and mode before farming.',
+      intelHint: 'Use the popup to compare map and mode before farming.',
     ),
     ArcBlueprint(
       id: 'fireworks-box',
       name: 'Fireworks Box',
       category: 'Utility',
       group: 'Row 7',
-      sortOrder: 61,
+      sortOrder: 62,
       rarity: ArcBlueprintRarity.common,
       icon: Icons.celebration_rounded,
       imageAssetPath: '${_base}fireworks-box.webp',
@@ -746,31 +757,29 @@ class ArcBlueprintSeedData {
       name: 'Gas Mine',
       category: 'Gadgets',
       group: 'Row 7',
-      sortOrder: 62,
+      sortOrder: 63,
       rarity: ArcBlueprintRarity.rare,
       icon: Icons.science_rounded,
       imageAssetPath: '${_base}gas-mine.webp',
-      intelHint:
-          'Track trap/gadget areas and compare full vs late raid data.',
+      intelHint: 'Track trap/gadget areas and compare full vs late raid data.',
     ),
     ArcBlueprint(
       id: 'yellow-light-stick',
       name: 'Yellow Light Stick',
       category: 'Utility',
       group: 'Row 7',
-      sortOrder: 63,
+      sortOrder: 64,
       rarity: ArcBlueprintRarity.common,
       icon: Icons.light_mode_rounded,
       imageAssetPath: '${_base}yellow-light-stick.webp',
-      intelHint:
-          'Common. Route speed matters more than rarity here.',
+      intelHint: 'Common. Route speed matters more than rarity here.',
     ),
     ArcBlueprint(
       id: 'looting-mk-3-safekeeper',
       name: 'Looting Mk. 3 (Safekeeper)',
       category: 'Looting Mods',
       group: 'Row 7',
-      sortOrder: 64,
+      sortOrder: 65,
       rarity: ArcBlueprintRarity.epic,
       icon: Icons.inventory_2_rounded,
       imageAssetPath: '${_base}looting-mk-3-safekeeper.webp',
@@ -782,7 +791,7 @@ class ArcBlueprintSeedData {
       name: 'Surge Coil',
       category: 'Deployables',
       group: 'Row 7',
-      sortOrder: 65,
+      sortOrder: 66,
       rarity: ArcBlueprintRarity.rare,
       icon: Icons.bolt_rounded,
       imageAssetPath: '${_base}surge-coil.webp',
@@ -794,7 +803,7 @@ class ArcBlueprintSeedData {
       name: 'Complex Gun Parts',
       category: 'Parts',
       group: 'Row 7',
-      sortOrder: 66,
+      sortOrder: 67,
       rarity: ArcBlueprintRarity.rare,
       icon: Icons.precision_manufacturing_rounded,
       imageAssetPath: '${_base}complex-gun-parts.webp',
@@ -806,19 +815,18 @@ class ArcBlueprintSeedData {
       name: 'Explosive Mine',
       category: 'Gadgets',
       group: 'Row 7',
-      sortOrder: 67,
+      sortOrder: 68,
       rarity: ArcBlueprintRarity.rare,
       icon: Icons.warning_amber_rounded,
       imageAssetPath: '${_base}explosive-mine.webp',
-      intelHint:
-          'Use gadget-route intel and compare raid-start conditions.',
+      intelHint: 'Use gadget-route intel and compare raid-start conditions.',
     ),
     ArcBlueprint(
       id: 'venator',
       name: 'Venator',
       category: 'Weapons',
       group: 'Row 7',
-      sortOrder: 68,
+      sortOrder: 69,
       rarity: ArcBlueprintRarity.legendary,
       icon: Icons.gps_not_fixed_rounded,
       imageAssetPath: '${_base}venator.webp',
@@ -830,67 +838,62 @@ class ArcBlueprintSeedData {
       name: 'Stable Stock II',
       category: 'Attachments',
       group: 'Row 7',
-      sortOrder: 69,
+      sortOrder: 70,
       rarity: ArcBlueprintRarity.uncommon,
       icon: Icons.architecture_rounded,
       imageAssetPath: '${_base}stable-stock-ii.webp',
-      intelHint:
-          'Best tracked through repeated attachment-route reports.',
+      intelHint: 'Best tracked through repeated attachment-route reports.',
     ),
     ArcBlueprint(
       id: 'blaze-grenade',
       name: 'Blaze Grenade',
       category: 'Grenades',
-      group: 'Row 7',
-      sortOrder: 70,
+      group: 'Row 8',
+      sortOrder: 71,
       rarity: ArcBlueprintRarity.rare,
       icon: Icons.local_fire_department_rounded,
       imageAssetPath: '${_base}blaze-grenade.webp',
-      intelHint:
-          'Compare tactical route reports between modes.',
+      intelHint: 'Compare tactical route reports between modes.',
     ),
     ArcBlueprint(
       id: 'trigger-nade',
       name: "Trigger 'Nade",
       category: 'Grenades',
       group: 'Row 8',
-      sortOrder: 71,
+      sortOrder: 72,
       rarity: ArcBlueprintRarity.rare,
       icon: Icons.touch_app_rounded,
       imageAssetPath: '${_base}trigger-nade.webp',
-      intelHint:
-          'Look for consistent grenade-route sightings.',
+      intelHint: 'Look for consistent grenade-route sightings.',
     ),
     ArcBlueprint(
       id: 'seeker-grenade',
       name: 'Seeker Grenade',
       category: 'Grenades',
       group: 'Row 8',
-      sortOrder: 72,
+      sortOrder: 73,
       rarity: ArcBlueprintRarity.epic,
       icon: Icons.track_changes_rounded,
       imageAssetPath: '${_base}seeker-grenade.webp',
-      intelHint:
-          'Use community reports to find the strongest tactical route.',
+      intelHint: 'Use community reports to find the strongest tactical route.',
     ),
     ArcBlueprint(
       id: 'silencer-i',
       name: 'Silencer I',
       category: 'Attachments',
       group: 'Row 8',
-      sortOrder: 73,
+      sortOrder: 74,
       rarity: ArcBlueprintRarity.common,
       icon: Icons.volume_off_rounded,
       imageAssetPath: '${_base}silencer-i.webp',
-      intelHint:
-          'Common attachment. Focus on the fastest proven route.',
+      intelHint: 'Common attachment. Focus on the fastest proven route.',
     ),
     ArcBlueprint(
       id: 'shotgun-choke-iii',
       name: 'Shotgun Choke III',
       category: 'Attachments',
       group: 'Row 8',
-      sortOrder: 74,
+      sortOrder: 75,
       rarity: ArcBlueprintRarity.rare,
       icon: Icons.blur_on_rounded,
       imageAssetPath: '${_base}shotgun-choke-iii.webp',
@@ -902,7 +905,7 @@ class ArcBlueprintSeedData {
       name: 'Blue Light Stick',
       category: 'Utility',
       group: 'Row 8',
-      sortOrder: 75,
+      sortOrder: 76,
       rarity: ArcBlueprintRarity.common,
       icon: Icons.light_mode_rounded,
       imageAssetPath: '${_base}blue-light-stick.webp',
@@ -914,43 +917,54 @@ class ArcBlueprintSeedData {
       name: 'Vertical Grip II',
       category: 'Attachments',
       group: 'Row 8',
-      sortOrder: 76,
+      sortOrder: 77,
       rarity: ArcBlueprintRarity.uncommon,
       icon: Icons.straighten_rounded,
       imageAssetPath: '${_base}vertical-grip-ii.webp',
-      intelHint:
-          'Track repeated attachment crate reports.',
+      intelHint: 'Track repeated attachment crate reports.',
     ),
+    ArcBlueprint(
+      id: 'extended-barrel-ii',
+      name: 'Extended Barrel II',
+      category: 'Attachments',
+      group: 'Row 8',
+      sortOrder: 78,
+      rarity: ArcBlueprintRarity.uncommon,
+      icon: Icons.swap_vert_rounded,
+      imageAssetPath: '${_base}extended-barrel-ii.webp',
+      intelHint:
+          'New attachment blueprint. Track attachment crates, black crate/security containers, and recent community reports.',
+    ),
+
     ArcBlueprint(
       id: 'muzzle-brake-ii',
       name: 'Muzzle Brake II',
       category: 'Attachments',
       group: 'Row 8',
-      sortOrder: 77,
+      sortOrder: 79,
       rarity: ArcBlueprintRarity.uncommon,
       icon: Icons.adjust_rounded,
       imageAssetPath: '${_base}muzzle-brake-ii.webp',
-      intelHint:
-          'Use the intel popup to compare route quality and recency.',
+      intelHint: 'Use the intel popup to compare route quality and recency.',
     ),
     ArcBlueprint(
       id: 'extended-barrel',
       name: 'Extended Barrel',
       category: 'Attachments',
       group: 'Row 8',
-      sortOrder: 78,
+      sortOrder: 80,
       rarity: ArcBlueprintRarity.rare,
       icon: Icons.swap_vert_rounded,
       imageAssetPath: '${_base}extended-barrel.webp',
-      intelHint:
-          'Strong candidate for comparing attachment-route confidence.',
+      intelHint: 'Strong candidate for comparing attachment-route confidence.',
     ),
+
     ArcBlueprint(
       id: 'burletta',
       name: 'Burletta',
       category: 'Weapons',
-      group: 'Row 8',
-      sortOrder: 79,
+      group: 'Row 9',
+      sortOrder: 81,
       rarity: ArcBlueprintRarity.epic,
       icon: Icons.auto_awesome_rounded,
       imageAssetPath: '${_base}burletta.webp',
@@ -961,20 +975,19 @@ class ArcBlueprintSeedData {
       id: 'equalizer',
       name: 'Equalizer',
       category: 'Weapons',
-      group: 'Row 8',
-      sortOrder: 80,
+      group: 'Row 9',
+      sortOrder: 82,
       rarity: ArcBlueprintRarity.legendary,
       icon: Icons.graphic_eq_rounded,
       imageAssetPath: '${_base}equalizer.webp',
-      intelHint:
-          'Legendary blueprint. Community confidence matters most here.',
+      intelHint: 'Legendary blueprint. Community confidence matters most here.',
     ),
     ArcBlueprint(
       id: 'snap-hook',
       name: 'Snap Hook',
       category: 'Utility',
       group: 'Row 9',
-      sortOrder: 81,
+      sortOrder: 83,
       rarity: ArcBlueprintRarity.uncommon,
       icon: Icons.link_rounded,
       imageAssetPath: '${_base}snap-hook.webp',

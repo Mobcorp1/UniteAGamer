@@ -1,5 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'uag_commercial_economy.dart';
+import 'uag_match_intelligence_copy.dart';
+
 enum UagPlanTier { free, essential, premium }
 
 extension UagPlanTierX on UagPlanTier {
@@ -25,13 +28,32 @@ extension UagPlanTierX on UagPlanTier {
     }
   }
 
+  String get publicName {
+    switch (this) {
+      case UagPlanTier.free:
+        return 'Core Raider';
+      case UagPlanTier.essential:
+        return 'Active Raider';
+      case UagPlanTier.premium:
+        return 'Elite Raider';
+    }
+  }
+
   static UagPlanTier fromId(String? value) {
     switch ((value ?? '').toLowerCase().trim()) {
       case 'essential':
+      case 'active_raider':
+      case 'active-raider':
         return UagPlanTier.essential;
       case 'premium':
+      case 'elite':
+      case 'elite_raider':
+      case 'elite-raider':
         return UagPlanTier.premium;
       case 'free':
+      case 'core':
+      case 'core_raider':
+      case 'core-raider':
       default:
         return UagPlanTier.free;
     }
@@ -68,8 +90,12 @@ class UagPlanDefinition {
   final List<String> benefits;
 
   bool get isUnlimited => tier == UagPlanTier.premium;
-  String get monthlyPriceLabel => monthlyPricePence == 0 ? '£0' : '£${(monthlyPricePence / 100).toStringAsFixed(2)}';
-  String get yearlyPriceLabel => yearlyPricePence == 0 ? '£0' : '£${(yearlyPricePence / 100).toStringAsFixed(2)}';
+  String get monthlyPriceLabel => monthlyPricePence == 0
+      ? '£0'
+      : '£${(monthlyPricePence / 100).toStringAsFixed(2)}';
+  String get yearlyPriceLabel => yearlyPricePence == 0
+      ? '£0'
+      : '£${(yearlyPricePence / 100).toStringAsFixed(2)}';
 }
 
 class UagPlans {
@@ -79,69 +105,74 @@ class UagPlans {
     tier: UagPlanTier.free,
     monthlyPricePence: 0,
     yearlyPricePence: 0,
-    weeklyTrades: 1,
-    weeklyMatchSearches: 1,
-    weeklyIntelHints: 1,
-    prioritySlots: 1,
+    weeklyTrades: UagCommercialEconomy.freeMonthlyTrades,
+    weeklyMatchSearches: UagCommercialEconomy.freeMonthlyMatchRaiderActions,
+    weeklyIntelHints: 8,
+    prioritySlots: 3,
     creatorDiscountPercent: 0,
     creatorCommissionPercent: 0,
     charityProfitPercent: 0,
-    adsLabel: 'Full ads',
+    adsLabel: 'Passive ads + optional rewarded boosts',
     benefits: [
-      '1 trade per week',
-      '1 Match Raider search per week',
-      '1 intel hint per week',
-      '1 priority target slot',
-      'Ads enabled',
-      '+1 extra action per 5 verified free signups',
+      'Full Collections Tracker access',
+      UagMatchIntelligenceCopy.freeDescription,
+      'Core UAG Raider voice item advice',
+      'Unlimited Intel contribution',
+      '2 active listings and 5 daily offers',
+      '5 Trades, 5 Match Raider actions, 5 Raid Intelligence unlocks and 5 Raid Planner runs each month',
+      '8 weekly Intel hints and 3 priority targets',
+      'No forced ads during voice assistant or active sessions',
     ],
   );
 
   static const essential = UagPlanDefinition(
     tier: UagPlanTier.essential,
-    monthlyPricePence: 599,
-    yearlyPricePence: 4999,
-    weeklyTrades: 5,
-    weeklyMatchSearches: 5,
-    weeklyIntelHints: 5,
-    prioritySlots: 5,
-    creatorDiscountPercent: 10,
-    creatorCommissionPercent: 10,
-    charityProfitPercent: 10,
-    adsLabel: 'Reduced ads',
+    monthlyPricePence: UagCommercialEconomy.essentialMonthlyPricePence,
+    yearlyPricePence: UagCommercialEconomy.essentialAnnualPricePence,
+    weeklyTrades: UagCommercialEconomy.essentialMonthlyTrades,
+    weeklyMatchSearches:
+        UagCommercialEconomy.essentialMonthlyMatchRaiderActions,
+    weeklyIntelHints: 40,
+    prioritySlots: 10,
+    creatorDiscountPercent: 0,
+    creatorCommissionPercent: 0,
+    charityProfitPercent: 0,
+    adsLabel: 'Light ads: banner only',
     benefits: [
-      '5 trades per week',
-      '5 Match Raider searches per week',
-      '5 intel hints per week',
-      '5 priority target slots',
-      'Reduced ads',
-      'Creator code: followers get 10% off',
-      'Creator commission: 10% recurring on active paid referrals',
-      '10% of net platform profit goes into the Essential Impact Pot',
+      UagMatchIntelligenceCopy.essentialDescription,
+      '10 active trade listings and 25 daily offers',
+      '30 Trades, 30 Match Raider actions, 30 Raid Intelligence unlocks and 30 Raid Planner runs each month',
+      '40 weekly Intel hints alongside the monthly Raid Intelligence allowance',
+      'Unlimited advanced voice commands',
+      'Smart trade, item and session alerts',
+      '30 monthly Raid Planner runs and enhanced voice profiles',
+      'Performance-based UAG Creator Programme benefits',
+      'Light advertising: banner only',
     ],
   );
 
   static const premium = UagPlanDefinition(
     tier: UagPlanTier.premium,
-    monthlyPricePence: 1099,
-    yearlyPricePence: 9499,
+    monthlyPricePence: UagCommercialEconomy.premiumMonthlyPricePence,
+    yearlyPricePence: UagCommercialEconomy.premiumAnnualPricePence,
     weeklyTrades: -1,
     weeklyMatchSearches: -1,
     weeklyIntelHints: -1,
     prioritySlots: -1,
-    creatorDiscountPercent: 20,
-    creatorCommissionPercent: 20,
-    charityProfitPercent: 20,
+    creatorDiscountPercent: 0,
+    creatorCommissionPercent: 0,
+    charityProfitPercent: 0,
     adsLabel: 'No ads',
     benefits: [
-      'Unlimited trades',
-      'Unlimited Match Raider searches',
-      'Unlimited intel hints',
-      'Unlimited priority tracking',
-      'No ads',
-      'Creator code: followers get up to 20% off',
-      'Creator commission: 20% recurring on active paid referrals',
-      '20% of net platform profit goes into the Premium Impact Pot',
+      UagMatchIntelligenceCopy.premiumDescription,
+      'Unlimited listings, offers, trades and sessions',
+      'Unlimited Match Raider actions',
+      'Unlimited Raid Intelligence unlocks and Intel hints',
+      'Trader Pro analytics and demand alerts',
+      'All UAG Raider voice profiles and personalities',
+      'Unlimited Raid Planner runs, automation and saved raid plans',
+      'No ads anywhere',
+      'Performance-based UAG Creator Programme benefits',
     ],
   );
 
@@ -182,26 +213,46 @@ class UagEntitlement {
   final DateTime? currentPeriodEnd;
   final String? referralCode;
 
-  bool get hasUnlimitedAccess => isAdmin || isDev || tier == UagPlanTier.premium;
-  bool get isPaid => tier == UagPlanTier.essential || tier == UagPlanTier.premium;
+  bool get hasUnlimitedAccess =>
+      isAdmin || isDev || tier == UagPlanTier.premium;
+  bool get isPaid =>
+      tier == UagPlanTier.essential || tier == UagPlanTier.premium;
   UagPlanDefinition get plan => UagPlans.byTier(tier);
 
   factory UagEntitlement.fromUserDoc(String uid, Map<String, dynamic> data) {
-    final monetisation = (data['monetisation'] as Map?)?.cast<String, dynamic>() ?? const <String, dynamic>{};
+    final monetisation =
+        (data['monetisation'] as Map?)?.cast<String, dynamic>() ??
+        const <String, dynamic>{};
     final tier = UagPlanTierX.fromId(
-      (monetisation['tier'] ?? data['tier'] ?? data['planTier'])?.toString(),
+      (data['subscriptionTier'] ??
+              monetisation['tier'] ??
+              data['tier'] ??
+              data['planTier'])
+          ?.toString(),
     );
-    final periodValue = monetisation['currentPeriodEnd'] ?? data['currentPeriodEnd'];
+    final periodValue =
+        monetisation['currentPeriodEnd'] ??
+        data['currentPeriodEnd'] ??
+        data['subscriptionCurrentPeriodEnd'];
     return UagEntitlement(
       uid: uid,
       tier: tier,
-      subscriptionStatus: (monetisation['subscriptionStatus'] ?? data['subscriptionStatus'] ?? 'inactive').toString(),
+      subscriptionStatus:
+          (data['subscriptionStatus'] ??
+                  monetisation['subscriptionStatus'] ??
+                  'inactive')
+              .toString(),
       isAdmin: data['isAdmin'] == true,
       isDev: data['isDev'] == true,
-      stripeCustomerId: (monetisation['stripeCustomerId'] ?? data['stripeCustomerId'])?.toString(),
-      stripeSubscriptionId: (monetisation['stripeSubscriptionId'] ?? data['stripeSubscriptionId'])?.toString(),
+      stripeCustomerId:
+          (monetisation['stripeCustomerId'] ?? data['stripeCustomerId'])
+              ?.toString(),
+      stripeSubscriptionId:
+          (monetisation['stripeSubscriptionId'] ?? data['stripeSubscriptionId'])
+              ?.toString(),
       currentPeriodEnd: periodValue is Timestamp ? periodValue.toDate() : null,
-      referralCode: (monetisation['referralCode'] ?? data['referralCode'])?.toString(),
+      referralCode: (data['referralCode'] ?? monetisation['referralCode'])
+          ?.toString(),
     );
   }
 }
@@ -221,10 +272,20 @@ class UagUsageSnapshot {
 
   factory UagUsageSnapshot.fromMap(Map<String, dynamic> data) {
     return UagUsageSnapshot(
-      tradesUsed: (data['tradesUsed'] as num?)?.toInt() ?? 0,
-      matchSearchesUsed: (data['matchSearchesUsed'] as num?)?.toInt() ?? 0,
-      intelHintsUsed: (data['intelHintsUsed'] as num?)?.toInt() ?? 0,
-      extraActionsAvailable: (data['extraActionsAvailable'] as num?)?.toInt() ?? 0,
+      tradesUsed:
+          (data['tradesUsed'] as num?)?.toInt() ??
+          (data['tradeActions'] as num?)?.toInt() ??
+          0,
+      matchSearchesUsed:
+          (data['matchSearchesUsed'] as num?)?.toInt() ??
+          (data['matchRaiderSearches'] as num?)?.toInt() ??
+          0,
+      intelHintsUsed:
+          (data['intelHintsUsed'] as num?)?.toInt() ??
+          (data['intelUnlocks'] as num?)?.toInt() ??
+          0,
+      extraActionsAvailable:
+          (data['extraActionsAvailable'] as num?)?.toInt() ?? 0,
     );
   }
 }
@@ -246,15 +307,18 @@ class UagImpactPotSnapshot {
   final int contributingUsers;
   final DateTime? lastAllocatedAt;
 
-  factory UagImpactPotSnapshot.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
+  factory UagImpactPotSnapshot.fromDoc(
+    DocumentSnapshot<Map<String, dynamic>> doc,
+  ) {
     final data = doc.data() ?? const <String, dynamic>{};
+    final last = data['lastAllocatedAt'];
     return UagImpactPotSnapshot(
       id: doc.id,
       label: (data['label'] ?? doc.id).toString(),
       monthlyPence: (data['monthlyPence'] as num?)?.toInt() ?? 0,
       allTimePence: (data['allTimePence'] as num?)?.toInt() ?? 0,
       contributingUsers: (data['contributingUsers'] as num?)?.toInt() ?? 0,
-      lastAllocatedAt: data['lastAllocatedAt'] is Timestamp ? (data['lastAllocatedAt'] as Timestamp).toDate() : null,
+      lastAllocatedAt: last is Timestamp ? last.toDate() : null,
     );
   }
 }

@@ -1,0 +1,470 @@
+import 'dart:math' as math;
+
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_community_seed.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_intelligence_location_resolver.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_poi_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_map_marker.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_drop_report.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
+
+class ArcBlueprintOpportunityEngine {
+  const ArcBlueprintOpportunityEngine();
+
+  List<ArcRaidIntelCluster> build({
+    required ArcRaidMap map,
+    required List<ArcBlueprintDropReport> reports,
+    Map<String, ArcBlueprintState> blueprintStates =
+        const <String, ArcBlueprintState>{},
+    List<ArcAdminMapMarker> canonicalMarkers = const <ArcAdminMapMarker>[],
+    DateTime? now,
+  }) {
+    final utcNow = (now ?? DateTime.now()).toUtc();
+    final relevantReports = reports
+        .where((report) {
+          if (!report.countsForMapIntelligence) return false;
+          if (ArcRaidIntelligenceSeedData.normalizeMapId(
+                report.intelligenceMapName,
+              ) !=
+              map.id) {
+            return false;
+          }
+          final state = blueprintStates[report.blueprintId];
+          return blueprintStates.isEmpty || state?.owned != true;
+        })
+        .toList(growable: false);
+
+    final grouped = <String, List<ArcBlueprintDropReport>>{};
+    for (final report in relevantReports) {
+      final locationKey = _locationKey(report);
+      grouped
+          .putIfAbsent(
+            '${report.blueprintId}|$locationKey',
+            () => <ArcBlueprintDropReport>[],
+          )
+          .add(report);
+    }
+
+    final clusters = <ArcRaidIntelCluster>[];
+    for (final entry in grouped.entries) {
+      final group = entry.value;
+      if (group.isEmpty) continue;
+      final first = group.first;
+      final pointResolution = _resolvePoint(
+        map,
+        first,
+        canonicalMarkers: canonicalMarkers,
+      );
+      if (pointResolution == null) continue;
+
+      final reporterIds = <String>{
+        for (final report in group)
+          if (report.userId.trim().isNotEmpty) report.userId.trim(),
+        for (final report in group)
+          ...report.confirmedByUserIds
+              .map((value) => value.trim())
+              .where((value) => value.isNotEmpty),
+      };
+      final reportCount = group.fold<int>(
+        0,
+        (total, report) => total + math.max(1, report.confirmationCount),
+      );
+      final newest = group
+          .map(
+            (report) =>
+                report.lastConfirmedAt ??
+                report.foundAt ??
+                report.createdAt ??
+                DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
+          )
+          .reduce((a, b) => a.isAfter(b) ? a : b)
+          .toUtc();
+      final age = utcNow.difference(newest);
+      final confidence = _confidence(
+        reportCount: reportCount,
+        independentReporterCount: reporterIds.length,
+        age: age,
+        calibratedPoint: !pointResolution.approximate,
+      );
+      final blueprintName = _blueprintName(first.blueprintId);
+      final sourceLabels = group
+          .map((report) => report.resolvedContainerLabel)
+          .where((value) => value.trim().isNotEmpty)
+          .toList(growable: false);
+      final commonSource = sourceLabels.isEmpty
+          ? first.sourceType.label
+          : _mostCommon(sourceLabels);
+      final conditions = group
+          .map((report) => report.conditionLabel?.trim())
+          .whereType<String>()
+          .where((value) => value.isNotEmpty)
+          .toSet()
+          .toList(growable: false);
+      final locationLabel = pointResolution.label;
+
+      final evidence = [
+        for (final report in group)
+          ArcRaidIntelEvidence(
+            id: report.id,
+            blueprintId: report.blueprintId,
+            mapId: map.id,
+            poiId: report.intelligencePoiId,
+            approximateArea: locationLabel,
+            point: pointResolution.point,
+            containerSource: report.resolvedContainerLabel,
+            conditionId: report.conditionId,
+            acquisitionSource: report.acquisitionSource.name,
+            claimSummary: _claimSummary(
+              blueprintName: blueprintName,
+              report: report,
+              locationLabel: locationLabel,
+            ),
+            sourceCategory: ArcBlueprintCommunitySeed.isSeedReport(report)
+                ? 'community_research_seed'
+                : 'community_drop_report',
+            sourceReference: ArcBlueprintCommunitySeed.isSeedReport(report)
+                ? ''
+                : report.signature.isEmpty
+                ? report.id
+                : report.signature,
+            publishedAt: ArcBlueprintCommunitySeed.isSeedReport(report)
+                ? null
+                : report.createdAt,
+            reviewedAt: ArcBlueprintCommunitySeed.isSeedReport(report)
+                ? null
+                : report.lastConfirmedAt,
+            direct:
+                !report.isGiftedOrIndirect ||
+                report.recipientWitnessedOriginalPickup,
+            confidence: confidence,
+            notes: ArcBlueprintCommunitySeed.isSeedReport(report)
+                ? ''
+                : report.notes,
+          ),
+      ];
+
+      clusters.add(
+        ArcRaidIntelCluster(
+          id: 'reports_${map.id}_${first.blueprintId}_${_safeId(_locationKey(first))}',
+          mapId: map.id,
+          label: '$blueprintName near $locationLabel',
+          point: pointResolution.point,
+          layer: pointResolution.layer,
+          poiId: first.intelligencePoiId,
+          blueprintIds: <String>[first.blueprintId],
+          evidence: evidence,
+          confidence: confidence,
+          reportCount: reportCount,
+          independentReporterCount: reporterIds.length,
+          freshnessLabel: _freshness(age),
+          commonSource: commonSource,
+          conditionCorrelation: conditions.isEmpty
+              ? 'Any reported condition'
+              : conditions.join(', '),
+        ),
+      );
+    }
+
+    clusters.sort((a, b) {
+      final confidenceCompare = b.confidence.score.compareTo(
+        a.confidence.score,
+      );
+      if (confidenceCompare != 0) return confidenceCompare;
+      final reportCompare = b.reportCount.compareTo(a.reportCount);
+      if (reportCompare != 0) return reportCompare;
+      return a.label.compareTo(b.label);
+    });
+    return clusters;
+  }
+
+  _ResolvedReportPoint? _resolvePoint(
+    ArcRaidMap map,
+    ArcBlueprintDropReport report, {
+    required List<ArcAdminMapMarker> canonicalMarkers,
+  }) {
+    if (report.exactPin && report.historicalPoint != null) {
+      final label = report.intelligencePoiName?.trim();
+      return _ResolvedReportPoint(
+        point: report.historicalPoint!,
+        layer: report.intelligenceLayer,
+        label: label == null || label.isEmpty ? 'Player pinpoint' : label,
+        approximate: false,
+      );
+    }
+
+    if (ArcBlueprintCommunitySeed.isSeedReport(report)) {
+      return _resolveCommunitySeedPoint(
+        map,
+        report,
+        canonicalMarkers: canonicalMarkers,
+      );
+    }
+
+    final resolution = const ArcIntelligenceLocationResolver()
+        .resolveBlueprintReport(
+          map: map,
+          adminMarkers: canonicalMarkers,
+          poiId: report.intelligencePoiId,
+          markerId: report.markerId,
+          poiName: report.intelligencePoiName,
+          fallbackLabel: report.locationName,
+          legacyPoint: report.historicalPoint,
+          preferredLayer: report.intelligenceLayer,
+        );
+    if (resolution != null && !resolution.needsAdminReview) {
+      return _ResolvedReportPoint(
+        point: resolution.point,
+        layer: resolution.layer,
+        label: resolution.label,
+        approximate: resolution.approximate,
+      );
+    }
+
+    return null;
+  }
+
+  _ResolvedReportPoint? _resolveCommunitySeedPoint(
+    ArcRaidMap map,
+    ArcBlueprintDropReport report, {
+    required List<ArcAdminMapMarker> canonicalMarkers,
+  }) {
+    final rawLabel = report.intelligencePoiName?.trim();
+    if (rawLabel == null || rawLabel.isEmpty) return null;
+    final query = _normalize(rawLabel);
+    if (query.isEmpty) return null;
+
+    final candidates = <_CommunitySeedPointCandidate>[];
+
+    for (final marker in canonicalMarkers) {
+      if (marker.mapId != map.id ||
+          !marker.isPublished ||
+          marker.kind != ArcAdminMapMarkerKind.poi) {
+        continue;
+      }
+      final labels = <String>[marker.name, ...marker.aliases];
+      var best = 0.0;
+      for (final label in labels) {
+        best = math.max(best, _communityLabelScore(query, _normalize(label)));
+      }
+      if (best >= 0.82) {
+        candidates.add(
+          _CommunitySeedPointCandidate(
+            point: marker.point,
+            layer: marker.layer,
+            label: marker.name,
+            score: best + (marker.adminVerified ? 0.02 : 0),
+          ),
+        );
+      }
+    }
+
+    if (candidates.isEmpty) return null;
+    candidates.sort((a, b) {
+      final scoreCompare = b.score.compareTo(a.score);
+      if (scoreCompare != 0) return scoreCompare;
+      return b.label.length.compareTo(a.label.length);
+    });
+
+    final best = candidates.first;
+    if (candidates.length > 1) {
+      final next = candidates[1];
+      if (_normalize(best.label) != _normalize(next.label) &&
+          best.score - next.score < 0.055) {
+        return null;
+      }
+    }
+
+    return _ResolvedReportPoint(
+      point: best.point,
+      layer: best.layer,
+      label: best.label,
+      approximate: true,
+    );
+  }
+
+  double _communityLabelScore(String query, String candidate) {
+    if (query.isEmpty || candidate.isEmpty) return 0;
+    if (query == candidate) return 1;
+
+    final queryTokens = query
+        .split(' ')
+        .where((value) => value.isNotEmpty)
+        .toSet();
+    final candidateTokens = candidate
+        .split(' ')
+        .where((value) => value.isNotEmpty)
+        .toSet();
+    if (candidateTokens.isEmpty) return 0;
+
+    final matched = candidateTokens.where(queryTokens.contains).length;
+    final candidateCoverage = matched / candidateTokens.length;
+    final queryCoverage = matched / math.max(1, queryTokens.length);
+
+    if (query.contains(candidate)) {
+      final specificity = math.min(candidate.length / 40, 1.0);
+      return 0.90 + (specificity * 0.06);
+    }
+    if (candidate.contains(query) && queryTokens.length >= 2) {
+      return 0.90;
+    }
+    if (candidateCoverage == 1 && candidateTokens.length >= 2) {
+      return 0.88 + math.min(candidateTokens.length * 0.015, 0.06);
+    }
+    if (candidateCoverage == 1 &&
+        candidateTokens.length == 1 &&
+        candidate.length >= 7) {
+      return 0.86;
+    }
+    if (candidateCoverage >= 0.75 && queryCoverage >= 0.45) {
+      return 0.82 + ((candidateCoverage - 0.75) * 0.2);
+    }
+    return 0;
+  }
+
+  /// Cluster location is already resolved against the current published POI.
+  ArcRaidMapLayer layerForCluster(
+    ArcRaidMap map,
+    ArcRaidIntelCluster cluster,
+  ) => cluster.layer;
+
+  ArcRaidIntelConfidence _confidence({
+    required int reportCount,
+    required int independentReporterCount,
+    required Duration age,
+    required bool calibratedPoint,
+  }) {
+    var score = math.min(reportCount, 8) * 8;
+    score += math.min(independentReporterCount, 5) * 12;
+    if (calibratedPoint) score += 10;
+    if (age.inDays <= 7) {
+      score += 18;
+    } else if (age.inDays <= 30) {
+      score += 10;
+    } else if (age.inDays > 90) {
+      score -= 18;
+    }
+
+    if (score >= 88) return ArcRaidIntelConfidence.confirmed;
+    if (score >= 70) return ArcRaidIntelConfidence.strong;
+    if (score >= 48) return ArcRaidIntelConfidence.moderate;
+    if (score >= 24) return ArcRaidIntelConfidence.limited;
+    return ArcRaidIntelConfidence.unverified;
+  }
+
+  String _blueprintName(String blueprintId) {
+    for (final blueprint in ArcBlueprintSeedData.blueprints) {
+      if (blueprint.id == blueprintId) return blueprint.name;
+    }
+    return blueprintId
+        .split('_')
+        .where((part) => part.isNotEmpty)
+        .map(
+          (part) => '${part.substring(0, 1).toUpperCase()}${part.substring(1)}',
+        )
+        .join(' ');
+  }
+
+  String _locationKey(ArcBlueprintDropReport report) {
+    final exactPoint = report.historicalPoint;
+    if (report.exactPin && exactPoint != null) {
+      return 'pin:${exactPoint.x.toStringAsFixed(2)}:'
+          '${exactPoint.y.toStringAsFixed(2)}:${report.intelligenceLayer.name}';
+    }
+    final markerId = report.markerId?.trim();
+    if (markerId != null && markerId.isNotEmpty) return 'marker:$markerId';
+    final poiId = report.intelligencePoiId?.trim();
+    if (poiId != null && poiId.isNotEmpty) return 'poi:$poiId';
+    final poiName = report.intelligencePoiName?.trim();
+    if (poiName != null && poiName.isNotEmpty) {
+      return 'poi_name:${_normalize(poiName)}';
+    }
+    final enemyId = report.enemySourceId?.trim();
+    if (enemyId != null && enemyId.isNotEmpty) return 'enemy:$enemyId';
+    final enemyName = report.enemySourceName?.trim();
+    if (enemyName != null && enemyName.isNotEmpty) {
+      return 'enemy_name:${_normalize(enemyName)}';
+    }
+    return 'source:${report.sourceType.name}';
+  }
+
+  String _claimSummary({
+    required String blueprintName,
+    required ArcBlueprintDropReport report,
+    required String locationLabel,
+  }) {
+    if (report.isGiftedOrIndirect && report.hasOriginalFindLocation) {
+      return '$blueprintName reported from original find location '
+          '$locationLabel after ${report.acquisitionSource.label.toLowerCase()}.';
+    }
+    if (report.isGiftedOrIndirect) {
+      return '$blueprintName indirect report at $locationLabel from '
+          '${report.acquisitionSource.label.toLowerCase()}.';
+    }
+    return '$blueprintName reported at $locationLabel from '
+        '${report.resolvedContainerLabel}.';
+  }
+
+  String _freshness(Duration age) {
+    if (age.inHours < 24) return 'Reported today';
+    if (age.inDays <= 7) return 'Reported this week';
+    if (age.inDays <= 30) return 'Reported this month';
+    if (age.inDays <= 90) return 'Reported within 90 days';
+    return 'Older community evidence';
+  }
+
+  String _mostCommon(List<String> values) {
+    final counts = <String, int>{};
+    for (final value in values) {
+      counts[value] = (counts[value] ?? 0) + 1;
+    }
+    final sorted = counts.entries.toList()
+      ..sort((a, b) {
+        final countCompare = b.value.compareTo(a.value);
+        if (countCompare != 0) return countCompare;
+        return a.key.compareTo(b.key);
+      });
+    return sorted.first.key;
+  }
+
+  String _normalize(String value) {
+    return value
+        .trim()
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), ' ')
+        .trim();
+  }
+
+  String _safeId(String value) {
+    return _normalize(value).replaceAll(' ', '_');
+  }
+}
+
+class _ResolvedReportPoint {
+  const _ResolvedReportPoint({
+    required this.point,
+    required this.layer,
+    required this.label,
+    required this.approximate,
+  });
+
+  final ArcNormalizedPoint point;
+  final ArcRaidMapLayer layer;
+  final String label;
+  final bool approximate;
+}
+
+class _CommunitySeedPointCandidate {
+  const _CommunitySeedPointCandidate({
+    required this.point,
+    required this.layer,
+    required this.label,
+    required this.score,
+  });
+
+  final ArcNormalizedPoint point;
+  final ArcRaidMapLayer layer;
+  final String label;
+  final double score;
+}

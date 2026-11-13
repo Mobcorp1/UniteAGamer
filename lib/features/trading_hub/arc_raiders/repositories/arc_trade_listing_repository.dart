@@ -2,11 +2,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/arc_trade_listing.dart';
+import 'arc_operations_repository.dart';
 
 class ArcTradeListingRepository {
   ArcTradeListingRepository({FirebaseFirestore? firestore, FirebaseAuth? auth})
-      : _firestore = firestore ?? FirebaseFirestore.instance,
-        _auth = auth ?? FirebaseAuth.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance,
+      _auth = auth ?? FirebaseAuth.instance;
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
@@ -24,9 +25,11 @@ class ArcTradeListingRepository {
         .where('userId', isEqualTo: uid)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => ArcTradeListing.fromMap(doc.data()))
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => ArcTradeListing.fromMap(doc.data()))
+              .toList(),
+        );
   }
 
   Stream<List<ArcTradeListing>> watchOpenListings({
@@ -34,7 +37,10 @@ class ArcTradeListingRepository {
     String? platform,
     String? wantedBlueprintId,
   }) {
-    Query<Map<String, dynamic>> query = _collection.where('status', isEqualTo: 'open');
+    Query<Map<String, dynamic>> query = _collection.where(
+      'status',
+      isEqualTo: 'open',
+    );
 
     if (region != null && region.isNotEmpty) {
       query = query.where('region', isEqualTo: region);
@@ -46,7 +52,10 @@ class ArcTradeListingRepository {
       query = query.where('wantedBlueprintId', isEqualTo: wantedBlueprintId);
     }
 
-    return query.orderBy('createdAt', descending: true).snapshots().map(
+    return query
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map(
           (snapshot) => snapshot.docs
               .map((doc) => ArcTradeListing.fromMap(doc.data()))
               .toList(),
@@ -54,15 +63,23 @@ class ArcTradeListingRepository {
   }
 
   Future<void> createListing(ArcTradeListing listing) async {
-    final doc = listing.id.isEmpty ? _collection.doc() : _collection.doc(listing.id);
+    final doc = listing.id.isEmpty
+        ? _collection.doc()
+        : _collection.doc(listing.id);
     final now = DateTime.now();
 
-    await doc.set(listing.copyWith(
+    final saved = listing.copyWith(
       id: doc.id,
       userId: _auth.currentUser?.uid ?? listing.userId,
       createdAt: now,
       updatedAt: now,
-    ).toMap());
+    );
+
+    await doc.set(saved.toMap());
+    await ArcOperationsRepository(
+      firestore: _firestore,
+      auth: _auth,
+    ).recordListingCreated(listingId: saved.id);
   }
 
   Future<void> closeListing(String listingId) async {
