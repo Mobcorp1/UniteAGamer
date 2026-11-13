@@ -1,48 +1,93 @@
-name: Flutter CI/CD
+name: Flutter CI / guarded production release
 
 on:
   push:
     branches: [main, master]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      confirm_production:
+        description: 'Type DEPLOY_UAG_PRODUCTION to explicitly authorize live Firebase deployment'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: read
 
 jobs:
-  build:
+  validate:
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
-      checks: write
-      pull-requests: write
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Flutter
+      - name: Set up project Flutter version
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: '3.41.9'
 
-      - name: Install Firebase CLI
-        run: npm install -g firebase-tools
-
-      - name: Write Firebase service account
-        run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_UNITEAGAME }}' > $HOME/firebase-service-account.json
+      - name: Show Flutter version
+        run: flutter --version
 
       - name: Install dependencies
-        run: flutter pub get
+        run: flutter pub get --no-example
 
       - name: Analyze
-        run: flutter analyze
+        run: flutter analyze --no-fatal-infos
+
+      - name: Run full regression suite
+        run: flutter test --reporter expanded
 
       - name: Build web
         run: |
           flutter build web --release
           dart run tool/generate_web_version.dart --output build/web/version.json
 
-      - name: Deploy Firestore Rules and Indexes
-        run: firebase deploy --only firestore:rules,firestore:indexes --project unite-a-gamer
+  deploy_production:
+    name: Manual Firebase production deployment
+    needs: validate
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.confirm_production == 'DEPLOY_UAG_PRODUCTION' }}
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up project Flutter version
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.41.9'
+
+      - name: Install dependencies
+        run: flutter pub get --no-example
+
+      - name: Build verified web bundle
+        run: |
+          flutter build web --release
+          dart run tool/generate_web_version.dart --output build/web/version.json
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Write Firebase service account securely
         env:
-          GOOGLE_APPLICATION_CREDENTIALS: $HOME/firebase-service-account.json
+          FIREBASE_CREDENTIALS_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_UNITEAGAME }}
+        run: |
+          if [ -z "$FIREBASE_CREDENTIALS_JSON" ]; then
+            echo "Firebase service account is not configured."
+            exit 1
+          fi
+          printf '%s' "$FIREBASE_CREDENTIALS_JSON" > "$RUNNER_TEMP/firebase-service-account.json"
+          chmod 600 "$RUNNER_TEMP/firebase-service-account.json"
+
+      - name: Deploy Firestore Rules and Indexes
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
+        run: firebase deploy --only firestore:rules,firestore:indexes --project unite-a-gamer --non-interactive
 
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
