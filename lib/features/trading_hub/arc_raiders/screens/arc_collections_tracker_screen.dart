@@ -189,9 +189,9 @@ class _ArcCollectionsTrackerScreenState
             _collectionTile(
               keyName: 'designs',
               label: 'DESIGNS',
-              subtitle: '100 slots · screenshot import and manual duplicates',
+              subtitle: '101 slots · screenshot import and manual duplicates',
               icon: Icons.chair_alt_outlined,
-              total: 100,
+              total: 101,
               ownedCount: designCount,
               onTap: () => _open(const ArcAdditionalCollectionsScreen(
                 initialKind: ArcNativeCollectionKind.designs)),

@@ -21,6 +21,6 @@ void main() {
 
     await tester.tap(find.text('DESIGNS'));
     await tester.pump();
-    expect(find.text('100 SLOTS'), findsOneWidget);
+    expect(find.text('101 SLOTS'), findsOneWidget);
   });
 }

@@ -29,6 +29,7 @@ void main() {
     'Clinic Medical Cabinet',
     'Ornate Wardrobe',
     'Polished Faculty Table',
+    'Offering Display Table',
     'Ornate Stash',
     'Diner Stool',
     'Lab Stool',
@@ -107,10 +108,10 @@ void main() {
     'Sturdy Den Shelf',
   ];
 
-  test('PASS26 maps all 100 Designs in MetaForge in-game order', () {
+  test('PASS26 maps 101 Designs in player-corrected reference order', () {
     expect(ArcDesignReferenceCatalogue.inGameOrder, expectedInGameOrder);
-    expect(ArcDesignReferenceCatalogue.inGameOrder.length, 100);
-    for (var i = 1; i <= 100; i++) {
+    expect(ArcDesignReferenceCatalogue.inGameOrder.length, 101);
+    for (var i = 1; i <= 101; i++) {
       expect(
         ArcDesignReferenceCatalogue.nameAt(i),
         expectedInGameOrder[i - 1],
@@ -118,13 +119,13 @@ void main() {
       );
     }
     expect(ArcDesignReferenceCatalogue.nameAt(0), isNull);
-    expect(ArcDesignReferenceCatalogue.nameAt(101), isNull);
+    expect(ArcDesignReferenceCatalogue.nameAt(102), isNull);
   });
 
   test('PASS26 preserves the duplicate Study Armchair ambiguity', () {
-    expect(ArcDesignReferenceCatalogue.nameAt(37), 'Study Armchair');
-    expect(ArcDesignReferenceCatalogue.nameAt(87), 'Study Armchair');
-    expect(expectedInGameOrder.toSet().length, 99);
+    expect(ArcDesignReferenceCatalogue.nameAt(38), 'Study Armchair');
+    expect(ArcDesignReferenceCatalogue.nameAt(88), 'Study Armchair');
+    expect(expectedInGameOrder.toSet().length, 100);
     expect(
       ArcDesignReferenceCatalogue.names,
       contains('Study Armchair (Uncommon)'),

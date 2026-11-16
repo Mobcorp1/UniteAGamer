@@ -23,7 +23,7 @@ void main() {
   };
 
   test('six furniture images match recovered PASS26 in-game positions', () {
-    expect(ArcDesignReferenceCatalogue.inGameOrder.length, 100);
+    expect(ArcDesignReferenceCatalogue.inGameOrder.length, 101);
     for (final entry in designs.entries) {
       expect(ArcDesignReferenceCatalogue.nameAt(entry.key), entry.value);
       final filename =
@@ -34,8 +34,8 @@ void main() {
     expect(File('assets/arc_raiders/blueprints/sacrifice.webp').existsSync(), isTrue);
     expect(File('assets/arc_raiders/blueprints/verdigris.webp').existsSync(), isTrue);
     // Original position identities and owned/dupe data must not be remapped.
-    expect(ArcDesignReferenceCatalogue.nameAt(37), 'Study Armchair');
-    expect(ArcDesignReferenceCatalogue.nameAt(87), 'Study Armchair');
+    expect(ArcDesignReferenceCatalogue.nameAt(38), 'Study Armchair');
+    expect(ArcDesignReferenceCatalogue.nameAt(88), 'Study Armchair');
   });
 
   test('stencils remain in the stencil catalogue', () {

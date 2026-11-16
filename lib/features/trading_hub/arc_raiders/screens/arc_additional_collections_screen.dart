@@ -131,8 +131,14 @@ class _ArcAdditionalCollectionsScreenState
           continue;
         }
         final filename = path.split('/').last.toLowerCase();
-        // Only references explicitly bundled in pubspec are eligible.
-        found.putIfAbsent(filename, () => path);
+        // Prefer actual Design artwork when filenames occur in multiple
+        // bundled folders. Preserve the existing fallback for missing files.
+        final current = found[filename];
+        if (current == null ||
+            (path.startsWith('assets/arc_raiders/blueprints/') &&
+                !current.startsWith('assets/arc_raiders/blueprints/'))) {
+          found[filename] = path;
+        }
       }
       if (mounted) setState(() => _designArtworkByFilename = found);
     } catch (_) {
@@ -853,7 +859,7 @@ class _ArcAdditionalCollectionsScreenState
       label: _name(slot),
       assetPath: _kind == ArcNativeCollectionKind.stencils
           ? ArcStencilCatalogue.assetAt(slot)
-          : null,
+          : _designArtworkForName(_name(slot)),
       spares: _saved.duplicateCounts[slot] ?? 0,
     );
     final owned = <ArcCollectionShareItem>[
@@ -1204,7 +1210,7 @@ class _ArcAdditionalCollectionsScreenState
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text(
-              'Check the Design position in your game first. The 100 reference names are not sorted in game order.',
+              'Check the Design position in your game first. Slot 25 is player-confirmed. Check other names against your in-game collection.',
             ),
             TextField(
               key: const Key('collections-design-slot-input'),
@@ -1213,7 +1219,7 @@ class _ArcAdditionalCollectionsScreenState
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               decoration: const InputDecoration(
-                labelText: 'Game slot number (1–100)',
+                labelText: 'Game slot number (1–101)',
               ),
             ),
           ],
@@ -1226,7 +1232,7 @@ class _ArcAdditionalCollectionsScreenState
           FilledButton(
             onPressed: () {
               final n = int.tryParse(typedSlot);
-              if (n != null && n >= 1 && n <= 100) {
+              if (n != null && n >= 1 && n <= 101) {
                 Navigator.pop(ctx, n);
               }
             },

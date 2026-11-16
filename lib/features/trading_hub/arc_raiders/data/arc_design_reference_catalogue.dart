@@ -1,5 +1,7 @@
-/// Verified ARC Raiders 2.0 furniture Design names, alphabetically sorted.
-/// Source: https://www.arcscrappy.com/en/items (Design, 100 items).
+/// Furniture Design names (101), alphabetical lookup including the Soul's Offering addition.
+/// Baseline reference: MetaForge Design Tracker (100-item order).
+/// Player-confirmed: Offering Display Table at slot 25 (row 2, card 8).
+/// The remaining positions use the shifted reference until checked in-game.
 /// IMPORTANT: this is NOT the in-game 17-column positional sequence.
 /// A name must be explicitly assigned to a slot; never infer a name from
 /// its alphabetical index, as doing so would mislabel ownership and trades.
@@ -57,6 +59,7 @@ class ArcDesignReferenceCatalogue {
     'Lab Ceiling Light',
     'Lab Stool',
     'Multicolored Geometric Sofa',
+    'Offering Display Table',
     'Ornate Den Bed',
     'Ornate Den Shelf',
     'Ornate Stash',
@@ -108,7 +111,9 @@ class ArcDesignReferenceCatalogue {
     'Work Light',
   ];
 
-  /// MetaForge Design Tracker's 100 in-game positions (17 columns, final row partial).
+  /// Player-corrected 101 Design reference positions (17 columns, last row 16).
+  /// Position 25 is player-confirmed. Other positions are provisional:
+  /// baseline MetaForge positions 25–100 shift forward by one.
   /// This is DISPLAY metadata only. Saved ownership and dupes continue to use
   /// their existing numeric slot IDs; manual user-verified names take precedence.
   /// The two Study Armchair variants cannot safely be assigned a rarity to a
@@ -138,6 +143,7 @@ class ArcDesignReferenceCatalogue {
     'Clinic Medical Cabinet',
     'Ornate Wardrobe',
     'Polished Faculty Table',
+    'Offering Display Table',
     'Ornate Stash',
     'Diner Stool',
     'Lab Stool',
@@ -236,6 +242,7 @@ class ArcDesignReferenceCatalogue {
   /// 1-based slot assignments.
   static const Map<String, String> suppliedArtwork = <String, String>{
     'Diner Sofa': 'assets/arc_raiders/blueprints/diner_sofa.webp',
+    'Offering Display Table': 'assets/arc_raiders/blueprints/offering_display_table.webp',
     'Draped Debris F': 'assets/arc_raiders/blueprints/draped_debris_f.webp',
     'Multicolored Geometric Sofa':
         'assets/arc_raiders/blueprints/multicolored_geometric_sofa.webp',
@@ -266,7 +273,7 @@ class ArcDesignReferenceCatalogue {
   static String? displayNameForSlot(
     int slot,
     Map<int, String> userAssignments,
-  ) => slot < 1 || slot > 100
+  ) => slot < 1 || slot > 101
       ? null
       : (userAssignments[slot] ?? knownDisplaySlots[slot]);
 
@@ -278,5 +285,5 @@ class ArcDesignReferenceCatalogue {
   static String? inGameNameForSlot(
     int slot,
     Map<int, String> verifiedAssignments,
-  ) => slot >= 1 && slot <= 100 ? verifiedAssignments[slot] : null;
+  ) => slot >= 1 && slot <= 101 ? verifiedAssignments[slot] : null;
 }

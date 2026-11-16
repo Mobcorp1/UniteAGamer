@@ -27,7 +27,7 @@ class ArcDesignSlotNamesRepository {
     final mapped = <int,String>{};
     raw.forEach((key, value) {
       final slot = int.tryParse(key.toString());
-      if (slot != null && slot >= 1 && slot <= 100 && value is String &&
+      if (slot != null && slot >= 1 && slot <= 101 && value is String &&
           ArcDesignReferenceCatalogue.names.contains(value)) {
         mapped[slot] = value;
       }
@@ -36,7 +36,7 @@ class ArcDesignSlotNamesRepository {
   }
 
   Future<void> assign(int slot, String name) async {
-    if (slot < 1 || slot > 100 ||
+    if (slot < 1 || slot > 101 ||
         !ArcDesignReferenceCatalogue.names.contains(name)) {
       throw ArgumentError('Unknown Design slot or name.');
     }

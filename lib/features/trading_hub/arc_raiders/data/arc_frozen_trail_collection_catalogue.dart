@@ -18,8 +18,8 @@ class ArcFrozenTrailCollectionCatalogue {
 
   static const designGrid = ArcCollectionGridSpec(
     type: ArcCollectionType.designs,
-    totalSlots: 100,
-    rowColumnCounts: <int>[17, 17, 17, 17, 17, 15],
+    totalSlots: 101,
+    rowColumnCounts: <int>[17, 17, 17, 17, 17, 16],
   );
 
   static const specs = <ArcCollectionType, ArcCollectionGridSpec>{

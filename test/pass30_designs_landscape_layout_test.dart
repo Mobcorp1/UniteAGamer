@@ -37,7 +37,7 @@ void main() {
       final delegate =
           grid.gridDelegate as SliverGridDelegateWithFixedCrossAxisCount;
       expect(delegate.crossAxisCount, 17);
-      expect(grid.semanticChildCount, 100);
+      expect(grid.semanticChildCount, 101);
       final viewportHeight = tester.getSize(gridFinder).height;
       // Exactly two fully visible rows, including all grid padding and gap.
       expect(delegate.mainAxisExtent,

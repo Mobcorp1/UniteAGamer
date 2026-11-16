@@ -23,14 +23,16 @@ void main() {
       .map((s) => s.slot).toList(), <int>[2, 3, 5, 6, 7, 9]);
   });
 
-  test('Native PS5 Designs screenshot gives 50 of 100 in exact positions', () async {
+  test('Legacy PS5 Designs screenshot retains first 100 positions in 101-grid schema', () async {
     final scan = recognizer.analyse(
       await fixture('designs_ps5_native.jpg'), ArcNativeCollectionKind.designs);
-    expect(scan.slots.length, 100);
-    expect(scan.count(ArcNativeSlotState.owned), 50);
-    expect(scan.count(ArcNativeSlotState.missing), 50);
-    expect(scan.count(ArcNativeSlotState.review), 0);
-    expect(scan.slots.where((s) => s.state == ArcNativeSlotState.owned)
+    expect(scan.slots.length, 101);
+    // Historical 100-position fixture: keep its old assertions intact.
+    final legacy = scan.slots.where((s) => s.slot <= 100).toList();
+    expect(legacy.where((s) => s.state == ArcNativeSlotState.owned).length, 50);
+    expect(legacy.where((s) => s.state == ArcNativeSlotState.missing).length, 50);
+    expect(legacy.where((s) => s.state == ArcNativeSlotState.review).length, 0);
+    expect(legacy.where((s) => s.state == ArcNativeSlotState.owned)
       .map((s) => s.slot).toList(), <int>[
         1, 4, 5, 6, 9, 10, 13, 15, 16, 17, 19, 20, 21, 23, 25,
         28, 35, 36, 41, 42, 43, 45, 46, 50, 53, 56, 59, 62, 63, 64,

@@ -16,12 +16,12 @@ void main() {
       );
       expect(
         ArcFrozenTrailCollectionCatalogue.designGrid.rowColumnCounts,
-        const [17, 17, 17, 17, 17, 15],
+        const [17, 17, 17, 17, 17, 16],
       );
 
       expect(ArcFrozenTrailCollectionCatalogue.blueprintGrid.totalSlots, 91);
       expect(ArcFrozenTrailCollectionCatalogue.stencilGrid.totalSlots, 14);
-      expect(ArcFrozenTrailCollectionCatalogue.designGrid.totalSlots, 100);
+      expect(ArcFrozenTrailCollectionCatalogue.designGrid.totalSlots, 101);
     });
 
     test('Advanced Camera is row 3 position 12 / slot 46', () {

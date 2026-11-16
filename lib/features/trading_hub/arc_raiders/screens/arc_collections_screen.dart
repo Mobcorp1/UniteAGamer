@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../data/arc_design_reference_catalogue.dart';
 import '../data/arc_frozen_trail_collection_catalogue.dart';
 import '../models/arc_collection_models.dart';
 import '../widgets/arc_raiders_screen_shell.dart';
@@ -222,6 +223,9 @@ class _ArcCollectionsScreenState extends State<ArcCollectionsScreen> {
       _selected,
       slot,
     );
+    final referenceName = _selected == ArcCollectionType.designs
+        ? ArcDesignReferenceCatalogue.nameAt(slot)
+        : null;
     final verified = entry != null;
     final accent = verified
         ? ArcUiTokens.primaryAccent
@@ -273,7 +277,7 @@ class _ArcCollectionsScreenState extends State<ArcCollectionsScreen> {
           else
             const Spacer(),
           Text(
-            entry?.name ?? 'UNVERIFIED',
+            entry?.name ?? referenceName ?? 'UNVERIFIED',
             maxLines: 3,
             overflow: TextOverflow.ellipsis,
             style: ArcUiTokens.body(
@@ -296,7 +300,7 @@ class _ArcCollectionsScreenState extends State<ArcCollectionsScreen> {
       return const ArcRaidersStatePanel(
         title: 'Layout captured',
         message:
-            'The 100-slot Design geometry is confirmed. Item names and exact positions will be added only when verified in-game.',
+            '101 Design positions are shown in the player-corrected reference order. Existing saved progress is unchanged.',
         icon: Icons.rule_folder_outlined,
       );
     }

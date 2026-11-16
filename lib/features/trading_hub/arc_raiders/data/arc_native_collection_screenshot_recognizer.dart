@@ -10,7 +10,7 @@ enum ArcNativeCollectionKind {
 
   String get title => this == stencils ? 'Stencils' : 'Designs';
   String get key => name;
-  int get slots => this == stencils ? 14 : 100;
+  int get slots => this == stencils ? 14 : 101;
   int get columns => this == stencils ? 9 : 17;
 }
 
@@ -174,7 +174,7 @@ class ArcNativeCollectionScreenshotRecognizer {
     final y2 = ((cellY + cellH * bottom) * sy).round().clamp(0, picture.height);
     var hits = 0;
     var samples = 0;
-    // Sampling stride keeps 100-card inspection quick on mobile and web.
+    // Sampling stride keeps 101-card inspection quick on mobile and web.
     for (var py = y1; py < y2; py += 2) {
       for (var px = x1; px < x2; px += 2) {
         final pixel = picture.getPixel(px, py);
