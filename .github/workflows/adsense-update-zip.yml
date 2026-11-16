@@ -1,0 +1,59 @@
+name: UAG AdSense PASS 04 - Download Updates ZIP
+
+on:
+  push:
+    branches:
+      - fix/adsense-live-release-candidate-20261102
+    paths:
+      - .github/workflows/adsense-update-zip.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out certified release candidate
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Validate and package every updated file
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p package
+          files=(
+            ".github/workflows/public-calculator-validation.yml"
+            ".github/workflows/adsense-content-build-certification.yml"
+            "scripts/test_research_material_calculator.js"
+            "web/guides/bantam-stiletto/index.html"
+            "web/guides/index.html"
+            "web/guides/outpost-upgrades/index.html"
+            "web/guides/research-station/index.html"
+            "web/public-assets/research-planner.css"
+            "web/public-assets/research-planner.js"
+            "web/sitemap.xml"
+            "web/tools/index.html"
+            "web/tools/research-material-calculator/index.html"
+          )
+          for file in "${files[@]}"; do
+            test -s "$file" || { echo "Missing file: $file"; exit 1; }
+            mkdir -p "package/$(dirname "$file")"
+            cp "$file" "package/$file"
+          done
+          printf 'UAG AdSense PASS 04 updates\nCertified source: fix/adsense-live-release-candidate-20261102\nSource commit: %s\nFiles: 12 (site content, styles, calculator, tests and CI)\nNo PowerShell script included.\nProduction not deployed.\n' "$GITHUB_SHA" > package/README.txt
+          test "$(find package -type f | wc -l)" -eq 13
+          node scripts/test_research_material_calculator.js
+
+      - name: Upload the complete updates ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: UAG_ADSENSE_PASS_04_UPDATES
+          path: package/
+          retention-days: 30
+          compression-level: 6
+          if-no-files-found: error
+          include-hidden-files: true

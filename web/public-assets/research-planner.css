@@ -1,0 +1,36 @@
+
+/* Accessible UAG public research planner */
+.planner-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:22px;margin:26px 0}
+.planner-panel{padding:24px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+.planner-panel h2{font-size:1.65rem}.planner-panel h3{font-size:1.2rem}
+.planner-field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.planner-field{display:flex;flex-direction:column;gap:6px;margin:8px 0 16px}
+.planner-field label,.planner-label{font-weight:650;color:var(--text)}
+.planner-field small,.planner-note{color:var(--muted)}
+.planner-field select,.planner-field input{font:inherit;color:var(--text);background:#040b11;border:1px solid #486273;border-radius:6px;padding:9px 11px;min-width:0;width:100%}
+.planner-field select:focus-visible,.planner-field input:focus-visible,.planner-table input:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.planner-check{display:flex;gap:11px;align-items:start;margin:12px 0}.planner-check input{width:20px;height:20px;flex:0 0 auto;accent-color:var(--cyan);margin-top:4px}
+.planner-table{width:100%;border-collapse:collapse;margin:15px 0;min-width:480px}
+.planner-table th,.planner-table td{padding:9px 12px;border-bottom:1px solid var(--line);text-align:left}
+.planner-table th{color:var(--cyan);font-size:.85rem}
+.planner-table .number{text-align:right;font-variant-numeric:tabular-nums}
+.planner-table .missing{font-weight:750;color:#b5f8ec}
+.planner-table input{width:100px;max-width:100%;font:inherit;background:#03060a;color:var(--text);border:1px solid #486273;border-radius:5px;padding:6px}
+.planner-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px}
+.planner-actions button{font:inherit;font-weight:650;padding:10px 18px;cursor:pointer;border:1px solid var(--cyan);border-radius:7px;background:#073b46;color:#f0ffff}
+.planner-actions button:disabled{opacity:.5;cursor:not-allowed}
+.planner-actions .secondary-action{background:transparent;border-color:#6b8190}
+.planner-actions button:focus-visible{outline:2px solid var(--pink);outline-offset:3px}
+.planner-warnings{padding:12px 18px 12px 33px;border-left:3px solid #ffd26d;background:#292217;color:#ffe7b9}
+.planner-stages{padding-left:20px}.planner-stages li{margin-bottom:4px}
+.planner-highlight{font-weight:700;color:var(--cyan);margin:12px 0}
+.planner-reference{padding:18px;border-left:3px solid var(--cyan);background:#08141d;margin:20px 0}
+.planner-reference p{margin-bottom:.55rem}
+.planner-reference h3{font-size:1.15rem}
+.planner-scroll{overflow-x:auto}
+.planner-reference-table{width:100%;border-collapse:collapse}
+.planner-reference-table th,.planner-reference-table td{text-align:left;padding:10px;border-bottom:1px solid #2a3b47;vertical-align:top}
+.planner-reference-table th{color:var(--cyan)}
+@media(max-width:860px){.planner-layout{grid-template-columns:1fr}.planner-field-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){.planner-field-grid{grid-template-columns:1fr}.planner-panel{padding:15px}.planner-table{min-width:440px}.planner-actions button{width:100%}}
+@media print{.site-header,.site-footer,.planner-actions,.skip-link,.breadcrumbs{display:none!important}body{background:white;color:black}.planner-panel,.planner-reference{background:white;color:black;border-color:#555}.planner-table td,.planner-table th{color:black!important}.planner-field select,.planner-field input{color:black;background:white}.planner-layout{display:block}.planner-panel{break-inside:avoid}}

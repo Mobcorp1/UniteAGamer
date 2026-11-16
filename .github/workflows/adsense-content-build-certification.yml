@@ -1,0 +1,91 @@
+name: UAG AdSense Original Content Release Certification
+
+on:
+  pull_request:
+    paths:
+      - 'web/**'
+      - 'scripts/test_research_material_calculator.js'
+      - '.github/workflows/adsense-content-build-certification.yml'
+      - '.github/workflows/public-calculator-validation.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: uag-adsense-certification-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  certify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Certify original material calculator
+        run: node scripts/test_research_material_calculator.js
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.41.0'
+          cache: true
+      - name: Install Flutter dependencies
+        run: flutter pub get
+      - name: Analyze Flutter source
+        run: flutter analyze --no-fatal-infos
+      - name: Certify locked UI regressions
+        run: |
+          flutter test --reporter expanded \
+            test/pass32_stencils_bottom_ad_layout_test.dart \
+            test/pass31_designs_artwork_fill_test.dart \
+            test/pass30_designs_landscape_layout_test.dart \
+            test/arc_collections_polish_pass08_test.dart \
+            test/arc_collections_persistent_grid_test.dart \
+            test/arc_collections_unified_ux_test.dart \
+            test/blueprint_intel_entry_restoration_test.dart \
+            test/blueprint_grid_screen_regression_test.dart \
+            test/arc_blueprint_canonical_grid_test.dart \
+            test/arc_blueprint_drop_report_legacy_payload_test.dart \
+            test/pass26_furniture_design_grid_order_test.dart \
+            test/pass27_favourite_snapshot_relevance_regression_test.dart \
+            test/pass23_command_centre_favourite_loadout_sync_test.dart \
+            test/arc_furniture_design_artwork_wiring_test.dart \
+            test/arc_command_centre_loadout_restore_regression_test.dart \
+            test/arc_research_resource_assets_test.dart \
+            test/arc_events_workspace_test.dart \
+            test/arc_server_region_mapping_test.dart
+      - name: Build Flutter production website
+        run: flutter build web --release --no-wasm-dry-run
+      - name: Verify ad and original content artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s build/web/main.dart.js
+          test -s build/web/app.html
+          test -s build/web/tools/research-material-calculator/index.html
+          test -s build/web/public-assets/research-planner.js
+          test -s build/web/public-assets/research-planner.css
+          test -s build/web/ads.txt
+          grep -Fxq 'google.com, pub-2994575443987525, DIRECT, f08c47fec0942fa0' build/web/ads.txt
+          grep -Fq 'https://uniteagamer.com/tools/research-material-calculator/' build/web/sitemap.xml
+          grep -Fq '<meta name="google-adsense-account" content="ca-pub-2994575443987525">' build/web/tools/research-material-calculator/index.html
+          grep -Fq 'https://uniteagamer.com/tools/research-material-calculator/' build/web/tools/research-material-calculator/index.html
+          grep -Fq 'https://uniteagamer.com/' build/web/index.html
+          echo 'All required AdSense and UAG original content artifacts are present.'
+      - name: Prepare immutable release metadata
+        run: dart run tool/prepare_web_release.dart --output build/web/version.json
+      - name: Upload non-deployed build for inspection
+        uses: actions/upload-artifact@v4
+        with:
+          name: uag-adsense-certification-${{ github.sha }}
+          path: build/web/
+          retention-days: 7
+          if-no-files-found: error
