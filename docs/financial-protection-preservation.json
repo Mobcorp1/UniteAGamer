@@ -1,0 +1,163 @@
+{
+  "startingHead": "a70821ce42daa856d8e5b0a86302cac2114c0e70",
+  "originalWorktree": "C:/Users/mikem/uag_traders_hub",
+  "note": "Artwork was committed by existing work to a70821ce42da before isolated implementation. It is no longer staged. Ten installer/sync files remain untracked. No original files were modified during the isolated pass. Original worktree also retains the earlier financial-protection drafts; these were copied, never removed or staged there.",
+  "files": [
+    {
+      "path": "assets/arc_raiders/blueprints/archive_floor_lamp.webp",
+      "sha256": "DA90543814DB39F99EE741F6E48D990FCEE9A0458E2C2835A7D1E221018D0D0B",
+      "currentSha256": "DA90543814DB39F99EE741F6E48D990FCEE9A0458E2C2835A7D1E221018D0D0B",
+      "unchanged": true
+    },
+    {
+      "path": "assets/arc_raiders/blueprints/blue_lab_cabinet.webp",
+      "sha256": "FCEC0D3EB838CE3392BB6B4ADAEB8CB0DF34152E20C852C2FECF5930D07E8520",
+      "currentSha256": "FCEC0D3EB838CE3392BB6B4ADAEB8CB0DF34152E20C852C2FECF5930D07E8520",
+      "unchanged": true
+    },
+    {
+      "path": "assets/arc_raiders/blueprints/chambers_shelf.webp",
+      "sha256": "897E843BF4C29DB43EB8B54E25E1FAF04E79C0F9CB0A659D82235FA937D32A46",
+      "currentSha256": "897E843BF4C29DB43EB8B54E25E1FAF04E79C0F9CB0A659D82235FA937D32A46",
+      "unchanged": true
+    },
+    {
+      "path": "assets/arc_raiders/blueprints/ornate_den_bed.webp",
+      "sha256": "2816395AF6ED0BE4DA24BD7BDA8E0D2A6E9E53DC9570A85F8DE39089F6E271CC",
+      "currentSha256": "2816395AF6ED0BE4DA24BD7BDA8E0D2A6E9E53DC9570A85F8DE39089F6E271CC",
+      "unchanged": true
+    },
+    {
+      "path": "assets/arc_raiders/blueprints/polished_stash.webp",
+      "sha256": "F965D3717CD7373D7EB939997589178905CF7B80B8165B2E097045CA6B85F6A0",
+      "currentSha256": "F965D3717CD7373D7EB939997589178905CF7B80B8165B2E097045CA6B85F6A0",
+      "unchanged": true
+    },
+    {
+      "path": "assets/arc_raiders/blueprints/polished_weapon_rack.webp",
+      "sha256": "000D82EAC736636418B6699DC202F49605EDF236059E48BD02211FEF59D0D83D",
+      "currentSha256": "000D82EAC736636418B6699DC202F49605EDF236059E48BD02211FEF59D0D83D",
+      "unchanged": true
+    },
+    {
+      "path": "assets/arc_raiders/blueprints/printed_fabric_chair.webp",
+      "sha256": "5803697BBA54FF979862E5DD5D5AD764C96BAF74B74998176219F51454ABDDC2",
+      "currentSha256": "5803697BBA54FF979862E5DD5D5AD764C96BAF74B74998176219F51454ABDDC2",
+      "unchanged": true
+    },
+    {
+      "path": "assets/arc_raiders/blueprints/restaurant_table.webp",
+      "sha256": "2F50361954AD240488D9F9A6F0CC31436A5234F4F57F2CAB93D3459218B722B1",
+      "currentSha256": "2F50361954AD240488D9F9A6F0CC31436A5234F4F57F2CAB93D3459218B722B1",
+      "unchanged": true
+    },
+    {
+      "path": "assets/arc_raiders/blueprints/small_lab_cabinet.webp",
+      "sha256": "2CBFF7056BECD385BE69EEECE93AC00B3B299FADBA7200A1F4A33C66BEE4B92A",
+      "currentSha256": "2CBFF7056BECD385BE69EEECE93AC00B3B299FADBA7200A1F4A33C66BEE4B92A",
+      "unchanged": true
+    },
+    {
+      "path": "assets/arc_raiders/blueprints/study_armchair.webp",
+      "sha256": "1C971FA0A41B654466A1118243B84D35FDF8043CC7479BAE96EC0AFC49961447",
+      "currentSha256": "1C971FA0A41B654466A1118243B84D35FDF8043CC7479BAE96EC0AFC49961447",
+      "unchanged": true
+    },
+    {
+      "path": "assets/arc_raiders/blueprints/sturdy_aviary_table.webp",
+      "sha256": "6035EE1B1A28381859732A220F27A6A987584362A2B8A39CA90B1AAFE620D929",
+      "currentSha256": "6035EE1B1A28381859732A220F27A6A987584362A2B8A39CA90B1AAFE620D929",
+      "unchanged": true
+    },
+    {
+      "path": "assets/arc_raiders/blueprints/sturdy_den_shelf.webp",
+      "sha256": "01E724FC5F900FDC1944E81654F0A0274A1BA4B4873768D8A84E5113ECDA986E",
+      "currentSha256": "01E724FC5F900FDC1944E81654F0A0274A1BA4B4873768D8A84E5113ECDA986E",
+      "unchanged": true
+    },
+    {
+      "path": "assets/arc_raiders/blueprints/sturdy_faculty_table.webp",
+      "sha256": "1836481E96C33398AC269F102EC3CFB9853692ED468BC618D0CF0357BBCA6D21",
+      "currentSha256": "1836481E96C33398AC269F102EC3CFB9853692ED468BC618D0CF0357BBCA6D21",
+      "unchanged": true
+    },
+    {
+      "path": "assets/arc_raiders/blueprints/sturdy_lab_chair.webp",
+      "sha256": "B8832EA2CCD34749CBE01E8B17DD410614311453C154C0F933F88A079718818D",
+      "currentSha256": "B8832EA2CCD34749CBE01E8B17DD410614311453C154C0F933F88A079718818D",
+      "unchanged": true
+    },
+    {
+      "path": "assets/arc_raiders/blueprints/warehouse_chair.webp",
+      "sha256": "1AA3EADAD6134E8434529CF6FA7632FFF1BE1E280C09BCD5E0517820A12DA272",
+      "currentSha256": "1AA3EADAD6134E8434529CF6FA7632FFF1BE1E280C09BCD5E0517820A12DA272",
+      "unchanged": true
+    },
+    {
+      "path": "assets/arc_raiders/blueprints/warehouse_desk.webp",
+      "sha256": "459DD80A79B2026AE895499A8358CBF25DB686905111A9DFFC39042E24B4AEC7",
+      "currentSha256": "459DD80A79B2026AE895499A8358CBF25DB686905111A9DFFC39042E24B4AEC7",
+      "unchanged": true
+    },
+    {
+      "path": "README.txt",
+      "sha256": "D6E111DAB5C2128781D689811732CE5161313CD6503786B66A21CE318A8901DB",
+      "currentSha256": "D6E111DAB5C2128781D689811732CE5161313CD6503786B66A21CE318A8901DB",
+      "unchanged": true
+    },
+    {
+      "path": "README_UAG_GITHUB_SYNC_V5.txt",
+      "sha256": "83C551FD1C75C55DBA30E85135FFA8281753166791EEBBCF0568188820850AC3",
+      "currentSha256": "83C551FD1C75C55DBA30E85135FFA8281753166791EEBBCF0568188820850AC3",
+      "unchanged": true
+    },
+    {
+      "path": "README_UAG_SONY_INSTALL.txt",
+      "sha256": "46609C50B2C0775AA7D23F2753626F06BC5F31EDF5F34341ACF3218243FFC7C0",
+      "currentSha256": "46609C50B2C0775AA7D23F2753626F06BC5F31EDF5F34341ACF3218243FFC7C0",
+      "unchanged": true
+    },
+    {
+      "path": "README_UAG_SYNC.txt",
+      "sha256": "A335ED13E1BC1D84559B8FDB83FFCD469C1F905B86143021D6B386BB5200F86B",
+      "currentSha256": "A335ED13E1BC1D84559B8FDB83FFCD469C1F905B86143021D6B386BB5200F86B",
+      "unchanged": true
+    },
+    {
+      "path": "RUN_UAG_SYNC_NEW_VERSION.cmd",
+      "sha256": "14612FB58FFFD3C3F376F77A344593EC2E149D99657E6D3BA8087606B38453C0",
+      "currentSha256": "14612FB58FFFD3C3F376F77A344593EC2E149D99657E6D3BA8087606B38453C0",
+      "unchanged": true
+    },
+    {
+      "path": "RUN_UAG_SYNC_V5.cmd",
+      "sha256": "BA91ABE641FEF10500D3B236B4E2E3C1C88D84E1B1021555BED77C1EED205595",
+      "currentSha256": "BA91ABE641FEF10500D3B236B4E2E3C1C88D84E1B1021555BED77C1EED205595",
+      "unchanged": true
+    },
+    {
+      "path": "UAG_GITHUB_SYNC_RELEASE_V5.js",
+      "sha256": "FC14575E80245CFFC168C0F5C43E36DAB91595D42AEA51803B2200D4E09BBC13",
+      "currentSha256": "FC14575E80245CFFC168C0F5C43E36DAB91595D42AEA51803B2200D4E09BBC13",
+      "unchanged": true
+    },
+    {
+      "path": "UAG_INSTALL_ACTUAL_SONY_PHONE.ps1",
+      "sha256": "A6481815DD3B51155506E3E9482FB3E1C0A6342F71729A74C5B6CA98D1B488E9",
+      "currentSha256": "A6481815DD3B51155506E3E9482FB3E1C0A6342F71729A74C5B6CA98D1B488E9",
+      "unchanged": true
+    },
+    {
+      "path": "UAG_INSTALL_PHONE.ps1",
+      "sha256": "86240A8C268E4CDCDC868C60BB87CAA35DAB754F8FE27DB3E5370427B475576B",
+      "currentSha256": "86240A8C268E4CDCDC868C60BB87CAA35DAB754F8FE27DB3E5370427B475576B",
+      "unchanged": true
+    },
+    {
+      "path": "UAG_SYNC_NEW_VERSION.ps1",
+      "sha256": "57F106BD8642A18C1AB5E1AF1B83757D5FB04E797D855BD50FCFAC9F1523B32F",
+      "currentSha256": "57F106BD8642A18C1AB5E1AF1B83757D5FB04E797D855BD50FCFAC9F1523B32F",
+      "unchanged": true
+    }
+  ]
+}

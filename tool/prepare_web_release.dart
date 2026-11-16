@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:crypto/crypto.dart';
+import 'version_web_static_assets.dart';
 
 class WebReleaseMetadata {
   const WebReleaseMetadata({
@@ -112,6 +113,7 @@ Future<WebReleaseMetadata> prepareWebReleaseMetadata(
   // compiled application instead, so the browser never mistakes changed JS
   // for the old build. A byte-identical web build keeps the same identity.
   final buildId = sha256.convert(await mainDartJs.readAsBytes()).toString();
+  await versionWebStaticAssets(buildWeb);
   final branch = await _resolveGitValue(
     options.repoRoot,
     const <String>['branch', '--show-current'],

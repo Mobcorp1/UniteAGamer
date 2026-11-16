@@ -1,3 +1,4 @@
+import 'package:uag_arc_raiders_hub/services/uag_app_check.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -61,39 +62,56 @@ class UagTradeInviteService {
     await prefs.remove(_storedToken);
   }
 
-  Future<Map<String, dynamic>> _post(String action, {String? token, String? programmeCode, String? referrerUid, String? code}) async {
+  Future<Map<String, dynamic>> _post(
+    String action, {
+    String? token,
+    String? programmeCode,
+    String? referrerUid,
+    String? code,
+  }) async {
     final user = FirebaseAuth.instance.currentUser;
     if (action != 'resolve' && user == null) {
       throw StateError('Sign in to use your trading invitation.');
     }
     final jwt = action == 'resolve' ? null : await user!.getIdToken();
-    final response = await http.post(
-      Uri.parse(_endpoint),
-      headers: <String, String>{
-        'Content-Type': 'application/json',
-        if (jwt != null && jwt.isNotEmpty) 'Authorization': 'Bearer $jwt',
-      },
-      body: jsonEncode(<String, String>{
-        'action': action,
-        'token': ?token,
-        'programmeCode': ?programmeCode,
-        'referrerUid': ?referrerUid,
-        'code': ?code,
-      }),
-    ).timeout(const Duration(seconds: 18));
+    final response = await http
+        .post(
+          Uri.parse(_endpoint),
+          headers: <String, String>{
+            ...await UagAppCheck.headers(),
+            'Content-Type': 'application/json',
+            if (jwt != null && jwt.isNotEmpty) 'Authorization': 'Bearer $jwt',
+          },
+          body: jsonEncode(<String, String>{
+            'action': action,
+            'token': ?token,
+            'programmeCode': ?programmeCode,
+            'referrerUid': ?referrerUid,
+            'code': ?code,
+          }),
+        )
+        .timeout(const Duration(seconds: 18));
     final decoded = jsonDecode(response.body);
     if (decoded is! Map) throw StateError('Unexpected trading response.');
     final payload = Map<String, dynamic>.from(decoded);
     if (response.statusCode != 200) {
-      throw StateError(payload['error']?.toString() ?? 'Trading invitation unavailable.');
+      throw StateError(
+        payload['error']?.toString() ?? 'Trading invitation unavailable.',
+      );
     }
     return payload;
   }
 
-  Future<Map<String, dynamic>> create({String? programmeCode}) => _post('create', programmeCode: programmeCode);
-  Future<Map<String, dynamic>> claimLegacy({required String referrerUid, required String code}) =>
-      _post('legacyCapture', referrerUid: referrerUid, code: code);
-  Future<Map<String, dynamic>> resolve(String token) => _post('resolve', token: token);
-  Future<Map<String, dynamic>> claim(String token) => _post('claim', token: token);
-  Future<Map<String, dynamic>> revoke(String token) => _post('revoke', token: token);
+  Future<Map<String, dynamic>> create({String? programmeCode}) =>
+      _post('create', programmeCode: programmeCode);
+  Future<Map<String, dynamic>> claimLegacy({
+    required String referrerUid,
+    required String code,
+  }) => _post('legacyCapture', referrerUid: referrerUid, code: code);
+  Future<Map<String, dynamic>> resolve(String token) =>
+      _post('resolve', token: token);
+  Future<Map<String, dynamic>> claim(String token) =>
+      _post('claim', token: token);
+  Future<Map<String, dynamic>> revoke(String token) =>
+      _post('revoke', token: token);
 }

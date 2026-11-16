@@ -1,0 +1,431 @@
+{
+  "observedOn": "2026-11-16",
+  "head": "a70821ce42daa856d8e5b0a86302cac2114c0e70",
+  "branch": "codex/uag-firebase-financial-protection",
+  "checks": [
+    {
+      "path": "assets/arc_raiders/blueprints/archive_floor_lamp.webp",
+      "baselineSha256": "DA90543814DB39F99EE741F6E48D990FCEE9A0458E2C2835A7D1E221018D0D0B",
+      "currentSha256": "DA90543814DB39F99EE741F6E48D990FCEE9A0458E2C2835A7D1E221018D0D0B",
+      "unchanged": true
+    },
+    {
+      "path": "assets/arc_raiders/blueprints/blue_lab_cabinet.webp",
+      "baselineSha256": "FCEC0D3EB838CE3392BB6B4ADAEB8CB0DF34152E20C852C2FECF5930D07E8520",
+      "currentSha256": "FCEC0D3EB838CE3392BB6B4ADAEB8CB0DF34152E20C852C2FECF5930D07E8520",
+      "unchanged": true
+    },
+    {
+      "path": "assets/arc_raiders/blueprints/chambers_shelf.webp",
+      "baselineSha256": "897E843BF4C29DB43EB8B54E25E1FAF04E79C0F9CB0A659D82235FA937D32A46",
+      "currentSha256": "897E843BF4C29DB43EB8B54E25E1FAF04E79C0F9CB0A659D82235FA937D32A46",
+      "unchanged": true
+    },
+    {
+      "path": "assets/arc_raiders/blueprints/ornate_den_bed.webp",
+      "baselineSha256": "2816395AF6ED0BE4DA24BD7BDA8E0D2A6E9E53DC9570A85F8DE39089F6E271CC",
+      "currentSha256": "2816395AF6ED0BE4DA24BD7BDA8E0D2A6E9E53DC9570A85F8DE39089F6E271CC",
+      "unchanged": true
+    },
+    {
+      "path": "assets/arc_raiders/blueprints/polished_stash.webp",
+      "baselineSha256": "F965D3717CD7373D7EB939997589178905CF7B80B8165B2E097045CA6B85F6A0",
+      "currentSha256": "F965D3717CD7373D7EB939997589178905CF7B80B8165B2E097045CA6B85F6A0",
+      "unchanged": true
+    },
+    {
+      "path": "assets/arc_raiders/blueprints/polished_weapon_rack.webp",
+      "baselineSha256": "000D82EAC736636418B6699DC202F49605EDF236059E48BD02211FEF59D0D83D",
+      "currentSha256": "000D82EAC736636418B6699DC202F49605EDF236059E48BD02211FEF59D0D83D",
+      "unchanged": true
+    },
+    {
+      "path": "assets/arc_raiders/blueprints/printed_fabric_chair.webp",
+      "baselineSha256": "5803697BBA54FF979862E5DD5D5AD764C96BAF74B74998176219F51454ABDDC2",
+      "currentSha256": "5803697BBA54FF979862E5DD5D5AD764C96BAF74B74998176219F51454ABDDC2",
+      "unchanged": true
+    },
+    {
+      "path": "assets/arc_raiders/blueprints/restaurant_table.webp",
+      "baselineSha256": "2F50361954AD240488D9F9A6F0CC31436A5234F4F57F2CAB93D3459218B722B1",
+      "currentSha256": "2F50361954AD240488D9F9A6F0CC31436A5234F4F57F2CAB93D3459218B722B1",
+      "unchanged": true
+    },
+    {
+      "path": "assets/arc_raiders/blueprints/small_lab_cabinet.webp",
+      "baselineSha256": "2CBFF7056BECD385BE69EEECE93AC00B3B299FADBA7200A1F4A33C66BEE4B92A",
+      "currentSha256": "2CBFF7056BECD385BE69EEECE93AC00B3B299FADBA7200A1F4A33C66BEE4B92A",
+      "unchanged": true
+    },
+    {
+      "path": "assets/arc_raiders/blueprints/study_armchair.webp",
+      "baselineSha256": "1C971FA0A41B654466A1118243B84D35FDF8043CC7479BAE96EC0AFC49961447",
+      "currentSha256": "1C971FA0A41B654466A1118243B84D35FDF8043CC7479BAE96EC0AFC49961447",
+      "unchanged": true
+    },
+    {
+      "path": "assets/arc_raiders/blueprints/sturdy_aviary_table.webp",
+      "baselineSha256": "6035EE1B1A28381859732A220F27A6A987584362A2B8A39CA90B1AAFE620D929",
+      "currentSha256": "6035EE1B1A28381859732A220F27A6A987584362A2B8A39CA90B1AAFE620D929",
+      "unchanged": true
+    },
+    {
+      "path": "assets/arc_raiders/blueprints/sturdy_den_shelf.webp",
+      "baselineSha256": "01E724FC5F900FDC1944E81654F0A0274A1BA4B4873768D8A84E5113ECDA986E",
+      "currentSha256": "01E724FC5F900FDC1944E81654F0A0274A1BA4B4873768D8A84E5113ECDA986E",
+      "unchanged": true
+    },
+    {
+      "path": "assets/arc_raiders/blueprints/sturdy_faculty_table.webp",
+      "baselineSha256": "1836481E96C33398AC269F102EC3CFB9853692ED468BC618D0CF0357BBCA6D21",
+      "currentSha256": "1836481E96C33398AC269F102EC3CFB9853692ED468BC618D0CF0357BBCA6D21",
+      "unchanged": true
+    },
+    {
+      "path": "assets/arc_raiders/blueprints/sturdy_lab_chair.webp",
+      "baselineSha256": "B8832EA2CCD34749CBE01E8B17DD410614311453C154C0F933F88A079718818D",
+      "currentSha256": "B8832EA2CCD34749CBE01E8B17DD410614311453C154C0F933F88A079718818D",
+      "unchanged": true
+    },
+    {
+      "path": "assets/arc_raiders/blueprints/warehouse_chair.webp",
+      "baselineSha256": "1AA3EADAD6134E8434529CF6FA7632FFF1BE1E280C09BCD5E0517820A12DA272",
+      "currentSha256": "1AA3EADAD6134E8434529CF6FA7632FFF1BE1E280C09BCD5E0517820A12DA272",
+      "unchanged": true
+    },
+    {
+      "path": "assets/arc_raiders/blueprints/warehouse_desk.webp",
+      "baselineSha256": "459DD80A79B2026AE895499A8358CBF25DB686905111A9DFFC39042E24B4AEC7",
+      "currentSha256": "459DD80A79B2026AE895499A8358CBF25DB686905111A9DFFC39042E24B4AEC7",
+      "unchanged": true
+    },
+    {
+      "path": "README.txt",
+      "baselineSha256": "D6E111DAB5C2128781D689811732CE5161313CD6503786B66A21CE318A8901DB",
+      "currentSha256": "04EC1CD3F41807F80A5BDB1834A60CFA560EA8DB692DE213F07940395C8E1644",
+      "unchanged": false
+    },
+    {
+      "path": "README_UAG_GITHUB_SYNC_V5.txt",
+      "baselineSha256": "83C551FD1C75C55DBA30E85135FFA8281753166791EEBBCF0568188820850AC3",
+      "currentSha256": "83C551FD1C75C55DBA30E85135FFA8281753166791EEBBCF0568188820850AC3",
+      "unchanged": true
+    },
+    {
+      "path": "README_UAG_SONY_INSTALL.txt",
+      "baselineSha256": "46609C50B2C0775AA7D23F2753626F06BC5F31EDF5F34341ACF3218243FFC7C0",
+      "currentSha256": "46609C50B2C0775AA7D23F2753626F06BC5F31EDF5F34341ACF3218243FFC7C0",
+      "unchanged": true
+    },
+    {
+      "path": "README_UAG_SYNC.txt",
+      "baselineSha256": "A335ED13E1BC1D84559B8FDB83FFCD469C1F905B86143021D6B386BB5200F86B",
+      "currentSha256": "A335ED13E1BC1D84559B8FDB83FFCD469C1F905B86143021D6B386BB5200F86B",
+      "unchanged": true
+    },
+    {
+      "path": "RUN_UAG_SYNC_NEW_VERSION.cmd",
+      "baselineSha256": "14612FB58FFFD3C3F376F77A344593EC2E149D99657E6D3BA8087606B38453C0",
+      "currentSha256": "14612FB58FFFD3C3F376F77A344593EC2E149D99657E6D3BA8087606B38453C0",
+      "unchanged": true
+    },
+    {
+      "path": "RUN_UAG_SYNC_V5.cmd",
+      "baselineSha256": "BA91ABE641FEF10500D3B236B4E2E3C1C88D84E1B1021555BED77C1EED205595",
+      "currentSha256": "BA91ABE641FEF10500D3B236B4E2E3C1C88D84E1B1021555BED77C1EED205595",
+      "unchanged": true
+    },
+    {
+      "path": "UAG_GITHUB_SYNC_RELEASE_V5.js",
+      "baselineSha256": "FC14575E80245CFFC168C0F5C43E36DAB91595D42AEA51803B2200D4E09BBC13",
+      "currentSha256": "FC14575E80245CFFC168C0F5C43E36DAB91595D42AEA51803B2200D4E09BBC13",
+      "unchanged": true
+    },
+    {
+      "path": "UAG_INSTALL_ACTUAL_SONY_PHONE.ps1",
+      "baselineSha256": "A6481815DD3B51155506E3E9482FB3E1C0A6342F71729A74C5B6CA98D1B488E9",
+      "currentSha256": "A6481815DD3B51155506E3E9482FB3E1C0A6342F71729A74C5B6CA98D1B488E9",
+      "unchanged": true
+    },
+    {
+      "path": "UAG_INSTALL_PHONE.ps1",
+      "baselineSha256": "86240A8C268E4CDCDC868C60BB87CAA35DAB754F8FE27DB3E5370427B475576B",
+      "currentSha256": "86240A8C268E4CDCDC868C60BB87CAA35DAB754F8FE27DB3E5370427B475576B",
+      "unchanged": true
+    },
+    {
+      "path": "UAG_SYNC_NEW_VERSION.ps1",
+      "baselineSha256": "57F106BD8642A18C1AB5E1AF1B83757D5FB04E797D855BD50FCFAC9F1523B32F",
+      "currentSha256": "57F106BD8642A18C1AB5E1AF1B83757D5FB04E797D855BD50FCFAC9F1523B32F",
+      "unchanged": true
+    }
+  ],
+  "originalPaths": [
+    {
+      "status": " M",
+      "path": "firestore.rules",
+      "sha256": "57B09B1D8D0E16BF16D18C233E11136761BEEA9F7A32A0F5FD77BF95FD6A44AE"
+    },
+    {
+      "status": " M",
+      "path": "functions/index.js",
+      "sha256": "9D9D796702D55E85AC7A43EBB6B8F74D1B1032C34847CF6176B7DC1933D97F79"
+    },
+    {
+      "status": " M",
+      "path": "lib/features/trading_hub/arc_raiders/data/uag_avatar_catalog.dart",
+      "sha256": "80442C0086FF4BD3F76224C0A9E049703C20FDA0AA00C18227ABE1AFDB055BAE"
+    },
+    {
+      "status": " M",
+      "path": "macos/Flutter/GeneratedPluginRegistrant.swift",
+      "sha256": "E80A1ABF6B474DF9225D526635D54C1F4E5B250D73CA1157BBBEB584FA212565"
+    },
+    {
+      "status": " M",
+      "path": "pubspec.lock",
+      "sha256": "6E0A6C65930209148638B404C441710B0B666C4D22BF1753ECC7F6052C579298"
+    },
+    {
+      "status": " M",
+      "path": "pubspec.yaml",
+      "sha256": "89D1C7961EA9E13F3AEBECDA0B06C2FBDF8C7EBB353C3F7A809227C2EA8F6288"
+    },
+    {
+      "status": " M",
+      "path": "storage.rules",
+      "sha256": "233C135BAFC7FD9E9D3E219BB6A19E36727568825F59DB222A0EA966212479BF"
+    },
+    {
+      "status": " M",
+      "path": "test/uag_avatar_locker_contract_test.dart",
+      "sha256": "74F63B7F38621A2E35922AE24FBBB6B16D5771C9D009E9A09B3F4D6A7F04F9F8"
+    },
+    {
+      "status": " M",
+      "path": "trading/firestore-rules.test.js",
+      "sha256": "F496A6B90778B4CEBD3F52084451C66DF6497ED62DCA084E4875741B3650847B"
+    },
+    {
+      "status": " M",
+      "path": "windows/flutter/generated_plugin_registrant.cc",
+      "sha256": "BECB192789E0E31C9D84736C42FBD1E82A22085B9A5358CC7AFC55B28163B973"
+    },
+    {
+      "status": " M",
+      "path": "windows/flutter/generated_plugins.cmake",
+      "sha256": "B6056EA723F6876AA2378BEC119103F5F94790F55AF8552723E2E2B1117E2C61"
+    },
+    {
+      "status": "??",
+      "path": "APPLY_UAG_FEMALE_AVATARS.ps1",
+      "sha256": "5C2FE05AB7B0C782B06A4ABD3D2C3CE7A4D9578C8F7D4D9C97CE78CA28307084"
+    },
+    {
+      "status": "??",
+      "path": "APPLY_UAG_FEMALE_AVATARS_V2.ps1",
+      "sha256": "C64A8C71A0D080D56AE1FDF125F918470A0013AFD69B86423B06DEAFF4D953D8"
+    },
+    {
+      "status": "??",
+      "path": "README.txt",
+      "sha256": "04EC1CD3F41807F80A5BDB1834A60CFA560EA8DB692DE213F07940395C8E1644"
+    },
+    {
+      "status": "??",
+      "path": "README_UAG_GITHUB_SYNC_V5.txt",
+      "sha256": "83C551FD1C75C55DBA30E85135FFA8281753166791EEBBCF0568188820850AC3"
+    },
+    {
+      "status": "??",
+      "path": "README_UAG_SONY_INSTALL.txt",
+      "sha256": "46609C50B2C0775AA7D23F2753626F06BC5F31EDF5F34341ACF3218243FFC7C0"
+    },
+    {
+      "status": "??",
+      "path": "README_UAG_SYNC.txt",
+      "sha256": "A335ED13E1BC1D84559B8FDB83FFCD469C1F905B86143021D6B386BB5200F86B"
+    },
+    {
+      "status": "??",
+      "path": "README_V2.txt",
+      "sha256": "6CF3636E30E2EA85E7ECDCAA19EFC30AE8CAB2BB1D09CAAEE19153E9EBB90635"
+    },
+    {
+      "status": "??",
+      "path": "RUN_UAG_SYNC_NEW_VERSION.cmd",
+      "sha256": "14612FB58FFFD3C3F376F77A344593EC2E149D99657E6D3BA8087606B38453C0"
+    },
+    {
+      "status": "??",
+      "path": "RUN_UAG_SYNC_V5.cmd",
+      "sha256": "BA91ABE641FEF10500D3B236B4E2E3C1C88D84E1B1021555BED77C1EED205595"
+    },
+    {
+      "status": "??",
+      "path": "UAG_FEMALE_AVATAR_WIRING_20261115_152941.txt",
+      "sha256": "F59BA75FAAD9BA0A0279B05200D2B070AE416DE254FDCE88FA3597C4DAD9094E"
+    },
+    {
+      "status": "??",
+      "path": "UAG_FEMALE_AVATAR_WIRING_20261115_153732.txt",
+      "sha256": "03BB181080824F177351771CC3BFC8C81ABDAFC5628CABACC25B1695FB2BC9E5"
+    },
+    {
+      "status": "??",
+      "path": "UAG_FEMALE_AVATAR_WIRING_20261116_135629.txt",
+      "sha256": "D677D0540BB9192F7EBF62032C160047FE33439EC662437BDDECDF7B503F3386"
+    },
+    {
+      "status": "??",
+      "path": "UAG_GITHUB_SYNC_RELEASE_V5.js",
+      "sha256": "FC14575E80245CFFC168C0F5C43E36DAB91595D42AEA51803B2200D4E09BBC13"
+    },
+    {
+      "status": "??",
+      "path": "UAG_INSTALL_ACTUAL_SONY_PHONE.ps1",
+      "sha256": "A6481815DD3B51155506E3E9482FB3E1C0A6342F71729A74C5B6CA98D1B488E9"
+    },
+    {
+      "status": "??",
+      "path": "UAG_INSTALL_PHONE.ps1",
+      "sha256": "86240A8C268E4CDCDC868C60BB87CAA35DAB754F8FE27DB3E5370427B475576B"
+    },
+    {
+      "status": "??",
+      "path": "UAG_SYNC_NEW_VERSION.ps1",
+      "sha256": "57F106BD8642A18C1AB5E1AF1B83757D5FB04E797D855BD50FCFAC9F1523B32F"
+    },
+    {
+      "status": "??",
+      "path": "assets/uag/avatars/uag_avatar_female_blaze.webp",
+      "sha256": "DA29B4942D547C1793BC17983DD8757472F3EC869287A0AE4BB4D8D992C52EE4"
+    },
+    {
+      "status": "??",
+      "path": "assets/uag/avatars/uag_avatar_female_dusk.webp",
+      "sha256": "1215FDB21FFD4BB947ED64D080BF5529CEB05417ECEAC8465D332177287CF2BA"
+    },
+    {
+      "status": "??",
+      "path": "assets/uag/avatars/uag_avatar_female_echo.webp",
+      "sha256": "670382F6BC2106503D6209ACD3C7D2427FE3C3950433E7D0BC094AE6F61B9FA6"
+    },
+    {
+      "status": "??",
+      "path": "assets/uag/avatars/uag_avatar_female_ember.webp",
+      "sha256": "95D6C30FBA7BFA2670765FCF913E62D287BC806AFD8001D0438578E969ABE754"
+    },
+    {
+      "status": "??",
+      "path": "assets/uag/avatars/uag_avatar_female_frost.webp",
+      "sha256": "C611A1832870274527A0DE5827BC3BCC7094F294379E8E65ADAD2BEDEFFAAB9E"
+    },
+    {
+      "status": "??",
+      "path": "assets/uag/avatars/uag_avatar_female_juno.webp",
+      "sha256": "321F57256BE0314B2D8D3BA08BDA81CF149BDF458D9E9A5E5A3599A6ADD8FEC7"
+    },
+    {
+      "status": "??",
+      "path": "assets/uag/avatars/uag_avatar_female_kai.webp",
+      "sha256": "C9C4D84C0A17B9760DF49FBFA08629DD8BB8490EAE5CBA9969942FC9F5213134"
+    },
+    {
+      "status": "??",
+      "path": "assets/uag/avatars/uag_avatar_female_lynx.webp",
+      "sha256": "5D8FE131E8A53E48F5DE1A2C39C8BF652CD97C26ED94BC2F4070031107890A6B"
+    },
+    {
+      "status": "??",
+      "path": "assets/uag/avatars/uag_avatar_female_marlowe.webp",
+      "sha256": "75004A574B79E0700476407564B198C92B87C1C8F9AFE9BE17F3EB95EC22B763"
+    },
+    {
+      "status": "??",
+      "path": "assets/uag/avatars/uag_avatar_female_mistral.webp",
+      "sha256": "38173821B0D50A0D2B3605754EEDD24E42AC58978A248414CE9C934B2B123F10"
+    },
+    {
+      "status": "??",
+      "path": "assets/uag/avatars/uag_avatar_female_nova.webp",
+      "sha256": "FDF629A1F8C7402ABE4EDC473E0A9E11F08659ADA13A0FD435CBF75FB2A3D723"
+    },
+    {
+      "status": "??",
+      "path": "assets/uag/avatars/uag_avatar_female_onyx.webp",
+      "sha256": "2504862A61189F28C3D356F79DF61C068DBD3CB10A27108A5B0AD959F69E3848"
+    },
+    {
+      "status": "??",
+      "path": "assets/uag/avatars/uag_avatar_female_phoenix.webp",
+      "sha256": "13D47517CB270E7F2FD2043C907B8D40FE69718FE6F5C76DE17A0164B08AA14A"
+    },
+    {
+      "status": "??",
+      "path": "assets/uag/avatars/uag_avatar_female_pixel.webp",
+      "sha256": "6547504D4D53F812EFBC234D49FED2FE43FD656B3E90F20644D83B19055D421F"
+    },
+    {
+      "status": "??",
+      "path": "assets/uag/avatars/uag_avatar_female_raven.webp",
+      "sha256": "726173ED32F634AE3E278DD6CEF22C96AF56955C18003E14360ED5A68E29770B"
+    },
+    {
+      "status": "??",
+      "path": "assets/uag/avatars/uag_avatar_female_rogue.webp",
+      "sha256": "CE2AAECB434C81D9D75A86FF8EF0B7237CFF4C3139BA42BEB77F6DB383F78A76"
+    },
+    {
+      "status": "??",
+      "path": "assets/uag/avatars/uag_avatar_female_sage.webp",
+      "sha256": "9EF79CE76ACFE43522397789E8C8F709BE74CD90EF9F4EEA170DEB982AD0DE17"
+    },
+    {
+      "status": "??",
+      "path": "assets/uag/avatars/uag_avatar_female_scout.webp",
+      "sha256": "EF81C7FD03D90AE8B949AC42D61E9F68C880AF30AB856FC76CA24A62776CC342"
+    },
+    {
+      "status": "??",
+      "path": "assets/uag/avatars/uag_avatar_female_shadow.webp",
+      "sha256": "D3A3DA04D0411886E76A83B9DB486471A69C406A7B8F54E01BA29E179D10A0A8"
+    },
+    {
+      "status": "??",
+      "path": "assets/uag/avatars/uag_avatar_female_siren.webp",
+      "sha256": "9692D7D4073CB0011D9DE6A86A59642E6FE52A575A75A5CDDCE8D61C4BE9FD3C"
+    },
+    {
+      "status": "??",
+      "path": "assets/uag/avatars/uag_avatar_female_trix.webp",
+      "sha256": "DBC59AF6217BC0AAD72A0B61AF0749A83026FD5BB0A557965948F60761E027E2"
+    },
+    {
+      "status": "??",
+      "path": "assets/uag/avatars/uag_avatar_female_venus.webp",
+      "sha256": "2330FF05B03EEAAB2EC0381450F28FB18C10CA921BFEA06D10E58464B65B4059"
+    },
+    {
+      "status": "??",
+      "path": "assets/uag/avatars/uag_avatar_female_volt.webp",
+      "sha256": "7C04BA59D075F50261DD77830FDDDDDDEAE6DEF66AAD2DFF50BD956A0476B59C"
+    },
+    {
+      "status": "??",
+      "path": "assets/uag/avatars/uag_avatar_female_widowmaker.webp",
+      "sha256": "BA9CBE6EBB9E1FD4BB6573A3F9D1F1F293A86E583EF2C949FD9937B97DABCF9B"
+    },
+    {
+      "status": "??",
+      "path": "firebase.financial-emulators.json",
+      "sha256": "DBBEF6D713F1986DB86BA605FC0E1E7BEF41659D79F72EF3319CF1E70E4658B5"
+    },
+    {
+      "status": "??",
+      "path": "functions/financial_protection.js",
+      "sha256": "74B29D9CC927735D4F002E44F28674E7C290A4E8000E87E43C17F77EC64D52D5"
+    }
+  ],
+  "note": "Read-only observation. README.txt changed between 14 and 16 November observations while task was paused; it was not modified by this pass. New avatar/installer work remains exclusively in the original checkout. No original path was staged, committed, restored or removed during isolated implementation."
+}

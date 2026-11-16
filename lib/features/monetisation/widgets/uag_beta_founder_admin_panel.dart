@@ -1,3 +1,4 @@
+import 'package:uag_arc_raiders_hub/services/uag_app_check.dart';
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -281,6 +282,7 @@ class _UagBetaFounderAdminPanelState extends State<UagBetaFounderAdminPanel> {
           'https://us-central1-$projectId.cloudfunctions.net/setUagFoundingRaiderStatus',
         ),
         headers: <String, String>{
+          ...await UagAppCheck.headers(),
           'Authorization': 'Bearer $idToken',
           'Content-Type': 'application/json',
         },

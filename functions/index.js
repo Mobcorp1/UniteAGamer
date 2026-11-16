@@ -1,4 +1,8 @@
 const admin = require('firebase-admin');
+const { setGlobalOptions } = require('firebase-functions/v2');
+// Deployment defaults only; no production settings are changed by this file.
+// Per-function limits constrain scaling, not aggregate project spending.
+setGlobalOptions({ maxInstances: 10 });
 const { onDocumentCreated, onDocumentWritten } = require('firebase-functions/v2/firestore');
 const { onRequest } = require('firebase-functions/v2/https');
 const { buildGateway: buildUagTradeInviteGateway } = require('./uag_trade_invite_gateway');
@@ -36,6 +40,11 @@ const stripeSecretKey = defineSecret('STRIPE_SECRET_KEY');
 const stripeWebhookSecret = defineSecret('STRIPE_WEBHOOK_SECRET');
 
 const db = admin.firestore();
+const { createFinancialProtection } = require('./financial_protection');
+const financialProtection = createFinancialProtection({
+  db, auth: admin.auth(), HttpsError: require('firebase-functions/v2/https').HttpsError,
+  timestamp: () => admin.firestore.FieldValue.serverTimestamp(),
+});
 
 const PLAN_CONFIG = {
   essential_monthly: {
@@ -380,7 +389,7 @@ function setCheckoutCors(req, res) {
     /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
   if (allowed) res.set('Access-Control-Allow-Origin', origin);
   res.set('Vary', 'Origin');
-  res.set('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+  res.set('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Firebase-AppCheck');
   res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
   if (req.method === 'OPTIONS') {
     res.status(204).send('');
@@ -4453,6 +4462,12 @@ exports.sendUagNotificationBroadcast = onDocumentCreated(
       return;
     }
 
+    if (await financialProtection.restricted()) {
+      await ref.set({ status: 'rejected', error: 'Optional broadcasts are temporarily unavailable.',
+        updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+      return;
+    }
+
     const claimed = await db.runTransaction(async (transaction) => {
       const current = await transaction.get(ref);
       const currentData = current.data() || {};
@@ -4660,6 +4675,11 @@ exports.processUagMessageOutbox = onDocumentCreated(
       }, { merge: true });
     }
 
+    if (await financialProtection.restricted()) {
+      await reject('blocked_service_unavailable', 'Messaging is temporarily unavailable. Please try again later.');
+      return;
+    }
+
     if (!senderUid || !recipientUid || senderUid === recipientUid || !body) {
       await reject('blocked_invalid_request', 'Message request is invalid.');
       return;
@@ -4768,8 +4788,13 @@ const raiderContractVerification = createContractVerification({
   db, bucket: admin.storage().bucket(), HttpsError,
   timestamp: () => admin.firestore.FieldValue.serverTimestamp(),
 });
-exports.submitRaiderContractEvidence = onCall(raiderContractVerification.submit);
-exports.reviewRaiderContractEvidence = onCall(raiderContractVerification.review);
+const evidenceOptions = { maxInstances: 3, concurrency: 4, memory: '512MiB', timeoutSeconds: 60 };
+exports.submitRaiderContractEvidence = onCall(evidenceOptions,
+  financialProtection.protectCallable('submitEvidence', 10, raiderContractVerification.submit));
+exports.reviewRaiderContractEvidence = onCall(evidenceOptions,
+  financialProtection.protectCallable('reviewEvidence', 10, raiderContractVerification.review));
+exports.setUagFinancialProtection = onCall({ maxInstances: 2, concurrency: 4, timeoutSeconds: 30 },
+  financialProtection.setRestriction);
 
 // Incident verification/discovery is separate from issuer-confirmed completion.
 const { createRaiderContractIntelligence } = require('./raider_contract_intelligence');
@@ -4780,9 +4805,12 @@ const contractIntelligence = createRaiderContractIntelligence({
   windowDays: process.env.CONTRACT_INTELLIGENCE_WINDOW_DAYS || 30,
 });
 exports.recordTradingBetrayal = onCall(contractIntelligence.recordBetrayal);
-exports.attachRaiderReportEvidence = onCall(contractIntelligence.attachEvidence);
-exports.moderateRaiderReport = onCall(contractIntelligence.moderateReport);
-exports.discoverRaiderContracts = onCall(contractIntelligence.discover);
+exports.attachRaiderReportEvidence = onCall(evidenceOptions,
+  financialProtection.protectCallable('attachEvidence', 10, contractIntelligence.attachEvidence));
+exports.moderateRaiderReport = onCall(evidenceOptions,
+  financialProtection.protectCallable('moderateReport', 30, contractIntelligence.moderateReport));
+exports.discoverRaiderContracts = onCall({ maxInstances: 3, concurrency: 8, timeoutSeconds: 60 },
+  financialProtection.protectCallable('discoverContracts', 20, contractIntelligence.discover));
 exports.acceptRaiderContract = onCall(contractIntelligence.accept);
 exports.raiderAccountCases = onCall(contractIntelligence.accountStatus);
 exports.challengeRaiderContract = onCall(contractIntelligence.challenge);
@@ -4808,7 +4836,7 @@ const accountDeletionLifecycle = createAccountDeletionLifecycle({
   timestamp: () => admin.firestore.FieldValue.serverTimestamp(),
 });
 exports.deleteUagAccount = onCall(
-  { timeoutSeconds: 300, memory: '512MiB' },
+  { timeoutSeconds: 300, memory: '512MiB', concurrency: 4 },
   accountDeletionLifecycle.deleteAccount,
 );
 exports.preventDeletedAccountResurrection = onDocumentWritten(
@@ -4858,8 +4886,9 @@ exports.redeemUagOperationCompletionReward = onRequest(
 
 // PASS09 public opaque trading links: no client writes to invite/commission ledgers.
 exports.uagTradeInviteGateway = onRequest(
-  { cors: false },
-  buildUagTradeInviteGateway({ admin, db, auth: admin.auth() }),
+  { cors: false, maxInstances: 3, concurrency: 16, timeoutSeconds: 30 },
+  buildUagTradeInviteGateway({ admin, db, auth: admin.auth(), financialProtection,
+    appCheck: admin.appCheck(), requireAppCheck: process.env.UAG_REQUIRE_APP_CHECK === 'true' }),
 );
 
 // Admin-disabled by default. Eligibility is audited and fulfilled by a
@@ -4879,13 +4908,15 @@ exports.notifyAutomaticTradingWatches = onDocumentCreated(
   async (event) => {
     const listing = event.data?.data();
     if (!listing || listing.active === false) return;
+    if (await financialProtection.restricted()) return;
     const expiresAt = listing.expiresAt?.toDate?.();
     if (expiresAt && expiresAt <= new Date()) return;
     const offeredBlueprints = new Set((listing.offeredBlueprintNames || []).map(x => String(x).trim().toLowerCase()));
     const offeredItems = new Set((listing.offeredTradeItemIds || []).map(String));
     if (!offeredBlueprints.size && !offeredItems.size) return;
     const ownerUid = String(listing.ownerUid || '');
-    // Bounded traversal. Future high-volume deployments can replace this with
+    // Bounded pages, but total traversal still grows with subscriber count.
+    // Future high-volume deployments can replace this with
     // a materialized inverted index without changing the client contract.
     let cursor = null;
     for (;;) {
@@ -4898,15 +4929,19 @@ exports.notifyAutomaticTradingWatches = onDocumentCreated(
         if (uid === ownerUid) continue;
         const pref = preference.data() || {};
         const matchedItem = [...(pref.tradeItemIds || []), ...(pref.researchTradeItemIds || [])].some(id => offeredItems.has(String(id)));
-        const states = await db.collection('users').doc(uid).collection('arc_blueprints').get();
-        const ownedIds = new Set(states.docs.filter(doc => {
-          const state = doc.data() || {};
-          return state.owned === true || Number(state.dupesOwned || 0) > 0;
-        }).map(doc => String(doc.data()?.blueprintId || doc.id)));
-        const missingNames = new Set(Object.entries(PASS38_BLUEPRINT_CATALOGUE)
-          .filter(([id]) => !ownedIds.has(id))
-          .map(([,name]) => name.trim().toLowerCase()));
-        const matchedBlueprint = [...offeredBlueprints].some(name => missingNames.has(name));
+        // Item matches need no ownership read. Item-only listings cannot match
+        // a blueprint. Preserve canonical + legacy document-ID semantics for
+        // blueprint listings (the state mapper below handles both).
+        let matchedBlueprint = false;
+        if (!matchedItem && offeredBlueprints.size > 0) {
+          const states = await db.collection('users').doc(uid).collection('arc_blueprints').get();
+          const ownedIds = new Set(states.docs.filter(doc => {
+            const state = doc.data() || {};
+            return state.owned === true || Number(state.dupesOwned || 0) > 0;
+          }).map(doc => String(doc.data()?.blueprintId || doc.id)));
+          matchedBlueprint = Object.entries(PASS38_BLUEPRINT_CATALOGUE).some(([id, name]) =>
+            !ownedIds.has(id) && offeredBlueprints.has(name.trim().toLowerCase()));
+        }
         if (!matchedItem && !matchedBlueprint) continue;
         const notificationId = `automatic_watch_${event.params.listingId}_${uid}`;
         const ref = db.collection('trading_notifications').doc(notificationId);
@@ -4922,6 +4957,8 @@ exports.notifyAutomaticTradingWatches = onDocumentCreated(
       }
       cursor = snapshot.docs[snapshot.docs.length - 1];
       if (snapshot.size < 200) break;
+      // Recheck between pages so an emergency activation interrupts fan-out.
+      if (await financialProtection.restricted()) return;
     }
   },
 );

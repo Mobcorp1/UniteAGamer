@@ -1,3 +1,4 @@
+import 'package:uag_arc_raiders_hub/services/uag_app_check.dart';
 import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -46,7 +47,7 @@ class UagCheckoutService {
 
     final response = await _client.post(
       _functionUri('createUagCheckoutSession'),
-      headers: _headers(idToken),
+      headers: await _headers(idToken),
       body: jsonEncode(<String, dynamic>{
         'planId': planId,
         if (referralCode != null && referralCode.trim().isNotEmpty)
@@ -96,7 +97,7 @@ class UagCheckoutService {
 
     final response = await _client.post(
       _functionUri('redeemUagGift'),
-      headers: _headers(idToken),
+      headers: await _headers(idToken),
       body: jsonEncode(<String, dynamic>{'code': code}),
     );
     final payload = _decodePayload(response);
@@ -121,7 +122,7 @@ class UagCheckoutService {
 
     final response = await _client.post(
       _functionUri('createUagCustomerPortalSession'),
-      headers: _headers(idToken),
+      headers: await _headers(idToken),
       body: jsonEncode(<String, dynamic>{'returnUrl': _returnUri().toString()}),
     );
 
@@ -163,10 +164,12 @@ class UagCheckoutService {
     return idToken;
   }
 
-  Map<String, String> _headers(String idToken) => <String, String>{
-    'Authorization': 'Bearer $idToken',
-    'Content-Type': 'application/json',
-  };
+  Future<Map<String, String>> _headers(String idToken) async =>
+      <String, String>{
+        ...await UagAppCheck.headers(),
+        'Authorization': 'Bearer $idToken',
+        'Content-Type': 'application/json',
+      };
 
   Map<String, dynamic> _decodePayload(http.Response response) {
     try {

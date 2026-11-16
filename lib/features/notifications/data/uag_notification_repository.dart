@@ -1,3 +1,4 @@
+import 'package:uag_arc_raiders_hub/services/uag_streams.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -43,7 +44,7 @@ class UagNotificationRepository {
       _firestore.collection('uag_notification_schedules');
 
   Stream<UagNotificationPreferences> watchPreferences() {
-    return _watchCurrentUid().asyncExpand((uid) {
+    return _watchCurrentUid().switchLatest((uid) {
       if (uid == null) {
         return Stream.value(UagNotificationPreferences.defaults);
       }
@@ -157,7 +158,7 @@ class UagNotificationRepository {
   }
 
   Stream<List<UagNotificationDevice>> watchMyDevices() {
-    return _watchCurrentUid().asyncExpand((uid) {
+    return _watchCurrentUid().switchLatest((uid) {
       if (uid == null) return Stream.value(const <UagNotificationDevice>[]);
       return _deviceCollection(uid)
           .orderBy('lastSeenAt', descending: true)

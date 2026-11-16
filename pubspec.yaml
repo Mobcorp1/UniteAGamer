@@ -42,6 +42,7 @@ dependencies:
   image: ^4.8.0
   crypto: ^3.0.7
   flutter_svg: ^2.3.0
+  firebase_app_check: ^0.4.9
 
 
 dev_dependencies:

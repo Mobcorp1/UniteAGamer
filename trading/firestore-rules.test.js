@@ -36,7 +36,11 @@ async function run() {
     const admin = env.authenticatedContext("admin").firestore();
     const anon = env.unauthenticatedContext().firestore();
 
-    await succeeds(admin.doc("users/admin").set({ isAdmin: true }));
+    // Privileges are provisioned by a trusted backend, never self-assigned.
+    await fails(admin.doc("users/admin").set({ isAdmin: true }));
+    await env.withSecurityRulesDisabled(async context => {
+      await context.firestore().doc("users/admin").set({ isAdmin: true });
+    });
 
     const userRef = owner.doc("users/owner");
     await succeeds(

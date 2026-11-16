@@ -10,6 +10,11 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == uid;
     }
 
+    function optionalServicesAvailable() {
+      return !exists(/databases/$(database)/documents/app_config/financial_protection) ||
+        get(/databases/$(database)/documents/app_config/financial_protection).data.active == false;
+    }
+
     function userDocExists() {
       return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid));
     }
@@ -312,15 +317,14 @@ service cloud.firestore {
         allow delete: if isAdminOrDev();
       }
 
-      match /{document=**} {
+      match /{collectionId}/{childId}/{document=**} {
         allow read: if isOwner(userId) || isAdminOrDev();
-        // Recursive grants are OR-combined with exact grants. Never allow
-        // the fallback to bypass the server-owned attribution exception.
-        allow create, update, delete: if isAdminOrDev() ||
-          (isOwner(userId) &&
-            (document.size() < 2 ||
-              document[0] != 'monetisation_usage' ||
-              document[1] != 'community_referral_attribution'));
+        // Recursive grants are OR-combined with exact grants. Owner writes
+        // must use the explicit child rules above, including their validation
+        // and server-owned exceptions. Path.size() in the old fallback was
+        // invalid; replacing it with a broad owner grant would weaken security.
+        // Two explicit child segments also exclude the root user document.
+        allow create, update, delete: if isAdminOrDev();
       }
     }
 
@@ -611,7 +615,7 @@ service cloud.firestore {
 
     match /notification_broadcasts/{broadcastId} {
       allow read: if isAdminOrDev();
-      allow create: if isAdminOrDev() &&
+      allow create: if isAdminOrDev() && optionalServicesAvailable() &&
         request.resource.data.id == broadcastId &&
         request.resource.data.senderUid == request.auth.uid &&
         request.resource.data.status == 'queued';
@@ -929,7 +933,7 @@ service cloud.firestore {
             resource.data.recipientUid == request.auth.uid
           )
         );
-      allow create: if currentUserAgeVerified() &&
+      allow create: if currentUserAgeVerified() && optionalServicesAvailable() &&
         userAgeVerified(request.resource.data.recipientUid) &&
         request.resource.data.id == messageId &&
         request.resource.data.senderUid == request.auth.uid &&
@@ -1151,7 +1155,17 @@ service cloud.firestore {
 
     match /app_config/{configId} {
       allow read: if isSignedIn();
-      allow create, update, delete: if isAdminOrDev();
+      allow create, update, delete: if configId != 'financial_protection' && isAdminOrDev();
+    }
+
+    // Changes must pass the audited server transaction, even for administrators.
+    match /financial_protection_audit/{eventId} {
+      allow read: if isAdminOrDev();
+      allow write: if false;
+    }
+
+    match /financial_operation_limits/{limitId} {
+      allow read, write: if false;
     }
 
     match /uag_discount_campaigns/{code} {

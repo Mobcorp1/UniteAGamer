@@ -19,6 +19,11 @@ service firebase.storage {
       return isSignedIn() && request.auth.uid == uid;
     }
 
+    function optionalServicesAvailable() {
+      return !firestore.exists(/databases/(default)/documents/app_config/financial_protection) ||
+        firestore.get(/databases/(default)/documents/app_config/financial_protection).data.active == false;
+    }
+
     function isAdminOrModerator() {
       return isSignedIn() &&
         userExists(request.auth.uid) &&
@@ -84,7 +89,7 @@ service firebase.storage {
 
     match /users/{uid}/creator_content/{fileName} {
       allow read: if isSignedIn();
-      allow create, update: if isOwner(uid) &&
+      allow create, update: if isOwner(uid) && optionalServicesAvailable() &&
         isAgeVerified() &&
         isEvidenceUpload(25 * 1024 * 1024, fileName);
       allow delete: if isOwner(uid) || isAdminOrModerator();

@@ -1,3 +1,4 @@
+import 'package:uag_arc_raiders_hub/services/uag_app_check.dart';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -219,7 +220,8 @@ class ArcRaiderContractsRepository {
     final response = await http
         .post(
           Uri.https('us-central1-$project.cloudfunctions.net', '/$name'),
-          headers: {
+          headers: <String, String>{
+            ...await UagAppCheck.headers(),
             'Authorization': 'Bearer $token',
             'Content-Type': 'application/json',
           },
@@ -231,7 +233,15 @@ class ArcRaiderContractsRepository {
         decoded is! Map ||
         decoded['error'] != null) {
       throw StateError(
-        'The Contract service could not complete this request. Refresh and retry.',
+        decoded is Map &&
+                decoded['error'] is Map &&
+                const [
+                  'UNAVAILABLE',
+                  'RESOURCE_EXHAUSTED',
+                ].contains(decoded['error']['status'])
+            ? (decoded['error']['message'] as String? ??
+                  'This service is temporarily unavailable.')
+            : 'The Contract service could not complete this request. Refresh and retry.',
       );
     }
     return Map<String, dynamic>.from(decoded['result'] as Map);

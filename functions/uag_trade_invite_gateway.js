@@ -1,6 +1,7 @@
 'use strict';
 
 const crypto = require('crypto');
+const { createLocalRateLimit } = require('./financial_protection');
 
 const INVITE_LIFETIME_MS = 30 * 24 * 60 * 60 * 1000;
 const INVITE_PATTERN = /^[A-Za-z0-9_-]{28,96}$/;
@@ -29,7 +30,8 @@ function isValidInvite(data, nowMillis) {
   return data && data.active === true && data.expiresAt?.toMillis && data.expiresAt.toMillis() > nowMillis;
 }
 
-function buildGateway({ admin, db, auth }) {
+function buildGateway({ admin, db, auth, financialProtection, appCheck,
+  requireAppCheck = false, allowRequest = createLocalRateLimit() }) {
   const stamp = () => admin.firestore.FieldValue.serverTimestamp();
   const time = (millis) => admin.firestore.Timestamp.fromMillis(millis);
   const clientOrigin = new Set(['https://unite-a-gamer.web.app', 'https://uniteagamer.com', 'https://www.uniteagamer.com']);
@@ -46,7 +48,7 @@ function buildGateway({ admin, db, auth }) {
       res.set('Access-Control-Allow-Origin', origin);
       res.set('Vary', 'Origin');
       res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-      res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+      res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Firebase-AppCheck');
       res.set('Access-Control-Max-Age', '3600');
     }
     if (req.method === 'OPTIONS') { res.status(204).send(''); return true; }
@@ -58,16 +60,35 @@ function buildGateway({ admin, db, auth }) {
     if (req.method !== 'POST' || !req.is('application/json')) {
       res.status(405).json({ error: 'JSON POST required' }); return;
     }
+    res.set('Cache-Control', 'no-store');
+    if (!allowRequest(req.ip || 'unknown')) {
+      res.set('Retry-After', '60');
+      res.status(429).json({ error: 'Too many requests. Please wait a minute.' }); return;
+    }
+    if (Buffer.byteLength(JSON.stringify(req.body || {})) > 4096) {
+      res.status(413).json({ error: 'Request too large' }); return;
+    }
     const action = String(req.body?.action || '');
     if (!['create', 'resolve', 'claim', 'revoke', 'legacyCapture'].includes(action)) {
       res.status(400).json({ error: 'Unknown request' }); return;
     }
     try {
+      const attestation = req.headers['x-firebase-appcheck'];
+      if (requireAppCheck && !attestation) {
+        res.status(401).json({ error: 'App verification required' }); return;
+      }
+      if (attestation && appCheck) {
+        try { await appCheck.verifyToken(attestation); }
+        catch (_) { res.status(401).json({ error: 'App verification failed' }); return; }
+      }
       const now = Date.now();
       const account = action === 'resolve' ? null : await principal(req);
       if (action !== 'resolve' && !account) {
         res.status(401).json({ error: 'Sign in required' }); return;
       }
+      // Link revocation stays available during an emergency.
+      if (action !== 'revoke' && financialProtection) await financialProtection.assertAvailable();
+      if (account && financialProtection) await financialProtection.consume(account.uid, 'tradeInvite', 30);
       if (action === 'legacyCapture') {
         const referrerUid = String(req.body?.referrerUid || '');
         const code = String(req.body?.code || '').trim().toUpperCase();
@@ -199,6 +220,9 @@ function buildGateway({ admin, db, auth }) {
         return;
       }
     } catch (err) {
+      if (err?.code === 'unavailable' || err?.code === 'resource-exhausted') {
+        res.status(err.code === 'unavailable' ? 503 : 429).json({ error: err.message }); return;
+      }
       console.error('UAG trade invitation gateway error:', err?.code || err?.message || 'unknown');
       res.status(500).json({ error: 'Trading link service temporarily unavailable' });
     }

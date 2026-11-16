@@ -1,0 +1,86 @@
+{
+  "totalBytes": 115179466,
+  "fileCount": 710,
+  "largest": [
+    {
+      "path": "build/web/main.dart.js",
+      "bytes": 7806235
+    },
+    {
+      "path": "build/web/canvaskit/canvaskit.wasm",
+      "bytes": 7155780
+    },
+    {
+      "path": "build/web/canvaskit/chromium/canvaskit.wasm",
+      "bytes": 5686836
+    },
+    {
+      "path": "build/web/assets/assets/arc_raiders/maps/buried_city/buried_city_master.jpg",
+      "bytes": 5296463
+    },
+    {
+      "path": "build/web/canvaskit/skwasm_heavy.wasm",
+      "bytes": 5140163
+    },
+    {
+      "path": "build/web/canvaskit/skwasm.wasm",
+      "bytes": 3549758
+    },
+    {
+      "path": "build/web/canvaskit/wimp.wasm",
+      "bytes": 3461420
+    },
+    {
+      "path": "build/web/assets/assets/arc_raiders/operations/badges/inner_circle.png",
+      "bytes": 2855643
+    },
+    {
+      "path": "build/web/assets/assets/arc_raiders/operations/badges/trailblazer.png",
+      "bytes": 2773894
+    },
+    {
+      "path": "build/web/assets/assets/arc_raiders/operations/badges/pathfinder.png",
+      "bytes": 2769000
+    },
+    {
+      "path": "build/web/assets/assets/arc_raiders/operations/badges/community_heart.png",
+      "bytes": 2696628
+    },
+    {
+      "path": "build/web/assets/assets/arc_raiders/operations/badges/beta_access_plus.png",
+      "bytes": 2670971
+    },
+    {
+      "path": "build/web/assets/assets/arc_raiders/operations/badges/og_legend.png",
+      "bytes": 2601490
+    },
+    {
+      "path": "build/web/assets/assets/arc_raiders/operations/badges/og_legend_alt_1.png",
+      "bytes": 2592243
+    },
+    {
+      "path": "build/web/assets/assets/arc_raiders/operations/badges/og_legend_alt_2.png",
+      "bytes": 2592243
+    },
+    {
+      "path": "build/web/assets/assets/arc_raiders/operations/badges/founding_raider.png",
+      "bytes": 2571804
+    },
+    {
+      "path": "build/web/canvaskit/wimp.js.symbols",
+      "bytes": 1751605
+    },
+    {
+      "path": "build/web/canvaskit/skwasm_heavy.js.symbols",
+      "bytes": 1644252
+    },
+    {
+      "path": "build/web/canvaskit/skwasm.js.symbols",
+      "bytes": 1519424
+    },
+    {
+      "path": "build/web/assets/assets/arc_raiders/operations/badges/cyberpunk_achievement.png",
+      "bytes": 1463081
+    }
+  ]
+}

@@ -1,0 +1,472 @@
+[
+  {
+    "name": "createUagCheckoutSession",
+    "line": 801,
+    "kind": "HTTP",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": null,
+    "concurrency": null,
+    "trigger": ""
+  },
+  {
+    "name": "setUagFoundingRaiderStatus",
+    "line": 1054,
+    "kind": "HTTP",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": null,
+    "concurrency": null,
+    "trigger": ""
+  },
+  {
+    "name": "createUagCustomerPortalSession",
+    "line": 1212,
+    "kind": "HTTP",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": null,
+    "concurrency": null,
+    "trigger": ""
+  },
+  {
+    "name": "redeemUagGift",
+    "line": 1239,
+    "kind": "HTTP",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": null,
+    "concurrency": null,
+    "trigger": ""
+  },
+  {
+    "name": "uagStripeWebhook",
+    "line": 1405,
+    "kind": "HTTP",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": null,
+    "concurrency": null,
+    "trigger": ""
+  },
+  {
+    "name": "queueCommunityReferralValidation",
+    "line": 2961,
+    "kind": "Firestore event",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": null,
+    "concurrency": null,
+    "trigger": "users/{referredUid}/monetisation_usage/community_referral_attribution"
+  },
+  {
+    "name": "activateReferralRewardAuthoritatively",
+    "line": 2993,
+    "kind": "Firestore event",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": null,
+    "concurrency": null,
+    "trigger": "uag_referral_reward_activation_requests/{requestId}"
+  },
+  {
+    "name": "releaseCreatorCommissionDaily",
+    "line": 3115,
+    "kind": "schedule",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": null,
+    "concurrency": null,
+    "trigger": "every day 03:15"
+  },
+  {
+    "name": "expireCreatorCancellationGraceDaily",
+    "line": 3169,
+    "kind": "schedule",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": null,
+    "concurrency": null,
+    "trigger": "every day 03:45"
+  },
+  {
+    "name": "validateCommunityReferralsDaily",
+    "line": 3201,
+    "kind": "schedule",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": null,
+    "concurrency": null,
+    "trigger": "every day 04:15"
+  },
+  {
+    "name": "expireReferralRewardsHourly",
+    "line": 3225,
+    "kind": "schedule",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": null,
+    "concurrency": null,
+    "trigger": "every 60 minutes"
+  },
+  {
+    "name": "syncTradingSessionNotificationSchedules",
+    "line": 4381,
+    "kind": "Firestore event",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": null,
+    "concurrency": null,
+    "trigger": "trading_sessions/{sessionId}"
+  },
+  {
+    "name": "syncUagSessionNotificationSchedules",
+    "line": 4386,
+    "kind": "Firestore event",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": null,
+    "concurrency": null,
+    "trigger": "uag_sessions/{sessionId}"
+  },
+  {
+    "name": "processUagNotificationSchedules",
+    "line": 4391,
+    "kind": "schedule",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": null,
+    "concurrency": null,
+    "trigger": "every 5 minutes"
+  },
+  {
+    "name": "sendTradingNotificationPush",
+    "line": 4417,
+    "kind": "Firestore event",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": null,
+    "concurrency": null,
+    "trigger": "trading_notifications/{notificationId}"
+  },
+  {
+    "name": "sendUagNotificationBroadcast",
+    "line": 4436,
+    "kind": "Firestore event",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": null,
+    "concurrency": null,
+    "trigger": "notification_broadcasts/{broadcastId}"
+  },
+  {
+    "name": "uagReleaseHealthCheck",
+    "line": 4564,
+    "kind": "HTTP",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": null,
+    "concurrency": null,
+    "trigger": ""
+  },
+  {
+    "name": "processUagAgeVerificationRequest",
+    "line": 4612,
+    "kind": "Firestore event",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": null,
+    "concurrency": null,
+    "trigger": "uag_age_verification_requests/{requestId}"
+  },
+  {
+    "name": "processUagMessageOutbox",
+    "line": 4655,
+    "kind": "Firestore event",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": null,
+    "concurrency": null,
+    "trigger": "uag_message_outbox/{messageId}"
+  },
+  {
+    "name": "submitRaiderContractEvidence",
+    "line": 4792,
+    "kind": "callable",
+    "maxInstances": 3,
+    "memory": 512,
+    "timeout": 60,
+    "concurrency": 4,
+    "trigger": ""
+  },
+  {
+    "name": "reviewRaiderContractEvidence",
+    "line": 4794,
+    "kind": "callable",
+    "maxInstances": 3,
+    "memory": 512,
+    "timeout": 60,
+    "concurrency": 4,
+    "trigger": ""
+  },
+  {
+    "name": "setUagFinancialProtection",
+    "line": 4796,
+    "kind": "callable",
+    "maxInstances": 2,
+    "memory": null,
+    "timeout": 30,
+    "concurrency": 4,
+    "trigger": ""
+  },
+  {
+    "name": "recordTradingBetrayal",
+    "line": 4807,
+    "kind": "callable",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": null,
+    "concurrency": null,
+    "trigger": ""
+  },
+  {
+    "name": "attachRaiderReportEvidence",
+    "line": 4808,
+    "kind": "callable",
+    "maxInstances": 3,
+    "memory": 512,
+    "timeout": 60,
+    "concurrency": 4,
+    "trigger": ""
+  },
+  {
+    "name": "moderateRaiderReport",
+    "line": 4810,
+    "kind": "callable",
+    "maxInstances": 3,
+    "memory": 512,
+    "timeout": 60,
+    "concurrency": 4,
+    "trigger": ""
+  },
+  {
+    "name": "discoverRaiderContracts",
+    "line": 4812,
+    "kind": "callable",
+    "maxInstances": 3,
+    "memory": null,
+    "timeout": 60,
+    "concurrency": 8,
+    "trigger": ""
+  },
+  {
+    "name": "acceptRaiderContract",
+    "line": 4814,
+    "kind": "callable",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": null,
+    "concurrency": null,
+    "trigger": ""
+  },
+  {
+    "name": "raiderAccountCases",
+    "line": 4815,
+    "kind": "callable",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": null,
+    "concurrency": null,
+    "trigger": ""
+  },
+  {
+    "name": "challengeRaiderContract",
+    "line": 4816,
+    "kind": "callable",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": null,
+    "concurrency": null,
+    "trigger": ""
+  },
+  {
+    "name": "reviewRaiderContractChallenge",
+    "line": 4817,
+    "kind": "callable",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": null,
+    "concurrency": null,
+    "trigger": ""
+  },
+  {
+    "name": "expireRaiderContracts",
+    "line": 4818,
+    "kind": "schedule",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": null,
+    "concurrency": null,
+    "trigger": "every 60 minutes"
+  },
+  {
+    "name": "withdrawRaiderContract",
+    "line": 4819,
+    "kind": "Firestore event",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": null,
+    "concurrency": null,
+    "trigger": "arc_raider_reports/{reportId}"
+  },
+  {
+    "name": "raiderContractAdminContext",
+    "line": 4821,
+    "kind": "callable",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": null,
+    "concurrency": null,
+    "trigger": ""
+  },
+  {
+    "name": "auditRaiderContractLifecycle",
+    "line": 4822,
+    "kind": "Firestore event",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": null,
+    "concurrency": null,
+    "trigger": "arc_raider_contracts/{contractId}"
+  },
+  {
+    "name": "deleteUagAccount",
+    "line": 4838,
+    "kind": "callable",
+    "maxInstances": 10,
+    "memory": 512,
+    "timeout": 300,
+    "concurrency": 4,
+    "trigger": ""
+  },
+  {
+    "name": "preventDeletedAccountResurrection",
+    "line": 4842,
+    "kind": "Firestore event",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": null,
+    "concurrency": null,
+    "trigger": "users/{userId}"
+  },
+  {
+    "name": "preventDeletedSupporterEntitlementResurrection",
+    "line": 4846,
+    "kind": "Firestore event",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": null,
+    "concurrency": null,
+    "trigger": "supporter_entitlements/{userId}"
+  },
+  {
+    "name": "prepareUagRewardedAd",
+    "line": 4855,
+    "kind": "HTTP",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": 60,
+    "concurrency": null,
+    "trigger": ""
+  },
+  {
+    "name": "cancelUagRewardedAd",
+    "line": 4856,
+    "kind": "HTTP",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": 60,
+    "concurrency": null,
+    "trigger": ""
+  },
+  {
+    "name": "redeemUagRaiderMarks",
+    "line": 4857,
+    "kind": "HTTP",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": 60,
+    "concurrency": null,
+    "trigger": ""
+  },
+  {
+    "name": "verifyUagRewardedAd",
+    "line": 4858,
+    "kind": "HTTP",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": 60,
+    "concurrency": null,
+    "trigger": ""
+  },
+  {
+    "name": "redeemUagReferralActionReward",
+    "line": 4864,
+    "kind": "HTTP",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": 60,
+    "concurrency": null,
+    "trigger": ""
+  },
+  {
+    "name": "redeemUagOperationActionReward",
+    "line": 4873,
+    "kind": "HTTP",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": 60,
+    "concurrency": null,
+    "trigger": ""
+  },
+  {
+    "name": "redeemUagOperationCompletionReward",
+    "line": 4882,
+    "kind": "HTTP",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": 60,
+    "concurrency": null,
+    "trigger": ""
+  },
+  {
+    "name": "uagTradeInviteGateway",
+    "line": 4888,
+    "kind": "HTTP",
+    "maxInstances": 3,
+    "memory": null,
+    "timeout": 30,
+    "concurrency": 16,
+    "trigger": ""
+  },
+  {
+    "name": "evaluateUagTradeReferralIncentives",
+    "line": 4898,
+    "kind": "schedule",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": null,
+    "concurrency": null,
+    "trigger": "every day 06:25"
+  },
+  {
+    "name": "notifyAutomaticTradingWatches",
+    "line": 4906,
+    "kind": "Firestore event",
+    "maxInstances": 10,
+    "memory": null,
+    "timeout": null,
+    "concurrency": null,
+    "trigger": "trading_listings/{listingId}"
+  }
+]

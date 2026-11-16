@@ -1,3 +1,4 @@
+import 'package:uag_arc_raiders_hub/services/uag_streams.dart';
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -37,7 +38,7 @@ class ArcUserPersonalisationRepository {
         .authStateChanges()
         .map((user) => user?.uid)
         .distinct()
-        .asyncExpand((uid) {
+        .switchLatest((uid) {
           if (uid == null || uid.isEmpty) {
             return Stream<ArcUserPersonalisationProfile>.value(
               ArcUserPersonalisationProfile.defaults,

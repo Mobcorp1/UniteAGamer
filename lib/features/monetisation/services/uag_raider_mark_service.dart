@@ -1,3 +1,4 @@
+import 'package:uag_arc_raiders_hub/services/uag_app_check.dart';
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -111,7 +112,8 @@ class UagRaiderMarkService {
     final response = await http
         .post(
           Uri.https('us-central1-$project.cloudfunctions.net', '/$name'),
-          headers: {
+          headers: <String, String>{
+            ...await UagAppCheck.headers(),
             'Authorization': 'Bearer $token',
             'Content-Type': 'application/json',
           },

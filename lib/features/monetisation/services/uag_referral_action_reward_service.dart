@@ -1,3 +1,4 @@
+import 'package:uag_arc_raiders_hub/services/uag_app_check.dart';
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -114,6 +115,7 @@ class UagReferralActionRewardService {
             '/redeemUagReferralActionReward',
           ),
           headers: <String, String>{
+            ...await UagAppCheck.headers(),
             'Authorization': 'Bearer $token',
             'Content-Type': 'application/json',
           },

@@ -1,3 +1,4 @@
+import 'package:uag_arc_raiders_hub/services/uag_streams.dart';
 import '../models/arc_admin_map_marker.dart';
 import '../data/arc_published_report_pois.dart';
 import 'dart:async';
@@ -47,7 +48,7 @@ class ArcBlueprintRepository {
 
   Stream<ArcBlueprintStateSnapshot> watchMyBlueprintStateSnapshot() {
     final lastLoadedByUid = <String, Map<String, ArcBlueprintState>>{};
-    return _authUserIdChanges().distinct().asyncExpand((uid) {
+    return _authUserIdChanges().distinct().switchLatest((uid) {
       if (uid == null) {
         return Stream<ArcBlueprintStateSnapshot>.value(
           ArcBlueprintStateSnapshot.signedOut(),
@@ -98,7 +99,7 @@ class ArcBlueprintRepository {
         .authStateChanges()
         .map((user) => user?.uid)
         .distinct()
-        .asyncExpand((uid) {
+        .switchLatest((uid) {
           if (uid == null) return Stream.value(<String, ArcBlueprintState>{});
           return _stateCollection(uid).snapshots().asyncMap(
             (snapshot) => _statesFromSnapshot(uid, snapshot),

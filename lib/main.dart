@@ -2,6 +2,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raider_setup_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_events_screen.dart';
 import 'dart:async';
+import 'services/uag_app_check.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/services/uag_trade_invite_service.dart';
 
 import 'features/monetisation/ads/uag_ad_consent_controller.dart';
@@ -91,6 +92,7 @@ Future<void> main() async {
   runApp(const _UagBootstrapApp());
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await UagAppCheck.initialize();
   await UagTradeInviteService.instance.initialise();
 
   await UagCreatorReferralBootstrap.instance.initialise();

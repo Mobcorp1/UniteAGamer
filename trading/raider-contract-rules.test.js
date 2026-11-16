@@ -4,7 +4,9 @@ const path = require('node:path');
 const { ref: storageRef, uploadBytes, getBytes } = require('firebase/storage');
 const { initializeTestEnvironment, assertFails, assertSucceeds } = require('@firebase/rules-unit-testing');
 async function run() {
-  const env = await initializeTestEnvironment({ projectId: 'demo-raider-contracts', firestore: {
+  const projectId = process.env.GCLOUD_PROJECT || 'demo-raider-contracts';
+  if (!projectId.startsWith('demo-')) throw Error('Demo project required');
+  const env = await initializeTestEnvironment({ projectId, firestore: {
     rules: fs.readFileSync(path.resolve(__dirname, '../firestore.rules'), 'utf8'), host: '127.0.0.1', port: 8080 },
     storage: { rules: fs.readFileSync(path.resolve(__dirname, '../storage.rules'), 'utf8'), host: '127.0.0.1', port: 9199 } });
   let checks = 0;
@@ -67,7 +69,7 @@ async function run() {
     // Real Firestore transactions exercise the deployed handler code (media and
     // Auth lookups injected); this catches sentinel/array and transaction errors.
     const admin = require('firebase-admin');
-    const app = admin.initializeApp({ projectId: 'demo-raider-contracts' }, 'contract-integration');
+    const app = admin.initializeApp({ projectId }, 'contract-integration');
     try {
       const backendDb = app.firestore();
       await backendDb.doc('arc_contract_restrictions/target').delete();

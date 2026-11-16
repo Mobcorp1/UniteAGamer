@@ -42,8 +42,10 @@ class _ArcTradeNetworkPanelState extends State<ArcTradeNetworkPanel> {
   final Set<String> _syncKeys = <String>{};
   bool _creatingWatch = false;
 
+  late final ArcBlueprintIntelRepository _defaultIntelRepository =
+      ArcBlueprintIntelRepository();
   ArcBlueprintIntelRepository get _intelRepository =>
-      widget.intelRepository ?? ArcBlueprintIntelRepository();
+      widget.intelRepository ?? _defaultIntelRepository;
 
   Map<String, int> get _ownedQuantities =>
       widget.engine.buildOwnedItemQuantities(
@@ -246,7 +248,7 @@ class _ArcTradeNetworkPanelState extends State<ArcTradeNetworkPanel> {
             onOpenListing: _openListing,
           ),
           const SizedBox(height: AppTheme.spaceM),
-          _BlueprintIntelPanel(
+          ArcTradeBlueprintIntelPanel(
             blueprintId: _firstBlueprintId(summary),
             blueprintNameFor: _blueprintName,
             intelRepository: _intelRepository,
@@ -589,8 +591,9 @@ class _WatchingPanel extends StatelessWidget {
   }
 }
 
-class _BlueprintIntelPanel extends StatelessWidget {
-  const _BlueprintIntelPanel({
+class ArcTradeBlueprintIntelPanel extends StatefulWidget {
+  const ArcTradeBlueprintIntelPanel({
+    super.key,
     required this.blueprintId,
     required this.blueprintNameFor,
     required this.intelRepository,
@@ -601,8 +604,39 @@ class _BlueprintIntelPanel extends StatelessWidget {
   final ArcBlueprintIntelRepository intelRepository;
 
   @override
+  State<ArcTradeBlueprintIntelPanel> createState() =>
+      _ArcTradeBlueprintIntelPanelState();
+}
+
+class _ArcTradeBlueprintIntelPanelState
+    extends State<ArcTradeBlueprintIntelPanel> {
+  Future<List<ArcBlueprintDropReport>>? _reports;
+
+  void _refresh() {
+    final id = widget.blueprintId;
+    _reports = id == null || id.isEmpty
+        ? null
+        : widget.intelRepository.getReportsForBlueprint(id, limit: 3);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _refresh();
+  }
+
+  @override
+  void didUpdateWidget(covariant ArcTradeBlueprintIntelPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.blueprintId != widget.blueprintId ||
+        oldWidget.intelRepository != widget.intelRepository) {
+      _refresh();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final id = blueprintId;
+    final id = widget.blueprintId;
     if (id == null || id.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -611,12 +645,21 @@ class _BlueprintIntelPanel extends StatelessWidget {
       title: 'Blueprint Intel',
       icon: Icons.map_outlined,
       child: FutureBuilder<List<ArcBlueprintDropReport>>(
-        future: intelRepository.getReportsForBlueprint(id, limit: 3),
+        future: _reports,
         builder: (context, snapshot) {
           final reports = snapshot.data ?? const <ArcBlueprintDropReport>[];
-          if (snapshot.hasError || reports.isEmpty) {
+          if (snapshot.hasError) {
+            return TextButton(
+              onPressed: () => setState(_refresh),
+              child: const Text('Community Intel unavailable. Retry'),
+            );
+          }
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const _MutedText('Loading community Intel…');
+          }
+          if (reports.isEmpty) {
             return _MutedText(
-              'No recent community Intel for ${blueprintNameFor(id)} yet.',
+              'No recent community Intel for ${widget.blueprintNameFor(id)} yet.',
             );
           }
 
@@ -626,7 +669,7 @@ class _BlueprintIntelPanel extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                blueprintNameFor(id),
+                widget.blueprintNameFor(id),
                 style: AppTheme.tradingHeading(
                   fontSize: 16,
                   color: AppTheme.neonPink,

@@ -1,3 +1,4 @@
+import 'package:uag_arc_raiders_hub/services/uag_streams.dart';
 import '../../../trust/repositories/arc_raider_contracts_repository.dart';
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -178,15 +179,21 @@ class TradingRepository {
     }
 
     return _cosmeticIdentityStreams.putIfAbsent(normalizedUid, () {
-      return _tradingProfileDoc(normalizedUid)
-          .snapshots()
-          .asyncMap(
-            (snapshot) => _loadTraderCosmeticIdentity(
-              uid: normalizedUid,
-              profileData: snapshot.data(),
-            ),
-          )
-          .asBroadcastStream();
+      late Stream<TradingCosmeticIdentity> shared;
+      shared = shareWhileListened(
+        () => _tradingProfileDoc(normalizedUid).snapshots().asyncMap(
+          (snapshot) => _loadTraderCosmeticIdentity(
+            uid: normalizedUid,
+            profileData: snapshot.data(),
+          ),
+        ),
+        () {
+          if (identical(_cosmeticIdentityStreams[normalizedUid], shared)) {
+            _cosmeticIdentityStreams.remove(normalizedUid);
+          }
+        },
+      );
+      return shared;
     });
   }
 
@@ -1145,7 +1152,7 @@ class TradingRepository {
   }
 
   Stream<Map<String, ArcBlueprintState>> watchBlueprintStates() {
-    return _watchCurrentUid().asyncExpand((uid) {
+    return _watchCurrentUid().switchLatest((uid) {
       if (uid == null) {
         return Stream.value(const <String, ArcBlueprintState>{});
       }
@@ -1209,7 +1216,7 @@ class TradingRepository {
   }
 
   Stream<List<TradingNotification>> watchNotifications() {
-    return _watchCurrentUid().asyncExpand((uid) {
+    return _watchCurrentUid().switchLatest((uid) {
       if (uid == null) return Stream.value(const <TradingNotification>[]);
 
       return _notificationsCollection
@@ -1685,9 +1692,13 @@ class TradingRepository {
 
     // Smart Trade requires a canonical structured bundle, never a free-text
     // claim that an offer automatically qualifies.
-    if (listing.acceptedBundles.any((bundle) =>
-      bundle.terms.notes == 'UAG_SMART_TRADE_V1') && exactBundleOffer == null) {
-      throw StateError('Select qualifying missing Blueprints for this smart listing.');
+    if (listing.acceptedBundles.any(
+          (bundle) => bundle.terms.notes == 'UAG_SMART_TRADE_V1',
+        ) &&
+        exactBundleOffer == null) {
+      throw StateError(
+        'Select qualifying missing Blueprints for this smart listing.',
+      );
     }
     if (exactBundleOffer != null) {
       final templateMatches = listing.acceptedBundles.where(
@@ -1823,16 +1834,24 @@ class TradingRepository {
     if (listing.expiresAt.isBefore(DateTime.now())) {
       throw Exception('This listing has expired.');
     }
-    if (listing.acceptedBundles.any((bundle) =>
-        bundle.terms.notes == 'UAG_SMART_TRADE_V1')) {
+    if (listing.acceptedBundles.any(
+      (bundle) => bundle.terms.notes == 'UAG_SMART_TRADE_V1',
+    )) {
       final exact = offer.exactBundleOffer;
-      final candidates = listing.acceptedBundles.where((bundle) =>
-        bundle.active && bundle.id == exact?.templateId &&
-        bundle.terms.notes == 'UAG_SMART_TRADE_V1');
-      if (exact == null || candidates.isEmpty ||
-          !const ArcTradeBundleEngine().compare(
-            template: candidates.first, offer: exact).isExact) {
-        throw StateError('This proposal does not meet the published smart terms.');
+      final candidates = listing.acceptedBundles.where(
+        (bundle) =>
+            bundle.active &&
+            bundle.id == exact?.templateId &&
+            bundle.terms.notes == 'UAG_SMART_TRADE_V1',
+      );
+      if (exact == null ||
+          candidates.isEmpty ||
+          !const ArcTradeBundleEngine()
+              .compare(template: candidates.first, offer: exact)
+              .isExact) {
+        throw StateError(
+          'This proposal does not meet the published smart terms.',
+        );
       }
     }
     await _ensureNoSessionAlreadyExistsForOffer(offer.id);
