@@ -12,6 +12,7 @@ void main() {
     expect(s, contains('if (_selectedPlatforms.isNotEmpty)'));
     expect(s, contains('if (askForPlatform)'));
     expect(s, contains('buildOnboardingLegalAcceptedMap('));
+    expect(s, contains("prefs.setString('uag_tracker_first_uid', user.uid)"));
     expect(s, contains('!_legalComplete'));
   });
 

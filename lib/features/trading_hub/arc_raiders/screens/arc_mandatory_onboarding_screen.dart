@@ -554,6 +554,7 @@ class _ArcMandatoryOnboardingScreenState
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('hasCompletedOnboarding', true);
+      await prefs.setString('uag_tracker_first_uid', user.uid);
       await prefs.setBool('hasCompletedProfileSetup', false);
       await prefs.setBool('forceOnboarding', false);
       await prefs.setString('displayName', riderName);

@@ -184,7 +184,13 @@ class _AppEntryGateState extends State<AppEntryGate> {
     } catch (error, stackTrace) {
       debugPrint('AppEntryGate deferred-setup lookup failed: $error');
       debugPrintStack(stackTrace: stackTrace);
-      return false;
+      // Offline fallback is tied to this Firebase UID, never a device-wide flag.
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        return prefs.getString('uag_tracker_first_uid') == uid;
+      } catch (_) {
+        return false;
+      }
     }
   }
 
