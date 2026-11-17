@@ -63,10 +63,13 @@ void main() {
     expect(appEntry, contains("data['onboardingComplete'] == true"));
     expect(authLanding, contains('const ArcMandatoryOnboardingScreen()'));
     expect(onboarding, contains('markAuthenticatedWithStoredPreference'));
-    expect(
-      onboarding,
-      contains('const ArcProfileSetupScreen(firstRunFlow: true)'),
-    );
+    // Tracker-first launch goes directly to Blueprint Tracker after the
+    // account and legal steps; full Raider Setup remains in AppEntryGate
+    // for legacy accounts and is optional for new tracker-only accounts.
+    expect(onboarding, contains('const BlueprintGridScreen()'));
+    expect(onboarding, contains('trackerFirst: true'));
+    expect(appEntry, contains('arcDefersFullRaiderSetup('));
+    expect(appEntry, contains('return ArcRaiderSetupGate('));
     expect(onboarding, isNot(contains('_completionDestination')));
     expect(onboarding, isNot(contains(': ArcCommandCentreScreen.routeName')));
     expect(web, contains('interactive-widget=resizes-content'));
