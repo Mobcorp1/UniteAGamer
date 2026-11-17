@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_onboarding_setup.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_user_personalisation_profile.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_cosmetic_identity.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_match_rider_profile.dart';
 import 'package:uag_arc_raiders_hub/screens/build/app_entry_gate.dart';
 
 void main() {
@@ -43,6 +44,18 @@ void main() {
     expect((data['modules'] as Map)['trader'], isFalse);
     expect(data['visibleInSearch'], isFalse);
     expect((data['arcOnboarding'] as Map)['platforms'], isEmpty);
+  });
+
+  test('Match Raider is private until the player explicitly opts in', () {
+    final profile = ArcMatchRiderProfile.empty('new-user');
+    expect(profile.visibleInSearch, isFalse);
+    expect(profile.lookingNow, isFalse);
+    final optedIn = profile.copyWith(
+      visibleInSearch: true,
+      lookingNow: true,
+    );
+    expect(optedIn.visibleInSearch, isTrue);
+    expect(optedIn.lookingNow, isTrue);
   });
 
   test('cosmetic identity carries the selected avatar ID', () {

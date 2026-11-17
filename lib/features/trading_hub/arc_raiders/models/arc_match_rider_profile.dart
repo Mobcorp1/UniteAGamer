@@ -344,8 +344,9 @@ class ArcMatchRiderProfile {
       betrayalFlags: 0,
       comms: const [],
       squadPreferences: const [],
-      lookingNow: true,
-      visibleInSearch: true,
+      // New Raiders opt in to discovery explicitly when they save a profile.
+      lookingNow: false,
+      visibleInSearch: false,
       notes: '',
       updatedAt: null,
     );
