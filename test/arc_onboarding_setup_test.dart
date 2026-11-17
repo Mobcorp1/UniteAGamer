@@ -58,6 +58,8 @@ void main() {
       expect(payload['createdAt'], isA<FieldValue>());
       expect(payload['updatedAt'], isA<FieldValue>());
       expect(payload.containsKey('ageVerification'), isFalse);
+      expect((payload['modules'] as Map)['trader'], isFalse);
+      expect(payload['visibleInSearch'], isFalse);
 
       final onboarding = payload['arcOnboarding'] as Map<String, dynamic>;
       expect(onboarding['version'], 7);

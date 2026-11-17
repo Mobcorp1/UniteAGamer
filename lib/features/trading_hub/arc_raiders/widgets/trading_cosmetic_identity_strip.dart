@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_cosmetic_identity.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/uag_raider_avatar.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class TradingCosmeticIdentityStrip extends StatelessWidget {
@@ -148,28 +149,25 @@ class TradingCosmeticIdentityStrip extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
+                  Padding(
+                    padding: EdgeInsets.all(hasFrame ? 5 : 0),
+                    child: Center(
+                      child: UagRaiderAvatar(
+                        avatarId: cosmetics.avatarId,
+                        displayName: effectiveName,
+                        size: avatarSize - (hasFrame ? 15 : 10),
+                        accent: frameAccent,
+                      ),
+                    ),
+                  ),
                   if (frameAsset != null && frameAsset.isNotEmpty)
-                    ClipOval(
+                    IgnorePointer(
                       child: Image.asset(
                         frameAsset,
                         fit: BoxFit.contain,
                         errorBuilder: (_, _, _) => const SizedBox.shrink(),
                       ),
                     ),
-                  Padding(
-                    padding: EdgeInsets.all(hasFrame ? 5 : 0),
-                    child: CircleAvatar(
-                      backgroundColor: AppTheme.cardBackgroundAlt,
-                      child: Text(
-                        (effectiveName.isNotEmpty ? effectiveName[0] : 'T')
-                            .toUpperCase(),
-                        style: AppTheme.tradingHeading(
-                          fontSize: compact ? 18 : 22,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),

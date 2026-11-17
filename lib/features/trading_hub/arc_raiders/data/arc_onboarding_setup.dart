@@ -130,8 +130,8 @@ Map<String, dynamic> buildArcOnboardingAccountProfilePayload({
     'displayName': normalizedName,
     'uagName': normalizedName,
     'updatedAt': FieldValue.serverTimestamp(),
-    'modules': <String, dynamic>{'trader': true},
-    'visibleInSearch': true,
+    'modules': <String, dynamic>{'trader': false},
+    'visibleInSearch': false,
     'basicProfile': <String, dynamic>{
       'displayName': normalizedName,
       'email': normalizedEmail,
@@ -176,6 +176,7 @@ Map<String, dynamic> buildArcOnboardingCompletionPayload({
       ArcBlueprintOwnershipState.unsure,
   ArcQuestProgressState questProgress = ArcQuestProgressState.unsure,
   bool accountCreatedDuringOnboarding = false,
+  bool trackerFirst = false,
 }) {
   final normalizedName = riderName.trim();
   final normalizedPlatforms = ArcGamePlatformCatalog.normalize(platforms);
@@ -208,17 +209,25 @@ Map<String, dynamic> buildArcOnboardingCompletionPayload({
         'verifiedAt': FieldValue.serverTimestamp(),
       },
     'arcOnboarding': <String, dynamic>{
-      'version': 7,
+      'version': trackerFirst ? 8 : 7,
+      'setupMode': trackerFirst ? 'trackerFirst' : 'full',
       'completedAt': FieldValue.serverTimestamp(),
-      'flow': <String>[
-        accountCreatedDuringOnboarding ? 'account' : 'identity',
-        'legal',
-        'primaryGoal',
-        'progression',
-        'profile',
-        'availability',
-      ],
-      'nextRequiredSetup': <String>['profileDetails', 'availability'],
+      'flow': trackerFirst
+          ? <String>[
+              accountCreatedDuringOnboarding ? 'account' : 'identity',
+              'legal',
+            ]
+          : <String>[
+              accountCreatedDuringOnboarding ? 'account' : 'identity',
+              'legal',
+              'primaryGoal',
+              'progression',
+              'profile',
+              'availability',
+            ],
+      'nextRequiredSetup': trackerFirst
+          ? <String>[]
+          : <String>['profileDetails', 'availability'],
       'accountCreatedDuringOnboarding': accountCreatedDuringOnboarding,
       'riderName': normalizedName,
       'platforms': normalizedPlatforms,
@@ -230,7 +239,15 @@ Map<String, dynamic> buildArcOnboardingCompletionPayload({
       'recommendedFirstSystem': recommendedFirstSystem,
       'progressiveSetupEnabled': true,
       'legalAccepted': legalAccepted,
-      'deferredSetup': <String>['tradePreferences', 'notificationPreferences'],
+      'deferredSetup': trackerFirst
+          ? <String>[
+              'profileDetails',
+              'availability',
+              'tradePreferences',
+              'matchPreferences',
+              'notificationPreferences',
+            ]
+          : <String>['tradePreferences', 'notificationPreferences'],
     },
   };
 }

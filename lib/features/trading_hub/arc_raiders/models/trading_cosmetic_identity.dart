@@ -4,6 +4,7 @@ class TradingCosmeticIdentity {
   const TradingCosmeticIdentity({
     required this.uid,
     this.displayName = '',
+    this.avatarId = '',
     this.gamerTag = '',
     this.preferredPlatform = '',
     this.equippedCosmetics = const ArcEquippedCosmetics(),
@@ -15,6 +16,7 @@ class TradingCosmeticIdentity {
 
   final String uid;
   final String displayName;
+  final String avatarId;
   final String gamerTag;
   final String preferredPlatform;
   final ArcEquippedCosmetics equippedCosmetics;

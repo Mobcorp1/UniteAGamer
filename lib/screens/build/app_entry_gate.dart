@@ -99,6 +99,16 @@ bool arcNeedsMandatoryOnboarding(Map<String, dynamic> data) =>
 bool arcNeedsProgressiveOnboarding(Map<String, dynamic> data) =>
     arcNeedsMandatoryOnboarding(data);
 
+/// Only explicitly completed version 8 tracker-first accounts may defer
+/// full profile, quest, bench and availability setup.
+bool arcDefersFullRaiderSetup(Map<String, dynamic> data) {
+  final setup = data['arcOnboarding'];
+  return data['arcMandatoryOnboardingComplete'] == true &&
+      setup is Map &&
+      setup['version'] == 8 &&
+      setup['setupMode'] == 'trackerFirst';
+}
+
 class AppEntryGate extends StatefulWidget {
   static const routeName = '/app-entry-gate';
 
@@ -166,6 +176,18 @@ class _AppEntryGateState extends State<AppEntryGate> {
     }
   }
 
+  Future<bool> _shouldDeferFullRaiderSetup(String uid) async {
+    try {
+      final snapshot =
+          await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      return arcDefersFullRaiderSetup(snapshot.data() ?? <String, dynamic>{});
+    } catch (error, stackTrace) {
+      debugPrint('AppEntryGate deferred-setup lookup failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      return false;
+    }
+  }
+
   Future<void> _runLegalGateOnce() async {
     if (_fanDisclaimerChecked) return;
     _fanDisclaimerChecked = true;
@@ -223,9 +245,7 @@ class _AppEntryGateState extends State<AppEntryGate> {
                   return const ArcMandatoryOnboardingScreen();
                 }
 
-                return ArcRaiderSetupGate(
-                  key: ValueKey(user.uid),
-                  child: Builder(
+                final destination = Builder(
                     builder: (context) {
                       WidgetsBinding.instance.addPostFrameCallback((_) {
                         if (mounted) _runLegalGateOnce();
@@ -244,7 +264,20 @@ class _AppEntryGateState extends State<AppEntryGate> {
                       }
                       return widget.destinationBuilder!.call(context);
                     },
-                  ),
+                  );
+
+                return FutureBuilder<bool>(
+                  future: _shouldDeferFullRaiderSetup(user.uid),
+                  builder: (context, deferredSnapshot) {
+                    if (!deferredSnapshot.hasData) {
+                      return const _GateLoadingScaffold();
+                    }
+                    if (deferredSnapshot.data == true) return destination;
+                    return ArcRaiderSetupGate(
+                      key: ValueKey(user.uid),
+                      child: destination,
+                    );
+                  },
                 );
               },
             );

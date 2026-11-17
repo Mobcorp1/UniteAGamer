@@ -38,7 +38,7 @@ void main() {
     expect(gate, isNot(contains("prefs.getBool('hasCompletedProfileSetup')")));
   });
 
-  test('ONB02 onboarding hands off through required profile setup', () {
+  test('ONB02 tracker-first onboarding enters Blueprint Tracker directly', () {
     final onboarding = File(
       'lib/features/trading_hub/arc_raiders/screens/'
       'arc_mandatory_onboarding_screen.dart',
@@ -46,7 +46,7 @@ void main() {
 
     expect(
       onboarding,
-      contains('const ArcProfileSetupScreen(firstRunFlow: true)'),
+      contains('const BlueprintGridScreen()'),
     );
     expect(onboarding, isNot(contains('_completionDestination')));
     expect(

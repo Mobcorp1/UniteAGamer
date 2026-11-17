@@ -139,6 +139,7 @@ class TradingRepository {
         profileData?['uagName'],
         profileData?['gamerTag'],
       ]),
+      avatarId: _firstNonEmptyString([profileData?['avatarId']]),
       gamerTag: _firstNonEmptyString([
         profileData?['gamerTag'],
         profileData?['uagId'],

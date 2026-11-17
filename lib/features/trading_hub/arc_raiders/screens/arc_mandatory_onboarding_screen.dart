@@ -18,7 +18,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_on
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_user_personalisation_profile.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_trader_profile_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_user_personalisation_repository.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_profile_setup_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_account_journey_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_game_platform_selector.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
@@ -137,7 +137,7 @@ class _ArcMandatoryOnboardingScreenState
   @override
   void initState() {
     super.initState();
-    _step = widget.initialStep.clamp(0, 3);
+    _step = widget.initialStep.clamp(0, widget.adminPreview ? 3 : 1);
     if (_step > 0) {
       _pageController.dispose();
       _pageController = PageController(initialPage: _step);
@@ -215,18 +215,21 @@ class _ArcMandatoryOnboardingScreenState
         if (!created || !mounted) return;
       } else {
         final error = validateArcRiderName(_riderNameController.text);
-        final platformError = _selectedPlatforms.isEmpty
-            ? 'Choose at least one platform.'
-            : null;
         setState(() {
           _riderNameError = error;
-          _platformError = platformError;
+          _platformError = null;
         });
-        if (error != null || platformError != null) return;
+        if (error != null) return;
       }
     }
     if (_step == 1 && !_legalComplete) {
       _showMessage('Accept all required agreements to continue.');
+      return;
+    }
+    // All player registrations finish after legal acceptance.
+    // Keep the legacy objective and progression pages in admin preview.
+    if (_step == 1 && !widget.adminPreview) {
+      await _completeSetup();
       return;
     }
     if (_step == 2 && _primaryGoal == null) {
@@ -260,9 +263,8 @@ class _ArcMandatoryOnboardingScreenState
     final emailError = validateArcOnboardingEmail(email);
     final passwordError = validateArcOnboardingPassword(password);
     final riderNameError = validateArcRiderName(riderName);
-    final platformError = _selectedPlatforms.isEmpty
-        ? 'Choose at least one platform.'
-        : null;
+    // Platform selection is deferred to opt-in trading or squad setup.
+    const String? platformError = null;
 
     setState(() {
       _emailError = emailError;
@@ -467,10 +469,11 @@ class _ArcMandatoryOnboardingScreenState
     }
 
     final user = await _currentSignedInUser();
-    final primaryGoal = _primaryGoal;
-    final progressStage = _progressStage;
-    final blueprintOwnership = _blueprintOwnership;
-    final questProgress = _questProgress;
+    final primaryGoal = _primaryGoal ?? ArcPersonalisationGoal.completeBlueprints;
+    final progressStage = _progressStage ?? ArcRaiderProgressStage.unsure;
+    final blueprintOwnership =
+        _blueprintOwnership ?? ArcBlueprintOwnershipState.unsure;
+    final questProgress = _questProgress ?? ArcQuestProgressState.unsure;
     final riderName = _riderNameController.text.trim();
     final nameError = validateArcRiderName(riderName);
 
@@ -480,18 +483,10 @@ class _ArcMandatoryOnboardingScreenState
       _showMessage('Create your account first.');
       return;
     }
-    if (nameError != null ||
-        _selectedPlatforms.isEmpty ||
-        primaryGoal == null ||
-        progressStage == null ||
-        blueprintOwnership == null ||
-        questProgress == null ||
-        !_legalComplete) {
+    if (nameError != null || !_legalComplete) {
       setState(() {
         _riderNameError = nameError;
-        _platformError = _selectedPlatforms.isEmpty
-            ? 'Choose at least one platform.'
-            : null;
+        _platformError = null;
       });
       _showMessage('Complete the required setup first.');
       return;
@@ -525,6 +520,7 @@ class _ArcMandatoryOnboardingScreenState
       blueprintOwnership: blueprintOwnership,
       questProgress: questProgress,
       accountCreatedDuringOnboarding: _accountCreatedDuringOnboarding,
+      trackerFirst: true,
     );
     final accountProfilePayload = _accountCreatedDuringOnboarding
         ? buildArcOnboardingAccountProfilePayload(
@@ -548,7 +544,8 @@ class _ArcMandatoryOnboardingScreenState
       // the app with a default "show everything" profile if they fail.
       await Future.wait<void>([
         _personalisationRepository.markComplete(personalisation),
-        _profileRepository.savePlatformSelection(_selectedPlatforms),
+        if (_selectedPlatforms.isNotEmpty)
+          _profileRepository.savePlatformSelection(_selectedPlatforms),
         if (user.displayName != riderName) user.updateDisplayName(riderName),
       ]).timeout(const Duration(seconds: 12));
 
@@ -579,7 +576,7 @@ class _ArcMandatoryOnboardingScreenState
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute<void>(
-          builder: (_) => const ArcProfileSetupScreen(firstRunFlow: true),
+          builder: (_) => const BlueprintGridScreen(),
         ),
         (_) => false,
       );
@@ -619,7 +616,11 @@ class _ArcMandatoryOnboardingScreenState
                       compact: true,
                     ),
                     const SizedBox(height: 10),
-                    _TopBar(step: _step, onBack: _back),
+                    _TopBar(
+                      step: _step,
+                      totalSteps: widget.adminPreview ? 4 : 2,
+                      onBack: _back,
+                    ),
                     const SizedBox(height: 10),
                     Expanded(
                       child: PageView(
@@ -636,6 +637,7 @@ class _ArcMandatoryOnboardingScreenState
                                   riderNameError: _riderNameError,
                                   selectedPlatforms: _selectedPlatforms,
                                   platformError: _platformError,
+                                  askForPlatform: widget.adminPreview,
                                   onPlatformsChanged: (platforms) =>
                                       setState(() {
                                         _selectedPlatforms
@@ -671,6 +673,7 @@ class _ArcMandatoryOnboardingScreenState
                                   errorText: _riderNameError,
                                   selectedPlatforms: _selectedPlatforms,
                                   platformError: _platformError,
+                                  askForPlatform: widget.adminPreview,
                                   onPlatformsChanged: (platforms) =>
                                       setState(() {
                                         _selectedPlatforms
@@ -761,7 +764,7 @@ class _ArcMandatoryOnboardingScreenState
                                   ),
                                 )
                               : Icon(
-                                  _step == 3
+                                  (_step == 3 || (!widget.adminPreview && _step == 1))
                                       ? Icons.rocket_launch_rounded
                                       : Icons.arrow_forward_rounded,
                                 ),
@@ -771,10 +774,10 @@ class _ArcMandatoryOnboardingScreenState
                                       ? 'CREATING ACCOUNT...'
                                       : 'INITIALISING ARC SYSTEMS...')
                                 : _step == 3
-                                ? (widget.adminPreview
-                                      ? 'CLOSE PREVIEW'
-                                      : 'ENTER UAG')
-                                : 'CONTINUE',
+                                ? 'CLOSE PREVIEW'
+                                : (!widget.adminPreview && _step == 1)
+                                    ? 'OPEN BLUEPRINT TRACKER'
+                                    : 'CONTINUE',
                           ),
                         ),
                       ),
@@ -791,8 +794,9 @@ class _ArcMandatoryOnboardingScreenState
 }
 
 class _TopBar extends StatelessWidget {
-  const _TopBar({required this.step, required this.onBack});
+  const _TopBar({required this.step, required this.totalSteps, required this.onBack});
   final int step;
+  final int totalSteps;
   final VoidCallback onBack;
 
   static const _labels = <String>[
@@ -853,7 +857,7 @@ class _TopBar extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'UAG // ARC NETWORK  •  ${step + 1} OF 4',
+                      'UAG // ARC NETWORK  •  ${step + 1} OF $totalSteps',
                       style: TextStyle(
                         color: AppTheme.neonCyan.withValues(alpha: 0.82),
                         fontSize: 10,
@@ -869,7 +873,7 @@ class _TopBar extends StatelessWidget {
                 child: Align(
                   alignment: Alignment.centerRight,
                   child: Text(
-                    '${((step + 1) * 25)}%',
+                    '${(((step + 1) * 100) / totalSteps).round()}%',
                     style: const TextStyle(
                       color: AppTheme.neonPink,
                       fontSize: 11,
@@ -882,7 +886,7 @@ class _TopBar extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Row(
-            children: List.generate(4, (index) {
+            children: List.generate(totalSteps, (index) {
               final active = index <= step;
               final current = index == step;
               return Expanded(
@@ -1110,6 +1114,7 @@ class _AccountCreationStep extends StatelessWidget {
     required this.riderNameError,
     required this.selectedPlatforms,
     required this.platformError,
+    required this.askForPlatform,
     required this.onPlatformsChanged,
     required this.showPassword,
     required this.rememberEmail,
@@ -1128,6 +1133,7 @@ class _AccountCreationStep extends StatelessWidget {
   final String? riderNameError;
   final Set<String> selectedPlatforms;
   final String? platformError;
+  final bool askForPlatform;
   final ValueChanged<Set<String>> onPlatformsChanged;
   final bool showPassword;
   final bool rememberEmail;
@@ -1143,7 +1149,7 @@ class _AccountCreationStep extends StatelessWidget {
       icon: Icons.person_add_alt_1_rounded,
       title: 'CREATE YOUR RAIDER ACCOUNT',
       subtitle:
-          'Choose your Raider identity and platforms, then secure your account.',
+          'Choose a Raider name, email and password to get started.',
       child: AutofillGroup(
         child: Column(
           children: [
@@ -1181,13 +1187,15 @@ class _AccountCreationStep extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  ArcGamePlatformSelector(
-                    selected: selectedPlatforms,
-                    errorText: platformError,
-                    compact: true,
-                    onChanged: onPlatformsChanged,
-                  ),
-                  const SizedBox(height: 8),
+                  if (askForPlatform) ...[
+                    ArcGamePlatformSelector(
+                      selected: selectedPlatforms,
+                      errorText: platformError,
+                      compact: true,
+                      onChanged: onPlatformsChanged,
+                    ),
+                    const SizedBox(height: 8),
+                  ],
                 ],
               ),
             ),
@@ -1351,6 +1359,7 @@ class _IdentityStep extends StatelessWidget {
     required this.errorText,
     required this.selectedPlatforms,
     required this.platformError,
+    required this.askForPlatform,
     required this.onPlatformsChanged,
     required this.onChanged,
   });
@@ -1359,6 +1368,7 @@ class _IdentityStep extends StatelessWidget {
   final String? errorText;
   final Set<String> selectedPlatforms;
   final String? platformError;
+  final bool askForPlatform;
   final ValueChanged<Set<String>> onPlatformsChanged;
   final ValueChanged<String> onChanged;
 
@@ -1368,7 +1378,7 @@ class _IdentityStep extends StatelessWidget {
       icon: Icons.badge_outlined,
       title: 'IDENTIFY YOUR RAIDER',
       subtitle:
-          'Your account is ready. Confirm your Raider name and platforms.',
+          'Your account is ready. Confirm your Raider name.',
       child: Column(
         children: [
           TextField(
@@ -1393,11 +1403,12 @@ class _IdentityStep extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          ArcGamePlatformSelector(
-            selected: selectedPlatforms,
-            errorText: platformError,
-            onChanged: onPlatformsChanged,
-          ),
+          if (askForPlatform)
+            ArcGamePlatformSelector(
+              selected: selectedPlatforms,
+              errorText: platformError,
+              onChanged: onPlatformsChanged,
+            ),
         ],
       ),
     );
