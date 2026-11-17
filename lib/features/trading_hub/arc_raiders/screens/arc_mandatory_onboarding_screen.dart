@@ -264,19 +264,16 @@ class _ArcMandatoryOnboardingScreenState
     final passwordError = validateArcOnboardingPassword(password);
     final riderNameError = validateArcRiderName(riderName);
     // Platform selection is deferred to opt-in trading or squad setup.
-    const String? platformError = null;
-
     setState(() {
       _emailError = emailError;
       _passwordError = passwordError;
       _riderNameError = riderNameError;
-      _platformError = platformError;
+      _platformError = null;
     });
 
     return emailError == null &&
         passwordError == null &&
-        riderNameError == null &&
-        platformError == null;
+        riderNameError == null;
   }
 
   Future<User> _waitForSignedInUser(UserCredential credential) async {
@@ -469,7 +466,8 @@ class _ArcMandatoryOnboardingScreenState
     }
 
     final user = await _currentSignedInUser();
-    final primaryGoal = _primaryGoal ?? ArcPersonalisationGoal.completeBlueprints;
+    final primaryGoal =
+        _primaryGoal ?? ArcPersonalisationGoal.completeBlueprints;
     final progressStage = _progressStage ?? ArcRaiderProgressStage.unsure;
     final blueprintOwnership =
         _blueprintOwnership ?? ArcBlueprintOwnershipState.unsure;
@@ -764,7 +762,8 @@ class _ArcMandatoryOnboardingScreenState
                                   ),
                                 )
                               : Icon(
-                                  (_step == 3 || (!widget.adminPreview && _step == 1))
+                                  (_step == 3 ||
+                                      (!widget.adminPreview && _step == 1))
                                       ? Icons.rocket_launch_rounded
                                       : Icons.arrow_forward_rounded,
                                 ),
@@ -794,7 +793,11 @@ class _ArcMandatoryOnboardingScreenState
 }
 
 class _TopBar extends StatelessWidget {
-  const _TopBar({required this.step, required this.totalSteps, required this.onBack});
+  const _TopBar({
+    required this.step,
+    required this.totalSteps,
+    required this.onBack,
+  });
   final int step;
   final int totalSteps;
   final VoidCallback onBack;

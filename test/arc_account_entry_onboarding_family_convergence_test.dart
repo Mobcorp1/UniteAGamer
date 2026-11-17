@@ -43,7 +43,7 @@ void main() {
     expect(auth, contains('AppEntryGate.routeName'));
     expect(
       onboarding,
-      contains('const ArcProfileSetupScreen(firstRunFlow: true)'),
+      contains('const BlueprintGridScreen()'),
     );
     expect(onboarding, isNot(contains('_completionDestination')));
     expect(agreement, contains('Navigator.of(context).pop(true)'));

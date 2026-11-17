@@ -246,25 +246,26 @@ class _AppEntryGateState extends State<AppEntryGate> {
                 }
 
                 final destination = Builder(
-                    builder: (context) {
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        if (mounted) _runLegalGateOnce();
-                      });
-                      if (widget.destinationBuilder == null) {
-                        return ValueListenableBuilder<String?>(
-                          valueListenable: UagTradeInviteService.instance.pendingToken,
-                          builder: (context, token, _) => token == null
-                              ? const ArcCommandCentreScreen()
-                              : UagTradeInviteLanding(
-                                  key: ValueKey(token),
-                                  token: token,
-                                  onExit: () {},
-                                ),
-                        );
-                      }
-                      return widget.destinationBuilder!.call(context);
-                    },
-                  );
+                  builder: (context) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted) _runLegalGateOnce();
+                    });
+                    if (widget.destinationBuilder == null) {
+                      return ValueListenableBuilder<String?>(
+                        valueListenable:
+                            UagTradeInviteService.instance.pendingToken,
+                        builder: (context, token, _) => token == null
+                            ? const ArcCommandCentreScreen()
+                            : UagTradeInviteLanding(
+                                key: ValueKey(token),
+                                token: token,
+                                onExit: () {},
+                              ),
+                      );
+                    }
+                    return widget.destinationBuilder!.call(context);
+                  },
+                );
 
                 return FutureBuilder<bool>(
                   future: _shouldDeferFullRaiderSetup(user.uid),
