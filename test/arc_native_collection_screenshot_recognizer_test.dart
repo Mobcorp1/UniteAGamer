@@ -12,14 +12,18 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   const recognizer = ArcNativeCollectionScreenshotRecognizer();
 
-  test('Native PS5 Stencils screenshot gives 6 of 14 in exact positions', () async {
+  test('Legacy PS5 Stencils screenshot retains its first 14 positions', () async {
     final scan = recognizer.analyse(
       await fixture('stencils_ps5_native.jpg'), ArcNativeCollectionKind.stencils);
-    expect(scan.slots.length, 14);
-    expect(scan.count(ArcNativeSlotState.owned), 6);
-    expect(scan.count(ArcNativeSlotState.missing), 8);
-    expect(scan.count(ArcNativeSlotState.review), 0);
-    expect(scan.slots.where((s) => s.state == ArcNativeSlotState.owned)
+    // The historical fixture predates the expanded stencil collection.
+    // Check its known 14 cells without assuming newer positions were present.
+    expect(scan.slots.length, ArcNativeCollectionKind.stencils.slots);
+    final legacy = scan.slots.where((s) => s.slot <= 14).toList();
+    expect(legacy.length, 14);
+    expect(legacy.where((s) => s.state == ArcNativeSlotState.owned).length, 6);
+    expect(legacy.where((s) => s.state == ArcNativeSlotState.missing).length, 8);
+    expect(legacy.where((s) => s.state == ArcNativeSlotState.review).length, 0);
+    expect(legacy.where((s) => s.state == ArcNativeSlotState.owned)
       .map((s) => s.slot).toList(), <int>[2, 3, 5, 6, 7, 9]);
   });
 
@@ -54,8 +58,14 @@ void main() {
       ArcNativeCollectionKind.stencils), throwsFormatException);
   });
 
-  test('owned slot decoding ignores wrong collection ranges', () {
-    expect(ArcCollectionSlotRepository.decodeOwned(<dynamic>[1, 6, 6, 15, -1, '7'],
-      ArcNativeCollectionKind.stencils), <int>{1, 6});
+  test('owned slot decoding accepts the final valid stencil, not out-of-range slots', () {
+    final lastValidSlot = ArcNativeCollectionKind.stencils.slots;
+    expect(
+      ArcCollectionSlotRepository.decodeOwned(
+        <dynamic>[1, 6, 6, lastValidSlot, lastValidSlot + 1, -1, '7'],
+        ArcNativeCollectionKind.stencils,
+      ),
+      <int>{1, 6, lastValidSlot},
+    );
   });
 }

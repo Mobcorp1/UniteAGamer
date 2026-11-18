@@ -86,7 +86,10 @@ void main() {
       ),
     ));
     await tester.pumpAndSettle();
-    expect(find.text('2/14 OWNED'), findsOneWidget);
+    expect(
+      find.text('2/${ArcNativeCollectionKind.stencils.slots} OWNED'),
+      findsOneWidget,
+    );
     expect(find.byKey(const Key('collections-saved-slot-2')), findsOneWidget);
     await tester.tap(find.byKey(const Key('collections-tab-designs')));
     await tester.pumpAndSettle();
