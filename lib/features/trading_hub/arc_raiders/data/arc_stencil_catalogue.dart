@@ -54,11 +54,12 @@ class ArcStencilCatalogue {
   static String assetAt(int slot) =>
       'assets/arc_raiders/blueprints/${fileNames[slot - 1]}';
 
-  static String _stem(String name) => name
-      .toLowerCase()
-      .replaceAll(RegExp(r'\\.[^.]+
-), '')
-      .replaceAll(RegExp(r'[^a-z0-9]'), '');
+  static String _stem(String name) {
+    final lower = name.toLowerCase();
+    final dot = lower.lastIndexOf('.');
+    final withoutExtension = dot < 0 ? lower : lower.substring(0, dot);
+    return withoutExtension.replaceAll(RegExp(r'[^a-z0-9]'), '');
+  }
 
   /// Resolve compressed images that were imported with different separators,
   /// filename casing or the original "Malcio"/"Unknown Stencil" labels.
