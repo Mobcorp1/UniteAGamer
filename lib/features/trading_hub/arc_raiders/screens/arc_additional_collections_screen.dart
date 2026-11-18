@@ -904,6 +904,37 @@ class _ArcAdditionalCollectionsScreenState
     );
   }
 
+  /// Preserve the stencil artwork while making missing items unmistakable.
+  /// Owned cards remain full colour; missing cards show greyscale artwork
+  /// at lower opacity. The saved ownership and the item order are unchanged.
+  Widget _stencilArtwork(int slot, {required bool owned}) {
+    final image = Image.asset(
+      _stencilArtworkBySlot[slot] ?? ArcStencilCatalogue.assetAt(slot),
+      key: Key('collections-stencil-artwork-$slot'),
+      fit: BoxFit.contain,
+      errorBuilder: (_, _, _) => Icon(
+        owned ? Icons.palette_outlined : Icons.lock_outline,
+        color: owned ? Colors.cyanAccent : Colors.white30,
+        size: 18,
+      ),
+    );
+
+    if (owned) {
+      return image;
+    }
+
+    return ColorFiltered(
+      key: Key('collections-stencil-unowned-filter-$slot'),
+      colorFilter: const ColorFilter.matrix(<double>[
+        0.2126, 0.7152, 0.0722, 0, 0,
+        0.2126, 0.7152, 0.0722, 0, 0,
+        0.2126, 0.7152, 0.0722, 0, 0,
+        0, 0, 0, 1, 0,
+      ]),
+      child: Opacity(opacity: 0.45, child: image),
+    );
+  }
+
   Widget _slotCard(int slot, double cardWidth) {
     final owned = _displayOwned.contains(slot);
     final dupes = _dupCount(slot);
@@ -944,16 +975,7 @@ class _ArcAdditionalCollectionsScreenState
                   fit: StackFit.expand,
                   children: [
                     if (_kind == ArcNativeCollectionKind.stencils)
-                      Image.asset(
-                        _stencilArtworkBySlot[slot] ??
-                            ArcStencilCatalogue.assetAt(slot),
-                        fit: BoxFit.contain,
-                        errorBuilder: (_, _, _) => Icon(
-                          owned ? Icons.palette_outlined : Icons.lock_outline,
-                          color: owned ? Colors.cyanAccent : Colors.white30,
-                          size: 18,
-                        ),
-                      )
+                      _stencilArtwork(slot, owned: owned)
                     else
                       Icon(
                         owned ? Icons.weekend_outlined : Icons.lock_outline,
