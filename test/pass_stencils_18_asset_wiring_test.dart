@@ -27,6 +27,9 @@ void main() {
           ArcCollectionType.stencils, entry.key);
       expect(registry?.name, entry.value.$1);
       expect(registry?.confidence, ArcCollectionSlotConfidence.verifiedInGame);
+      if (entry.key >= 15 && entry.key <= 17) {
+        expect(registry?.sourceLabel, 'In-game shop');
+      }
     }
   });
 

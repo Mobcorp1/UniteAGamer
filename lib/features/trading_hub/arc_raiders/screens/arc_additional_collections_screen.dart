@@ -527,6 +527,12 @@ class _ArcAdditionalCollectionsScreenState
 
   // Community-maintained item source guidance. Not a guaranteed drop location.
   static String _stencilSource(int slot) {
+    if (slot >= 15 && slot <= 17) {
+      return 'In-game shop';
+    }
+    if (slot == 18) {
+      return 'Source not confirmed';
+    }
     if (slot == 9) {
       return 'Collector Set DLC';
     }
