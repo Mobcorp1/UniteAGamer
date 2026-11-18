@@ -92,8 +92,8 @@ void main() {
     final designs = tester.widget<GridView>(
       find.byKey(const Key('collections-design-readable-gallery')),
     );
-    expect(designs.semanticChildCount, 100);
-    // In-game slot order is preserved but rendered in a 3-column scroll.
+    expect(designs.semanticChildCount, ArcNativeCollectionKind.designs.slots);
+    // In-game slot order is preserved across the full 101-position grid.
 
     expect(find.text('TEST AD SLOT'), findsOneWidget);
     expect(tester.takeException(), isNull);
