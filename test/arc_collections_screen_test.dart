@@ -17,7 +17,7 @@ void main() {
 
     await tester.tap(find.text('STENCILS'));
     await tester.pump();
-    expect(find.text('14 SLOTS'), findsOneWidget);
+    expect(find.text('18 SLOTS'), findsOneWidget);
 
     await tester.tap(find.text('DESIGNS'));
     await tester.pump();

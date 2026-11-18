@@ -21,7 +21,7 @@ void main() {
     expect(ArcBenchArtwork.forStation('Outpost'), isNull);
   });
 
-  test('new stencil art follows the existing 14-slot in-game catalogue', () {
+  test('existing stencil art retains first fourteen slots in expanded catalogue', () {
     const expected = <int, String>{11: 'fortuna', 13: 'garnet', 14: 'ochre'};
     for (final entry in expected.entries) {
       final path = ArcStencilCatalogue.assetAt(entry.key);
@@ -37,7 +37,7 @@ void main() {
         path,
       );
     }
-    expect(ArcFrozenTrailCollectionCatalogue.stencilGrid.totalSlots, 14);
+    expect(ArcFrozenTrailCollectionCatalogue.stencilGrid.totalSlots, 18);
     expect(ArcFrozenTrailCollectionCatalogue.blueprintGrid.totalSlots, 91);
     expect(
       ArcFrozenTrailCollectionCatalogue.blueprintGrid.rowColumnCounts,

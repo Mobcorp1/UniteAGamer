@@ -10,7 +10,7 @@ enum ArcNativeCollectionKind {
 
   String get title => this == stencils ? 'Stencils' : 'Designs';
   String get key => name;
-  int get slots => this == stencils ? 14 : 101;
+  int get slots => this == stencils ? 18 : 101;
   int get columns => this == stencils ? 9 : 17;
 }
 

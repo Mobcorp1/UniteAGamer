@@ -43,6 +43,7 @@ void main() {
       expect(find.byKey(const Key('collections-pinch-zoom-grid')), findsOneWidget);
       expect(find.byKey(const Key('collections-saved-slot-1')), findsOneWidget);
       expect(find.byKey(const Key('collections-saved-slot-14')), findsOneWidget);
+      expect(find.byKey(const Key('collections-saved-slot-18')), findsOneWidget);
 
       final ad = tester.getRect(find.byKey(const Key('collections-stencil-fitted-ad')));
       final all = tester.getRect(find.byKey(const Key('collections-filter-all')));

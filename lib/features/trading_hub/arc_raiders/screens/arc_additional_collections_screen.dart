@@ -74,6 +74,7 @@ class _ArcAdditionalCollectionsScreenState
   final _designNames = ArcDesignSlotNamesRepository();
   Map<int, String> _assignedDesignNames = <int, String>{};
   Map<String, String> _designArtworkByFilename = <String, String>{};
+  Map<int, String> _stencilArtworkBySlot = <int, String>{};
   final _recognizer = const ArcNativeCollectionScreenshotRecognizer();
   late ArcNativeCollectionKind _kind;
   ArcCollectionView _view = ArcCollectionView.all;
@@ -140,7 +141,18 @@ class _ArcAdditionalCollectionsScreenState
           found[filename] = path;
         }
       }
-      if (mounted) setState(() => _designArtworkByFilename = found);
+      final stencilAssets = <int, String>{
+        for (var slot = 1; slot <= ArcNativeCollectionKind.stencils.slots; slot++)
+          if (ArcStencilCatalogue.bundledAssetAt(slot, manifest.listAssets())
+              case final String assetPath)
+            slot: assetPath,
+      };
+      if (mounted) {
+        setState(() {
+          _designArtworkByFilename = found;
+          _stencilArtworkBySlot = stencilAssets;
+        });
+      }
     } catch (_) {
       // Missing optional artwork must never block Design grid ownership.
     }
@@ -927,7 +939,8 @@ class _ArcAdditionalCollectionsScreenState
                   children: [
                     if (_kind == ArcNativeCollectionKind.stencils)
                       Image.asset(
-                        ArcStencilCatalogue.assetAt(slot),
+                        _stencilArtworkBySlot[slot] ??
+                            ArcStencilCatalogue.assetAt(slot),
                         fit: BoxFit.contain,
                         errorBuilder: (_, _, _) => Icon(
                           owned ? Icons.palette_outlined : Icons.lock_outline,
@@ -1295,7 +1308,8 @@ class _ArcAdditionalCollectionsScreenState
             owned: _displayOwned.contains(slot),
             spares: _dupCount(slot),
             imageAssetPath: _kind == ArcNativeCollectionKind.stencils
-                ? ArcStencilCatalogue.assetAt(slot)
+                ? (_stencilArtworkBySlot[slot] ??
+                    ArcStencilCatalogue.assetAt(slot))
                 : _designArtworkForName(_name(slot)),
             icon: Icons.weekend_outlined,
             detail: _kind == ArcNativeCollectionKind.designs

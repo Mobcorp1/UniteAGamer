@@ -12,8 +12,8 @@ class ArcFrozenTrailCollectionCatalogue {
 
   static const stencilGrid = ArcCollectionGridSpec(
     type: ArcCollectionType.stencils,
-    totalSlots: 14,
-    rowColumnCounts: <int>[9, 5],
+    totalSlots: 18,
+    rowColumnCounts: <int>[9, 9],
   );
 
   static const designGrid = ArcCollectionGridSpec(
@@ -376,6 +376,42 @@ class ArcFrozenTrailCollectionCatalogue {
       duplicateStatus: ArcCollectionEconomyStatus.unknown,
       tradeStatus: ArcCollectionEconomyStatus.unknown,
     ),
+    ArcCollectionEntry(
+      id: 'sundog',
+      name: 'Sundog',
+      type: ArcCollectionType.stencils,
+      slot: 15,
+      confidence: ArcCollectionSlotConfidence.verifiedInGame,
+      duplicateStatus: ArcCollectionEconomyStatus.unknown,
+      tradeStatus: ArcCollectionEconomyStatus.unknown,
+    ),
+    ArcCollectionEntry(
+      id: 'malocchio',
+      name: 'Malocchio',
+      type: ArcCollectionType.stencils,
+      slot: 16,
+      confidence: ArcCollectionSlotConfidence.verifiedInGame,
+      duplicateStatus: ArcCollectionEconomyStatus.unknown,
+      tradeStatus: ArcCollectionEconomyStatus.unknown,
+    ),
+    ArcCollectionEntry(
+      id: 'taurus',
+      name: 'Taurus',
+      type: ArcCollectionType.stencils,
+      slot: 17,
+      confidence: ArcCollectionSlotConfidence.verifiedInGame,
+      duplicateStatus: ArcCollectionEconomyStatus.unknown,
+      tradeStatus: ArcCollectionEconomyStatus.unknown,
+    ),
+    ArcCollectionEntry(
+      id: 'golden-olive',
+      name: 'Golden Olive',
+      type: ArcCollectionType.stencils,
+      slot: 18,
+      confidence: ArcCollectionSlotConfidence.verifiedInGame,
+      duplicateStatus: ArcCollectionEconomyStatus.unknown,
+      tradeStatus: ArcCollectionEconomyStatus.unknown,
+    ),
   ];
 
   static const designEntries = <ArcCollectionEntry>[];
@@ -568,6 +604,10 @@ class ArcFrozenTrailCollectionCatalogue {
     'fortuna': 'assets/arc_raiders/blueprints/fortuna.webp',
     'garnet': 'assets/arc_raiders/blueprints/garnet.webp',
     'ochre': 'assets/arc_raiders/blueprints/ochre.webp',
+    'sundog': 'assets/arc_raiders/blueprints/sundog.webp',
+    'malocchio': 'assets/arc_raiders/blueprints/malocchio.webp',
+    'taurus': 'assets/arc_raiders/blueprints/taurus.webp',
+    'golden-olive': 'assets/arc_raiders/blueprints/golden-olive.webp',
     'yank-grenade': 'assets/arc_raiders/blueprints/yank-grenade.webp',
     'grappling-hook': 'assets/arc_raiders/blueprints/grappling-hook.webp',
     'tether-launcher': 'assets/arc_raiders/blueprints/tether-launcher.webp',

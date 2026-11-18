@@ -9,7 +9,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   test('Stencil catalogue maps user-confirmed lowercase WebP names and slots', () {
-    expect(ArcStencilCatalogue.names.length, 14);
+    expect(ArcStencilCatalogue.names.length, 18);
     expect(ArcStencilCatalogue.assetAt(2), 'assets/arc_raiders/blueprints/slipstream.webp');
     expect(ArcStencilCatalogue.assetAt(3), 'assets/arc_raiders/blueprints/tortoise.webp');
     expect(ArcStencilCatalogue.assetAt(5), 'assets/arc_raiders/blueprints/milky-terracotta.webp');
@@ -74,6 +74,7 @@ void main() {
     expect(find.byKey(const Key('collections-tab-designs')), findsOneWidget);
     expect(find.byKey(const Key('collections-saved-slot-2')), findsOneWidget);
     expect(find.byKey(const Key('collections-saved-slot-14')), findsOneWidget);
+    expect(find.byKey(const Key('collections-saved-slot-18')), findsOneWidget);
     expect(find.byKey(const Key('collections-upload-native-screenshot')), findsOneWidget);
     expect(find.byKey(const Key('collections-filter-all')), findsOneWidget);
     expect(find.byKey(const Key('collections-filter-needed')), findsOneWidget);

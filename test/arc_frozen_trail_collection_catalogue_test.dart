@@ -12,7 +12,7 @@ void main() {
       );
       expect(
         ArcFrozenTrailCollectionCatalogue.stencilGrid.rowColumnCounts,
-        const [9, 5],
+        const [9, 9],
       );
       expect(
         ArcFrozenTrailCollectionCatalogue.designGrid.rowColumnCounts,
@@ -20,7 +20,7 @@ void main() {
       );
 
       expect(ArcFrozenTrailCollectionCatalogue.blueprintGrid.totalSlots, 91);
-      expect(ArcFrozenTrailCollectionCatalogue.stencilGrid.totalSlots, 14);
+      expect(ArcFrozenTrailCollectionCatalogue.stencilGrid.totalSlots, 18);
       expect(ArcFrozenTrailCollectionCatalogue.designGrid.totalSlots, 101);
     });
 
