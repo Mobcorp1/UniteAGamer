@@ -1,8 +1,17 @@
-/// In-game 14-position Stencil ordering, 13 October 2026.
-/// Lowercase-hyphen WebP names follow UAG's established Blueprint convention.
-/// Player-confirmed assets: positions 2, 3, 5, 6, 7, 9.
+/// In-game 18-position Stencil ordering, updated 17 November 2026.
+///
+/// Slots 1-14 preserve the established UAG ordering exactly.
+/// Player-confirmed November additions:
+/// 15 Sundog, 16 Malocchio, 17 Taurus.
+/// Slot 18 exists in-game but its identity is not yet confirmed.
+///
+/// Lowercase-hyphen WebP names follow UAG's established convention.
 class ArcStencilCatalogue {
   const ArcStencilCatalogue._();
+
+  static const int slotCount = 18;
+  static const int columns = 9;
+  static const String assetDirectory = 'assets/arc_raiders/blueprints';
 
   static const List<String> names = <String>[
     'Verdigris',
@@ -19,8 +28,12 @@ class ArcStencilCatalogue {
     'Serac',
     'Garnet',
     'Ochre',
+    'Sundog',
+    'Malocchio',
+    'Taurus',
+    'Unknown Stencil',
   ];
-  // Hand-defined for punctuation and user's exact file spelling.
+
   static const List<String> fileNames = <String>[
     'verdigris.webp',
     'slipstream.webp',
@@ -36,9 +49,21 @@ class ArcStencilCatalogue {
     'serac.webp',
     'garnet.webp',
     'ochre.webp',
+    'sundog.webp',
+    'malocchio.webp',
+    'taurus.webp',
+    'unknown-stencil.webp',
   ];
 
-  static String nameAt(int slot) => names[slot - 1];
+  static String nameAt(int slot) => names[_indexFor(slot)];
+
   static String assetAt(int slot) =>
-      'assets/arc_raiders/blueprints/${fileNames[slot - 1]}';
+      '$assetDirectory/${fileNames[_indexFor(slot)]}';
+
+  static int _indexFor(int slot) {
+    if (slot < 1 || slot > slotCount) {
+      throw RangeError.range(slot, 1, slotCount, 'slot');
+    }
+    return slot - 1;
+  }
 }

@@ -2,6 +2,8 @@ import 'dart:typed_data';
 
 import 'package:image/image.dart' as img;
 
+import 'arc_stencil_catalogue.dart';
+
 /// Only the Stencils and Designs screenshot profiles live here. The locked
 /// 91-slot Blueprint classifier remains in its existing implementation.
 enum ArcNativeCollectionKind {
@@ -10,8 +12,8 @@ enum ArcNativeCollectionKind {
 
   String get title => this == stencils ? 'Stencils' : 'Designs';
   String get key => name;
-  int get slots => this == stencils ? 14 : 100;
-  int get columns => this == stencils ? 9 : 17;
+  int get slots => this == stencils ? ArcStencilCatalogue.slotCount : 101;
+  int get columns => this == stencils ? ArcStencilCatalogue.columns : 17;
 }
 
 enum ArcNativeSlotState { owned, missing, review }
@@ -58,9 +60,12 @@ class ArcNativeCollectionScreenshotRecognizer {
   ) {
     final picture = img.decodeImage(encoded);
     if (picture == null) {
-      throw const FormatException('Image could not be decoded. Upload the original screenshot.');
+      throw const FormatException(
+        'Image could not be decoded. Upload the original screenshot.',
+      );
     }
-    if (picture.width < 1280 || picture.height < 720 ||
+    if (picture.width < 1280 ||
+        picture.height < 720 ||
         ((picture.width / picture.height) - 16 / 9).abs() > .025) {
       throw const FormatException(
         'Use an uncropped 16:9 in-game screenshot. TV photos are not supported in this beta.',
@@ -87,8 +92,18 @@ class ArcNativeCollectionScreenshotRecognizer {
 
       // Outer left border is a sanity check that the image really contains
       // the expected native Collections view at the expected scale.
-      final border = _fraction(picture, x, y, width, height,
-        .00, .35, .06, .75, _luminous);
+      final border = _fraction(
+        picture,
+        x,
+        y,
+        width,
+        height,
+        .00,
+        .35,
+        .06,
+        .75,
+        _luminous,
+      );
       if (border > .05) borderedCards++;
 
       late final bool isOwned;
@@ -97,32 +112,74 @@ class ArcNativeCollectionScreenshotRecognizer {
       final double tick;
       if (isStencil) {
         // Empty stencil cards have a centred grey number, no yellow tick.
-        content = _fraction(picture, x, y, width, height,
-          .15, .20, .85, .80, _vivid);
-        tick = _fraction(picture, x, y, width, height,
-          .76, .05, .95, .24, _yellow);
+        content = _fraction(
+          picture,
+          x,
+          y,
+          width,
+          height,
+          .15,
+          .20,
+          .85,
+          .80,
+          _vivid,
+        );
+        tick = _fraction(
+          picture,
+          x,
+          y,
+          width,
+          height,
+          .76,
+          .05,
+          .95,
+          .24,
+          _yellow,
+        );
         isOwned = tick > .012 && content > .10;
         isEmpty = tick < .003 && content < .015;
       } else {
         // Design cards contain varied art and small '+' marks, and a white
         // check in the top right; blanks lack both the art and the check.
-        content = _fraction(picture, x, y, width, height,
-          .15, .20, .85, .80, _bright);
-        tick = _fraction(picture, x, y, width, height,
-          .76, .05, .95, .24, _white);
+        content = _fraction(
+          picture,
+          x,
+          y,
+          width,
+          height,
+          .15,
+          .20,
+          .85,
+          .80,
+          _bright,
+        );
+        tick = _fraction(
+          picture,
+          x,
+          y,
+          width,
+          height,
+          .76,
+          .05,
+          .95,
+          .24,
+          _white,
+        );
         isOwned = tick > .035 && content > .040;
         isEmpty = tick < .010 && content < .012;
       }
       final state = isOwned
           ? ArcNativeSlotState.owned
           : isEmpty
-              ? ArcNativeSlotState.missing
-              : ArcNativeSlotState.review;
-      slots.add(ArcNativeCollectionSlot(
-        slot: index + 1,
-        state: state,
-        evidence: content.clamp(0.0, 1.0),
-      ));
+          ? ArcNativeSlotState.missing
+          : ArcNativeSlotState.review;
+      slots.add(
+        ArcNativeCollectionSlot(
+          slot: index + 1,
+          state: state,
+          evidence: content.clamp(0.0, 1.0),
+        ),
+      );
     }
     // Refuse a generic black screenshot or a cropped/misaligned screen.
     if (borderedCards < (kind.slots * .60).ceil()) {
@@ -142,17 +199,16 @@ class ArcNativeCollectionScreenshotRecognizer {
     );
   }
 
-  static bool _luminous(int r, int g, int b) =>
-      (r > 35 || g > 35 || b > 35);
+  static bool _luminous(int r, int g, int b) => (r > 35 || g > 35 || b > 35);
   static bool _vivid(int r, int g, int b) {
     final hi = r > g ? (r > b ? r : b) : (g > b ? g : b);
     final lo = r < g ? (r < b ? r : b) : (g < b ? g : b);
     return hi > 65 && hi - lo > 25;
   }
+
   static bool _bright(int r, int g, int b) => r > 100 || g > 100 || b > 100;
   static bool _white(int r, int g, int b) => r > 130 && g > 130 && b > 130;
-  static bool _yellow(int r, int g, int b) =>
-      r > 130 && g > 90 && b < 105;
+  static bool _yellow(int r, int g, int b) => r > 130 && g > 90 && b < 105;
 
   static double _fraction(
     img.Image picture,
@@ -168,9 +224,15 @@ class ArcNativeCollectionScreenshotRecognizer {
   ) {
     final sx = picture.width / 2048;
     final sy = picture.height / 1152;
-    final x1 = ((cellX + cellW * left) * sx).round().clamp(0, picture.width - 1);
+    final x1 = ((cellX + cellW * left) * sx).round().clamp(
+      0,
+      picture.width - 1,
+    );
     final x2 = ((cellX + cellW * right) * sx).round().clamp(0, picture.width);
-    final y1 = ((cellY + cellH * top) * sy).round().clamp(0, picture.height - 1);
+    final y1 = ((cellY + cellH * top) * sy).round().clamp(
+      0,
+      picture.height - 1,
+    );
     final y2 = ((cellY + cellH * bottom) * sy).round().clamp(0, picture.height);
     var hits = 0;
     var samples = 0;
