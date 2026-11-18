@@ -25,7 +25,7 @@ void main() {
       const Key('collections-design-readable-gallery')));
     final delegate = grid.gridDelegate as SliverGridDelegateWithFixedCrossAxisCount;
     expect(delegate.crossAxisCount, 17);
-    expect(grid.semanticChildCount, 100);
+    expect(grid.semanticChildCount, ArcNativeCollectionKind.designs.slots);
     expect(delegate.mainAxisExtent, greaterThan(90));
     expect(find.byKey(const Key('collections-saved-slot-1')), findsOneWidget);
     expect(find.byKey(const Key('collections-saved-slot-4')), findsOneWidget);

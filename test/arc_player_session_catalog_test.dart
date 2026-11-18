@@ -16,13 +16,16 @@ void main() {
       goals: const <String>['Trials'],
       sessionIntent: 'Trials',
       currentPriority: 'Trials',
+      visibleInSearch: true,
     );
     final matching = ArcMatchRiderProfile.empty('other').copyWith(
       goals: const <String>['Trials'],
       sessionIntent: 'Trials',
       currentPriority: 'Trials',
     );
-    final flexible = ArcMatchRiderProfile.empty('other-2');
+    final flexible = ArcMatchRiderProfile.empty('other-2').copyWith(
+      visibleInSearch: true,
+    );
 
     const engine = ArcMatchCompatibilityEngine();
     final matchingResult = engine.score(me: base, other: matching);

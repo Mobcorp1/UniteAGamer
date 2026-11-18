@@ -404,6 +404,7 @@ ArcMatchRiderProfile _profile(String uid) {
     serverPreference: 'Europe',
     crossplayEnabled: true,
     lookingNow: true,
+    visibleInSearch: true, // Public test candidate opted in.
   );
 }
 
@@ -416,6 +417,7 @@ ArcMatchRiderProfile _neutralProfile(String uid) {
     serverPreference: 'Europe',
     crossplayEnabled: true,
     lookingNow: false,
+    visibleInSearch: true, // Neutral score fixture is not hidden.
   );
 }
 

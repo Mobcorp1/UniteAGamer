@@ -380,6 +380,7 @@ ArcMatchRiderProfile _profile({
     serverPreference: serverPreference,
     crossplayEnabled: crossplayEnabled,
     lookingNow: lookingNow,
+    visibleInSearch: true, // Fixture Raider explicitly opts into matchmaking.
   );
 }
 
@@ -392,5 +393,6 @@ ArcMatchRiderProfile _neutralProfile(String uid) {
     serverPreference: 'Europe',
     crossplayEnabled: true,
     lookingNow: false,
+    visibleInSearch: true, // Ranking fixtures must be discoverable.
   );
 }

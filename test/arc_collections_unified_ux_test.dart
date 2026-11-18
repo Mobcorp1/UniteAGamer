@@ -9,9 +9,9 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  test('100 sourced Design names are unique; unknown game positions remain unassigned', () {
-    expect(ArcDesignReferenceCatalogue.names.length, 100);
-    expect(ArcDesignReferenceCatalogue.names.toSet().length, 100);
+  test('101 sourced Design names are unique; unknown game positions remain unassigned', () {
+    expect(ArcDesignReferenceCatalogue.names.length, 101);
+    expect(ArcDesignReferenceCatalogue.names.toSet().length, 101);
     expect(ArcDesignReferenceCatalogue.names, contains('Winter Table'));
     expect(ArcDesignReferenceCatalogue.names, contains('Study Armchair (Legendary)'));
     expect(ArcDesignReferenceCatalogue.inGameNameForSlot(1, const {}), isNull);
