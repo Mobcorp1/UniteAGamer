@@ -22,6 +22,7 @@ void main() {
       goals: const <String>['Trials'],
       sessionIntent: 'Trials',
       currentPriority: 'Trials',
+      visibleInSearch: true,
     );
     final flexible = ArcMatchRiderProfile.empty('other-2').copyWith(
       visibleInSearch: true,
